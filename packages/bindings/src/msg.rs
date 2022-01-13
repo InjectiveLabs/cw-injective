@@ -25,7 +25,7 @@ impl CustomMsg for InjectiveMsgWrapper {}
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum InjectiveMsg {
-    MsgSubaccountTransfer {
+    SubaccountTransfer {
         sender: Addr,
         source_subaccount_id: String,
         destination_subaccount_id: String,
@@ -41,7 +41,7 @@ pub fn create_subaccount_transfer_msg(
 ) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,
-        msg_data: InjectiveMsg::MsgSubaccountTransfer {
+        msg_data: InjectiveMsg::SubaccountTransfer {
             sender,
             source_subaccount_id: source_subaccount_id.to_string(),
             destination_subaccount_id: destination_subaccount_id.to_string(),
