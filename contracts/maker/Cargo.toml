@@ -1,0 +1,37 @@
+[package]
+name = "maker"
+version = "0.1.0"
+authors = ["Albert Chon <albert@injectivelabs.org>"]
+edition = "2018"
+
+exclude = [
+    # Those files are cosmwasm-opt artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
+    "contract.wasm",
+    "hash.txt",
+]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["cranelift"]
+# for quicker tests, cargo test --lib
+# for more explicit tests, cargo test --features=backtraces
+backtraces = ["cosmwasm-std/backtraces", "cosmwasm-vm/backtraces"]
+cranelift = ["cosmwasm-vm/cranelift"]
+
+[dependencies]
+injective-bindings = { path = "../../packages/bindings", version = "0.1.0"}
+cosmwasm-std = { version = "1.0.0-beta4", features = ["iterator"] }
+cosmwasm-storage = { version = "1.0.0-beta4", features = ["iterator"] }
+schemars = "0.8.1"
+serde = { version = "1.0.125", default-features = false, features = ["derive"] }
+snafu = { version = "0.6.3" }
+thiserror = { version = "1.0.23" }
+
+[dev-dependencies]
+injective-mocks = { path = "../../packages/mocks", version = "0.1.0" }
+cosmwasm-vm = { version = "1.0.0-beta4", default-features = false, features = ["iterator"] }
+cosmwasm-schema = { version = "1.0.0-beta4" }
