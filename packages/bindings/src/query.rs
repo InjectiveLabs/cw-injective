@@ -1,8 +1,8 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Decimal, CustomQuery};
 use crate::route::InjectiveRoute;
+use cosmwasm_std::{CustomQuery, Decimal};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -36,5 +36,3 @@ pub struct Deposit {
     pub available_balance: Decimal,
     pub total_balance: Decimal,
 }
-
-

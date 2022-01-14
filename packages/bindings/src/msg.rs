@@ -1,10 +1,10 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Coin, CosmosMsg, Addr, CustomMsg};
+use crate::route::InjectiveRoute;
+use cosmwasm_std::{Addr, Coin, CosmosMsg, CustomMsg};
 use schemars::gen::SchemaGenerator;
 use schemars::schema::Schema;
-use crate::route::InjectiveRoute;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -48,5 +48,5 @@ pub fn create_subaccount_transfer_msg(
             amount,
         },
     }
-        .into()
+    .into()
 }

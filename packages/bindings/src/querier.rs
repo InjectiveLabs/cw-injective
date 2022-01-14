@@ -1,8 +1,6 @@
 use cosmwasm_std::{QuerierWrapper, StdResult};
 
-use crate::query::{
-    InjectiveQueryWrapper, SubaccountDepositResponse, InjectiveQuery,
-};
+use crate::query::{InjectiveQuery, InjectiveQueryWrapper, SubaccountDepositResponse};
 
 use crate::route::InjectiveRoute;
 
@@ -32,4 +30,3 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 }
-

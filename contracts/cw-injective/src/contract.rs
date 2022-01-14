@@ -1,4 +1,6 @@
-use cosmwasm_std::{entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{
+    entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
@@ -87,7 +89,8 @@ mod tests {
         let msg = InstantiateMsg {
             count: 17,
             name: "BTC/USDT PERP Market Making Strategy".to_string(),
-            market_id: "0x4ca0f92fc28be0c9761326016b5a1a2177dd6375558365116b5bdda9abc229ce".to_string(),
+            market_id: "0x4ca0f92fc28be0c9761326016b5a1a2177dd6375558365116b5bdda9abc229ce"
+                .to_string(),
         };
         let info = mock_info("creator", &coins(1000, "earth"));
 
@@ -108,7 +111,8 @@ mod tests {
         let msg = InstantiateMsg {
             count: 17,
             name: "BTC/USDT PERP Market Making Strategy".to_string(),
-            market_id: "0x4ca0f92fc28be0c9761326016b5a1a2177dd6375558365116b5bdda9abc229ce".to_string(),
+            market_id: "0x4ca0f92fc28be0c9761326016b5a1a2177dd6375558365116b5bdda9abc229ce"
+                .to_string(),
         };
         let info = mock_info("creator", &coins(2, "token"));
         let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
@@ -131,7 +135,8 @@ mod tests {
         let msg = InstantiateMsg {
             count: 17,
             name: "BTC/USDT PERP Market Making Strategy".to_string(),
-            market_id: "0x4ca0f92fc28be0c9761326016b5a1a2177dd6375558365116b5bdda9abc229ce".to_string(),
+            market_id: "0x4ca0f92fc28be0c9761326016b5a1a2177dd6375558365116b5bdda9abc229ce"
+                .to_string(),
         };
         let info = mock_info("creator", &coins(2, "token"));
         let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
