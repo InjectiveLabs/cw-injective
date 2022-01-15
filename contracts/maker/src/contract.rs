@@ -147,18 +147,6 @@ fn query_action(
     Ok(WrappedGetActionResponse { orders_to_open })
 }
 
-fn calc_reservation_price(s: Decimal, q: Decimal, r: Decimal, varience: Decimal) -> Decimal {
-    s - (q * r * varience)
-}
-
-fn calc_spread_res(varience: Decimal, risk_aversion: Decimal) -> Decimal {
-    (varience * risk_aversion) / Decimal::from_i32(2).unwrap()
-}
-
-fn calc_spread_mid(varience: Decimal, risk_aversion: Decimal) -> Decimal {
-    risk_aversion * varience * Decimal::from_str("2").unwrap() / Decimal::from_i32(2).unwrap()
-}
-
 fn create_all_orders(
     state: &State,
     decimal_shift: Decimal,
@@ -317,11 +305,26 @@ fn calculate_inventory_dist_from_target(
     q
 }
 
+fn calc_reservation_price(s: Decimal, q: Decimal, r: Decimal, varience: Decimal) -> Decimal {
+    s - (q * r * varience)
+}
+
+fn calc_spread_res(varience: Decimal, risk_aversion: Decimal) -> Decimal {
+    (varience * risk_aversion) / Decimal::from_i32(2).unwrap()
+}
+
+fn calc_spread_mid(varience: Decimal, risk_aversion: Decimal) -> Decimal {
+    risk_aversion * varience * Decimal::from_str("2").unwrap() / Decimal::from_i32(2).unwrap()
+}
+
 // #[cfg(test)]
 // mod tests {
+//     use std::marker::PhantomData;
+
 //     use super::*;
 //     use cosmwasm_std::testing::{MockStorage, MockApi, MockQuerier, mock_env, mock_info};
-//     use cosmwasm_std::{coins, from_binary};
+//     use cosmwasm_std::{coins, from_binary, OwnedDeps, QuerierWrapper};
+//     use injective_bindings::{InjectiveRoute, InjectiveQuery};
 
 //     #[test]
 //     fn reservation_price_test() {
@@ -394,14 +397,15 @@ fn calculate_inventory_dist_from_target(
 //         let ratio_active_capital = Decimal::from_str("0.2").unwrap();
 
 //         // Get state
-//         let mut deps: DepsMut<InjectiveQueryWrapper> = DepsMut {
+//         let query =  InjectiveQueryWrapper {
+//              route: InjectiveRoute::Exchange,
+//              query_data: InjectiveQuery::SubaccountDeposit{ subaccount_id: String::from(""), denom: String::from("") },
+//         };
+//         let querier: QuerierWrapper<'_, injective_bindings::InjectiveQueryWrapper > = QuerierWrapper::new(query);
+//         let deps: DepsMut<'_, InjectiveQueryWrapper> = DepsMut {
+//             storage: &mut MockStorage::default(),
 //             api: &MockApi::default(),
-//             ßtorage: &mut MockStorage::default(),
-//             querier: InjectiveQueryWrapper {
-//                  route: InjectiveRoute,
-//                  query_data: InjectiveQuery,
-//             },
-            
+//             querier: querier,
 //         };
 //         let msg = InstantiateMsg {
 //             market_id,
@@ -653,138 +657,138 @@ fn calculate_inventory_dist_from_target(
 //         println!("{} {}", spread_res, spread_mid);
 //     }
 
-//     // #[test]
-//     // fn initialization_test() {
-//     //     let mut deps = mock_dependencies_with_balance(&coins(2, "token"));
+// #[test]
+// fn initialization_test() {
+//     let mut deps = mock_dependencies_with_balance(&coins(2, "token"));
 
-//     //     let msg = InstantiateMsg {
-//     //         market_id: String::from("some market"),
-//     //         sub_account: String::from("some account"),
-//     //         fee_recipient: String::from("some recipient"),
-//     //         risk_aversion: String::from("0.5"),
-//     //         price_distribution_rate: String::from("2.5"),
-//     //         leverage: String::from("2"),
-//     //         decimal_shift: String::from("1000000"),
-//     //         slices_per_spread_bp: String::from("0.2"),
-//     //         ratio_active_capital: String::from("0.2"),
-//     //         manager: String::from("some manager"),
-//     //     };
-//     //     let info = mock_info("creator", &coins(1000, "earth"));
+//     let msg = InstantiateMsg {
+//         market_id: String::from("some market"),
+//         sub_account: String::from("some account"),
+//         fee_recipient: String::from("some recipient"),
+//         risk_aversion: String::from("0.5"),
+//         price_distribution_rate: String::from("2.5"),
+//         leverage: String::from("2"),
+//         decimal_shift: String::from("1000000"),
+//         slices_per_spread_bp: String::from("0.2"),
+//         ratio_active_capital: String::from("0.2"),
+//         manager: String::from("some manager"),
+//     };
+//     let info = mock_info("creator", &coins(1000, "earth"));
 
-//     //     // we can just call .unwrap() to assert this was a success
-//     //     let res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
-//     //     assert_eq!(0, res.messages.len());
+//     // we can just call .unwrap() to assert this was a success
+//     let res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+//     assert_eq!(0, res.messages.len());
 
-//     //     // it worked, let's query the state
-//     //     let res = query(deps.as_ref(), mock_env(), QueryMsg::CheckState {}).unwrap();
-//     //     let value: State = from_binary(&res).unwrap();
-//     //     let expected = State {
-//     //         market_id: String::from("some market"),
-//     //         sub_account: String::from("some account"),
-//     //         fee_recipient: String::from("some recipient"),
-//     //         risk_aversion: String::from("0.5"),
-//     //         price_distribution_rate: String::from("2.5"),
-//     //         leverage: String::from("2"),
-//     //         decimal_shift: String::from("1000000"),
-//     //         owner: info.sender,
-//     //         slices_per_spread_bp: String::from("0.2"),
-//     //         ratio_active_capital: String::from("0.2"),
-//     //         manager: todo!(),
-//     //     };
-//     //     assert_eq!(expected, value);
-//     // }
+//     // it worked, let's query the state
+//     let res = query(deps.as_ref(), mock_env(), QueryMsg::CheckState {}).unwrap();
+//     let value: State = from_binary(&res).unwrap();
+//     let expected = State {
+//         market_id: String::from("some market"),
+//         sub_account: String::from("some account"),
+//         fee_recipient: String::from("some recipient"),
+//         risk_aversion: String::from("0.5"),
+//         price_distribution_rate: String::from("2.5"),
+//         leverage: String::from("2"),
+//         decimal_shift: String::from("1000000"),
+//         owner: info.sender,
+//         slices_per_spread_bp: String::from("0.2"),
+//         ratio_active_capital: String::from("0.2"),
+//         manager: todo!(),
+//     };
+//     assert_eq!(expected, value);
+// }
 
-//     // #[test]
-//     // fn create_all_orders_test() {
-//     //     // Define vars
-//     //     let total_notional_balance = String::from("200000000000");
-//     //     let standard_deviation = String::from("2000000");
-//     //     let mid_price = String::from("4000000000");
-//     //     let leverage = String::from("2");
+// #[test]
+// fn create_all_orders_test() {
+//     // Define vars
+//     let total_notional_balance = String::from("200000000000");
+//     let standard_deviation = String::from("2000000");
+//     let mid_price = String::from("4000000000");
+//     let leverage = String::from("2");
 
-//     //     let mut deps = mock_dependencies_with_balance(&coins(2, "token"));
+//     let mut deps = mock_dependencies_with_balance(&coins(2, "token"));
 
-//     //     let msg = InstantiateMsg {
-//     //         market_id: String::from("some market"),
-//     //         sub_account: String::from("some account"),
-//     //         fee_recipient: String::from("some recipient"),
-//     //         risk_aversion: String::from("0.5"),
-//     //         price_distribution_rate: String::from("2.5"),
-//     //         leverage: leverage.clone(),
-//     //         decimal_shift: String::from("1000000"),
-//     //         slices_per_spread_bp: String::from("0.2"),
-//     //         ratio_active_capital: String::from("0.2"),
-//     //     };
-//     //     let info = mock_info("creator", &coins(1000, "earth"));
+//     let msg = InstantiateMsg {
+//         market_id: String::from("some market"),
+//         sub_account: String::from("some account"),
+//         fee_recipient: String::from("some recipient"),
+//         risk_aversion: String::from("0.5"),
+//         price_distribution_rate: String::from("2.5"),
+//         leverage: leverage.clone(),
+//         decimal_shift: String::from("1000000"),
+//         slices_per_spread_bp: String::from("0.2"),
+//         ratio_active_capital: String::from("0.2"),
+//     };
+//     let info = mock_info("creator", &coins(1000, "earth"));
 
-//     //     // we can just call .unwrap() to assert this was a success
-//     //     let res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
-//     //     assert_eq!(0, res.messages.len());
+//     // we can just call .unwrap() to assert this was a success
+//     let res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+//     assert_eq!(0, res.messages.len());
 
-//     //     // No position
-//     //     let msg = QueryMsg::GetAction {
-//     //         position: Position {
-//     //             is_long: false,
-//     //             quantity: String::from("0"),
-//     //             avg_price: String::from("0"),
-//     //             margin: String::from("0"),
-//     //             cum_funding_entry: String::from("0"),
-//     //         },
-//     //         total_notional_balance: total_notional_balance.clone(),
-//     //         standard_deviation: standard_deviation.clone(),
-//     //         mid_price: mid_price.clone(),
-//     //     };
+//     // No position
+//     let msg = QueryMsg::GetAction {
+//         position: Position {
+//             is_long: false,
+//             quantity: String::from("0"),
+//             avg_price: String::from("0"),
+//             margin: String::from("0"),
+//             cum_funding_entry: String::from("0"),
+//         },
+//         total_notional_balance: total_notional_balance.clone(),
+//         standard_deviation: standard_deviation.clone(),
+//         mid_price: mid_price.clone(),
+//     };
 
-//     //     let res = query(deps.as_ref(), mock_env(), msg).unwrap();
-//     //     let value: WrappedGetActionResponse = from_binary(&res).unwrap();
-//     //     let notional_value: Vec<Decimal> = value
-//     //         .orders_to_open
-//     //         .iter()
-//     //         .map(|order| {
-//     //             Decimal::from_str(&order.price).unwrap()
-//     //                 * Decimal::from_str(&order.quantity).unwrap()
-//     //         })
-//     //         .collect();
-//     //     let notional_value = notional_value
-//     //         .into_iter()
-//     //         .fold(Decimal::from_i32(0).unwrap(), |acc, x| acc + x);
-//     //     // assert_eq!(notional_value  / Decimal::from_str(&leverage).unwrap(), Decimal::from_str(&total_notional_balance).unwrap());
-//     //     println!("{}", value);
-//     //     println!("{}", notional_value);
+//     let res = query(deps.as_ref(), mock_env(), msg).unwrap();
+//     let value: WrappedGetActionResponse = from_binary(&res).unwrap();
+//     let notional_value: Vec<Decimal> = value
+//         .orders_to_open
+//         .iter()
+//         .map(|order| {
+//             Decimal::from_str(&order.price).unwrap()
+//                 * Decimal::from_str(&order.quantity).unwrap()
+//         })
+//         .collect();
+//     let notional_value = notional_value
+//         .into_iter()
+//         .fold(Decimal::from_i32(0).unwrap(), |acc, x| acc + x);
+//     // assert_eq!(notional_value  / Decimal::from_str(&leverage).unwrap(), Decimal::from_str(&total_notional_balance).unwrap());
+//     println!("{}", value);
+//     println!("{}", notional_value);
 
-//     //     // No position
-//     //     let quantity = Decimal::from_str("3").unwrap();
-//     //     let avg_price = Decimal::from_str("3999000000").unwrap();
-//     //     let margin = quantity * avg_price / Decimal::from_str(&leverage).unwrap();
+//     // No position
+//     let quantity = Decimal::from_str("3").unwrap();
+//     let avg_price = Decimal::from_str("3999000000").unwrap();
+//     let margin = quantity * avg_price / Decimal::from_str(&leverage).unwrap();
 
-//     //     let msg = QueryMsg::GetAction {
-//     //         position: Position {
-//     //             is_long: true,
-//     //             quantity: quantity.to_string(),
-//     //             avg_price: avg_price.to_string(),
-//     //             margin: margin.to_string(),
-//     //             cum_funding_entry: String::from("0"),
-//     //         },
-//     //         total_notional_balance: total_notional_balance.clone(),
-//     //         standard_deviation: standard_deviation.clone(),
-//     //         mid_price: mid_price.clone(),
-//     //     };
+//     let msg = QueryMsg::GetAction {
+//         position: Position {
+//             is_long: true,
+//             quantity: quantity.to_string(),
+//             avg_price: avg_price.to_string(),
+//             margin: margin.to_string(),
+//             cum_funding_entry: String::from("0"),
+//         },
+//         total_notional_balance: total_notional_balance.clone(),
+//         standard_deviation: standard_deviation.clone(),
+//         mid_price: mid_price.clone(),
+//     };
 
-//     //     let res = query(deps.as_ref(), mock_env(), msg).unwrap();
-//     //     let value: WrappedGetActionResponse = from_binary(&res).unwrap();
-//     //     let notional_value: Vec<Decimal> = value
-//     //         .orders_to_open
-//     //         .iter()
-//     //         .map(|order| {
-//     //             Decimal::from_str(&order.price).unwrap()
-//     //                 * Decimal::from_str(&order.quantity).unwrap()
-//     //         })
-//     //         .collect();
-//     //     let notional_value = notional_value
-//     //         .into_iter()
-//     //         .fold(Decimal::from_i32(0).unwrap(), |acc, x| acc + x);
-//     //     // assert_eq!(notional_value  / Decimal::from_str(&leverage).unwrap(), Decimal::from_str(&total_notional_balance).unwrap());
-//     //     println!("{}", value);
-//     //     println!("{}", notional_value);
-//     // }
+//     let res = query(deps.as_ref(), mock_env(), msg).unwrap();
+//     let value: WrappedGetActionResponse = from_binary(&res).unwrap();
+//     let notional_value: Vec<Decimal> = value
+//         .orders_to_open
+//         .iter()
+//         .map(|order| {
+//             Decimal::from_str(&order.price).unwrap()
+//                 * Decimal::from_str(&order.quantity).unwrap()
+//         })
+//         .collect();
+//     let notional_value = notional_value
+//         .into_iter()
+//         .fold(Decimal::from_i32(0).unwrap(), |acc, x| acc + x);
+//     // assert_eq!(notional_value  / Decimal::from_str(&leverage).unwrap(), Decimal::from_str(&total_notional_balance).unwrap());
+//     println!("{}", value);
+//     println!("{}", notional_value);
+// }
 // }

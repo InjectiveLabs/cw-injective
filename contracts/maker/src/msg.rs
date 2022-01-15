@@ -1,5 +1,5 @@
 use crate::state::{config_read, State};
-use cosmwasm_std::{Coin, StdError, Deps};
+use cosmwasm_std::{Coin, Deps, StdError};
 use injective_bindings::InjectiveQueryWrapper;
 use rust_decimal::Decimal;
 use schemars::JsonSchema;
@@ -47,7 +47,7 @@ pub struct Position {
     pub cum_funding_entry: String,
 }
 impl Position {
-    pub fn wrap(&self, deps:  Deps<InjectiveQueryWrapper>) -> Result<WrappedPosition, StdError> {
+    pub fn wrap(&self, deps: Deps<InjectiveQueryWrapper>) -> Result<WrappedPosition, StdError> {
         let state = config_read(deps.storage).load()?;
         Ok(WrappedPosition {
             is_long: self.is_long,
