@@ -1,5 +1,5 @@
 use crate::state::{config_read, State};
-use cosmwasm_std::{Coin, Deps, StdError, Decimal256 as Decimal, Uint256, Fraction};
+use cosmwasm_std::{Coin, Decimal256 as Decimal, Deps, Fraction, StdError, Uint256};
 use injective_bindings::InjectiveQueryWrapper;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -134,11 +134,12 @@ pub fn wrap(unwrapped_num: &String, deps: Deps<InjectiveQueryWrapper>) -> Decima
 
 fn wrap_from_state(unwrapped_num: &String, state: &State) -> Decimal {
     let shift = Uint256::from_str(&state.decimal_shift).unwrap();
-    Decimal::from_str(unwrapped_num).unwrap() *  Decimal::from_ratio(Uint256::from_str("1").unwrap(), shift)
+    Decimal::from_str(unwrapped_num).unwrap()
+        * Decimal::from_ratio(Uint256::from_str("1").unwrap(), shift)
 }
 
 pub fn div_int(num: Decimal, denom: Uint256) -> Decimal {
-    num *  Decimal::from_ratio(Uint256::from_str("1").unwrap(), denom)
+    num * Decimal::from_ratio(Uint256::from_str("1").unwrap(), denom)
 }
 
 pub fn div_dec(num: Decimal, denom: Decimal) -> Decimal {
