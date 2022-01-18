@@ -3,19 +3,17 @@ use std::str::FromStr;
 use crate::error::ContractError;
 use crate::msg::{
     wrap, ExecuteMsg, InstantiateMsg, QueryMsg, WrappedGetActionResponse, WrappedOrderResponse,
-    WrappedPosition,
+    WrappedPosition, div_dec,
 };
 use crate::state::{config, config_read, State};
 use cosmwasm_std::{
-    entry_point, to_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response,
-    StdError, StdResult,
+    entry_point, to_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, Decimal256 as Decimal,
+    StdError, StdResult, Uint256,
 };
 use injective_bindings::{
     create_subaccount_transfer_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper,
     SubaccountDepositResponse,
 };
-use rust_decimal::prelude::{FromPrimitive, ToPrimitive};
-use rust_decimal::Decimal;
 
 #[entry_point]
 pub fn instantiate(
@@ -127,7 +125,7 @@ fn query_action(
     let decimal_shift = Decimal::from_str(&state.decimal_shift).unwrap();
     let varience = std_dev * std_dev;
     let q = calculate_inventory_dist_from_target(&position, total_notional_balance);
-    let reservation_price = calc_reservation_price(mid_price, q, risk_aversion, varience);
+    let reservation_price = calc_reservation_price(mid_price, q, risk_aversion, varience,  position.is_long && position.quantity > Decimal::from_str("0").unwrap());
     let reservation_spread = calc_spread_res(varience, risk_aversion);
     let orders_to_open = create_all_orders(
         &state,
@@ -163,7 +161,7 @@ fn create_all_orders(
     leverage: Decimal,
 ) -> Vec<WrappedOrderResponse> {
     let alloc_notional_balance =
-        (total_notional_balance * ratio_active_capital) / Decimal::from_i32(2).unwrap();
+        (total_notional_balance * ratio_active_capital) / Uint256::from_str("2").unwrap();
     let mid_spread = calc_spread_mid(varience, risk_aversion);
     let min_bid = mid_price - mid_spread;
     let mut buy_orders = create_orders(
@@ -214,8 +212,8 @@ fn create_orders(
         if are_bids == position.is_long {
             (
                 alloc_notional_balance - position.margin,
-                Decimal::from_i32(0).unwrap(),
-                Decimal::from_i32(0).unwrap(),
+                Decimal::from_str("0").unwrap(),
+                Decimal::from_str("0").unwrap(),
             )
         } else {
             (alloc_notional_balance, position.quantity, position.margin)
@@ -228,23 +226,26 @@ fn create_orders(
     };
 
     let mut orders: Vec<WrappedOrderResponse> = Vec::new();
-    let bp =
-        ((max_price - optimal_price).abs() / optimal_price) * Decimal::from_i32(10000).unwrap();
-    let num_buy_orders = (bp / slices_per_spread_bp).floor().to_i32().unwrap();
+    let bp = if max_price > optimal_price {
+        div_dec(max_price - optimal_price, optimal_price) * Decimal::from_str("10000").unwrap()
+    } else {
+        div_dec(optimal_price - max_price, optimal_price) * Decimal::from_str("10000").unwrap()
+    };
+    let num_buy_orders = format!("{:.0}", div_dec(bp , slices_per_spread_bp).to_string()).parse::<i32>().unwrap();
     if num_buy_orders > 0 {
         let price_interval =
-            (optimal_price - max_price) / Decimal::from_i32(num_buy_orders).unwrap();
+            div_dec(optimal_price - max_price, Decimal::from_str(&num_buy_orders.to_string()).unwrap());
         for i in 0..num_buy_orders {
-            let current_price = max_price + (price_interval * Decimal::from_i32(i + 1).unwrap());
+            let current_price = max_price + (price_interval * Decimal::from_str(&(i + 1).to_string()).unwrap());
             let (balance_for_price, balance_for_next_price) = if i != num_buy_orders - 1 {
-                let balance_for_next = free_balance_remaining / price_distribution_rate;
+                let balance_for_next = div_dec(free_balance_remaining, price_distribution_rate);
                 (free_balance_remaining - balance_for_next, balance_for_next)
             } else {
-                (free_balance_remaining, Decimal::from_i32(0).unwrap())
+                (free_balance_remaining, Decimal::from_str("0").unwrap())
             };
             if margin_remaining > balance_for_next_price {
                 let reduce_only_balance_for_price = margin_remaining - balance_for_next_price;
-                let qty = (reduce_only_balance_for_price / current_price) * leverage;
+                let qty = div_dec(reduce_only_balance_for_price , current_price) * leverage;
                 let reduce_order = WrappedOrderResponse::new(
                     state,
                     decimal_shift,
@@ -254,10 +255,10 @@ fn create_orders(
                     true,
                     leverage,
                 );
-                reduce_only_qty_remaining -= qty;
+                reduce_only_qty_remaining = reduce_only_qty_remaining - qty;
                 let remaining_balance_for_price = balance_for_price - reduce_only_balance_for_price;
-                let qty = (remaining_balance_for_price / current_price) * leverage;
-                if qty > Decimal::from_i32(0).unwrap() {
+                let qty = div_dec(remaining_balance_for_price , current_price) * leverage;
+                if qty > Decimal::from_str("0").unwrap() {
                     let order = WrappedOrderResponse::new(
                         state,
                         decimal_shift,
@@ -270,9 +271,9 @@ fn create_orders(
                     orders.push(order);
                 }
                 orders.push(reduce_order);
-                margin_remaining -= reduce_only_balance_for_price;
+                margin_remaining = margin_remaining - reduce_only_balance_for_price;
             } else {
-                let qty = (balance_for_price / current_price) * leverage;
+                let qty = div_dec(balance_for_price , current_price) * leverage;
                 let order = WrappedOrderResponse::new(
                     state,
                     decimal_shift,
@@ -284,7 +285,7 @@ fn create_orders(
                 );
                 orders.push(order);
             }
-            free_balance_remaining -= balance_for_price;
+            free_balance_remaining = free_balance_remaining - balance_for_price;
         }
         if !are_bids {
             orders.reverse();
@@ -298,23 +299,23 @@ fn calculate_inventory_dist_from_target(
     total_notional_balance: Decimal,
 ) -> Decimal {
     let notional_position_value = position.margin;
-    let mut q = notional_position_value / total_notional_balance;
-    if position.is_long && position.quantity > Decimal::from_i32(0).unwrap() {
-        q.set_sign_negative(true);
-    };
-    q
+    div_dec(notional_position_value, total_notional_balance)
 }
 
-fn calc_reservation_price(s: Decimal, q: Decimal, r: Decimal, varience: Decimal) -> Decimal {
-    s - (q * r * varience)
+fn calc_reservation_price(s: Decimal, q: Decimal, r: Decimal, varience: Decimal, should_sub: bool) -> Decimal {
+    if should_sub {
+        s + (q * r * varience)
+    } else {
+        s - (q * r * varience)
+    }
 }
 
 fn calc_spread_res(varience: Decimal, risk_aversion: Decimal) -> Decimal {
-    (varience * risk_aversion) / Decimal::from_i32(2).unwrap()
+    div_dec(varience * risk_aversion, Decimal::from_str("2").unwrap())
 }
 
 fn calc_spread_mid(varience: Decimal, risk_aversion: Decimal) -> Decimal {
-    risk_aversion * varience * Decimal::from_str("2").unwrap() / Decimal::from_i32(2).unwrap()
+    div_dec(risk_aversion * varience * Decimal::from_str("2").unwrap(), Decimal::from_str("2").unwrap())
 }
 
 // #[cfg(test)]

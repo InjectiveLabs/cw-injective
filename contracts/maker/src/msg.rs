@@ -1,7 +1,6 @@
 use crate::state::{config_read, State};
-use cosmwasm_std::{Coin, Deps, StdError};
+use cosmwasm_std::{Coin, Deps, StdError, Decimal256 as Decimal, Uint256, Fraction};
 use injective_bindings::InjectiveQueryWrapper;
-use rust_decimal::Decimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::{fmt, str::FromStr};
@@ -95,7 +94,7 @@ impl WrappedOrderResponse {
             market_id: state.market_id.clone(),
             subaccount_id: state.sub_account.clone(),
             fee_recipient: state.fee_recipient.clone(),
-            price: (price * decimal_shift).round().to_string(),
+            price: format!("{:.0}", (price * decimal_shift).to_string()),
             quantity: quantity.to_string(),
             leverage: leverage.to_string(),
             is_buy,
@@ -130,9 +129,18 @@ impl fmt::Display for WrappedGetActionResponse {
 
 pub fn wrap(unwrapped_num: &String, deps: Deps<InjectiveQueryWrapper>) -> Decimal {
     let state = config_read(deps.storage).load().unwrap();
-    Decimal::from_str(unwrapped_num).unwrap() / Decimal::from_str(&state.decimal_shift).unwrap()
+    Decimal::from_str(unwrapped_num).unwrap() / Uint256::from_str(&state.decimal_shift).unwrap()
 }
 
 fn wrap_from_state(unwrapped_num: &String, state: &State) -> Decimal {
-    Decimal::from_str(unwrapped_num).unwrap() / Decimal::from_str(&state.decimal_shift).unwrap()
+    let shift = Uint256::from_str(&state.decimal_shift).unwrap();
+    Decimal::from_str(unwrapped_num).unwrap() *  Decimal::from_ratio(Uint256::from_str("1").unwrap(), shift)
+}
+
+pub fn div_int(num: Decimal, denom: Uint256) -> Decimal {
+    num *  Decimal::from_ratio(Uint256::from_str("1").unwrap(), denom)
+}
+
+pub fn div_dec(num: Decimal, denom: Decimal) -> Decimal {
+    num * denom.inv().unwrap()
 }
