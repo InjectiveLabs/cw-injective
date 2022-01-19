@@ -143,6 +143,9 @@ pub fn create_new_orders_spot(
     orders_to_open
 }
 
+
+// Tests
+
 #[cfg(test)]
 mod tests {
     use crate::{

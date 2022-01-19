@@ -2,7 +2,7 @@ use crate::{
     state::{config_read, State},
     utils::{div_dec, round_to_precision, wrap_from_state},
 };
-use cosmwasm_std::{Coin, Decimal256 as Decimal, Deps, Fraction, StdError, Uint256};
+use cosmwasm_std::{Coin, Decimal256 as Decimal, Deps, StdError};
 use injective_bindings::InjectiveQueryWrapper;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
