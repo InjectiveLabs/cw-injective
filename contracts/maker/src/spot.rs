@@ -12,17 +12,20 @@ pub fn inv_imbalance_spot(inv_base_val: Decimal, inv_val: Decimal) -> (Decimal, 
     (inv_imbalance, inv_base_val > half_inv_val)
 }
 
-pub fn orders_to_cancel_for_buy(
-    open_buy_orders: Vec<WrappedOpenOrder>,
-    new_buy_head: Decimal,
-    new_buy_tail: Decimal,
+pub fn orders_to_cancel(
+    open_orders: Vec<WrappedOpenOrder>,
+    new_head: Decimal,
+    new_tail: Decimal,
+    is_buy: bool,
 ) -> (Vec<String>, Vec<WrappedOpenOrder>, Decimal, bool) {
     let mut orders_remaining_val = Decimal::zero();
     let mut hashes_to_cancel: Vec<String> = Vec::new();
-    let buy_orders_to_keep: Vec<WrappedOpenOrder> = open_buy_orders
+    let orders_to_keep: Vec<WrappedOpenOrder> = open_orders
         .into_iter()
         .filter(|o| {
-            let keep = o.price <= new_buy_head && o.price >= new_buy_tail;
+            let keep_if_buy = o.price <= new_head && o.price >= new_tail;
+            let keep_if_sell = o.price >= new_head && o.price <= new_tail;
+            let keep = (keep_if_buy && is_buy) || (keep_if_sell && !is_buy);
             if keep {
                 orders_remaining_val = orders_remaining_val + (o.price * o.qty);
             } else {
@@ -31,11 +34,16 @@ pub fn orders_to_cancel_for_buy(
             keep
         })
         .collect();
-    let append_new_to_head = sub_abs(new_buy_head, buy_orders_to_keep.first().unwrap().price)
-        > sub_abs(buy_orders_to_keep.last().unwrap().price, new_buy_tail);
+    let append_new_to_head = if is_buy {
+        sub_abs(new_head, orders_to_keep.first().unwrap().price)
+            > sub_abs(orders_to_keep.last().unwrap().price, new_tail)
+    } else {
+        sub_abs(orders_to_keep.first().unwrap().price, new_head)
+            > sub_abs(new_tail, orders_to_keep.last().unwrap().price)
+    };
     (
         hashes_to_cancel,
-        buy_orders_to_keep,
+        orders_to_keep,
         orders_remaining_val,
         append_new_to_head,
     )
@@ -102,35 +110,6 @@ pub fn create_new_buy_orders(
     orders_to_open
 }
 
-pub fn orders_to_cancel_for_sell(
-    open_sell_orders: Vec<WrappedOpenOrder>,
-    new_sell_head: Decimal,
-    new_sell_tail: Decimal,
-) -> (Vec<String>, Vec<WrappedOpenOrder>, Decimal, bool) {
-    let mut orders_remaining_val = Decimal::zero();
-    let mut hashes_to_cancel: Vec<String> = Vec::new();
-    let sell_orders_to_keep: Vec<WrappedOpenOrder> = open_sell_orders
-        .into_iter()
-        .filter(|o| {
-            let keep = o.price >= new_sell_head && o.price <= new_sell_tail;
-            if keep {
-                orders_remaining_val = orders_remaining_val + (o.price * o.qty);
-            } else {
-                hashes_to_cancel.push(o.order_hash.clone());
-            }
-            keep
-        })
-        .collect();
-    let append_new_to_head = sub_abs(sell_orders_to_keep.first().unwrap().price, new_sell_head)
-        > sub_abs(new_sell_tail, sell_orders_to_keep.last().unwrap().price);
-    (
-        hashes_to_cancel,
-        sell_orders_to_keep,
-        orders_remaining_val,
-        append_new_to_head,
-    )
-}
-
 pub fn create_new_sell_orders(
     new_sell_head: Decimal,
     new_sell_tail: Decimal,
@@ -194,8 +173,7 @@ pub fn create_new_sell_orders(
 
 #[cfg(test)]
 mod tests {
-    use super::orders_to_cancel_for_buy;
-    use crate::{msg::WrappedOpenOrder, spot::orders_to_cancel_for_sell};
+    use crate::{msg::WrappedOpenOrder, spot::orders_to_cancel};
     use cosmwasm_std::Decimal256 as Decimal;
     use std::str::FromStr;
 
@@ -243,7 +221,7 @@ mod tests {
             buy_orders_to_keep,
             buy_orders_remaining_val,
             buy_append_new_to_head,
-        ) = orders_to_cancel_for_buy(open_buy_orders.clone(), new_buy_head_a, new_buy_tail_a);
+        ) = orders_to_cancel(open_buy_orders.clone(), new_buy_head_a, new_buy_tail_a, true);
         assert!(buy_append_new_to_head);
         assert_eq!(buy_orders_remaining_val, buy_orders_remaining_val_a);
         assert_eq!(
@@ -256,7 +234,7 @@ mod tests {
             buy_orders_to_keep,
             buy_orders_remaining_val,
             buy_append_new_to_head,
-        ) = orders_to_cancel_for_buy(open_buy_orders.clone(), new_buy_head_b, new_buy_tail_b);
+        ) = orders_to_cancel(open_buy_orders.clone(), new_buy_head_b, new_buy_tail_b, true);
         assert!(!buy_append_new_to_head);
         assert_eq!(buy_orders_remaining_val, buy_orders_remaining_val_b);
         assert_eq!(
@@ -306,7 +284,7 @@ mod tests {
             sell_orders_to_keep,
             sell_orders_remaining_val,
             sell_append_new_to_head,
-        ) = orders_to_cancel_for_sell(open_sell_orders.clone(), new_sell_head_a, new_sell_tail_a);
+        ) = orders_to_cancel(open_sell_orders.clone(), new_sell_head_a, new_sell_tail_a, false);
         assert!(!sell_append_new_to_head);
         assert_eq!(sell_orders_remaining_val, sell_orders_remaining_val_a);
         assert_eq!(
@@ -319,7 +297,7 @@ mod tests {
             sell_orders_to_keep,
             sell_orders_remaining_val,
             sell_append_new_to_head,
-        ) = orders_to_cancel_for_sell(open_sell_orders.clone(), new_sell_head_b, new_sell_tail_b);
+        ) = orders_to_cancel(open_sell_orders.clone(), new_sell_head_b, new_sell_tail_b, false);
         assert!(sell_append_new_to_head);
         assert_eq!(sell_orders_remaining_val, sell_orders_remaining_val_b);
         assert_eq!(

@@ -7,8 +7,7 @@ use crate::msg::{
     WrappedOpenOrder,
 };
 use crate::spot::{
-    create_new_buy_orders, create_new_sell_orders, inv_imbalance_spot, orders_to_cancel_for_buy,
-    orders_to_cancel_for_sell,
+    create_new_buy_orders, create_new_sell_orders, inv_imbalance_spot, orders_to_cancel
 };
 use crate::state::{config, config_read, State};
 use crate::utils::{div_dec, sub_abs, wrap};
@@ -181,7 +180,7 @@ fn get_action(
             buy_orders_to_keep,
             buy_orders_remaining_val,
             buy_append_new_to_head,
-        ) = orders_to_cancel_for_buy(open_buys, new_buy_head, new_buy_tail);
+        ) = orders_to_cancel(open_buys, new_buy_head, new_buy_tail, true);
 
         // Get new buy orders
         let new_buy_orders = create_new_buy_orders(
@@ -200,7 +199,7 @@ fn get_action(
             sell_orders_to_keep,
             sell_orders_remaining_val,
             sell_append_new_to_head,
-        ) = orders_to_cancel_for_sell(open_sells, new_sell_head, new_sell_tail);
+        ) = orders_to_cancel(open_sells, new_sell_head, new_sell_tail, false);
 
         // Get new sell orders
         let mut new_sell_orders = create_new_sell_orders(
