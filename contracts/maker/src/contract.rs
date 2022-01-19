@@ -6,9 +6,7 @@ use crate::msg::{
     ExecuteMsg, InstantiateMsg, OpenOrder, Position, QueryMsg, WrappedGetActionResponse,
     WrappedOpenOrder,
 };
-use crate::spot::{
-    create_new_buy_orders, create_new_sell_orders, inv_imbalance_spot, orders_to_cancel
-};
+use crate::spot::{create_new_orders_spot, inv_imbalance_spot, orders_to_cancel_spot};
 use crate::state::{config, config_read, State};
 use crate::utils::{div_dec, sub_abs, wrap};
 use cosmwasm_std::{
@@ -43,6 +41,7 @@ pub fn instantiate(
         head_chg_tol_bp: Decimal::from_str(&msg.head_chg_tol_bp.clone()).unwrap(),
         max_dd: Decimal::from_str(&msg.max_dd.clone()).unwrap(),
         leverage: Decimal::from_str(&msg.leverage.clone()).unwrap(),
+        base_precision_shift: Uint256::from_str(&msg.base_precision_shift.clone()).unwrap(),
     };
 
     config(deps.storage).save(&state)?;
@@ -180,16 +179,17 @@ fn get_action(
             buy_orders_to_keep,
             buy_orders_remaining_val,
             buy_append_new_to_head,
-        ) = orders_to_cancel(open_buys, new_buy_head, new_buy_tail, true);
+        ) = orders_to_cancel_spot(open_buys, new_buy_head, new_buy_tail, true);
 
         // Get new buy orders
-        let new_buy_orders = create_new_buy_orders(
+        let new_buy_orders = create_new_orders_spot(
             new_buy_head,
             new_buy_tail,
             inv_val,
             buy_orders_to_keep,
             buy_orders_remaining_val,
             buy_append_new_to_head,
+            true,
             &state,
         );
 
@@ -199,16 +199,17 @@ fn get_action(
             sell_orders_to_keep,
             sell_orders_remaining_val,
             sell_append_new_to_head,
-        ) = orders_to_cancel(open_sells, new_sell_head, new_sell_tail, false);
+        ) = orders_to_cancel_spot(open_sells, new_sell_head, new_sell_tail, false);
 
         // Get new sell orders
-        let mut new_sell_orders = create_new_sell_orders(
+        let mut new_sell_orders = create_new_orders_spot(
             new_sell_head,
             new_sell_tail,
             inv_val,
             sell_orders_to_keep,
             sell_orders_remaining_val,
             sell_append_new_to_head,
+            false,
             &state,
         );
 

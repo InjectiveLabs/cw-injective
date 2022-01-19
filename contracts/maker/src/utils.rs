@@ -30,3 +30,13 @@ pub fn sub_abs(lhs: Decimal, rhs: Decimal) -> Decimal {
         rhs - lhs
     }
 }
+
+pub fn round_to_precision(num: Decimal, precision_shift: Uint256) -> Decimal {
+    let shifted = num * precision_shift;
+    let shifted = Decimal::from_str(&shifted.to_string()).unwrap();
+    shifted
+        * Decimal::from_str(&precision_shift.to_string())
+            .unwrap()
+            .inv()
+            .unwrap()
+}

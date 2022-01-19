@@ -23,6 +23,7 @@ pub struct State {
     pub max_dd: Decimal,
     pub leverage: Decimal,
     pub decimal_shift: Uint256,
+    pub base_precision_shift: Uint256,
 }
 
 pub fn config(storage: &mut dyn Storage) -> Singleton<State> {

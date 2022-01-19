@@ -1,8 +1,8 @@
 use crate::{
     state::{config_read, State},
-    utils::wrap_from_state,
+    utils::{div_dec, round_to_precision, wrap_from_state},
 };
-use cosmwasm_std::{Coin, Decimal256 as Decimal, Deps, StdError};
+use cosmwasm_std::{Coin, Decimal256 as Decimal, Deps, Fraction, StdError, Uint256};
 use injective_bindings::InjectiveQueryWrapper;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -25,6 +25,7 @@ pub struct InstantiateMsg {
     pub max_dd: String,
     pub leverage: String,
     pub decimal_shift: String,
+    pub base_precision_shift: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -115,6 +116,7 @@ pub struct WrappedOrderResponse {
     pub leverage: String,
     pub is_buy: bool,
     pub is_reduce_only: bool,
+    pub decimal_shift: String,
 }
 impl WrappedOrderResponse {
     pub fn new(
@@ -130,12 +132,25 @@ impl WrappedOrderResponse {
             market_id: state.market_id.clone(),
             subaccount_id: state.sub_account.clone(),
             fee_recipient: state.fee_recipient.clone(),
-            price: format!("{:.0}", (price * state.decimal_shift).to_string()),
-            quantity: quantity.to_string(),
+            price: (price * state.decimal_shift).to_string(),
+            quantity: round_to_precision(quantity, state.base_precision_shift).to_string(),
             leverage: state.leverage.to_string(),
             is_buy,
             is_reduce_only,
+            decimal_shift: state.decimal_shift.to_string(),
         }
+    }
+    pub fn get_price(&self) -> Decimal {
+        div_dec(
+            Decimal::from_str(&self.price).unwrap(),
+            Decimal::from_str(&self.decimal_shift.to_string()).unwrap(),
+        )
+    }
+    pub fn get_val(&self) -> Decimal {
+        div_dec(
+            Decimal::from_str(&self.quantity).unwrap() * Decimal::from_str(&self.price).unwrap(),
+            Decimal::from_str(&self.decimal_shift.to_string()).unwrap(),
+        )
     }
 }
 impl fmt::Display for WrappedOrderResponse {
@@ -143,8 +158,13 @@ impl fmt::Display for WrappedOrderResponse {
         let side = if self.is_buy { "BUY" } else { "SELL" };
         write!(
             f,
-            "{} ${} {} {} {}",
-            side, self.price, self.quantity, self.is_reduce_only, self.leverage
+            "{} ${} {} {} {} val: {}",
+            side,
+            self.get_price(),
+            self.quantity,
+            self.is_reduce_only,
+            self.leverage,
+            self.get_val()
         )
     }
 }
