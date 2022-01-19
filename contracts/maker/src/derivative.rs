@@ -1,6 +1,4 @@
-use std::str::FromStr;
-
-use crate::msg::{div_dec, WrappedPosition};
+use crate::{msg::WrappedPosition, utils::div_dec};
 use cosmwasm_std::Decimal256 as Decimal;
 
 pub fn inv_imbalance_deriv(

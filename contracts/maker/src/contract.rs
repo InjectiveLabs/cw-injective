@@ -3,14 +3,15 @@ use std::str::FromStr;
 use crate::derivative::inv_imbalance_deriv;
 use crate::error::ContractError;
 use crate::msg::{
-    div_dec, wrap, ExecuteMsg, InstantiateMsg, OpenOrder, Position, QueryMsg,
-    WrappedGetActionResponse, WrappedOpenOrder, WrappedOrderResponse, WrappedPosition,
+    ExecuteMsg, InstantiateMsg, OpenOrder, Position, QueryMsg, WrappedGetActionResponse,
+    WrappedOpenOrder,
 };
 use crate::spot::{
     create_new_buy_orders, create_new_sell_orders, inv_imbalance_spot, orders_to_cancel_for_buy,
     orders_to_cancel_for_sell,
 };
 use crate::state::{config, config_read, State};
+use crate::utils::{div_dec, sub_abs, wrap};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, Coin, Decimal256 as Decimal, Deps, DepsMut, Env,
     MessageInfo, Response, StdError, StdResult, Uint256,
@@ -180,7 +181,7 @@ fn get_action(
             buy_orders_to_keep,
             buy_orders_remaining_val,
             buy_append_new_to_head,
-        ) = orders_to_cancel_for_buy(open_buys, new_buy_head, new_buy_tail, inv_val);
+        ) = orders_to_cancel_for_buy(open_buys, new_buy_head, new_buy_tail);
 
         // Get new buy orders
         let new_buy_orders = create_new_buy_orders(
@@ -199,7 +200,7 @@ fn get_action(
             sell_orders_to_keep,
             sell_orders_remaining_val,
             sell_append_new_to_head,
-        ) = orders_to_cancel_for_sell(open_sells, new_sell_head, new_sell_tail, inv_val);
+        ) = orders_to_cancel_for_sell(open_sells, new_sell_head, new_sell_tail);
 
         // Get new sell orders
         let mut new_sell_orders = create_new_sell_orders(
@@ -211,10 +212,13 @@ fn get_action(
             sell_append_new_to_head,
             &state,
         );
+
         let mut hashes_to_cancel = buy_hashes_to_cancel;
         hashes_to_cancel.append(&mut sell_hashes_to_cancel);
+
         let mut orders_to_open = new_buy_orders;
         orders_to_open.append(&mut new_sell_orders);
+
         Ok(WrappedGetActionResponse {
             hashes_to_cancel,
             orders_to_open,
@@ -270,13 +274,8 @@ fn head_chg_gt_tol(
         true
     } else {
         let old_head = open_orders.first().unwrap().price;
-        if old_head > new_head {
-            div_dec(old_head - new_head, old_head) * Decimal::from_str("10000").unwrap()
-                > head_chg_tol_bp
-        } else {
-            div_dec(new_head - old_head, old_head) * Decimal::from_str("10000").unwrap()
-                > head_chg_tol_bp
-        }
+        div_dec(sub_abs(old_head, new_head), old_head) * Decimal::from_str("10000").unwrap()
+            > head_chg_tol_bp
     }
 }
 
@@ -309,4 +308,37 @@ fn split_open_orders(
     sell_orders.sort_by(|a, b| a.price.partial_cmp(&b.price).unwrap());
 
     (buy_orders, sell_orders)
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::split_open_orders;
+    use crate::msg::WrappedOpenOrder;
+    use cosmwasm_std::Decimal256 as Decimal;
+
+    #[test]
+    fn split_open_orders_test() {
+        let mut open_orders: Vec<WrappedOpenOrder> = Vec::new();
+        let order = WrappedOpenOrder {
+            order_hash: String::from(""),
+            is_buy: true,
+            qty: Decimal::zero(),
+            price: Decimal::one(),
+        };
+        let mut buy = order.clone();
+        let mut sell = order.clone();
+        for _ in 0..25 {
+            sell.is_buy = false;
+            buy.price = buy.price + Decimal::one();
+            sell.price = sell.price + Decimal::one();
+            open_orders.push(buy.clone());
+            open_orders.push(sell.clone());
+        }
+        let (buy_orders, sell_orders) = split_open_orders(open_orders);
+        for i in 1..25 {
+            assert!(buy_orders[i].price < buy_orders[i - 1].price); // These should be decreasing
+            assert!(sell_orders[i].price > sell_orders[i - 1].price); // These should be increasing
+        }
+    }
 }
