@@ -1,9 +1,14 @@
 use std::str::FromStr;
 
+use crate::derivative::inv_imbalance_deriv;
 use crate::error::ContractError;
 use crate::msg::{
-    div_dec, wrap, ExecuteMsg, InstantiateMsg, QueryMsg, WrappedGetActionResponse,
-    WrappedOrderResponse, WrappedPosition,
+    div_dec, wrap, ExecuteMsg, InstantiateMsg, OpenOrder, Position, QueryMsg,
+    WrappedGetActionResponse, WrappedOpenOrder, WrappedOrderResponse, WrappedPosition,
+};
+use crate::spot::{
+    create_new_buy_orders, create_new_sell_orders, inv_imbalance_spot, orders_to_cancel_for_buy,
+    orders_to_cancel_for_sell,
 };
 use crate::state::{config, config_read, State};
 use cosmwasm_std::{
@@ -27,28 +32,22 @@ pub fn instantiate(
         manager: info.sender.clone().into(),
         sub_account: msg.sub_account.clone(),
         fee_recipient: msg.fee_recipient.clone(),
-        risk_aversion: msg.risk_aversion.clone(),
-        price_distribution_rate: msg.price_distribution_rate.clone(),
-        slices_per_spread_bp: msg.slices_per_spread_bp.clone(),
-        ratio_active_capital: msg.ratio_active_capital.clone(),
-        leverage: msg.leverage.clone(),
-        decimal_shift: msg.decimal_shift.clone(),
+        risk_aversion: Decimal::from_str(&msg.risk_aversion.clone()).unwrap(),
+        order_density: Uint256::from_str(&msg.order_density.clone()).unwrap(),
+        active_capital_perct: Decimal::from_str(&msg.active_capital_perct.clone()).unwrap(),
+        decimal_shift: Uint256::from_str(&msg.decimal_shift.clone()).unwrap(),
+        max_notional_position: Decimal::from_str(&msg.max_notional_position.clone()).unwrap(),
+        min_pnl: Decimal::from_str(&msg.min_pnl.clone()).unwrap(),
+        manual_offset_perct: Decimal::from_str(&msg.manual_offset_perct.clone()).unwrap(),
+        tail_dist_to_head_bp: Decimal::from_str(&msg.tail_dist_to_head_bp.clone()).unwrap(),
+        head_chg_tol_bp: Decimal::from_str(&msg.head_chg_tol_bp.clone()).unwrap(),
+        max_dd: Decimal::from_str(&msg.max_dd.clone()).unwrap(),
+        leverage: Decimal::from_str(&msg.leverage.clone()).unwrap(),
     };
 
     config(deps.storage).save(&state)?;
 
-    Ok(Response::new()
-        .add_attribute("method", "instantiate")
-        .add_attribute("owner", info.sender)
-        .add_attribute("market_id", msg.market_id)
-        .add_attribute("sub_account", msg.sub_account)
-        .add_attribute("fee_recipient", msg.fee_recipient)
-        .add_attribute("risk_aversion", msg.risk_aversion)
-        .add_attribute("price_distribution_rate", msg.price_distribution_rate)
-        .add_attribute("slices_per_spread_bp", msg.slices_per_spread_bp)
-        .add_attribute("ratio_active_capital", msg.ratio_active_capital)
-        .add_attribute("leverage", msg.leverage.to_string())
-        .add_attribute("decimal_shift", msg.decimal_shift.to_string()))
+    Ok(Response::new())
 }
 
 #[entry_point]
@@ -95,721 +94,219 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> Std
     match msg {
         QueryMsg::Config {} => to_binary(&config_read(deps.storage).load()?),
         QueryMsg::GetAction {
+            is_deriv,
+            open_orders,
             position,
-            total_notional_balance,
-            standard_deviation,
+            inv_base_val,
+            inv_val,
+            std_dev,
             mid_price,
-        } => to_binary(&query_action(
+        } => to_binary(&get_action(
             deps,
-            position.wrap(deps).unwrap(),
-            wrap(&total_notional_balance, deps),
-            wrap(&standard_deviation, deps),
-            wrap(&mid_price, deps),
+            is_deriv,
+            open_orders,
+            position,
+            inv_base_val,
+            inv_val,
+            std_dev,
+            mid_price,
         )?),
     }
 }
 
-fn query_action(
+fn get_action(
     deps: Deps<InjectiveQueryWrapper>,
-    position: WrappedPosition,
-    total_notional_balance: Decimal,
-    std_dev: Decimal,
-    mid_price: Decimal,
+    is_deriv: bool,
+    open_orders: Vec<OpenOrder>,
+    position: Option<Position>,
+    inv_base_val: String,
+    inv_val: String,
+    std_dev: String,
+    mid_price: String,
 ) -> StdResult<WrappedGetActionResponse> {
-    let state = config_read(deps.storage).load().unwrap();
-    let leverage = Decimal::from_str(&state.leverage).unwrap();
-    let risk_aversion = Decimal::from_str(&state.risk_aversion).unwrap();
-    let ratio_active_capital = Decimal::from_str(&state.ratio_active_capital).unwrap();
-    let slices_per_spread_bp = Decimal::from_str(&state.slices_per_spread_bp).unwrap();
-    let price_distribution_rate = Decimal::from_str(&state.price_distribution_rate).unwrap();
-    let decimal_shift = Decimal::from_str(&state.decimal_shift).unwrap();
+    // Wrap everything
+    let open_orders: Vec<WrappedOpenOrder> = open_orders
+        .into_iter()
+        .map(|o| o.wrap(deps).unwrap())
+        .collect();
+    let position = match position {
+        None => None,
+        Some(p) => Some(p.wrap(deps).unwrap()),
+    };
+    let inv_base_val = wrap(&inv_base_val, deps);
+    let inv_val = wrap(&inv_val, deps);
+    let std_dev = wrap(&std_dev, deps);
+    let mid_price = wrap(&mid_price, deps);
     let varience = std_dev * std_dev;
-    let q = calculate_inventory_dist_from_target(&position, total_notional_balance);
-    let reservation_price = calc_reservation_price(
+
+    // Load state
+    let state = config_read(deps.storage).load().unwrap();
+
+    // Calculate inventory imbalance parameter
+    let (inv_imbal, imbal_is_long) = if is_deriv {
+        inv_imbalance_deriv(&position, inv_val)
+    } else {
+        inv_imbalance_spot(inv_base_val, inv_val)
+    };
+
+    // Calculate reservation price
+    let reservation_price = reservation_price(
         mid_price,
-        q,
-        risk_aversion,
+        inv_imbal,
         varience,
-        position.is_long && position.quantity > Decimal::from_str("0").unwrap(),
+        state.risk_aversion,
+        state.manual_offset_perct,
+        imbal_is_long,
     );
-    let reservation_spread = calc_spread_res(varience, risk_aversion);
-    let orders_to_open = create_all_orders(
-        &state,
-        decimal_shift,
-        ratio_active_capital,
-        slices_per_spread_bp,
-        price_distribution_rate,
-        reservation_spread,
-        reservation_price,
-        risk_aversion,
-        varience,
-        total_notional_balance,
-        &position,
-        mid_price,
-        leverage,
-    );
-    Ok(WrappedGetActionResponse { orders_to_open })
+
+    // Calculate the new head prices
+    let (new_buy_head, new_sell_head) =
+        new_head_prices(varience, reservation_price, state.risk_aversion);
+
+    // Split open orders
+    let (open_buys, open_sells) = split_open_orders(open_orders);
+
+    // Ensure that the heads have changed enough that we are willing to make an action
+    if head_chg_gt_tol(&open_buys, new_buy_head, state.head_chg_tol_bp)
+        && head_chg_gt_tol(&open_sells, new_sell_head, state.head_chg_tol_bp)
+    {
+        // Get new tails
+        let (new_buy_tail, new_sell_tail) =
+            new_tail_prices(new_buy_head, new_sell_head, state.tail_dist_to_head_bp);
+
+        // Get information for buy order creation/cancellation
+        let (
+            buy_hashes_to_cancel,
+            buy_orders_to_keep,
+            buy_orders_remaining_val,
+            buy_append_new_to_head,
+        ) = orders_to_cancel_for_buy(open_buys, new_buy_head, new_buy_tail, inv_val);
+
+        // Get new buy orders
+        let new_buy_orders = create_new_buy_orders(
+            new_buy_head,
+            new_buy_tail,
+            inv_val,
+            buy_orders_to_keep,
+            buy_orders_remaining_val,
+            buy_append_new_to_head,
+            &state,
+        );
+
+        // Get information for sell order creation/cancellation
+        let (
+            mut sell_hashes_to_cancel,
+            sell_orders_to_keep,
+            sell_orders_remaining_val,
+            sell_append_new_to_head,
+        ) = orders_to_cancel_for_sell(open_sells, new_sell_head, new_sell_tail, inv_val);
+
+        // Get new sell orders
+        let mut new_sell_orders = create_new_sell_orders(
+            new_sell_head,
+            new_sell_tail,
+            inv_val,
+            sell_orders_to_keep,
+            sell_orders_remaining_val,
+            sell_append_new_to_head,
+            &state,
+        );
+        let mut hashes_to_cancel = buy_hashes_to_cancel;
+        hashes_to_cancel.append(&mut sell_hashes_to_cancel);
+        let mut orders_to_open = new_buy_orders;
+        orders_to_open.append(&mut new_sell_orders);
+        Ok(WrappedGetActionResponse {
+            hashes_to_cancel,
+            orders_to_open,
+        })
+    } else {
+        Ok(WrappedGetActionResponse {
+            hashes_to_cancel: Vec::new(),
+            orders_to_open: Vec::new(),
+        })
+    }
 }
 
-fn create_all_orders(
-    state: &State,
-    decimal_shift: Decimal,
-    ratio_active_capital: Decimal,
-    slices_per_spread_bp: Decimal,
-    price_distribution_rate: Decimal,
-    reservation_spread: Decimal,
+fn reservation_price(
+    mid_price: Decimal,
+    inv_imbal: Decimal,
+    varience: Decimal,
+    risk_aversion: Decimal,
+    manual_offset_perct: Decimal,
+    imbal_is_long: bool,
+) -> Decimal {
+    if inv_imbal == Decimal::zero() {
+        mid_price
+    } else {
+        if imbal_is_long {
+            (mid_price - (inv_imbal * risk_aversion * varience))
+                * (Decimal::one() - manual_offset_perct)
+        } else {
+            (mid_price + (inv_imbal * risk_aversion * varience))
+                * (Decimal::one() + manual_offset_perct)
+        }
+    }
+}
+
+fn new_head_prices(
+    varience: Decimal,
     reservation_price: Decimal,
     risk_aversion: Decimal,
-    varience: Decimal,
-    total_notional_balance: Decimal,
-    position: &WrappedPosition,
-    mid_price: Decimal,
-    leverage: Decimal,
-) -> Vec<WrappedOrderResponse> {
-    let alloc_notional_balance =
-        (total_notional_balance * ratio_active_capital) / Uint256::from_str("2").unwrap();
-    let mid_spread = calc_spread_mid(varience, risk_aversion);
-    let min_bid = mid_price - mid_spread;
-    let mut buy_orders = create_orders(
-        state,
-        decimal_shift,
-        slices_per_spread_bp,
-        price_distribution_rate,
-        true,
-        reservation_spread,
-        reservation_price,
-        alloc_notional_balance,
-        position,
-        min_bid,
-        leverage,
-    );
-    let max_ask = mid_price + mid_spread;
-    let mut sell_orders = create_orders(
-        state,
-        decimal_shift,
-        slices_per_spread_bp,
-        price_distribution_rate,
-        false,
-        reservation_spread,
-        reservation_price,
-        alloc_notional_balance,
-        position,
-        max_ask,
-        leverage,
-    );
-    buy_orders.append(&mut sell_orders);
-    buy_orders
-}
-
-fn create_orders(
-    state: &State,
-    decimal_shift: Decimal,
-    slices_per_spread_bp: Decimal,
-    price_distribution_rate: Decimal,
-    are_bids: bool,
-    spread: Decimal,
-    reservation_price: Decimal,
-    alloc_notional_balance: Decimal,
-    position: &WrappedPosition,
-    max_price: Decimal,
-    leverage: Decimal,
-) -> Vec<WrappedOrderResponse> {
-    let (mut free_balance_remaining, mut reduce_only_qty_remaining, mut margin_remaining) =
-        if are_bids == position.is_long {
-            (
-                alloc_notional_balance - position.margin,
-                Decimal::from_str("0").unwrap(),
-                Decimal::from_str("0").unwrap(),
-            )
-        } else {
-            (alloc_notional_balance, position.quantity, position.margin)
-        };
-
-    let optimal_price = if are_bids {
-        reservation_price - spread
-    } else {
-        reservation_price + spread
-    };
-
-    let mut orders: Vec<WrappedOrderResponse> = Vec::new();
-    let bp = if max_price > optimal_price {
-        div_dec(max_price - optimal_price, optimal_price) * Decimal::from_str("10000").unwrap()
-    } else {
-        div_dec(optimal_price - max_price, optimal_price) * Decimal::from_str("10000").unwrap()
-    };
-    let num_buy_orders = format!("{:.0}", div_dec(bp, slices_per_spread_bp).to_string())
-        .parse::<i32>()
-        .unwrap();
-    if num_buy_orders > 0 {
-        let price_interval = div_dec(
-            optimal_price - max_price,
-            Decimal::from_str(&num_buy_orders.to_string()).unwrap(),
-        );
-        for i in 0..num_buy_orders {
-            let current_price =
-                max_price + (price_interval * Decimal::from_str(&(i + 1).to_string()).unwrap());
-            let (balance_for_price, balance_for_next_price) = if i != num_buy_orders - 1 {
-                let balance_for_next = div_dec(free_balance_remaining, price_distribution_rate);
-                (free_balance_remaining - balance_for_next, balance_for_next)
-            } else {
-                (free_balance_remaining, Decimal::from_str("0").unwrap())
-            };
-            if margin_remaining > balance_for_next_price {
-                let reduce_only_balance_for_price = margin_remaining - balance_for_next_price;
-                let qty = div_dec(reduce_only_balance_for_price, current_price) * leverage;
-                let reduce_order = WrappedOrderResponse::new(
-                    state,
-                    decimal_shift,
-                    current_price,
-                    qty,
-                    are_bids,
-                    true,
-                    leverage,
-                );
-                reduce_only_qty_remaining = reduce_only_qty_remaining - qty;
-                let remaining_balance_for_price = balance_for_price - reduce_only_balance_for_price;
-                let qty = div_dec(remaining_balance_for_price, current_price) * leverage;
-                if qty > Decimal::from_str("0").unwrap() {
-                    let order = WrappedOrderResponse::new(
-                        state,
-                        decimal_shift,
-                        current_price,
-                        qty,
-                        are_bids,
-                        false,
-                        leverage,
-                    );
-                    orders.push(order);
-                }
-                orders.push(reduce_order);
-                margin_remaining = margin_remaining - reduce_only_balance_for_price;
-            } else {
-                let qty = div_dec(balance_for_price, current_price) * leverage;
-                let order = WrappedOrderResponse::new(
-                    state,
-                    decimal_shift,
-                    current_price,
-                    qty,
-                    are_bids,
-                    false,
-                    leverage,
-                );
-                orders.push(order);
-            }
-            free_balance_remaining = free_balance_remaining - balance_for_price;
-        }
-        if !are_bids {
-            orders.reverse();
-        }
-    }
-    orders
-}
-
-fn calculate_inventory_dist_from_target(
-    position: &WrappedPosition,
-    total_notional_balance: Decimal,
-) -> Decimal {
-    let notional_position_value = position.margin;
-    div_dec(notional_position_value, total_notional_balance)
-}
-
-fn calc_reservation_price(
-    s: Decimal,
-    q: Decimal,
-    r: Decimal,
-    varience: Decimal,
-    should_sub: bool,
-) -> Decimal {
-    if should_sub {
-        s + (q * r * varience)
-    } else {
-        s - (q * r * varience)
-    }
-}
-
-fn calc_spread_res(varience: Decimal, risk_aversion: Decimal) -> Decimal {
-    div_dec(varience * risk_aversion, Decimal::from_str("2").unwrap())
-}
-
-fn calc_spread_mid(varience: Decimal, risk_aversion: Decimal) -> Decimal {
-    div_dec(
-        risk_aversion * varience * Decimal::from_str("2").unwrap(),
-        Decimal::from_str("2").unwrap(),
+) -> (Decimal, Decimal) {
+    let dist_from_reservation_price =
+        div_dec(varience * risk_aversion, Decimal::from_str("2").unwrap());
+    (
+        reservation_price - dist_from_reservation_price,
+        reservation_price + dist_from_reservation_price,
     )
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use std::marker::PhantomData;
+fn head_chg_gt_tol(
+    open_orders: &Vec<WrappedOpenOrder>,
+    new_head: Decimal,
+    head_chg_tol_bp: Decimal,
+) -> bool {
+    if open_orders.len() == 0 {
+        true
+    } else {
+        let old_head = open_orders.first().unwrap().price;
+        if old_head > new_head {
+            div_dec(old_head - new_head, old_head) * Decimal::from_str("10000").unwrap()
+                > head_chg_tol_bp
+        } else {
+            div_dec(new_head - old_head, old_head) * Decimal::from_str("10000").unwrap()
+                > head_chg_tol_bp
+        }
+    }
+}
 
-//     use super::*;
-//     use cosmwasm_std::testing::{MockStorage, MockApi, MockQuerier, mock_env, mock_info};
-//     use cosmwasm_std::{coins, from_binary, OwnedDeps, QuerierWrapper};
-//     use injective_bindings::{InjectiveRoute, InjectiveQuery};
+fn new_tail_prices(
+    new_buy_head: Decimal,
+    new_sell_head: Decimal,
+    tail_dist_to_head_bp: Decimal,
+) -> (Decimal, Decimal) {
+    (
+        new_buy_head
+            * (Decimal::one() - (tail_dist_to_head_bp * Decimal::from_str("10000").unwrap())),
+        new_sell_head
+            * (Decimal::one() + (tail_dist_to_head_bp * Decimal::from_str("10000").unwrap())),
+    )
+}
 
-//     #[test]
-//     fn reservation_price_test() {
-//         let s = Decimal::from_str("4000").unwrap();
-//         let q = Decimal::from_str("0.2").unwrap();
-//         let r = Decimal::from_str("0.5").unwrap();
-//         let std_dev = Decimal::from_str("1").unwrap();
-//         let reservation_price = calc_reservation_price(s, q, r, std_dev * std_dev);
-//         println!("{}", reservation_price);
-//         assert_eq!(Decimal::from_str("3999.90").unwrap(), reservation_price);
-//     }
+fn split_open_orders(
+    open_orders: Vec<WrappedOpenOrder>,
+) -> (Vec<WrappedOpenOrder>, Vec<WrappedOpenOrder>) {
+    let mut buy_orders: Vec<WrappedOpenOrder> = open_orders
+        .clone()
+        .into_iter()
+        .filter(|o| o.is_buy)
+        .collect();
+    let mut sell_orders: Vec<WrappedOpenOrder> =
+        open_orders.into_iter().filter(|o| !o.is_buy).collect();
 
-//     #[test]
-//     fn inventory_dist_from_target_test() {
-//         // first, no position taken
-//         let position = WrappedPosition {
-//             is_long: true,
-//             quantity: Decimal::from_str("0").unwrap(),
-//             avg_price: Decimal::from_str("0").unwrap(),
-//             margin: Decimal::from_str("0").unwrap(),
-//             cum_funding_entry: Decimal::from_str("0").unwrap(),
-//         };
+    // Sort both so the head is at index 0
+    buy_orders.sort_by(|a, b| b.price.partial_cmp(&a.price).unwrap());
+    sell_orders.sort_by(|a, b| a.price.partial_cmp(&b.price).unwrap());
 
-//         let q =
-//             calculate_inventory_dist_from_target(&position, Decimal::from_str("100000").unwrap());
-
-//         assert_eq!(q, Decimal::from_str("0.0").unwrap());
-
-//         // first, long taken
-//         let position = WrappedPosition {
-//             is_long: true,
-//             quantity: Decimal::from_str("1").unwrap(),
-//             avg_price: Decimal::from_str("4000").unwrap(),
-//             margin: Decimal::from_str("4000").unwrap(),
-//             cum_funding_entry: Decimal::from_str("0").unwrap(),
-//         };
-
-//         let q =
-//             calculate_inventory_dist_from_target(&position, Decimal::from_str("100000").unwrap());
-
-//         assert_eq!(q, Decimal::from_str("-0.04").unwrap());
-
-//         // first, short taken
-//         let position = WrappedPosition {
-//             is_long: false,
-//             quantity: Decimal::from_str("1").unwrap(),
-//             avg_price: Decimal::from_str("4000").unwrap(),
-//             margin: Decimal::from_str("4000").unwrap(),
-//             cum_funding_entry: Decimal::from_str("0").unwrap(),
-//         };
-
-//         let q =
-//             calculate_inventory_dist_from_target(&position, Decimal::from_str("100000").unwrap());
-
-//         assert_eq!(q, Decimal::from_str("0.04").unwrap());
-//     }
-
-//     #[test]
-//     fn create_orders_test() {
-//         // Create vars
-//         let market_id = String::from("some market");
-//         let sub_account = String::from("some account");
-//         let fee_recipient = String::from("some recipient");
-//         let manager = String::from("some manager");
-//         let risk_aversion = Decimal::from_str("0.5").unwrap();
-//         let price_distribution_rate = Decimal::from_str("2.5").unwrap();
-//         let leverage = Decimal::from_str("2").unwrap();
-//         let decimal_shift = Decimal::from_str("1000000").unwrap();
-//         let slices_per_spread_bp = Decimal::from_str("0.2").unwrap();
-//         let ratio_active_capital = Decimal::from_str("0.2").unwrap();
-
-//         // Get state
-//         let query =  InjectiveQueryWrapper {
-//              route: InjectiveRoute::Exchange,
-//              query_data: InjectiveQuery::SubaccountDeposit{ subaccount_id: String::from(""), denom: String::from("") },
-//         };
-//         let querier: QuerierWrapper<'_, injective_bindings::InjectiveQueryWrapper > = QuerierWrapper::new(query);
-//         let deps: DepsMut<'_, InjectiveQueryWrapper> = DepsMut {
-//             storage: &mut MockStorage::default(),
-//             api: &MockApi::default(),
-//             querier: querier,
-//         };
-//         let msg = InstantiateMsg {
-//             market_id,
-//             sub_account,
-//             fee_recipient,
-//             risk_aversion: risk_aversion.to_string(),
-//             price_distribution_rate: price_distribution_rate.to_string(),
-//             leverage: leverage.to_string(),
-//             decimal_shift: decimal_shift.to_string(),
-//             slices_per_spread_bp: slices_per_spread_bp.to_string(),
-//             ratio_active_capital: ratio_active_capital.to_string(),
-//             manager,
-//         };
-//         let info = mock_info("creator", &coins(1000, "earth"));
-//         instantiate(deps, mock_env(), info.clone(), msg).unwrap();
-
-//         let state = config_read(deps.storage).load().unwrap();
-
-//         // Test sell side orders (No Position)
-//         let quantity = Decimal::from_str("0").unwrap();
-//         let avg_price = Decimal::from_str("0").unwrap();
-//         let margin = quantity * avg_price / leverage;
-//         let cum_funding_entry = Decimal::from_str("0").unwrap();
-//         let position = WrappedPosition {
-//             is_long: true,
-//             quantity,
-//             avg_price,
-//             margin,
-//             cum_funding_entry,
-//         };
-//         let spread = Decimal::from_i32(1).unwrap();
-//         let reservation_price = Decimal::from_i64(4000).unwrap();
-//         let alloc_notional_balance = Decimal::from_i64(10000).unwrap();
-//         let max_price = Decimal::from_i64(4002).unwrap();
-//         let orders = create_orders(
-//             &state,
-//             decimal_shift,
-//             slices_per_spread_bp,
-//             price_distribution_rate,
-//             false,
-//             spread,
-//             reservation_price,
-//             alloc_notional_balance,
-//             &position,
-//             max_price,
-//             leverage,
-//         );
-//         orders.iter().for_each(|o| println!("{}", o));
-
-//         if orders.len() > 0 {
-//             sell_order_test_helper(
-//                 orders,
-//                 position,
-//                 max_price,
-//                 decimal_shift,
-//                 reservation_price,
-//                 alloc_notional_balance,
-//                 leverage,
-//                 spread,
-//             );
-//         }
-
-//         // Test sell side orders (Short Position)
-//         let quantity = Decimal::from_str("1").unwrap();
-//         let avg_price = Decimal::from_str("4001").unwrap();
-//         let margin = quantity * avg_price / leverage;
-//         let cum_funding_entry = Decimal::from_str("0").unwrap();
-//         let position = WrappedPosition {
-//             is_long: false,
-//             quantity,
-//             avg_price,
-//             margin,
-//             cum_funding_entry,
-//         };
-//         let spread = Decimal::from_i32(2).unwrap();
-//         let reservation_price = Decimal::from_i64(4000).unwrap();
-//         let alloc_notional_balance = Decimal::from_i64(10000).unwrap();
-//         let max_price = Decimal::from_i64(4004).unwrap();
-//         let orders = create_orders(
-//             &state,
-//             decimal_shift,
-//             slices_per_spread_bp,
-//             price_distribution_rate,
-//             false,
-//             spread,
-//             reservation_price,
-//             alloc_notional_balance,
-//             &position,
-//             max_price,
-//             leverage,
-//         );
-//         orders.iter().for_each(|o| println!("{}", o));
-
-//         if orders.len() > 0 {
-//             sell_order_test_helper(
-//                 orders,
-//                 position,
-//                 max_price,
-//                 decimal_shift,
-//                 reservation_price,
-//                 alloc_notional_balance,
-//                 leverage,
-//                 spread,
-//             );
-//         }
-
-//         // Test sell side orders (Long Position)
-//         let quantity = Decimal::from_str("1").unwrap();
-//         let avg_price = Decimal::from_str("3999").unwrap();
-//         let margin = quantity * avg_price / leverage;
-//         let cum_funding_entry = Decimal::from_str("0").unwrap();
-//         let position = WrappedPosition {
-//             is_long: true,
-//             quantity,
-//             avg_price,
-//             margin,
-//             cum_funding_entry,
-//         };
-//         let spread = Decimal::from_i32(2).unwrap();
-//         let reservation_price = Decimal::from_i64(4000).unwrap();
-//         let alloc_notional_balance = Decimal::from_i64(10000).unwrap();
-//         let max_price = Decimal::from_i64(4004).unwrap();
-//         let orders = create_orders(
-//             &state,
-//             decimal_shift,
-//             slices_per_spread_bp,
-//             price_distribution_rate,
-//             false,
-//             spread,
-//             reservation_price,
-//             alloc_notional_balance,
-//             &position,
-//             max_price,
-//             leverage,
-//         );
-//         orders.iter().for_each(|o| println!("{}", o));
-
-//         if orders.len() > 0 {
-//             sell_order_test_helper(
-//                 orders,
-//                 position,
-//                 max_price,
-//                 decimal_shift,
-//                 reservation_price,
-//                 alloc_notional_balance,
-//                 leverage,
-//                 spread,
-//             );
-//         }
-//     }
-
-//     fn sell_order_test_helper(
-//         orders: Vec<WrappedOrderResponse>,
-//         position: WrappedPosition,
-//         max_price: Decimal,
-//         decimal_shift: Decimal,
-//         reservation_price: Decimal,
-//         alloc_notional_balance: Decimal,
-//         leverage: Decimal,
-//         spread: Decimal,
-//     ) {
-//         assert!(
-//             max_price * decimal_shift > Decimal::from_str(&orders[orders.len() - 1].price).unwrap()
-//         );
-//         let min_price = Decimal::from_str(&orders[0].price).unwrap();
-//         assert!(min_price >= (reservation_price + spread) * decimal_shift);
-
-//         // If there was a position taking there will be additional things to check
-//         if !position.is_long && position.avg_price > Decimal::from_i32(0).unwrap() {
-//             // Ensure that our notional balance of sell orders includes the balance of the short position taken
-//             let notional_value: Vec<Decimal> = orders
-//                 .iter()
-//                 .map(|order| {
-//                     Decimal::from_str(&order.price).unwrap()
-//                         * Decimal::from_str(&order.quantity).unwrap()
-//                 })
-//                 .collect();
-//             let notional_value = notional_value
-//                 .into_iter()
-//                 .fold(Decimal::from_i32(0).unwrap(), |acc, x| acc + x);
-//             println!(
-//                 "{} {}",
-//                 (alloc_notional_balance - position.margin)
-//                     * decimal_shift
-//                     * Decimal::from_str("1.00001").unwrap(),
-//                 (notional_value / leverage).round()
-//             );
-//             assert!(
-//                 (alloc_notional_balance - position.margin)
-//                     * decimal_shift
-//                     * Decimal::from_str("1.00001").unwrap()
-//                     > (notional_value / leverage).round()
-//             );
-//         } else if position.is_long && position.avg_price > Decimal::from_i32(0).unwrap() {
-//             // Ensure that the total notional value of the orders is equal to the allocated notional balance + some tolerance
-//             let notional_value: Vec<Decimal> = orders
-//                 .iter()
-//                 .map(|order| {
-//                     Decimal::from_str(&order.price).unwrap()
-//                         * Decimal::from_str(&order.quantity).unwrap()
-//                 })
-//                 .collect();
-//             let notional_value = notional_value
-//                 .into_iter()
-//                 .fold(Decimal::from_i32(0).unwrap(), |acc, x| acc + x);
-//             println!(
-//                 "{} {}",
-//                 alloc_notional_balance * decimal_shift * Decimal::from_str("1.00001").unwrap(),
-//                 (notional_value / leverage).round()
-//             );
-//             assert!(
-//                 alloc_notional_balance * decimal_shift * Decimal::from_str("1.00001").unwrap()
-//                     > (notional_value / leverage).round()
-//             );
-
-//             // Ensure that the reduce only orders add up to the margin of the position
-//             let reduce_only_val: Vec<WrappedOrderResponse> = orders
-//                 .into_iter()
-//                 .filter(|order| order.is_reduce_only)
-//                 .collect();
-//             let reduce_only_val: Vec<Decimal> = reduce_only_val
-//                 .iter()
-//                 .map(|order| {
-//                     Decimal::from_str(&order.price).unwrap()
-//                         * Decimal::from_str(&order.quantity).unwrap()
-//                 })
-//                 .collect();
-//             let reduce_only_val = reduce_only_val
-//                 .into_iter()
-//                 .fold(Decimal::from_i32(0).unwrap(), |acc, x| acc + x);
-//             println!(
-//                 "{} {}",
-//                 reduce_only_val / leverage,
-//                 position.margin * decimal_shift * Decimal::from_str("0.99999").unwrap()
-//             );
-//             assert!(
-//                 reduce_only_val / leverage
-//                     > position.margin * decimal_shift * Decimal::from_str("0.99999").unwrap()
-//             );
-//         }
-//     }
-
-//     #[test]
-//     fn spread_test() {
-//         let std_dev = Decimal::from_str("5").unwrap();
-//         let risk_aversion = Decimal::from_str("0.6").unwrap();
-//         let spread_res = calc_spread_res(std_dev * std_dev, risk_aversion);
-//         let spread_mid = calc_spread_mid(std_dev * std_dev, risk_aversion);
-//         println!("{} {}", spread_res, spread_mid);
-//     }
-
-// #[test]
-// fn initialization_test() {
-//     let mut deps = mock_dependencies_with_balance(&coins(2, "token"));
-
-//     let msg = InstantiateMsg {
-//         market_id: String::from("some market"),
-//         sub_account: String::from("some account"),
-//         fee_recipient: String::from("some recipient"),
-//         risk_aversion: String::from("0.5"),
-//         price_distribution_rate: String::from("2.5"),
-//         leverage: String::from("2"),
-//         decimal_shift: String::from("1000000"),
-//         slices_per_spread_bp: String::from("0.2"),
-//         ratio_active_capital: String::from("0.2"),
-//         manager: String::from("some manager"),
-//     };
-//     let info = mock_info("creator", &coins(1000, "earth"));
-
-//     // we can just call .unwrap() to assert this was a success
-//     let res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
-//     assert_eq!(0, res.messages.len());
-
-//     // it worked, let's query the state
-//     let res = query(deps.as_ref(), mock_env(), QueryMsg::CheckState {}).unwrap();
-//     let value: State = from_binary(&res).unwrap();
-//     let expected = State {
-//         market_id: String::from("some market"),
-//         sub_account: String::from("some account"),
-//         fee_recipient: String::from("some recipient"),
-//         risk_aversion: String::from("0.5"),
-//         price_distribution_rate: String::from("2.5"),
-//         leverage: String::from("2"),
-//         decimal_shift: String::from("1000000"),
-//         owner: info.sender,
-//         slices_per_spread_bp: String::from("0.2"),
-//         ratio_active_capital: String::from("0.2"),
-//         manager: todo!(),
-//     };
-//     assert_eq!(expected, value);
-// }
-
-// #[test]
-// fn create_all_orders_test() {
-//     // Define vars
-//     let total_notional_balance = String::from("200000000000");
-//     let standard_deviation = String::from("2000000");
-//     let mid_price = String::from("4000000000");
-//     let leverage = String::from("2");
-
-//     let mut deps = mock_dependencies_with_balance(&coins(2, "token"));
-
-//     let msg = InstantiateMsg {
-//         market_id: String::from("some market"),
-//         sub_account: String::from("some account"),
-//         fee_recipient: String::from("some recipient"),
-//         risk_aversion: String::from("0.5"),
-//         price_distribution_rate: String::from("2.5"),
-//         leverage: leverage.clone(),
-//         decimal_shift: String::from("1000000"),
-//         slices_per_spread_bp: String::from("0.2"),
-//         ratio_active_capital: String::from("0.2"),
-//     };
-//     let info = mock_info("creator", &coins(1000, "earth"));
-
-//     // we can just call .unwrap() to assert this was a success
-//     let res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
-//     assert_eq!(0, res.messages.len());
-
-//     // No position
-//     let msg = QueryMsg::GetAction {
-//         position: Position {
-//             is_long: false,
-//             quantity: String::from("0"),
-//             avg_price: String::from("0"),
-//             margin: String::from("0"),
-//             cum_funding_entry: String::from("0"),
-//         },
-//         total_notional_balance: total_notional_balance.clone(),
-//         standard_deviation: standard_deviation.clone(),
-//         mid_price: mid_price.clone(),
-//     };
-
-//     let res = query(deps.as_ref(), mock_env(), msg).unwrap();
-//     let value: WrappedGetActionResponse = from_binary(&res).unwrap();
-//     let notional_value: Vec<Decimal> = value
-//         .orders_to_open
-//         .iter()
-//         .map(|order| {
-//             Decimal::from_str(&order.price).unwrap()
-//                 * Decimal::from_str(&order.quantity).unwrap()
-//         })
-//         .collect();
-//     let notional_value = notional_value
-//         .into_iter()
-//         .fold(Decimal::from_i32(0).unwrap(), |acc, x| acc + x);
-//     // assert_eq!(notional_value  / Decimal::from_str(&leverage).unwrap(), Decimal::from_str(&total_notional_balance).unwrap());
-//     println!("{}", value);
-//     println!("{}", notional_value);
-
-//     // No position
-//     let quantity = Decimal::from_str("3").unwrap();
-//     let avg_price = Decimal::from_str("3999000000").unwrap();
-//     let margin = quantity * avg_price / Decimal::from_str(&leverage).unwrap();
-
-//     let msg = QueryMsg::GetAction {
-//         position: Position {
-//             is_long: true,
-//             quantity: quantity.to_string(),
-//             avg_price: avg_price.to_string(),
-//             margin: margin.to_string(),
-//             cum_funding_entry: String::from("0"),
-//         },
-//         total_notional_balance: total_notional_balance.clone(),
-//         standard_deviation: standard_deviation.clone(),
-//         mid_price: mid_price.clone(),
-//     };
-
-//     let res = query(deps.as_ref(), mock_env(), msg).unwrap();
-//     let value: WrappedGetActionResponse = from_binary(&res).unwrap();
-//     let notional_value: Vec<Decimal> = value
-//         .orders_to_open
-//         .iter()
-//         .map(|order| {
-//             Decimal::from_str(&order.price).unwrap()
-//                 * Decimal::from_str(&order.quantity).unwrap()
-//         })
-//         .collect();
-//     let notional_value = notional_value
-//         .into_iter()
-//         .fold(Decimal::from_i32(0).unwrap(), |acc, x| acc + x);
-//     // assert_eq!(notional_value  / Decimal::from_str(&leverage).unwrap(), Decimal::from_str(&total_notional_balance).unwrap());
-//     println!("{}", value);
-//     println!("{}", notional_value);
-// }
-// }
+    (buy_orders, sell_orders)
+}
