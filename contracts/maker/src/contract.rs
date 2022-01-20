@@ -178,7 +178,7 @@ fn get_action(
             buy_hashes_to_cancel,
             buy_orders_to_keep,
             buy_orders_remaining_val,
-            buy_append_new_to_head,
+            buy_append_to_new_head,
         ) = orders_to_cancel_spot(open_buys, new_buy_head, new_buy_tail, true);
 
         // Get new buy orders
@@ -188,7 +188,7 @@ fn get_action(
             inv_val,
             buy_orders_to_keep,
             buy_orders_remaining_val,
-            buy_append_new_to_head,
+            buy_append_to_new_head,
             true,
             &state,
         );
@@ -198,7 +198,7 @@ fn get_action(
             mut sell_hashes_to_cancel,
             sell_orders_to_keep,
             sell_orders_remaining_val,
-            sell_append_new_to_head,
+            sell_append_to_new_head,
         ) = orders_to_cancel_spot(open_sells, new_sell_head, new_sell_tail, false);
 
         // Get new sell orders
@@ -208,7 +208,7 @@ fn get_action(
             inv_val,
             sell_orders_to_keep,
             sell_orders_remaining_val,
-            sell_append_new_to_head,
+            sell_append_to_new_head,
             false,
             &state,
         );

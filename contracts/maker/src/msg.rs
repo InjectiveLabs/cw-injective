@@ -126,8 +126,6 @@ impl WrappedOrderResponse {
         is_buy: bool,
         is_reduce_only: bool,
     ) -> WrappedOrderResponse {
-        // TODO: find out if there's a limit on decimal precision for quantity and leverage. If so,
-        // we need to round them to the number of significant digits.
         WrappedOrderResponse {
             market_id: state.market_id.clone(),
             subaccount_id: state.sub_account.clone(),

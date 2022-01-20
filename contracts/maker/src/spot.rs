@@ -6,12 +6,31 @@ use crate::{
 use cosmwasm_std::{Decimal256 as Decimal, Uint256};
 use std::str::FromStr;
 
+/// Calculates the inventory imbalance from 50/50 target balance
+/// # Arguments
+/// * `inv_base_val` - The notional value of all base assets
+/// * `inv_val` - The total notional value of all assets
+/// # Returns
+/// * `inv_imbalance` - The inventory imbalance parameter
+/// * `imbal_is_long` - True if the imbalance is skewed in favor of the base asset
 pub fn inv_imbalance_spot(inv_base_val: Decimal, inv_val: Decimal) -> (Decimal, bool) {
     let half_inv_val = div_int(inv_val, Uint256::from_str("2").unwrap());
     let inv_imbalance = div_dec(sub_abs(inv_base_val, half_inv_val), inv_val);
     (inv_imbalance, inv_base_val > half_inv_val)
 }
 
+/// Uses the new head/tail to determine if there are any orders that need to be cancelled.
+/// # Arguments
+/// * `open_orders` - A list of open orders from the last block
+/// * `new_head` - The new head (closest to the reservation price)
+/// * `new_tail` - The new tail (farthest from the reservation price)
+/// * `is_buy` - True if all open_orders are buy. False if they are all sell
+/// # Returns
+/// * `hashes_to_cancel` - A list of order hashes that we would like to cancel
+/// * `orders_to_keep` - A list of open orders that we are going to keep on the book
+/// * `orders_remaining_val` - An aggregation of the total notional value of orders_to_keep
+/// * `append_to_new_head` - An indication of whether we should append new orders to the new head
+/// or to the back of the orders_to_keep block
 pub fn orders_to_cancel_spot(
     open_orders: Vec<WrappedOpenOrder>,
     new_head: Decimal,
@@ -20,7 +39,9 @@ pub fn orders_to_cancel_spot(
 ) -> (Vec<String>, Vec<WrappedOpenOrder>, Decimal, bool) {
     let mut orders_remaining_val = Decimal::zero();
     let mut hashes_to_cancel: Vec<String> = Vec::new();
+    // If there are any open orders, we need to check them to see if we should cancel
     if open_orders.len() > 0 {
+        // Use the new tail/head to filter out the orders to cancel
         let orders_to_keep: Vec<WrappedOpenOrder> = open_orders
             .into_iter()
             .filter(|o| {
@@ -35,31 +56,41 @@ pub fn orders_to_cancel_spot(
                 keep
             })
             .collect();
-        let append_new_to_head = if is_buy {
-            sub_abs(new_head, orders_to_keep.first().unwrap().price)
-                > sub_abs(orders_to_keep.last().unwrap().price, new_tail)
-        } else {
-            sub_abs(orders_to_keep.first().unwrap().price, new_head)
-                > sub_abs(new_tail, orders_to_keep.last().unwrap().price)
-        };
+        // Determine if we need to append to new orders to the new head or if we need to
+        // append to the end of the block of orders we will be keeping
+        let append_to_new_head = sub_abs(new_head, orders_to_keep.first().unwrap().price)
+            > sub_abs(orders_to_keep.last().unwrap().price, new_tail);
         (
             hashes_to_cancel,
             orders_to_keep,
             orders_remaining_val,
-            append_new_to_head,
+            append_to_new_head,
         )
     } else {
         (hashes_to_cancel, Vec::new(), orders_remaining_val, true)
     }
 }
 
+/// Determines the new orders that should be placed between the new head/tail. Ensures
+/// that the notional value of all open orders will be equal to the percent of active
+/// capital defined upon instantiation.
+/// # Arguments
+/// * `new_head` - The new head (closest to the reservation price)
+/// * `new_tail` - The new tail (farthest from the reservation price)
+/// * `inv_val` - The total notional value of our inventory
+/// * `orders_to_keep` - A list of open orders that we are going to keep on the book
+/// * `orders_remaining_val` - An aggregation of the total notional value of orders_to_keep
+/// * `is_buy` - True if all open_orders are buy. False if they are all sell
+/// * `state` - Contract state
+/// # Returns
+/// * `orders_to_open` - A list of all the new orders that we would like to place
 pub fn create_new_orders_spot(
     new_head: Decimal,
     new_tail: Decimal,
     inv_val: Decimal,
     orders_to_keep: Vec<WrappedOpenOrder>,
     orders_remaining_val: Decimal,
-    append_new_to_head: bool,
+    append_to_new_head: bool,
     is_buy: bool,
     state: &State,
 ) -> Vec<WrappedOrderResponse> {
@@ -73,19 +104,16 @@ pub fn create_new_orders_spot(
     let val_per_order = alloc_val_for_new_orders / num_orders_to_open;
 
     if orders_to_keep.len() == 0 {
+        // If we have no orders remaining after cancellation, all we need to do is create orders
+        // between the new head and tail
         let price_dist = sub_abs(new_head, new_tail);
         let price_step = div_int(price_dist, num_orders_to_open);
         let num_orders_to_open = num_orders_to_open.to_string().parse::<i32>().unwrap();
         let mut current_price = new_head;
         for _ in 0..num_orders_to_open {
             let qty = div_dec(val_per_order, current_price);
-            orders_to_open.push(WrappedOrderResponse::new(
-                state,
-                current_price,
-                qty,
-                true,
-                false,
-            ));
+            let new_order = WrappedOrderResponse::new(state, current_price, qty, is_buy, false);
+            orders_to_open.push(new_order);
             current_price = if is_buy {
                 current_price - price_step
             } else {
@@ -93,24 +121,23 @@ pub fn create_new_orders_spot(
             }
         }
     } else if num_open_orders < state.order_density {
-        let price_dist = if append_new_to_head {
+        // If we have some orders remaining but room for new ones, we need to create new orders in
+        // the gap that will be created after we cancel
+        let price_dist = if append_to_new_head {
             sub_abs(new_head, orders_to_keep.first().unwrap().price)
         } else {
             sub_abs(orders_to_keep.last().unwrap().price, new_tail)
         };
         let price_step = div_int(price_dist, num_orders_to_open);
         let num_orders_to_open = num_orders_to_open.to_string().parse::<i32>().unwrap();
-        if append_new_to_head {
+        if append_to_new_head {
+            // We need to create new orders in the price range between the new head and the start of
+            // the orders_to_keep block
             let mut current_price = new_head;
             for _ in 0..num_orders_to_open {
                 let qty = div_dec(val_per_order, current_price);
-                orders_to_open.push(WrappedOrderResponse::new(
-                    state,
-                    current_price,
-                    qty,
-                    true,
-                    false,
-                ));
+                let new_order = WrappedOrderResponse::new(state, current_price, qty, is_buy, false);
+                orders_to_open.push(new_order);
                 current_price = if is_buy {
                     current_price - price_step
                 } else {
@@ -118,6 +145,8 @@ pub fn create_new_orders_spot(
                 }
             }
         } else {
+            // We need to create new orders in the price range between the end of
+            // the orders_to_keep block and the new tail
             let mut current_price = if is_buy {
                 orders_to_keep.last().unwrap().price - price_step
             } else {
@@ -125,13 +154,8 @@ pub fn create_new_orders_spot(
             };
             for _ in 0..num_orders_to_open {
                 let qty = div_dec(val_per_order, current_price);
-                orders_to_open.push(WrappedOrderResponse::new(
-                    state,
-                    current_price,
-                    qty,
-                    true,
-                    false,
-                ));
+                let new_order = WrappedOrderResponse::new(state, current_price, qty, is_buy, false);
+                orders_to_open.push(new_order);
                 current_price = if is_buy {
                     current_price - price_step
                 } else {
@@ -142,9 +166,6 @@ pub fn create_new_orders_spot(
     }
     orders_to_open
 }
-
-
-// Tests
 
 #[cfg(test)]
 mod tests {
@@ -207,6 +228,7 @@ mod tests {
             if i > 0 {
                 assert!(orders[i - 1].get_price() > orders[i].get_price())
             }
+            assert!(orders[i].is_buy);
             total_notional_val = total_notional_val + orders[i].get_val();
         }
         assert_eq!(new_buy_head, orders.first().unwrap().get_price());
@@ -255,6 +277,7 @@ mod tests {
             if i > 0 {
                 assert!(orders[i - 1].get_price() > orders[i].get_price())
             }
+            assert!(orders[i].is_buy);
             total_notional_val = total_notional_val + orders[i].get_val();
         }
         buy_orders_to_keep.iter().for_each(|o| {
@@ -301,6 +324,7 @@ mod tests {
             if i > 0 {
                 assert!(orders[i - 1].get_price() > orders[i].get_price())
             }
+            assert!(orders[i].is_buy);
             total_notional_val = total_notional_val + orders[i].get_val();
         }
         buy_orders_to_keep.iter().for_each(|o| {
@@ -372,6 +396,7 @@ mod tests {
             if i > 0 {
                 assert!(orders[i - 1].get_price() < orders[i].get_price())
             }
+            assert!(!orders[i].is_buy);
             total_notional_val = total_notional_val + orders[i].get_val();
         }
         assert_eq!(new_sell_head, orders.first().unwrap().get_price());
@@ -420,6 +445,7 @@ mod tests {
             if i > 0 {
                 assert!(orders[i - 1].get_price() < orders[i].get_price())
             }
+            assert!(!orders[i].is_buy);
             total_notional_val = total_notional_val + orders[i].get_val();
         }
         sell_orders_to_keep.iter().for_each(|o| {
@@ -466,6 +492,7 @@ mod tests {
             if i > 0 {
                 assert!(orders[i - 1].get_price() < orders[i].get_price())
             }
+            assert!(!orders[i].is_buy);
             total_notional_val = total_notional_val + orders[i].get_val();
         }
         sell_orders_to_keep.iter().for_each(|o| {
