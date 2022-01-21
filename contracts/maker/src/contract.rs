@@ -265,6 +265,7 @@ fn create_orders(
     is_buy: bool,
     state: &State,
 ) -> Vec<WrappedOrderResponse> {
+    let alloc_val_for_new_orders = div_dec(inv_val * state.active_capital_perct, Decimal::from_str("2").unwrap()) - orders_remaining_val;
     if is_deriv {
         let position_qty = match position {
             Some(position) => {
@@ -280,9 +281,8 @@ fn create_orders(
             let (new_orders, _) = base_deriv(
                 new_head,
                 new_tail,
-                inv_val,
+                alloc_val_for_new_orders,
                 orders_to_keep,
-                orders_remaining_val,
                 position_qty,
                 true,
                 is_buy,
@@ -291,12 +291,12 @@ fn create_orders(
             new_orders
         } else if append_to_new_head {
             let (new_orders, mut additional_hashes_to_cancel) =
-                tail_to_head_deriv(new_head, inv_val, orders_to_keep, orders_remaining_val, position_qty, is_buy, &state);
+                tail_to_head_deriv(new_head, alloc_val_for_new_orders, orders_to_keep, position_qty, is_buy, &state);
             hashes_to_cancel.append(&mut additional_hashes_to_cancel);
             new_orders
         } else {
             let (new_orders, mut additional_hashes_to_cancel) =
-                head_to_tail_deriv(new_tail, inv_val, orders_to_keep, orders_remaining_val, position_qty, is_buy, &state);
+                head_to_tail_deriv(new_tail, alloc_val_for_new_orders, orders_to_keep, position_qty, is_buy, &state);
             hashes_to_cancel.append(&mut additional_hashes_to_cancel);
             new_orders
         }
@@ -304,9 +304,8 @@ fn create_orders(
         create_new_orders_spot(
             new_head,
             new_tail,
-            inv_val,
+            alloc_val_for_new_orders,
             orders_to_keep,
-            orders_remaining_val,
             append_to_new_head,
             is_buy,
             &state,
@@ -370,10 +369,10 @@ fn split_open_orders(open_orders: Vec<WrappedOpenOrder>) -> (Vec<WrappedOpenOrde
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
     use super::split_open_orders;
     use crate::{contract::orders_to_cancel, msg::WrappedOpenOrder};
     use cosmwasm_std::Decimal256 as Decimal;
+    use std::str::FromStr;
 
     #[test]
     fn split_open_orders_test() {

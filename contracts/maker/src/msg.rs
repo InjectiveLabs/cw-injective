@@ -147,6 +147,9 @@ impl WrappedOrderResponse {
             Decimal::from_str(&self.decimal_shift.to_string()).unwrap(),
         )
     }
+    pub fn get_qty(&self) -> Decimal {
+        Decimal::from_str(&self.quantity).unwrap()
+    }
 }
 impl fmt::Display for WrappedOrderResponse {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

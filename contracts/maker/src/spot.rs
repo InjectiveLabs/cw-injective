@@ -35,9 +35,8 @@ pub fn inv_imbalance_spot(inv_base_val: Decimal, inv_val: Decimal) -> (Decimal, 
 pub fn create_new_orders_spot(
     new_head: Decimal,
     new_tail: Decimal,
-    inv_val: Decimal,
+    alloc_val_for_new_orders: Decimal,
     orders_to_keep: Vec<WrappedOpenOrder>,
-    orders_remaining_val: Decimal,
     append_to_new_head: bool,
     is_buy: bool,
     state: &State,
@@ -45,7 +44,6 @@ pub fn create_new_orders_spot(
     let num_open_orders = Uint256::from_str(&orders_to_keep.len().to_string()).unwrap();
     let mut orders_to_open: Vec<WrappedOrderResponse> = Vec::new();
     let num_orders_to_open = state.order_density - num_open_orders;
-    let alloc_val_for_new_orders = div_dec(inv_val * state.active_capital_perct, Decimal::from_str("2").unwrap()) - orders_remaining_val;
     let val_per_order = alloc_val_for_new_orders / num_orders_to_open;
 
     if orders_to_keep.len() == 0 {
@@ -157,13 +155,13 @@ mod tests {
         let new_buy_tail = Decimal::from_str("1").unwrap();
         let buy_orders_to_keep: Vec<WrappedOpenOrder> = Vec::new();
         let buy_orders_remaining_val = Decimal::zero();
+        let alloc_val_for_new_orders = div_dec(inv_val * state.active_capital_perct, Decimal::from_str("2").unwrap()) - buy_orders_remaining_val;
         let buy_append_new_to_head = true;
         let orders = create_new_orders_spot(
             new_buy_head,
             new_buy_tail,
-            inv_val,
+            alloc_val_for_new_orders,
             buy_orders_to_keep,
-            buy_orders_remaining_val,
             buy_append_new_to_head,
             true,
             &state,
@@ -197,13 +195,13 @@ mod tests {
             buy_orders_remaining_val = buy_orders_remaining_val + (o.price * o.qty);
             buy_orders_to_keep.push(o.clone());
         }
+        let alloc_val_for_new_orders = div_dec(inv_val * state.active_capital_perct, Decimal::from_str("2").unwrap()) - buy_orders_remaining_val;
         let buy_append_new_to_head = true;
         let orders = create_new_orders_spot(
             new_buy_head,
             new_buy_tail,
-            inv_val,
+            alloc_val_for_new_orders,
             buy_orders_to_keep.clone(),
-            buy_orders_remaining_val,
             buy_append_new_to_head,
             true,
             &state,
@@ -239,12 +237,12 @@ mod tests {
             buy_orders_to_keep.push(o.clone());
         }
         let buy_append_new_to_head = false;
+        let alloc_val_for_new_orders = div_dec(inv_val * state.active_capital_perct, Decimal::from_str("2").unwrap()) - buy_orders_remaining_val;
         let orders = create_new_orders_spot(
             new_buy_head,
             new_buy_tail,
-            inv_val,
+            alloc_val_for_new_orders,
             buy_orders_to_keep.clone(),
-            buy_orders_remaining_val,
             buy_append_new_to_head,
             true,
             &state,
@@ -305,13 +303,13 @@ mod tests {
         let new_sell_tail = Decimal::from_str("10").unwrap();
         let sell_orders_to_keep: Vec<WrappedOpenOrder> = Vec::new();
         let sell_orders_remaining_val = Decimal::zero();
+        let alloc_val_for_new_orders = div_dec(inv_val * state.active_capital_perct, Decimal::from_str("2").unwrap()) - sell_orders_remaining_val;
         let sell_append_new_to_head = true;
         let orders = create_new_orders_spot(
             new_sell_head,
             new_sell_tail,
-            inv_val,
+            alloc_val_for_new_orders,
             sell_orders_to_keep,
-            sell_orders_remaining_val,
             sell_append_new_to_head,
             false,
             &state,
@@ -345,13 +343,13 @@ mod tests {
             sell_orders_remaining_val = sell_orders_remaining_val + (o.price * o.qty);
             sell_orders_to_keep.push(o.clone());
         }
+        let alloc_val_for_new_orders = div_dec(inv_val * state.active_capital_perct, Decimal::from_str("2").unwrap()) - sell_orders_remaining_val;
         let sell_append_new_to_head = true;
         let orders = create_new_orders_spot(
             new_sell_head,
             new_sell_tail,
-            inv_val,
+            alloc_val_for_new_orders,
             sell_orders_to_keep.clone(),
-            sell_orders_remaining_val,
             sell_append_new_to_head,
             false,
             &state,
@@ -386,13 +384,13 @@ mod tests {
             sell_orders_remaining_val = sell_orders_remaining_val + (o.price * o.qty);
             sell_orders_to_keep.push(o.clone());
         }
+        let alloc_val_for_new_orders = div_dec(inv_val * state.active_capital_perct, Decimal::from_str("2").unwrap()) - sell_orders_remaining_val;
         let sell_append_new_to_head = false;
         let orders = create_new_orders_spot(
             new_sell_head,
             new_sell_tail,
-            inv_val,
+            alloc_val_for_new_orders,
             sell_orders_to_keep.clone(),
-            sell_orders_remaining_val,
             sell_append_new_to_head,
             false,
             &state,
