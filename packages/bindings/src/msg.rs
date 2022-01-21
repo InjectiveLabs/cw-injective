@@ -34,7 +34,10 @@ pub enum InjectiveMsg {
 }
 
 pub fn create_subaccount_transfer_msg(
-    sender: Addr, source_subaccount_id: String, destination_subaccount_id: String, amount: Coin,
+    sender: Addr,
+    source_subaccount_id: String,
+    destination_subaccount_id: String,
+    amount: Coin,
 ) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,

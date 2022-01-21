@@ -32,7 +32,10 @@ pub fn inv_imbalance_spot(inv_base_val: Decimal, inv_val: Decimal) -> (Decimal, 
 /// * `append_to_new_head` - An indication of whether we should append new orders to the new head
 /// or to the back of the orders_to_keep block
 pub fn orders_to_cancel_spot(
-    open_orders: Vec<WrappedOpenOrder>, new_head: Decimal, new_tail: Decimal, is_buy: bool,
+    open_orders: Vec<WrappedOpenOrder>,
+    new_head: Decimal,
+    new_tail: Decimal,
+    is_buy: bool,
 ) -> (Vec<String>, Vec<WrappedOpenOrder>, Decimal, bool) {
     let mut orders_remaining_val = Decimal::zero();
     let mut hashes_to_cancel: Vec<String> = Vec::new();
@@ -76,8 +79,14 @@ pub fn orders_to_cancel_spot(
 /// # Returns
 /// * `orders_to_open` - A list of all the new orders that we would like to place
 pub fn create_new_orders_spot(
-    new_head: Decimal, new_tail: Decimal, inv_val: Decimal, orders_to_keep: Vec<WrappedOpenOrder>, orders_remaining_val: Decimal,
-    append_to_new_head: bool, is_buy: bool, state: &State,
+    new_head: Decimal,
+    new_tail: Decimal,
+    inv_val: Decimal,
+    orders_to_keep: Vec<WrappedOpenOrder>,
+    orders_remaining_val: Decimal,
+    append_to_new_head: bool,
+    is_buy: bool,
+    state: &State,
 ) -> Vec<WrappedOrderResponse> {
     let num_open_orders = Uint256::from_str(&orders_to_keep.len().to_string()).unwrap();
     let mut orders_to_open: Vec<WrappedOrderResponse> = Vec::new();

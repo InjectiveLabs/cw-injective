@@ -41,7 +41,10 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, info: Messag
 
 #[entry_point]
 pub fn execute(
-    deps: DepsMut<InjectiveQueryWrapper>, env: Env, info: MessageInfo, msg: ExecuteMsg,
+    deps: DepsMut<InjectiveQueryWrapper>,
+    env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     match msg {
         ExecuteMsg::Subscribe { subaccount_id, amount } => subscribe(deps, env, info.sender, subaccount_id, amount),
@@ -49,7 +52,11 @@ pub fn execute(
 }
 
 pub fn subscribe(
-    _deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Addr, subaccount_id: String, amount: Coin,
+    _deps: DepsMut<InjectiveQueryWrapper>,
+    env: Env,
+    sender: Addr,
+    subaccount_id: String,
+    amount: Coin,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let contract = env.contract.address;
 
@@ -91,8 +98,14 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> Std
 }
 
 fn get_action(
-    deps: Deps<InjectiveQueryWrapper>, is_deriv: bool, open_orders: Vec<OpenOrder>, position: Option<Position>, inv_base_val: String,
-    inv_val: String, std_dev: String, mid_price: String,
+    deps: Deps<InjectiveQueryWrapper>,
+    is_deriv: bool,
+    open_orders: Vec<OpenOrder>,
+    position: Option<Position>,
+    inv_base_val: String,
+    inv_val: String,
+    std_dev: String,
+    mid_price: String,
 ) -> StdResult<WrappedGetActionResponse> {
     // Wrap everything
     let open_orders: Vec<WrappedOpenOrder> = open_orders.into_iter().map(|o| o.wrap(deps).unwrap()).collect();
@@ -193,7 +206,11 @@ fn get_action(
     }
 }
 fn orders_to_cancel(
-    open_orders: Vec<WrappedOpenOrder>, new_head: Decimal, new_tail: Decimal, is_buy: bool, is_deriv: bool,
+    open_orders: Vec<WrappedOpenOrder>,
+    new_head: Decimal,
+    new_tail: Decimal,
+    is_buy: bool,
+    is_deriv: bool,
 ) -> (Vec<String>, Vec<WrappedOpenOrder>, Decimal, bool) {
     if is_deriv {
         orders_to_cancel_deriv(open_orders, new_head, new_tail, is_buy)
@@ -203,8 +220,17 @@ fn orders_to_cancel(
 }
 
 fn create_orders(
-    new_head: Decimal, new_tail: Decimal, inv_val: Decimal, orders_to_keep: Vec<WrappedOpenOrder>, orders_remaining_val: Decimal,
-    position: Option<WrappedPosition>, append_to_new_head: bool, hashes_to_cancel: &mut Vec<String>, is_deriv: bool, is_buy: bool, state: &State,
+    new_head: Decimal,
+    new_tail: Decimal,
+    inv_val: Decimal,
+    orders_to_keep: Vec<WrappedOpenOrder>,
+    orders_remaining_val: Decimal,
+    position: Option<WrappedPosition>,
+    append_to_new_head: bool,
+    hashes_to_cancel: &mut Vec<String>,
+    is_deriv: bool,
+    is_buy: bool,
+    state: &State,
 ) -> Vec<WrappedOrderResponse> {
     if is_deriv {
         let position_qty = match position {
@@ -256,7 +282,12 @@ fn create_orders(
 }
 
 fn reservation_price(
-    mid_price: Decimal, inv_imbal: Decimal, varience: Decimal, risk_aversion: Decimal, manual_offset_perct: Decimal, imbal_is_long: bool,
+    mid_price: Decimal,
+    inv_imbal: Decimal,
+    varience: Decimal,
+    risk_aversion: Decimal,
+    manual_offset_perct: Decimal,
+    imbal_is_long: bool,
 ) -> Decimal {
     if inv_imbal == Decimal::zero() {
         mid_price

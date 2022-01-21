@@ -30,7 +30,10 @@ pub fn inv_imbalance_deriv(position: &Option<WrappedPosition>, inv_val: Decimal)
 /// * `append_to_new_head` - An indication of whether we should append new orders to the new head
 /// or to the back of the orders_to_keep block
 pub fn orders_to_cancel_deriv(
-    open_orders: Vec<WrappedOpenOrder>, new_head: Decimal, new_tail: Decimal, is_buy: bool,
+    open_orders: Vec<WrappedOpenOrder>,
+    new_head: Decimal,
+    new_tail: Decimal,
+    is_buy: bool,
 ) -> (Vec<String>, Vec<WrappedOpenOrder>, Decimal, bool) {
     let mut orders_remaining_val = Decimal::zero();
     let mut hashes_to_cancel: Vec<String> = Vec::new();
@@ -61,8 +64,15 @@ pub fn orders_to_cancel_deriv(
 }
 
 pub fn base_deriv(
-    new_head: Decimal, new_tail: Decimal, inv_val: Decimal, orders_to_keep: Vec<WrappedOpenOrder>, orders_remaining_val: Decimal,
-    mut position_qty: Decimal, touch_head: bool, is_buy: bool, state: &State,
+    new_head: Decimal,
+    new_tail: Decimal,
+    inv_val: Decimal,
+    orders_to_keep: Vec<WrappedOpenOrder>,
+    orders_remaining_val: Decimal,
+    mut position_qty: Decimal,
+    touch_head: bool,
+    is_buy: bool,
+    state: &State,
 ) -> (Vec<WrappedOrderResponse>, Decimal) {
     let num_open_orders = Uint256::from_str(&orders_to_keep.len().to_string()).unwrap();
     let mut orders_to_open: Vec<WrappedOrderResponse> = Vec::new();
@@ -117,7 +127,12 @@ pub fn base_deriv(
 }
 
 pub fn tail_to_head_deriv(
-    new_head: Decimal, inv_val: Decimal, orders_to_keep: Vec<WrappedOpenOrder>, orders_remaining_val: Decimal, position_qty: Decimal, is_buy: bool,
+    new_head: Decimal,
+    inv_val: Decimal,
+    orders_to_keep: Vec<WrappedOpenOrder>,
+    orders_remaining_val: Decimal,
+    position_qty: Decimal,
+    is_buy: bool,
     state: &State,
 ) -> (Vec<WrappedOrderResponse>, Vec<String>) {
     let (mut orders_to_open, mut position_qty) = base_deriv(
@@ -165,8 +180,13 @@ pub fn tail_to_head_deriv(
 }
 
 pub fn head_to_tail_deriv(
-    new_tail: Decimal, inv_val: Decimal, orders_to_keep: Vec<WrappedOpenOrder>, orders_remaining_val: Decimal, mut position_qty: Decimal,
-    is_buy: bool, state: &State,
+    new_tail: Decimal,
+    inv_val: Decimal,
+    orders_to_keep: Vec<WrappedOpenOrder>,
+    orders_remaining_val: Decimal,
+    mut position_qty: Decimal,
+    is_buy: bool,
+    state: &State,
 ) -> (Vec<WrappedOrderResponse>, Vec<String>) {
     let mut orders_to_open: Vec<WrappedOrderResponse> = Vec::new();
     let mut additional_hashes_to_cancel: Vec<String> = Vec::new();
