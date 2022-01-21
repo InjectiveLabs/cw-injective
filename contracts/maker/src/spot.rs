@@ -6,7 +6,7 @@ use crate::{
 use cosmwasm_std::{Decimal256 as Decimal, Uint256};
 use std::str::FromStr;
 
-/// Calculates the inventory imbalance from 50/50 target balance
+/// Calculates the inventory imbalance from 50/50 target balance.
 /// # Arguments
 /// * `inv_base_val` - The notional value of all base assets
 /// * `inv_val` - The total notional value of all assets
@@ -203,6 +203,7 @@ mod tests {
             is_buy: true,
             qty: Decimal::one(),
             price: Decimal::zero(),
+            is_reduce_only: false,
         };
         let inv_val = Decimal::from_str("1000000").unwrap();
 
@@ -371,6 +372,7 @@ mod tests {
             is_buy: false,
             qty: Decimal::one(),
             price: Decimal::zero(),
+            is_reduce_only: false,
         };
         let inv_val = Decimal::from_str("1000000").unwrap();
 
@@ -525,6 +527,7 @@ mod tests {
             is_buy: true,
             qty: Decimal::one(),
             price: Decimal::zero(),
+            is_reduce_only: false,
         };
 
         let old_tail_price = 10;
@@ -609,6 +612,7 @@ mod tests {
             is_buy: false,
             qty: Decimal::one(),
             price: Decimal::zero(),
+            is_reduce_only: false,
         };
 
         let old_head_price = 10;

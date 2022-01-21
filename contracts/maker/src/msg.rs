@@ -76,6 +76,7 @@ pub struct OpenOrder {
     pub is_buy: bool,
     pub qty: String,
     pub price: String,
+    pub is_reduce_only: bool,
 }
 impl OpenOrder {
     pub fn wrap(&self, deps: Deps<InjectiveQueryWrapper>) -> Result<WrappedOpenOrder, StdError> {
@@ -85,6 +86,7 @@ impl OpenOrder {
             is_buy: self.is_buy,
             qty: Decimal::from_str(&self.qty).unwrap(),
             price: wrap_from_state(&self.price, &state),
+            is_reduce_only: self.is_reduce_only,
         })
     }
 }
@@ -104,6 +106,7 @@ pub struct WrappedOpenOrder {
     pub is_buy: bool,
     pub qty: Decimal,
     pub price: Decimal,
+    pub is_reduce_only: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
