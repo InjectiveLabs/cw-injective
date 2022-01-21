@@ -123,11 +123,7 @@ pub struct WrappedOrderResponse {
 }
 impl WrappedOrderResponse {
     pub fn new(
-        state: &State,
-        price: Decimal,
-        quantity: Decimal,
-        is_buy: bool,
-        is_reduce_only: bool,
+        state: &State, price: Decimal, quantity: Decimal, is_buy: bool, is_reduce_only: bool,
     ) -> WrappedOrderResponse {
         WrappedOrderResponse {
             market_id: state.market_id.clone(),

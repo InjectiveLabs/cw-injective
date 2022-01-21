@@ -13,10 +13,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[entry_point]
 pub fn instantiate(
-    deps: DepsMut,
-    _env: Env,
-    info: MessageInfo,
-    msg: InstantiateMsg,
+    deps: DepsMut, _env: Env, info: MessageInfo, msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     let state = State {
         count: msg.count,
@@ -33,10 +30,7 @@ pub fn instantiate(
 
 #[entry_point]
 pub fn execute(
-    deps: DepsMut,
-    _env: Env,
-    info: MessageInfo,
-    msg: ExecuteMsg,
+    deps: DepsMut, _env: Env, info: MessageInfo, msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Increment {} => try_increment(deps),

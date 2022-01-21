@@ -32,10 +32,7 @@ pub fn inv_imbalance_spot(inv_base_val: Decimal, inv_val: Decimal) -> (Decimal, 
 /// * `append_to_new_head` - An indication of whether we should append new orders to the new head
 /// or to the back of the orders_to_keep block
 pub fn orders_to_cancel_spot(
-    open_orders: Vec<WrappedOpenOrder>,
-    new_head: Decimal,
-    new_tail: Decimal,
-    is_buy: bool,
+    open_orders: Vec<WrappedOpenOrder>, new_head: Decimal, new_tail: Decimal, is_buy: bool,
 ) -> (Vec<String>, Vec<WrappedOpenOrder>, Decimal, bool) {
     let mut orders_remaining_val = Decimal::zero();
     let mut hashes_to_cancel: Vec<String> = Vec::new();
@@ -60,12 +57,7 @@ pub fn orders_to_cancel_spot(
         // append to the end of the block of orders we will be keeping
         let append_to_new_head = sub_abs(new_head, orders_to_keep.first().unwrap().price)
             > sub_abs(orders_to_keep.last().unwrap().price, new_tail);
-        (
-            hashes_to_cancel,
-            orders_to_keep,
-            orders_remaining_val,
-            append_to_new_head,
-        )
+        (hashes_to_cancel, orders_to_keep, orders_remaining_val, append_to_new_head)
     } else {
         (hashes_to_cancel, Vec::new(), orders_remaining_val, true)
     }
@@ -85,22 +77,15 @@ pub fn orders_to_cancel_spot(
 /// # Returns
 /// * `orders_to_open` - A list of all the new orders that we would like to place
 pub fn create_new_orders_spot(
-    new_head: Decimal,
-    new_tail: Decimal,
-    inv_val: Decimal,
-    orders_to_keep: Vec<WrappedOpenOrder>,
-    orders_remaining_val: Decimal,
-    append_to_new_head: bool,
-    is_buy: bool,
-    state: &State,
+    new_head: Decimal, new_tail: Decimal, inv_val: Decimal, orders_to_keep: Vec<WrappedOpenOrder>,
+    orders_remaining_val: Decimal, append_to_new_head: bool, is_buy: bool, state: &State,
 ) -> Vec<WrappedOrderResponse> {
     let num_open_orders = Uint256::from_str(&orders_to_keep.len().to_string()).unwrap();
     let mut orders_to_open: Vec<WrappedOrderResponse> = Vec::new();
     let num_orders_to_open = state.order_density - num_open_orders;
-    let alloc_val_for_new_orders = div_dec(
-        inv_val * state.active_capital_perct,
-        Decimal::from_str("2").unwrap(),
-    ) - orders_remaining_val;
+    let alloc_val_for_new_orders =
+        div_dec(inv_val * state.active_capital_perct, Decimal::from_str("2").unwrap())
+            - orders_remaining_val;
     let val_per_order = alloc_val_for_new_orders / num_orders_to_open;
 
     if orders_to_keep.len() == 0 {
@@ -234,14 +219,9 @@ mod tests {
         }
         assert_eq!(new_buy_head, orders.first().unwrap().get_price());
         assert!(new_buy_tail <= orders.last().unwrap().get_price());
-        assert_eq!(
-            Uint256::from_str(&orders.len().to_string()).unwrap(),
-            state.order_density
-        );
-        let expected_notional_value = div_dec(
-            state.active_capital_perct * inv_val,
-            Decimal::from_str("2").unwrap(),
-        );
+        assert_eq!(Uint256::from_str(&orders.len().to_string()).unwrap(), state.order_density);
+        let expected_notional_value =
+            div_dec(state.active_capital_perct * inv_val, Decimal::from_str("2").unwrap());
         assert!(
             sub_abs(expected_notional_value, total_notional_val)
                 < Decimal::from_str("0.00001").unwrap() * expected_notional_value
@@ -290,10 +270,8 @@ mod tests {
             Uint256::from_str(&(orders.len() + buy_orders_to_keep.len()).to_string()).unwrap(),
             state.order_density
         );
-        let expected_notional_value = div_dec(
-            state.active_capital_perct * inv_val,
-            Decimal::from_str("2").unwrap(),
-        );
+        let expected_notional_value =
+            div_dec(state.active_capital_perct * inv_val, Decimal::from_str("2").unwrap());
         assert!(
             sub_abs(expected_notional_value, total_notional_val)
                 < Decimal::from_str("0.00001").unwrap() * expected_notional_value
@@ -337,10 +315,8 @@ mod tests {
             Uint256::from_str(&(orders.len() + buy_orders_to_keep.len()).to_string()).unwrap(),
             state.order_density
         );
-        let expected_notional_value = div_dec(
-            state.active_capital_perct * inv_val,
-            Decimal::from_str("2").unwrap(),
-        );
+        let expected_notional_value =
+            div_dec(state.active_capital_perct * inv_val, Decimal::from_str("2").unwrap());
         assert!(
             sub_abs(expected_notional_value, total_notional_val)
                 < Decimal::from_str("0.00001").unwrap() * expected_notional_value
@@ -403,14 +379,9 @@ mod tests {
         }
         assert_eq!(new_sell_head, orders.first().unwrap().get_price());
         assert!(new_sell_tail >= orders.last().unwrap().get_price());
-        assert_eq!(
-            Uint256::from_str(&orders.len().to_string()).unwrap(),
-            state.order_density
-        );
-        let expected_notional_value = div_dec(
-            state.active_capital_perct * inv_val,
-            Decimal::from_str("2").unwrap(),
-        );
+        assert_eq!(Uint256::from_str(&orders.len().to_string()).unwrap(), state.order_density);
+        let expected_notional_value =
+            div_dec(state.active_capital_perct * inv_val, Decimal::from_str("2").unwrap());
         assert!(
             sub_abs(expected_notional_value, total_notional_val)
                 < Decimal::from_str("0.00001").unwrap() * expected_notional_value
@@ -459,10 +430,8 @@ mod tests {
             Uint256::from_str(&(orders.len() + sell_orders_to_keep.len()).to_string()).unwrap(),
             state.order_density
         );
-        let expected_notional_value = div_dec(
-            state.active_capital_perct * inv_val,
-            Decimal::from_str("2").unwrap(),
-        );
+        let expected_notional_value =
+            div_dec(state.active_capital_perct * inv_val, Decimal::from_str("2").unwrap());
         assert!(
             sub_abs(expected_notional_value, total_notional_val)
                 < Decimal::from_str("0.00001").unwrap() * expected_notional_value
@@ -509,10 +478,8 @@ mod tests {
             Uint256::from_str(&(orders.len() + sell_orders_to_keep.len()).to_string()).unwrap(),
             state.order_density
         );
-        let expected_notional_value = div_dec(
-            state.active_capital_perct * inv_val,
-            Decimal::from_str("2").unwrap(),
-        );
+        let expected_notional_value =
+            div_dec(state.active_capital_perct * inv_val, Decimal::from_str("2").unwrap());
         assert!(
             sub_abs(expected_notional_value, total_notional_val)
                 < Decimal::from_str("0.00001").unwrap() * expected_notional_value
@@ -565,18 +532,10 @@ mod tests {
             buy_orders_to_keep,
             buy_orders_remaining_val,
             buy_append_new_to_head,
-        ) = orders_to_cancel_spot(
-            open_buy_orders.clone(),
-            new_buy_head_a,
-            new_buy_tail_a,
-            true,
-        );
+        ) = orders_to_cancel_spot(open_buy_orders.clone(), new_buy_head_a, new_buy_tail_a, true);
         assert!(buy_append_new_to_head);
         assert_eq!(buy_orders_remaining_val, buy_orders_remaining_val_a);
-        assert_eq!(
-            open_buy_orders.len() - buy_orders_to_keep.len(),
-            buy_hashes_to_cancel.len()
-        );
+        assert_eq!(open_buy_orders.len() - buy_orders_to_keep.len(), buy_hashes_to_cancel.len());
 
         // Check case where we need to cancel orders by the head because the new head < old head
         let (
@@ -584,18 +543,10 @@ mod tests {
             buy_orders_to_keep,
             buy_orders_remaining_val,
             buy_append_new_to_head,
-        ) = orders_to_cancel_spot(
-            open_buy_orders.clone(),
-            new_buy_head_b,
-            new_buy_tail_b,
-            true,
-        );
+        ) = orders_to_cancel_spot(open_buy_orders.clone(), new_buy_head_b, new_buy_tail_b, true);
         assert!(!buy_append_new_to_head);
         assert_eq!(buy_orders_remaining_val, buy_orders_remaining_val_b);
-        assert_eq!(
-            open_buy_orders.len() - buy_orders_to_keep.len(),
-            buy_hashes_to_cancel.len()
-        );
+        assert_eq!(open_buy_orders.len() - buy_orders_to_keep.len(), buy_hashes_to_cancel.len());
 
         // Check case where there were no open orders at all
         let (buy_hashes_to_cancel, _, _, buy_append_new_to_head) =
@@ -655,10 +606,7 @@ mod tests {
         );
         assert!(!sell_append_new_to_head);
         assert_eq!(sell_orders_remaining_val, sell_orders_remaining_val_a);
-        assert_eq!(
-            open_sell_orders.len() - sell_orders_to_keep.len(),
-            sell_hashes_to_cancel.len()
-        );
+        assert_eq!(open_sell_orders.len() - sell_orders_to_keep.len(), sell_hashes_to_cancel.len());
 
         // Check case where we need to cancel orders by the tail because the new head > old head
         let (
@@ -674,10 +622,7 @@ mod tests {
         );
         assert!(sell_append_new_to_head);
         assert_eq!(sell_orders_remaining_val, sell_orders_remaining_val_b);
-        assert_eq!(
-            open_sell_orders.len() - sell_orders_to_keep.len(),
-            sell_hashes_to_cancel.len()
-        );
+        assert_eq!(open_sell_orders.len() - sell_orders_to_keep.len(), sell_hashes_to_cancel.len());
 
         // Check case where there were no open orders at all
         let (sell_hashes_to_cancel, _, _, sell_append_new_to_head) =

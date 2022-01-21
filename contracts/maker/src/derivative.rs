@@ -7,8 +7,7 @@ use cosmwasm_std::{Decimal256 as Decimal, Uint256};
 use std::str::FromStr;
 
 pub fn inv_imbalance_deriv(
-    position: &Option<WrappedPosition>,
-    inv_val: Decimal,
+    position: &Option<WrappedPosition>, inv_val: Decimal,
 ) -> (Decimal, bool) {
     match position {
         None => (Decimal::zero(), true),
@@ -33,10 +32,7 @@ pub fn inv_imbalance_deriv(
 /// * `append_to_new_head` - An indication of whether we should append new orders to the new head
 /// or to the back of the orders_to_keep block
 pub fn orders_to_cancel_deriv(
-    open_orders: Vec<WrappedOpenOrder>,
-    new_head: Decimal,
-    new_tail: Decimal,
-    is_buy: bool,
+    open_orders: Vec<WrappedOpenOrder>, new_head: Decimal, new_tail: Decimal, is_buy: bool,
 ) -> (Vec<String>, Vec<WrappedOpenOrder>, Decimal, bool) {
     let mut orders_remaining_val = Decimal::zero();
     let mut hashes_to_cancel: Vec<String> = Vec::new();
@@ -61,35 +57,23 @@ pub fn orders_to_cancel_deriv(
         // append to the end of the block of orders we will be keeping
         let append_to_new_head = sub_abs(new_head, orders_to_keep.first().unwrap().price)
             > sub_abs(orders_to_keep.last().unwrap().price, new_tail);
-        (
-            hashes_to_cancel,
-            orders_to_keep,
-            orders_remaining_val,
-            append_to_new_head,
-        )
+        (hashes_to_cancel, orders_to_keep, orders_remaining_val, append_to_new_head)
     } else {
         (hashes_to_cancel, Vec::new(), orders_remaining_val, true)
     }
 }
 
 pub fn create_new_orders_base_deriv(
-    new_head: Decimal,
-    new_tail: Decimal,
-    inv_val: Decimal,
-    orders_to_keep: Vec<WrappedOpenOrder>,
-    orders_remaining_val: Decimal,
-    mut position_qty: Decimal,
-    touch_head: bool,
-    is_buy: bool,
+    new_head: Decimal, new_tail: Decimal, inv_val: Decimal, orders_to_keep: Vec<WrappedOpenOrder>,
+    orders_remaining_val: Decimal, mut position_qty: Decimal, touch_head: bool, is_buy: bool,
     state: &State,
 ) -> (Vec<WrappedOrderResponse>, Decimal) {
     let num_open_orders = Uint256::from_str(&orders_to_keep.len().to_string()).unwrap();
     let mut orders_to_open: Vec<WrappedOrderResponse> = Vec::new();
     let num_orders_to_open = state.order_density - num_open_orders;
-    let alloc_val_for_new_orders = div_dec(
-        inv_val * state.active_capital_perct,
-        Decimal::from_str("2").unwrap(),
-    ) - orders_remaining_val;
+    let alloc_val_for_new_orders =
+        div_dec(inv_val * state.active_capital_perct, Decimal::from_str("2").unwrap())
+            - orders_remaining_val;
     let val_per_order = alloc_val_for_new_orders / num_orders_to_open;
     let val_per_order = val_per_order * state.leverage;
 
@@ -147,13 +131,8 @@ pub fn create_new_orders_base_deriv(
 }
 
 pub fn create_new_orders_tail_to_head_deriv(
-    new_head: Decimal,
-    inv_val: Decimal,
-    orders_to_keep: Vec<WrappedOpenOrder>,
-    orders_remaining_val: Decimal,
-    position_qty: Decimal,
-    is_buy: bool,
-    state: &State,
+    new_head: Decimal, inv_val: Decimal, orders_to_keep: Vec<WrappedOpenOrder>,
+    orders_remaining_val: Decimal, position_qty: Decimal, is_buy: bool, state: &State,
 ) -> (Vec<WrappedOrderResponse>, Vec<String>) {
     let (mut orders_to_open, mut position_qty) = create_new_orders_base_deriv(
         new_head,
@@ -204,13 +183,8 @@ pub fn create_new_orders_tail_to_head_deriv(
 }
 
 pub fn create_new_orders_head_to_tail_deriv(
-    new_tail: Decimal,
-    inv_val: Decimal,
-    orders_to_keep: Vec<WrappedOpenOrder>,
-    orders_remaining_val: Decimal,
-    mut position_qty: Decimal,
-    is_buy: bool,
-    state: &State,
+    new_tail: Decimal, inv_val: Decimal, orders_to_keep: Vec<WrappedOpenOrder>,
+    orders_remaining_val: Decimal, mut position_qty: Decimal, is_buy: bool, state: &State,
 ) -> (Vec<WrappedOrderResponse>, Vec<String>) {
     let mut orders_to_open: Vec<WrappedOrderResponse> = Vec::new();
     let mut additional_hashes_to_cancel: Vec<String> = Vec::new();
@@ -308,18 +282,10 @@ fn orders_to_cancel_for_buy_test() {
         buy_orders_to_keep,
         buy_orders_remaining_val,
         buy_append_new_to_head,
-    ) = orders_to_cancel_deriv(
-        open_buy_orders.clone(),
-        new_buy_head_a,
-        new_buy_tail_a,
-        true,
-    );
+    ) = orders_to_cancel_deriv(open_buy_orders.clone(), new_buy_head_a, new_buy_tail_a, true);
     assert!(buy_append_new_to_head);
     assert_eq!(buy_orders_remaining_val, buy_orders_remaining_val_a);
-    assert_eq!(
-        open_buy_orders.len() - buy_orders_to_keep.len(),
-        buy_hashes_to_cancel.len()
-    );
+    assert_eq!(open_buy_orders.len() - buy_orders_to_keep.len(), buy_hashes_to_cancel.len());
 
     // Check case where we need to cancel orders by the head because the new head < old head
     let (
@@ -327,18 +293,10 @@ fn orders_to_cancel_for_buy_test() {
         buy_orders_to_keep,
         buy_orders_remaining_val,
         buy_append_new_to_head,
-    ) = orders_to_cancel_deriv(
-        open_buy_orders.clone(),
-        new_buy_head_b,
-        new_buy_tail_b,
-        true,
-    );
+    ) = orders_to_cancel_deriv(open_buy_orders.clone(), new_buy_head_b, new_buy_tail_b, true);
     assert!(!buy_append_new_to_head);
     assert_eq!(buy_orders_remaining_val, buy_orders_remaining_val_b);
-    assert_eq!(
-        open_buy_orders.len() - buy_orders_to_keep.len(),
-        buy_hashes_to_cancel.len()
-    );
+    assert_eq!(open_buy_orders.len() - buy_orders_to_keep.len(), buy_hashes_to_cancel.len());
 
     // Check case where there were no open orders at all
     let (buy_hashes_to_cancel, _, _, buy_append_new_to_head) =
@@ -405,10 +363,7 @@ mod tests {
         );
         assert!(!sell_append_new_to_head);
         assert_eq!(sell_orders_remaining_val, sell_orders_remaining_val_a);
-        assert_eq!(
-            open_sell_orders.len() - sell_orders_to_keep.len(),
-            sell_hashes_to_cancel.len()
-        );
+        assert_eq!(open_sell_orders.len() - sell_orders_to_keep.len(), sell_hashes_to_cancel.len());
 
         // Check case where we need to cancel orders by the tail because the new head > old head
         let (
@@ -424,10 +379,7 @@ mod tests {
         );
         assert!(sell_append_new_to_head);
         assert_eq!(sell_orders_remaining_val, sell_orders_remaining_val_b);
-        assert_eq!(
-            open_sell_orders.len() - sell_orders_to_keep.len(),
-            sell_hashes_to_cancel.len()
-        );
+        assert_eq!(open_sell_orders.len() - sell_orders_to_keep.len(), sell_hashes_to_cancel.len());
 
         // Check case where there were no open orders at all
         let (sell_hashes_to_cancel, _, _, sell_append_new_to_head) =

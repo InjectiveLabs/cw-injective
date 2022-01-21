@@ -38,8 +38,7 @@ const DEFAULT_GAS_LIMIT: u64 = 500_000;
 
 // TODO: improve the whole state of this
 pub fn mock_instance(
-    wasm: &[u8],
-    contract_balance: &[Coin],
+    wasm: &[u8], contract_balance: &[Coin],
 ) -> Instance<MockStorage, MockApi, MockQuerier> {
     // TODO: check_wasm is not exported from cosmwasm_vm
     // let terra_features = features_from_csv("staking,terra");

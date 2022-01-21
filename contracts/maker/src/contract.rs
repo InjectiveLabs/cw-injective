@@ -23,10 +23,7 @@ use injective_bindings::{
 
 #[entry_point]
 pub fn instantiate(
-    deps: DepsMut<InjectiveQueryWrapper>,
-    _env: Env,
-    info: MessageInfo,
-    msg: InstantiateMsg,
+    deps: DepsMut<InjectiveQueryWrapper>, _env: Env, info: MessageInfo, msg: InstantiateMsg,
 ) -> Result<Response, StdError> {
     let state = State {
         market_id: msg.market_id.to_string(),
@@ -54,10 +51,7 @@ pub fn instantiate(
 
 #[entry_point]
 pub fn execute(
-    deps: DepsMut<InjectiveQueryWrapper>,
-    env: Env,
-    info: MessageInfo,
-    msg: ExecuteMsg,
+    deps: DepsMut<InjectiveQueryWrapper>, env: Env, info: MessageInfo, msg: ExecuteMsg,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     match msg {
         ExecuteMsg::Subscribe {
@@ -68,10 +62,7 @@ pub fn execute(
 }
 
 pub fn subscribe(
-    _deps: DepsMut<InjectiveQueryWrapper>,
-    env: Env,
-    sender: Addr,
-    subaccount_id: String,
+    _deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Addr, subaccount_id: String,
     amount: Coin,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let contract = env.contract.address;
@@ -117,13 +108,8 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> Std
 }
 
 fn get_action(
-    deps: Deps<InjectiveQueryWrapper>,
-    is_deriv: bool,
-    open_orders: Vec<OpenOrder>,
-    position: Option<Position>,
-    inv_base_val: String,
-    inv_val: String,
-    std_dev: String,
+    deps: Deps<InjectiveQueryWrapper>, is_deriv: bool, open_orders: Vec<OpenOrder>,
+    position: Option<Position>, inv_base_val: String, inv_val: String, std_dev: String,
     mid_price: String,
 ) -> StdResult<WrappedGetActionResponse> {
     // Wrap everything
@@ -240,10 +226,7 @@ fn get_action(
     }
 }
 fn orders_to_cancel(
-    open_orders: Vec<WrappedOpenOrder>,
-    new_head: Decimal,
-    new_tail: Decimal,
-    is_buy: bool,
+    open_orders: Vec<WrappedOpenOrder>, new_head: Decimal, new_tail: Decimal, is_buy: bool,
     is_deriv: bool,
 ) -> (Vec<String>, Vec<WrappedOpenOrder>, Decimal, bool) {
     if is_deriv {
@@ -254,17 +237,9 @@ fn orders_to_cancel(
 }
 
 fn create_orders(
-    new_head: Decimal,
-    new_tail: Decimal,
-    inv_val: Decimal,
-    orders_to_keep: Vec<WrappedOpenOrder>,
-    orders_remaining_val: Decimal,
-    position: Option<WrappedPosition>,
-    append_to_new_head: bool,
-    hashes_to_cancel: &mut Vec<String>,
-    is_deriv: bool,
-    is_buy: bool,
-    state: &State,
+    new_head: Decimal, new_tail: Decimal, inv_val: Decimal, orders_to_keep: Vec<WrappedOpenOrder>,
+    orders_remaining_val: Decimal, position: Option<WrappedPosition>, append_to_new_head: bool,
+    hashes_to_cancel: &mut Vec<String>, is_deriv: bool, is_buy: bool, state: &State,
 ) -> Vec<WrappedOrderResponse> {
     if is_deriv {
         let position_qty = match position {
@@ -332,12 +307,8 @@ fn create_orders(
 }
 
 fn reservation_price(
-    mid_price: Decimal,
-    inv_imbal: Decimal,
-    varience: Decimal,
-    risk_aversion: Decimal,
-    manual_offset_perct: Decimal,
-    imbal_is_long: bool,
+    mid_price: Decimal, inv_imbal: Decimal, varience: Decimal, risk_aversion: Decimal,
+    manual_offset_perct: Decimal, imbal_is_long: bool,
 ) -> Decimal {
     if inv_imbal == Decimal::zero() {
         mid_price
@@ -353,9 +324,7 @@ fn reservation_price(
 }
 
 fn new_head_prices(
-    varience: Decimal,
-    reservation_price: Decimal,
-    risk_aversion: Decimal,
+    varience: Decimal, reservation_price: Decimal, risk_aversion: Decimal,
 ) -> (Decimal, Decimal) {
     let dist_from_reservation_price =
         div_dec(varience * risk_aversion, Decimal::from_str("2").unwrap());
@@ -366,9 +335,7 @@ fn new_head_prices(
 }
 
 fn head_chg_gt_tol(
-    open_orders: &Vec<WrappedOpenOrder>,
-    new_head: Decimal,
-    head_chg_tol_bp: Decimal,
+    open_orders: &Vec<WrappedOpenOrder>, new_head: Decimal, head_chg_tol_bp: Decimal,
 ) -> bool {
     if open_orders.len() == 0 {
         true
@@ -380,9 +347,7 @@ fn head_chg_gt_tol(
 }
 
 fn new_tail_prices(
-    new_buy_head: Decimal,
-    new_sell_head: Decimal,
-    tail_dist_to_head_bp: Decimal,
+    new_buy_head: Decimal, new_sell_head: Decimal, tail_dist_to_head_bp: Decimal,
 ) -> (Decimal, Decimal) {
     (
         new_buy_head
