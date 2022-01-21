@@ -16,10 +16,7 @@ pub struct InjectiveQueryWrapper {
 #[serde(rename_all = "snake_case")]
 pub enum InjectiveQuery {
     // SubaccountDeposit will return the subaccount deposits for a given subaccount_id and denom
-    SubaccountDeposit {
-        subaccount_id: String,
-        denom: String,
-    },
+    SubaccountDeposit { subaccount_id: String, denom: String },
 }
 
 impl CustomQuery for InjectiveQueryWrapper {}

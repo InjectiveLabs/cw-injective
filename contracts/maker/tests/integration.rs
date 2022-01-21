@@ -17,12 +17,8 @@
 //!      });
 //! 4. Anywhere you see query(&deps, ...) you must replace it with query(&mut deps, ...)
 
-use cosmwasm_std::{
-    coin, coins, from_binary, Coin, CosmosMsg, HandleResponse, InitResponse, Uint128,
-};
-use cosmwasm_vm::testing::{
-    handle, init, mock_dependencies, mock_env, query, MockApi, MockQuerier, MockStorage,
-};
+use cosmwasm_std::{coin, coins, from_binary, Coin, CosmosMsg, HandleResponse, InitResponse, Uint128};
+use cosmwasm_vm::testing::{handle, init, mock_dependencies, mock_env, query, MockApi, MockQuerier, MockStorage};
 use cosmwasm_vm::{Api, Instance};
 
 use injective_bindings::{ExchangeMsg, InjectiveMsg};
@@ -37,9 +33,7 @@ static WASM: &[u8] = include_bytes!("../target/wasm32-unknown-unknown/release/ma
 const DEFAULT_GAS_LIMIT: u64 = 500_000;
 
 // TODO: improve the whole state of this
-pub fn mock_instance(
-    wasm: &[u8], contract_balance: &[Coin],
-) -> Instance<MockStorage, MockApi, MockQuerier> {
+pub fn mock_instance(wasm: &[u8], contract_balance: &[Coin]) -> Instance<MockStorage, MockApi, MockQuerier> {
     // TODO: check_wasm is not exported from cosmwasm_vm
     // let terra_features = features_from_csv("staking,terra");
     // check_wasm(wasm, &terra_features).unwrap();
@@ -83,9 +77,7 @@ fn buy_limit() {
     // we buy BTC with half the ETH
     let env = mock_env(&deps.api, "creator", &[]);
     let contract_addr = deps.api.human_address(&env.contract.address).unwrap();
-    let msg = HandleMsg::Buy {
-        limit: Some(Uint128(100)),
-    };
+    let msg = HandleMsg::Buy { limit: Some(Uint128(100)) };
     let res: HandleResponse<InjectiveMsg> = handle(&mut deps, env, msg).unwrap();
 
     // make sure we produce proper trade order

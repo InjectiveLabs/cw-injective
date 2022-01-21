@@ -11,8 +11,7 @@ pub fn wrap(unwrapped_num: &String, deps: Deps<InjectiveQueryWrapper>) -> Decima
 }
 
 pub fn wrap_from_state(unwrapped_num: &String, state: &State) -> Decimal {
-    Decimal::from_str(unwrapped_num).unwrap()
-        * Decimal::from_ratio(Uint256::from_str("1").unwrap(), state.decimal_shift)
+    Decimal::from_str(unwrapped_num).unwrap() * Decimal::from_ratio(Uint256::from_str("1").unwrap(), state.decimal_shift)
 }
 
 pub fn div_int(num: Decimal, denom: Uint256) -> Decimal {
@@ -34,9 +33,5 @@ pub fn sub_abs(lhs: Decimal, rhs: Decimal) -> Decimal {
 pub fn round_to_precision(num: Decimal, precision_shift: Uint256) -> Decimal {
     let shifted = num * precision_shift;
     let shifted = Decimal::from_str(&shifted.to_string()).unwrap();
-    shifted
-        * Decimal::from_str(&precision_shift.to_string())
-            .unwrap()
-            .inv()
-            .unwrap()
+    shifted * Decimal::from_str(&precision_shift.to_string()).unwrap().inv().unwrap()
 }

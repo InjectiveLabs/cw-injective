@@ -13,9 +13,7 @@ impl<'a> InjectiveQuerier<'a> {
         InjectiveQuerier { querier }
     }
 
-    pub fn query_subaccount_deposit<T: Into<String>>(
-        &self, subaccount_id: T, denom: T,
-    ) -> StdResult<SubaccountDepositResponse> {
+    pub fn query_subaccount_deposit<T: Into<String>>(&self, subaccount_id: T, denom: T) -> StdResult<SubaccountDepositResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::SubaccountDeposit {

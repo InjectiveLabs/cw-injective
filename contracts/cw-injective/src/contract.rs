@@ -1,6 +1,4 @@
-use cosmwasm_std::{
-    entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
-};
+use cosmwasm_std::{entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
@@ -12,9 +10,7 @@ const CONTRACT_NAME: &str = "crates.io:cw-injective";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[entry_point]
-pub fn instantiate(
-    deps: DepsMut, _env: Env, info: MessageInfo, msg: InstantiateMsg,
-) -> Result<Response, ContractError> {
+pub fn instantiate(deps: DepsMut, _env: Env, info: MessageInfo, msg: InstantiateMsg) -> Result<Response, ContractError> {
     let state = State {
         count: msg.count,
         owner: info.sender.clone(),
@@ -29,9 +25,7 @@ pub fn instantiate(
 }
 
 #[entry_point]
-pub fn execute(
-    deps: DepsMut, _env: Env, info: MessageInfo, msg: ExecuteMsg,
-) -> Result<Response, ContractError> {
+pub fn execute(deps: DepsMut, _env: Env, info: MessageInfo, msg: ExecuteMsg) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Increment {} => try_increment(deps),
         ExecuteMsg::Reset { count } => try_reset(deps, info, count),
@@ -83,8 +77,7 @@ mod tests {
         let msg = InstantiateMsg {
             count: 17,
             name: "BTC/USDT PERP Market Making Strategy".to_string(),
-            market_id: "0x4ca0f92fc28be0c9761326016b5a1a2177dd6375558365116b5bdda9abc229ce"
-                .to_string(),
+            market_id: "0x4ca0f92fc28be0c9761326016b5a1a2177dd6375558365116b5bdda9abc229ce".to_string(),
         };
         let info = mock_info("creator", &coins(1000, "earth"));
 
@@ -105,8 +98,7 @@ mod tests {
         let msg = InstantiateMsg {
             count: 17,
             name: "BTC/USDT PERP Market Making Strategy".to_string(),
-            market_id: "0x4ca0f92fc28be0c9761326016b5a1a2177dd6375558365116b5bdda9abc229ce"
-                .to_string(),
+            market_id: "0x4ca0f92fc28be0c9761326016b5a1a2177dd6375558365116b5bdda9abc229ce".to_string(),
         };
         let info = mock_info("creator", &coins(2, "token"));
         let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
@@ -129,8 +121,7 @@ mod tests {
         let msg = InstantiateMsg {
             count: 17,
             name: "BTC/USDT PERP Market Making Strategy".to_string(),
-            market_id: "0x4ca0f92fc28be0c9761326016b5a1a2177dd6375558365116b5bdda9abc229ce"
-                .to_string(),
+            market_id: "0x4ca0f92fc28be0c9761326016b5a1a2177dd6375558365116b5bdda9abc229ce".to_string(),
         };
         let info = mock_info("creator", &coins(2, "token"));
         let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();

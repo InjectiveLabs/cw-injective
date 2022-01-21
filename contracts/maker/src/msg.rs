@@ -43,7 +43,7 @@ pub enum QueryMsg {
         open_orders: Vec<OpenOrder>,
         position: Option<Position>, // Will be None if is deriv == false
         inv_base_val: String,       // Will be 0.0 if deriv == true
-        inv_val: String, // This includes any notional balance that may be tied up in a position
+        inv_val: String,            // This includes any notional balance that may be tied up in a position
         std_dev: String,
         mid_price: String,
     },
@@ -122,9 +122,7 @@ pub struct WrappedOrderResponse {
     pub decimal_shift: String,
 }
 impl WrappedOrderResponse {
-    pub fn new(
-        state: &State, price: Decimal, quantity: Decimal, is_buy: bool, is_reduce_only: bool,
-    ) -> WrappedOrderResponse {
+    pub fn new(state: &State, price: Decimal, quantity: Decimal, is_buy: bool, is_reduce_only: bool) -> WrappedOrderResponse {
         WrappedOrderResponse {
             market_id: state.market_id.clone(),
             subaccount_id: state.sub_account.clone(),
