@@ -7,10 +7,10 @@ use crate::derivative::{
 use crate::error::ContractError;
 use crate::msg::{
     ExecuteMsg, InstantiateMsg, OpenOrder, Position, QueryMsg, WrappedGetActionResponse,
-    WrappedOpenOrder,
+    WrappedOpenOrder, WrappedOrderResponse, WrappedPosition,
 };
 use crate::spot::{create_new_orders_spot, inv_imbalance_spot, orders_to_cancel_spot};
-use crate::state::{config, config_read, State};
+use crate::state::{self, config, config_read, State};
 use crate::utils::{div_dec, sub_abs, wrap};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, Coin, Decimal256 as Decimal, Deps, DepsMut, Env,
@@ -182,76 +182,7 @@ fn get_action(
             buy_orders_to_keep,
             buy_orders_remaining_val,
             buy_append_to_new_head,
-        ) = if is_deriv {
-            orders_to_cancel_deriv(open_buys, new_buy_head, new_buy_tail, true)
-        } else {
-            orders_to_cancel_spot(open_buys, new_buy_head, new_buy_tail, true)
-        };
-
-        // Get new buy orders
-        let new_buy_orders = if is_deriv {
-            let position_qty = match position.clone() {
-                Some(position) => {
-                    if position.is_long {
-                        Decimal::zero()
-                    } else {
-                        position.quantity
-                    }
-                }
-                None => Decimal::zero(),
-            };
-            if buy_orders_to_keep.len() == 0 {
-                let (new_buy_orders, _) = create_new_orders_base_deriv(
-                    new_buy_head,
-                    new_buy_tail,
-                    inv_val,
-                    buy_orders_to_keep,
-                    buy_orders_remaining_val,
-                    position_qty,
-                    true,
-                    true,
-                    &state,
-                );
-                new_buy_orders
-            } else if buy_append_to_new_head {
-                let (new_buy_orders, mut additional_hashes_to_cancel) =
-                    create_new_orders_tail_to_head_deriv(
-                        new_buy_head,
-                        inv_val,
-                        buy_orders_to_keep,
-                        buy_orders_remaining_val,
-                        position_qty,
-                        true,
-                        &state,
-                    );
-                buy_hashes_to_cancel.append(&mut additional_hashes_to_cancel);
-                new_buy_orders
-            } else {
-                let (new_buy_orders, mut additional_hashes_to_cancel) =
-                    create_new_orders_head_to_tail_deriv(
-                        new_buy_tail,
-                        inv_val,
-                        buy_orders_to_keep,
-                        buy_orders_remaining_val,
-                        position_qty,
-                        true,
-                        &state,
-                    );
-                buy_hashes_to_cancel.append(&mut additional_hashes_to_cancel);
-                new_buy_orders
-            }
-        } else {
-            create_new_orders_spot(
-                new_buy_head,
-                new_buy_tail,
-                inv_val,
-                buy_orders_to_keep,
-                buy_orders_remaining_val,
-                buy_append_to_new_head,
-                true,
-                &state,
-            )
-        };
+        ) = orders_to_cancel(open_buys, new_buy_head, new_buy_tail, true, is_deriv);
 
         // Get information for sell order creation/cancellation
         let (
@@ -259,76 +190,37 @@ fn get_action(
             sell_orders_to_keep,
             sell_orders_remaining_val,
             sell_append_to_new_head,
-        ) = if is_deriv {
-            orders_to_cancel_deriv(open_sells, new_sell_head, new_sell_tail, false)
-        } else {
-            orders_to_cancel_spot(open_sells, new_sell_head, new_sell_tail, false)
-        };
+        ) = orders_to_cancel(open_sells, new_sell_head, new_sell_tail, false, is_deriv);
+
+        // Get new buy orders
+        let new_buy_orders = create_orders(
+            new_buy_head,
+            new_buy_tail,
+            inv_val,
+            buy_orders_to_keep,
+            buy_orders_remaining_val,
+            position.clone(),
+            buy_append_to_new_head,
+            &mut buy_hashes_to_cancel,
+            is_deriv,
+            true,
+            &state,
+        );
 
         // Get new sell orders
-        let mut new_sell_orders = if is_deriv {
-            let position_qty = match position {
-                Some(position) => {
-                    if !position.is_long {
-                        Decimal::zero()
-                    } else {
-                        position.quantity
-                    }
-                }
-                None => Decimal::zero(),
-            };
-            if sell_orders_to_keep.len() == 0 {
-                let (new_sell_orders, _) = create_new_orders_base_deriv(
-                    new_sell_head,
-                    new_sell_tail,
-                    inv_val,
-                    sell_orders_to_keep,
-                    sell_orders_remaining_val,
-                    position_qty,
-                    true,
-                    false,
-                    &state,
-                );
-                new_sell_orders
-            } else if sell_append_to_new_head {
-                let (new_sell_orders, mut additional_hashes_to_cancel) =
-                    create_new_orders_tail_to_head_deriv(
-                        new_sell_head,
-                        inv_val,
-                        sell_orders_to_keep,
-                        sell_orders_remaining_val,
-                        position_qty,
-                        false,
-                        &state,
-                    );
-                sell_hashes_to_cancel.append(&mut additional_hashes_to_cancel);
-                new_sell_orders
-            } else {
-                let (new_sell_orders, mut additional_hashes_to_cancel) =
-                    create_new_orders_head_to_tail_deriv(
-                        new_sell_tail,
-                        inv_val,
-                        sell_orders_to_keep,
-                        sell_orders_remaining_val,
-                        position_qty,
-                        false,
-                        &state,
-                    );
-                sell_hashes_to_cancel.append(&mut additional_hashes_to_cancel);
-                new_sell_orders
-            }
-        } else {
-            create_new_orders_spot(
-                new_sell_head,
-                new_sell_tail,
-                inv_val,
-                sell_orders_to_keep,
-                sell_orders_remaining_val,
-                sell_append_to_new_head,
-                false,
-                &state,
-            )
-        };
+        let mut new_sell_orders = create_orders(
+            new_sell_head,
+            new_sell_tail,
+            inv_val,
+            sell_orders_to_keep,
+            sell_orders_remaining_val,
+            position,
+            sell_append_to_new_head,
+            &mut sell_hashes_to_cancel,
+            is_deriv,
+            false,
+            &state,
+        );
 
         let mut hashes_to_cancel = buy_hashes_to_cancel;
         hashes_to_cancel.append(&mut sell_hashes_to_cancel);
@@ -345,6 +237,97 @@ fn get_action(
             hashes_to_cancel: Vec::new(),
             orders_to_open: Vec::new(),
         })
+    }
+}
+fn orders_to_cancel(
+    open_orders: Vec<WrappedOpenOrder>,
+    new_head: Decimal,
+    new_tail: Decimal,
+    is_buy: bool,
+    is_deriv: bool,
+) -> (Vec<String>, Vec<WrappedOpenOrder>, Decimal, bool) {
+    if is_deriv {
+        orders_to_cancel_deriv(open_orders, new_head, new_tail, is_buy)
+    } else {
+        orders_to_cancel_spot(open_orders, new_head, new_tail, is_buy)
+    }
+}
+
+fn create_orders(
+    new_head: Decimal,
+    new_tail: Decimal,
+    inv_val: Decimal,
+    orders_to_keep: Vec<WrappedOpenOrder>,
+    orders_remaining_val: Decimal,
+    position: Option<WrappedPosition>,
+    append_to_new_head: bool,
+    hashes_to_cancel: &mut Vec<String>,
+    is_deriv: bool,
+    is_buy: bool,
+    state: &State,
+) -> Vec<WrappedOrderResponse> {
+    if is_deriv {
+        let position_qty = match position {
+            Some(position) => {
+                if !position.is_long {
+                    Decimal::zero()
+                } else {
+                    position.quantity
+                }
+            }
+            None => Decimal::zero(),
+        };
+        if orders_to_keep.len() == 0 {
+            let (new_orders, _) = create_new_orders_base_deriv(
+                new_head,
+                new_tail,
+                inv_val,
+                orders_to_keep,
+                orders_remaining_val,
+                position_qty,
+                true,
+                is_buy,
+                &state,
+            );
+            new_orders
+        } else if append_to_new_head {
+            let (new_orders, mut additional_hashes_to_cancel) =
+                create_new_orders_tail_to_head_deriv(
+                    new_head,
+                    inv_val,
+                    orders_to_keep,
+                    orders_remaining_val,
+                    position_qty,
+                    is_buy,
+                    &state,
+                );
+            hashes_to_cancel.append(&mut additional_hashes_to_cancel);
+            new_orders
+        } else {
+            let (new_orders, mut additional_hashes_to_cancel) =
+                create_new_orders_head_to_tail_deriv(
+                    new_tail,
+                    inv_val,
+                    orders_to_keep,
+                    orders_remaining_val,
+                    position_qty,
+                    is_buy,
+                    &state,
+                );
+            hashes_to_cancel.append(&mut additional_hashes_to_cancel);
+            new_orders
+        }
+    } else {
+        create_new_orders_spot(
+            new_head,
+            new_tail,
+            inv_val,
+            orders_to_keep,
+            orders_remaining_val,
+            append_to_new_head,
+            is_buy,
+            &state,
+        )
     }
 }
 
