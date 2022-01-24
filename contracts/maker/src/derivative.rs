@@ -3,7 +3,7 @@ use crate::{
     state::State,
     utils::{div_dec, div_int, sub_abs},
 };
-use cosmwasm_std::{Decimal256 as Decimal};
+use cosmwasm_std::Decimal256 as Decimal;
 
 /// Calculates the inventory imbalance from the margined value of an open position
 /// # Arguments
@@ -25,7 +25,7 @@ pub fn inv_imbalance_deriv(position: &Option<WrappedPosition>, inv_val: Decimal)
 
 /// Determines the new orders that should be placed between the new head/tail. Ensures
 /// that the notional value of all open orders will be equal to the percent of active
-/// capital defined upon instantiation. If there is a position open, it will place 
+/// capital defined upon instantiation. If there is a position open, it will place
 /// reduce only orders starting from the head to try to reduce the position.
 /// # Arguments
 /// * `new_head` - The new head (closest to the reservation price)
@@ -111,7 +111,10 @@ mod tests {
                         head_price,
                         Decimal::from_str(&tail_price.to_string()).unwrap(),
                         alloc_value,
-                        div_dec( div_dec(alloc_value * state.leverage, head_price), Decimal::from_str(&p.to_string()).unwrap()) ,
+                        div_dec(
+                            div_dec(alloc_value * state.leverage, head_price),
+                            Decimal::from_str(&p.to_string()).unwrap(),
+                        ),
                         true,
                         &state,
                     );
@@ -120,7 +123,7 @@ mod tests {
         }
     }
 
-     #[test]
+    #[test]
     fn create_new_sell_orders_deriv_test() {
         let leverage = Decimal::from_str("2.5").unwrap();
         for i in 2..10 {
@@ -143,7 +146,10 @@ mod tests {
                         head_price,
                         Decimal::from_str(&tail_price.to_string()).unwrap(),
                         alloc_value,
-                        div_dec( div_dec(alloc_value * state.leverage, head_price), Decimal::from_str(&p.to_string()).unwrap()) ,
+                        div_dec(
+                            div_dec(alloc_value * state.leverage, head_price),
+                            Decimal::from_str(&p.to_string()).unwrap(),
+                        ),
                         false,
                         &state,
                     );
@@ -192,10 +198,9 @@ mod tests {
                 };
                 if new_orders[i - 1].get_price() == new_orders[i].get_price() {
                     num_same_priced_orders += 1;
-
                 }
                 assert!(value * (max_tolerance * val_per_order) >= val_per_order);
-            } 
+            }
         }
 
         // Ensure we never have too many orders

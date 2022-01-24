@@ -264,36 +264,36 @@ fn split_open_orders(open_orders: Vec<WrappedOpenOrder>) -> (Vec<WrappedOpenOrde
     (buy_orders, sell_orders)
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::split_open_orders;
-//     use crate::{contract::orders_to_cancel, msg::WrappedOpenOrder};
-//     use cosmwasm_std::Decimal256 as Decimal;
-//     use std::str::FromStr;
+#[cfg(test)]
+mod tests {
+    use super::split_open_orders;
+    use crate::msg::WrappedOpenOrder;
+    use cosmwasm_std::Decimal256 as Decimal;
+    use std::str::FromStr;
 
-//     #[test]
-//     fn split_open_orders_test() {
-//         let mut open_orders: Vec<WrappedOpenOrder> = Vec::new();
-//         let order = WrappedOpenOrder {
-//             order_hash: String::from(""),
-//             is_buy: true,
-//             qty: Decimal::zero(),
-//             price: Decimal::one(),
-//             is_reduce_only: false,
-//         };
-//         let mut buy = order.clone();
-//         let mut sell = order.clone();
-//         for _ in 0..25 {
-//             sell.is_buy = false;
-//             buy.price = buy.price + Decimal::one();
-//             sell.price = sell.price + Decimal::one();
-//             open_orders.push(buy.clone());
-//             open_orders.push(sell.clone());
-//         }
-//         let (buy_orders, sell_orders) = split_open_orders(open_orders);
-//         for i in 1..25 {
-//             assert!(buy_orders[i].price < buy_orders[i - 1].price); // These should be decreasing
-//             assert!(sell_orders[i].price > sell_orders[i - 1].price); // These should be increasing
-//         }
-//     }
-// }
+    #[test]
+    fn split_open_orders_test() {
+        let mut open_orders: Vec<WrappedOpenOrder> = Vec::new();
+        let order = WrappedOpenOrder {
+            order_hash: String::from(""),
+            is_buy: true,
+            qty: Decimal::zero(),
+            price: Decimal::one(),
+            is_reduce_only: false,
+        };
+        let mut buy = order.clone();
+        let mut sell = order.clone();
+        for _ in 0..25 {
+            sell.is_buy = false;
+            buy.price = buy.price + Decimal::one();
+            sell.price = sell.price + Decimal::one();
+            open_orders.push(buy.clone());
+            open_orders.push(sell.clone());
+        }
+        let (buy_orders, sell_orders) = split_open_orders(open_orders);
+        for i in 1..25 {
+            assert!(buy_orders[i].price < buy_orders[i - 1].price); // These should be decreasing
+            assert!(sell_orders[i].price > sell_orders[i - 1].price); // These should be increasing
+        }
+    }
+}
