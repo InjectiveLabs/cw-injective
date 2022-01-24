@@ -1,13 +1,13 @@
 use std::str::FromStr;
 
-use crate::derivative::{base_deriv, head_to_tail_deriv, inv_imbalance_deriv, tail_to_head_deriv};
+use crate::derivative::{create_new_orders_deriv, inv_imbalance_deriv};
 use crate::error::ContractError;
 use crate::msg::{
     ExecuteMsg, InstantiateMsg, OpenOrder, Position, QueryMsg, WrappedGetActionResponse, WrappedOpenOrder, WrappedOrderResponse, WrappedPosition,
 };
 use crate::spot::{create_new_orders_spot, inv_imbalance_spot};
 use crate::state::{config, config_read, State};
-use crate::utils::{div_dec, sub_abs, wrap};
+use crate::utils::{div_dec, sub_abs, sub_no_overflow, wrap};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, Coin, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint256,
 };
@@ -151,165 +151,62 @@ fn get_action(
         let (new_buy_tail, new_sell_tail) = new_tail_prices(new_buy_head, new_sell_head, state.tail_dist_to_head_bp);
 
         // Get information for buy order creation/cancellation
-        let (mut buy_hashes_to_cancel, buy_orders_to_keep, buy_orders_remaining_val, buy_append_to_new_head) =
-            orders_to_cancel(open_buys, new_buy_head, new_buy_tail, true);
+        let buy_hashes_to_cancel = orders_to_cancel(open_buys);
 
         // Get information for sell order creation/cancellation
-        let (mut sell_hashes_to_cancel, sell_orders_to_keep, sell_orders_remaining_val, sell_append_to_new_head) =
-            orders_to_cancel(open_sells, new_sell_head, new_sell_tail, false);
+        let sell_hashes_to_cancel = orders_to_cancel(open_sells);
 
         // Get new buy orders
-        let new_buy_orders = create_orders(
-            new_buy_head,
-            new_buy_tail,
-            inv_val,
-            buy_orders_to_keep,
-            buy_orders_remaining_val,
-            position.clone(),
-            buy_append_to_new_head,
-            &mut buy_hashes_to_cancel,
-            is_deriv,
-            true,
-            &state,
-        );
+        let buy_orders_to_open = create_orders(new_buy_head, new_buy_tail, inv_val, position.clone(), is_deriv, true, &state);
 
         // Get new sell orders
-        let mut new_sell_orders = create_orders(
-            new_sell_head,
-            new_sell_tail,
-            inv_val,
-            sell_orders_to_keep,
-            sell_orders_remaining_val,
-            position,
-            sell_append_to_new_head,
-            &mut sell_hashes_to_cancel,
-            is_deriv,
-            false,
-            &state,
-        );
-
-        let mut hashes_to_cancel = buy_hashes_to_cancel;
-        hashes_to_cancel.append(&mut sell_hashes_to_cancel);
-
-        let mut orders_to_open = new_buy_orders;
-        orders_to_open.append(&mut new_sell_orders);
+        let sell_orders_to_open = create_orders(new_sell_head, new_sell_tail, inv_val, position, is_deriv, false, &state);
 
         Ok(WrappedGetActionResponse {
-            hashes_to_cancel,
-            orders_to_open,
+            buy_hashes_to_cancel,
+            buy_orders_to_open,
+            sell_hashes_to_cancel,
+            sell_orders_to_open,
         })
     } else {
         Ok(WrappedGetActionResponse {
-            hashes_to_cancel: Vec::new(),
-            orders_to_open: Vec::new(),
+            buy_hashes_to_cancel: Vec::new(),
+            buy_orders_to_open: Vec::new(),
+            sell_hashes_to_cancel: Vec::new(),
+            sell_orders_to_open: Vec::new(),
         })
     }
 }
 
-/// Uses the new head/tail to determine if there are any orders that need to be cancelled.
-/// # Arguments
-/// * `open_orders` - A list of open orders from the last block
-/// * `new_head` - The new head (closest to the reservation price)
-/// * `new_tail` - The new tail (farthest from the reservation price)
-/// * `is_buy` - True if all open_orders are buy. False if they are all sell
-/// # Returns
-/// * `hashes_to_cancel` - A list of order hashes that we would like to cancel
-/// * `orders_to_keep` - A list of open orders that we are going to keep on the book
-/// * `orders_remaining_val` - An aggregation of the total notional value of orders_to_keep
-/// * `append_to_new_head` - An indication of whether we should append new orders to the new head
-/// or to the back of the orders_to_keep block
-pub fn orders_to_cancel(
-    open_orders: Vec<WrappedOpenOrder>,
-    new_head: Decimal,
-    new_tail: Decimal,
-    is_buy: bool,
-) -> (Vec<String>, Vec<WrappedOpenOrder>, Decimal, bool) {
-    let mut orders_remaining_val = Decimal::zero();
-    let mut hashes_to_cancel: Vec<String> = Vec::new();
-    // If there are any open orders, we need to check them to see if we should cancel
-    if open_orders.len() > 0 {
-        // Use the new tail/head to filter out the orders to cancel
-        let orders_to_keep: Vec<WrappedOpenOrder> = open_orders
-            .into_iter()
-            .filter(|o| {
-                let keep_if_buy = o.price <= new_head && o.price >= new_tail;
-                let keep_if_sell = o.price >= new_head && o.price <= new_tail;
-                let keep = (keep_if_buy && is_buy) || (keep_if_sell && !is_buy);
-                if keep {
-                    orders_remaining_val = orders_remaining_val + (o.price * o.qty);
-                } else {
-                    hashes_to_cancel.push(o.order_hash.clone());
-                }
-                keep
-            })
-            .collect();
-        // Determine if we need to append to new orders to the new head or if we need to
-        // append to the end of the block of orders we will be keeping
-        let append_to_new_head = sub_abs(new_head, orders_to_keep.first().unwrap().price) > sub_abs(orders_to_keep.last().unwrap().price, new_tail);
-        (hashes_to_cancel, orders_to_keep, orders_remaining_val, append_to_new_head)
-    } else {
-        (hashes_to_cancel, Vec::new(), orders_remaining_val, true)
-    }
+pub fn orders_to_cancel(open_orders: Vec<WrappedOpenOrder>) -> Vec<String> {
+    open_orders.iter().map(|o| o.order_hash.clone()).collect()
 }
 
 fn create_orders(
     new_head: Decimal,
     new_tail: Decimal,
     inv_val: Decimal,
-    orders_to_keep: Vec<WrappedOpenOrder>,
-    orders_remaining_val: Decimal,
     position: Option<WrappedPosition>,
-    append_to_new_head: bool,
-    hashes_to_cancel: &mut Vec<String>,
     is_deriv: bool,
     is_buy: bool,
     state: &State,
 ) -> Vec<WrappedOrderResponse> {
-    let alloc_val_for_new_orders = div_dec(inv_val * state.active_capital_perct, Decimal::from_str("2").unwrap()) - orders_remaining_val;
+    let alloc_val_for_new_orders = div_dec(inv_val * state.active_capital_perct, Decimal::from_str("2").unwrap());
     if is_deriv {
-        let position_qty = match position {
+        let (position_qty, position_margin) = match position {
             Some(position) => {
-                if !position.is_long {
-                    Decimal::zero()
+                if position.is_long == is_buy {
+                    (Decimal::zero(), position.margin)
                 } else {
-                    position.quantity
+                    (position.quantity, Decimal::zero())
                 }
             }
-            None => Decimal::zero(),
+            None => (Decimal::zero(), Decimal::zero()),
         };
-        if orders_to_keep.len() == 0 {
-            let (new_orders, _) = base_deriv(
-                new_head,
-                new_tail,
-                alloc_val_for_new_orders,
-                orders_to_keep,
-                position_qty,
-                true,
-                is_buy,
-                &state,
-            );
-            new_orders
-        } else if append_to_new_head {
-            let (new_orders, mut additional_hashes_to_cancel) =
-                tail_to_head_deriv(new_head, alloc_val_for_new_orders, orders_to_keep, position_qty, is_buy, &state);
-            hashes_to_cancel.append(&mut additional_hashes_to_cancel);
-            new_orders
-        } else {
-            let (new_orders, mut additional_hashes_to_cancel) =
-                head_to_tail_deriv(new_tail, alloc_val_for_new_orders, orders_to_keep, position_qty, is_buy, &state);
-            hashes_to_cancel.append(&mut additional_hashes_to_cancel);
-            new_orders
-        }
+        let alloc_val_for_new_orders = sub_no_overflow(alloc_val_for_new_orders, position_margin);
+        create_new_orders_deriv(new_head, new_tail, alloc_val_for_new_orders, position_qty, is_buy, &state).0
     } else {
-        create_new_orders_spot(
-            new_head,
-            new_tail,
-            alloc_val_for_new_orders,
-            orders_to_keep,
-            append_to_new_head,
-            is_buy,
-            &state,
-        )
+        create_new_orders_spot(new_head, new_tail, alloc_val_for_new_orders, is_buy, &state)
     }
 }
 
@@ -349,10 +246,10 @@ fn head_chg_gt_tol(open_orders: &Vec<WrappedOpenOrder>, new_head: Decimal, head_
     }
 }
 
-fn new_tail_prices(new_buy_head: Decimal, new_sell_head: Decimal, tail_dist_to_head_bp: Decimal) -> (Decimal, Decimal) {
+pub fn new_tail_prices(new_buy_head: Decimal, new_sell_head: Decimal, tail_dist_to_head_bp: Decimal) -> (Decimal, Decimal) {
     (
-        new_buy_head * (Decimal::one() - (tail_dist_to_head_bp * Decimal::from_str("10000").unwrap())),
-        new_sell_head * (Decimal::one() + (tail_dist_to_head_bp * Decimal::from_str("10000").unwrap())),
+        new_buy_head * (Decimal::one() - div_dec(tail_dist_to_head_bp, Decimal::from_str("10000").unwrap())),
+        new_sell_head * (Decimal::one() + div_dec(tail_dist_to_head_bp, Decimal::from_str("10000").unwrap())),
     )
 }
 
@@ -367,147 +264,36 @@ fn split_open_orders(open_orders: Vec<WrappedOpenOrder>) -> (Vec<WrappedOpenOrde
     (buy_orders, sell_orders)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::split_open_orders;
-    use crate::{contract::orders_to_cancel, msg::WrappedOpenOrder};
-    use cosmwasm_std::Decimal256 as Decimal;
-    use std::str::FromStr;
+// #[cfg(test)]
+// mod tests {
+//     use super::split_open_orders;
+//     use crate::{contract::orders_to_cancel, msg::WrappedOpenOrder};
+//     use cosmwasm_std::Decimal256 as Decimal;
+//     use std::str::FromStr;
 
-    #[test]
-    fn split_open_orders_test() {
-        let mut open_orders: Vec<WrappedOpenOrder> = Vec::new();
-        let order = WrappedOpenOrder {
-            order_hash: String::from(""),
-            is_buy: true,
-            qty: Decimal::zero(),
-            price: Decimal::one(),
-            is_reduce_only: false,
-        };
-        let mut buy = order.clone();
-        let mut sell = order.clone();
-        for _ in 0..25 {
-            sell.is_buy = false;
-            buy.price = buy.price + Decimal::one();
-            sell.price = sell.price + Decimal::one();
-            open_orders.push(buy.clone());
-            open_orders.push(sell.clone());
-        }
-        let (buy_orders, sell_orders) = split_open_orders(open_orders);
-        for i in 1..25 {
-            assert!(buy_orders[i].price < buy_orders[i - 1].price); // These should be decreasing
-            assert!(sell_orders[i].price > sell_orders[i - 1].price); // These should be increasing
-        }
-    }
-
-    #[test]
-    fn orders_to_cancel_for_buy_test() {
-        let mut open_buy_orders: Vec<WrappedOpenOrder> = Vec::new();
-        let order = WrappedOpenOrder {
-            order_hash: String::from(""),
-            is_buy: true,
-            qty: Decimal::one(),
-            price: Decimal::zero(),
-            is_reduce_only: false,
-        };
-
-        let old_tail_price = 10;
-        let order_density = 10;
-
-        let new_buy_head_a = Decimal::from_str(&(old_tail_price + order_density + 1).to_string()).unwrap();
-        let new_buy_tail_a = Decimal::from_str(&(old_tail_price + 1).to_string()).unwrap();
-        let mut buy_orders_remaining_val_a = Decimal::zero();
-
-        let new_buy_head_b = Decimal::from_str(&(old_tail_price + order_density - 1).to_string()).unwrap();
-        let new_buy_tail_b = Decimal::from_str(&(old_tail_price + 1).to_string()).unwrap();
-        let mut buy_orders_remaining_val_b = Decimal::zero();
-
-        let mut buy = order.clone();
-        for i in (old_tail_price..(old_tail_price + order_density + 1)).into_iter().rev() {
-            let price = Decimal::from_str(&i.to_string()).unwrap();
-            buy.price = price;
-            buy.is_reduce_only = i % 2 == 0;
-            if price <= new_buy_head_a && price >= new_buy_tail_a {
-                buy_orders_remaining_val_a = buy_orders_remaining_val_a + price;
-            }
-            if price <= new_buy_head_b && price >= new_buy_tail_b {
-                buy_orders_remaining_val_b = buy_orders_remaining_val_b + price;
-            }
-            open_buy_orders.push(buy.clone());
-        }
-
-        // Check case where we need to cancel orders by the tail because the new head > old head
-        let (buy_hashes_to_cancel, buy_orders_to_keep, buy_orders_remaining_val, buy_append_new_to_head) =
-            orders_to_cancel(open_buy_orders.clone(), new_buy_head_a, new_buy_tail_a, true);
-        assert!(buy_append_new_to_head);
-        assert_eq!(buy_orders_remaining_val, buy_orders_remaining_val_a);
-        assert_eq!(open_buy_orders.len() - buy_orders_to_keep.len(), buy_hashes_to_cancel.len());
-
-        // Check case where we need to cancel orders by the head because the new head < old head
-        let (buy_hashes_to_cancel, buy_orders_to_keep, buy_orders_remaining_val, buy_append_new_to_head) =
-            orders_to_cancel(open_buy_orders.clone(), new_buy_head_b, new_buy_tail_b, true);
-        assert!(!buy_append_new_to_head);
-        assert_eq!(buy_orders_remaining_val, buy_orders_remaining_val_b);
-        assert_eq!(open_buy_orders.len() - buy_orders_to_keep.len(), buy_hashes_to_cancel.len());
-
-        // Check case where there were no open orders at all
-        let (buy_hashes_to_cancel, _, _, buy_append_new_to_head) = orders_to_cancel(Vec::new(), new_buy_head_a, new_buy_tail_a, true);
-        assert!(buy_append_new_to_head);
-        assert_eq!(0, buy_hashes_to_cancel.len());
-    }
-    #[test]
-    fn orders_to_cancel_for_sell_test() {
-        let mut open_sell_orders: Vec<WrappedOpenOrder> = Vec::new();
-        let order = WrappedOpenOrder {
-            order_hash: String::from(""),
-            is_buy: false,
-            qty: Decimal::one(),
-            price: Decimal::zero(),
-            is_reduce_only: false,
-        };
-
-        let old_head_price = 10;
-        let order_density = 10;
-
-        let new_sell_head_a = Decimal::from_str(&(old_head_price + 1).to_string()).unwrap();
-        let new_sell_tail_a = Decimal::from_str(&(old_head_price + order_density + 1).to_string()).unwrap();
-        let mut sell_orders_remaining_val_a = Decimal::zero();
-
-        let new_sell_head_b = Decimal::from_str(&(old_head_price - 1).to_string()).unwrap();
-        let new_sell_tail_b = Decimal::from_str(&(old_head_price + order_density - 1).to_string()).unwrap();
-        let mut sell_orders_remaining_val_b = Decimal::zero();
-
-        let mut sell = order.clone();
-        for i in old_head_price..(old_head_price + order_density + 1) {
-            let price = Decimal::from_str(&i.to_string()).unwrap();
-            sell.price = price;
-            sell.is_reduce_only = i % 2 == 0;
-            if price >= new_sell_head_a && price <= new_sell_tail_a {
-                sell_orders_remaining_val_a = sell_orders_remaining_val_a + price;
-            }
-            if price >= new_sell_head_b && price <= new_sell_tail_b {
-                sell_orders_remaining_val_b = sell_orders_remaining_val_b + price;
-            }
-            open_sell_orders.push(sell.clone());
-        }
-
-        // Check case where we need to cancel orders by the tail because the new head > old head
-        let (sell_hashes_to_cancel, sell_orders_to_keep, sell_orders_remaining_val, sell_append_new_to_head) =
-            orders_to_cancel(open_sell_orders.clone(), new_sell_head_a, new_sell_tail_a, false);
-        assert!(!sell_append_new_to_head);
-        assert_eq!(sell_orders_remaining_val, sell_orders_remaining_val_a);
-        assert_eq!(open_sell_orders.len() - sell_orders_to_keep.len(), sell_hashes_to_cancel.len());
-
-        // Check case where we need to cancel orders by the tail because the new head > old head
-        let (sell_hashes_to_cancel, sell_orders_to_keep, sell_orders_remaining_val, sell_append_new_to_head) =
-            orders_to_cancel(open_sell_orders.clone(), new_sell_head_b, new_sell_tail_b, false);
-        assert!(sell_append_new_to_head);
-        assert_eq!(sell_orders_remaining_val, sell_orders_remaining_val_b);
-        assert_eq!(open_sell_orders.len() - sell_orders_to_keep.len(), sell_hashes_to_cancel.len());
-
-        // Check case where there were no open orders at all
-        let (sell_hashes_to_cancel, _, _, sell_append_new_to_head) = orders_to_cancel(Vec::new(), new_sell_head_a, new_sell_tail_a, false);
-        assert!(sell_append_new_to_head);
-        assert_eq!(0, sell_hashes_to_cancel.len());
-    }
-}
+//     #[test]
+//     fn split_open_orders_test() {
+//         let mut open_orders: Vec<WrappedOpenOrder> = Vec::new();
+//         let order = WrappedOpenOrder {
+//             order_hash: String::from(""),
+//             is_buy: true,
+//             qty: Decimal::zero(),
+//             price: Decimal::one(),
+//             is_reduce_only: false,
+//         };
+//         let mut buy = order.clone();
+//         let mut sell = order.clone();
+//         for _ in 0..25 {
+//             sell.is_buy = false;
+//             buy.price = buy.price + Decimal::one();
+//             sell.price = sell.price + Decimal::one();
+//             open_orders.push(buy.clone());
+//             open_orders.push(sell.clone());
+//         }
+//         let (buy_orders, sell_orders) = split_open_orders(open_orders);
+//         for i in 1..25 {
+//             assert!(buy_orders[i].price < buy_orders[i - 1].price); // These should be decreasing
+//             assert!(sell_orders[i].price > sell_orders[i - 1].price); // These should be increasing
+//         }
+//     }
+// }

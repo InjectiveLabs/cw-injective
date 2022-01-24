@@ -30,8 +30,17 @@ pub fn sub_abs(lhs: Decimal, rhs: Decimal) -> Decimal {
     }
 }
 
+pub fn sub_no_overflow(lhs: Decimal, rhs: Decimal) -> Decimal {
+    if lhs > rhs {
+        lhs - rhs
+    } else {
+        Decimal::zero()
+    }
+}
+
 pub fn round_to_precision(num: Decimal, precision_shift: Uint256) -> Decimal {
-    let shifted = num * precision_shift;
+    let precision_shift = Decimal::from_str(&precision_shift.to_string()).unwrap();
+    let shifted = (num * precision_shift) * Uint256::from_str("1").unwrap();
     let shifted = Decimal::from_str(&shifted.to_string()).unwrap();
-    shifted * Decimal::from_str(&precision_shift.to_string()).unwrap().inv().unwrap()
+    div_dec(shifted, precision_shift)
 }

@@ -2,7 +2,7 @@ use crate::{
     state::{config_read, State},
     utils::{div_dec, round_to_precision, wrap_from_state},
 };
-use cosmwasm_std::{Coin, Decimal256 as Decimal, Deps, StdError};
+use cosmwasm_std::{Coin, Decimal256 as Decimal, Deps, StdError, Uint256};
 use injective_bindings::InjectiveQueryWrapper;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -127,7 +127,11 @@ impl WrappedOrderResponse {
             market_id: state.market_id.clone(),
             subaccount_id: state.sub_account.clone(),
             fee_recipient: state.fee_recipient.clone(),
-            price: (price * state.decimal_shift).to_string(),
+            price: round_to_precision(
+                price * Decimal::from_str(&state.decimal_shift.to_string()).unwrap(),
+                Uint256::from_str("1").unwrap(),
+            )
+            .to_string(),
             quantity: round_to_precision(quantity, state.base_precision_shift).to_string(),
             leverage: state.leverage.to_string(),
             is_buy,
@@ -169,13 +173,18 @@ impl fmt::Display for WrappedOrderResponse {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct WrappedGetActionResponse {
-    pub hashes_to_cancel: Vec<String>,
-    pub orders_to_open: Vec<WrappedOrderResponse>,
+    pub buy_hashes_to_cancel: Vec<String>,
+    pub buy_orders_to_open: Vec<WrappedOrderResponse>,
+    pub sell_hashes_to_cancel: Vec<String>,
+    pub sell_orders_to_open: Vec<WrappedOrderResponse>,
 }
 impl fmt::Display for WrappedGetActionResponse {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut log = String::from("");
-        for order in self.orders_to_open.iter() {
+        for order in self.buy_orders_to_open.iter() {
+            log = format!("{}\n{}", log, order);
+        }
+        for order in self.sell_orders_to_open.iter() {
             log = format!("{}\n{}", log, order);
         }
         write!(f, "{}", log)
