@@ -5,6 +5,7 @@ use crate::error::ContractError;
 use crate::msg::{
     ExecuteMsg, InstantiateMsg, OpenOrder, Position, QueryMsg, WrappedGetActionResponse, WrappedOpenOrder, WrappedOrderResponse, WrappedPosition,
 };
+use crate::risk_management::get_alloc_bal_new_orders;
 use crate::spot::{create_new_orders_spot, inv_imbalance_spot};
 use crate::state::{config, config_read, State};
 use crate::utils::{div_dec, sub_abs, sub_no_overflow, wrap};
@@ -24,7 +25,7 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, info: Messag
         order_density: Uint256::from_str(&msg.order_density.clone()).unwrap(),
         active_capital_perct: Decimal::from_str(&msg.active_capital_perct.clone()).unwrap(),
         decimal_shift: Uint256::from_str(&msg.decimal_shift.clone()).unwrap(),
-        max_notional_position: Decimal::from_str(&msg.max_notional_position.clone()).unwrap(),
+        max_notional_position_perct: Decimal::from_str(&msg.max_notional_position_perct.clone()).unwrap(),
         min_pnl: Decimal::from_str(&msg.min_pnl.clone()).unwrap(),
         manual_offset_perct: Decimal::from_str(&msg.manual_offset_perct.clone()).unwrap(),
         tail_dist_to_head_bp: Decimal::from_str(&msg.tail_dist_to_head_bp.clone()).unwrap(),
@@ -191,7 +192,6 @@ fn create_orders(
     is_buy: bool,
     state: &State,
 ) -> Vec<WrappedOrderResponse> {
-    let alloc_val_for_new_orders = div_dec(inv_val * state.active_capital_perct, Decimal::from_str("2").unwrap());
     if is_deriv {
         let (position_qty, position_margin) = match position {
             Some(position) => {
@@ -203,9 +203,10 @@ fn create_orders(
             }
             None => (Decimal::zero(), Decimal::zero()),
         };
-        let alloc_val_for_new_orders = sub_no_overflow(alloc_val_for_new_orders, position_margin);
+        let alloc_val_for_new_orders = get_alloc_bal_new_orders(inv_val, position_margin, state.active_capital_perct, state.max_notional_position_perct);
         create_new_orders_deriv(new_head, new_tail, alloc_val_for_new_orders, position_qty, is_buy, &state).0
     } else {
+        let alloc_val_for_new_orders = get_alloc_bal_new_orders(inv_val, Decimal::zero(), state.active_capital_perct, state.max_notional_position_perct);
         create_new_orders_spot(new_head, new_tail, alloc_val_for_new_orders, is_buy, &state)
     }
 }

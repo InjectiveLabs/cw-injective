@@ -17,7 +17,7 @@ pub struct InstantiateMsg {
     pub risk_aversion: String,
     pub order_density: String,
     pub active_capital_perct: String,
-    pub max_notional_position: String,
+    pub max_notional_position_perct: String,
     pub min_pnl: String,
     pub manual_offset_perct: String,
     pub tail_dist_to_head_bp: String,

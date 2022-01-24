@@ -73,7 +73,7 @@ mod tests {
                 let alloc_value = 10_i32.pow(j);
                 create_new_orders_spot_test(
                     head_price,
-                    Decimal::from_str(&tail_price.to_string()).unwrap(),
+                    tail_price,
                     Decimal::from_str(&alloc_value.to_string()).unwrap(),
                     true,
                     &state,
@@ -93,7 +93,7 @@ mod tests {
                 let alloc_value = 10_i32.pow(j);
                 create_new_orders_spot_test(
                     head_price,
-                    Decimal::from_str(&tail_price.to_string()).unwrap(),
+                    tail_price,
                     Decimal::from_str(&alloc_value.to_string()).unwrap(),
                     false,
                     &state,
@@ -142,7 +142,7 @@ mod tests {
             risk_aversion: Decimal::from_str("0.2").unwrap(),
             order_density: Uint256::from_str(&order_density).unwrap(),
             active_capital_perct: Decimal::from_str("0.2").unwrap(),
-            max_notional_position: Decimal::zero(),
+            max_notional_position_perct: Decimal::zero(),
             min_pnl: Decimal::zero(),
             manual_offset_perct: Decimal::zero(),
             tail_dist_to_head_bp: Decimal::from_str("300").unwrap(),

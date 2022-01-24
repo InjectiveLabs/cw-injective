@@ -15,7 +15,7 @@ pub struct State {
     pub risk_aversion: Decimal,
     pub order_density: Uint256,
     pub active_capital_perct: Decimal,
-    pub max_notional_position: Decimal,
+    pub max_notional_position_perct: Decimal,
     pub min_pnl: Decimal,
     pub manual_offset_perct: Decimal,
     pub tail_dist_to_head_bp: Decimal,
