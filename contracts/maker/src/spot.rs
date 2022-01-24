@@ -71,13 +71,7 @@ mod tests {
             let tail_price = head_price * (Decimal::one() - div_dec(state.tail_dist_to_head_bp, Decimal::from_str("10000").unwrap()));
             for j in 3..10 {
                 let alloc_value = 10_i32.pow(j);
-                create_new_orders_spot_test(
-                    head_price,
-                    tail_price,
-                    Decimal::from_str(&alloc_value.to_string()).unwrap(),
-                    true,
-                    &state,
-                );
+                create_new_orders_spot_test(head_price, tail_price, Decimal::from_str(&alloc_value.to_string()).unwrap(), true, &state);
             }
         }
     }

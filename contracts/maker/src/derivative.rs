@@ -98,14 +98,7 @@ mod tests {
             let tail_price = head_price * (Decimal::one() - div_dec(state.tail_dist_to_head_bp, Decimal::from_str("10000").unwrap()));
             for j in 3..10 {
                 let alloc_value = Decimal::from_str(&10_i32.pow(j).to_string()).unwrap();
-                create_new_orders_deriv_test(
-                    head_price,
-                    tail_price,
-                    alloc_value,
-                    Decimal::zero(),
-                    true,
-                    &state,
-                );
+                create_new_orders_deriv_test(head_price, tail_price, alloc_value, Decimal::zero(), true, &state);
                 for p in 1..20 {
                     create_new_orders_deriv_test(
                         head_price,

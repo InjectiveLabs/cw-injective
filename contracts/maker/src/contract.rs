@@ -203,10 +203,12 @@ fn create_orders(
             }
             None => (Decimal::zero(), Decimal::zero()),
         };
-        let alloc_val_for_new_orders = get_alloc_bal_new_orders(inv_val, position_margin, state.active_capital_perct, state.max_notional_position_perct);
+        let alloc_val_for_new_orders =
+            get_alloc_bal_new_orders(inv_val, position_margin, state.active_capital_perct, state.max_notional_position_perct);
         create_new_orders_deriv(new_head, new_tail, alloc_val_for_new_orders, position_qty, is_buy, &state).0
     } else {
-        let alloc_val_for_new_orders = get_alloc_bal_new_orders(inv_val, Decimal::zero(), state.active_capital_perct, state.max_notional_position_perct);
+        let alloc_val_for_new_orders =
+            get_alloc_bal_new_orders(inv_val, Decimal::zero(), state.active_capital_perct, state.max_notional_position_perct);
         create_new_orders_spot(new_head, new_tail, alloc_val_for_new_orders, is_buy, &state)
     }
 }
