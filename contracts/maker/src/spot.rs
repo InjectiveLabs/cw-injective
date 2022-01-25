@@ -88,7 +88,7 @@ mod tests {
             let decimal_base_shift = 10_i128.pow(i);
             let state = mock_state(String::from("1"), String::from("10"), decimal_base_shift.to_string());
             let head_price = Decimal::from_str(&10_i32.pow(i).to_string()).unwrap();
-            let tail_price = head_price * (Decimal::one() - div_dec(state.min_tail_dist_bp, Decimal::from_str("10000").unwrap()));
+            let tail_price = head_price * (Decimal::one() - state.min_tail_dist_perct);
             for j in 3..10 {
                 let alloc_value = 10_i32.pow(j);
                 create_new_orders_spot_test(head_price, tail_price, Decimal::from_str(&alloc_value.to_string()).unwrap(), true, &state);
@@ -102,7 +102,7 @@ mod tests {
             let decimal_base_shift = 10_i128.pow(i);
             let state = mock_state(String::from("1"), String::from("10"), decimal_base_shift.to_string());
             let head_price = Decimal::from_str(&10_i32.pow(i).to_string()).unwrap();
-            let tail_price = head_price * (Decimal::one() + div_dec(state.min_tail_dist_bp, Decimal::from_str("10000").unwrap()));
+            let tail_price = head_price * (Decimal::one() + state.min_tail_dist_perct);
             for j in 3..10 {
                 let alloc_value = 10_i32.pow(j);
                 create_new_orders_spot_test(
@@ -157,9 +157,9 @@ mod tests {
             order_density: Uint256::from_str(&order_density).unwrap(),
             active_capital_perct: Decimal::from_str("0.2").unwrap(),
             manual_offset_perct: Decimal::zero(),
-            min_tail_dist_bp: Decimal::from_str("300").unwrap(),
-            tail_dist_from_mid_bp: Decimal::from_str("800").unwrap(),
-            head_chg_tol_bp: Decimal::zero(),
+            min_tail_dist_perct: Decimal::from_str("0.03").unwrap(),
+            tail_dist_from_mid_perct: Decimal::from_str("0.08").unwrap(),
+            head_chg_tol_perct: Decimal::zero(),
             leverage: Decimal::from_str(&leverage).unwrap(),
             decimal_shift: Uint256::from_str("1000000").unwrap(),
             base_precision_shift: Uint256::from_str(&base_precision_shift.to_string()).unwrap(),

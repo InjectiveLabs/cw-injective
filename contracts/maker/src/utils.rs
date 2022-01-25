@@ -44,3 +44,7 @@ pub fn round_to_precision(num: Decimal, precision_shift: Uint256) -> Decimal {
     let shifted = Decimal::from_str(&shifted.to_string()).unwrap();
     div_dec(shifted, precision_shift)
 }
+
+pub fn bp_to_perct(bp: Decimal) -> Decimal {
+    div_dec(bp, Decimal::from_str("10000").unwrap())
+}
