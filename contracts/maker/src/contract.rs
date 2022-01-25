@@ -5,7 +5,7 @@ use crate::error::ContractError;
 use crate::msg::{
     ExecuteMsg, InstantiateMsg, OpenOrder, Position, QueryMsg, WrappedGetActionResponse, WrappedOpenOrder, WrappedOrderResponse, WrappedPosition,
 };
-use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders};
+use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, safe_varience};
 use crate::spot::{create_new_orders_spot, inv_imbalance_spot};
 use crate::state::{config, config_read, State};
 use crate::utils::{bp_to_perct, div_dec, sub_abs, sub_no_overflow, wrap};
@@ -116,7 +116,7 @@ fn get_action(
     let inv_val = wrap(&inv_val, deps);
     let std_dev = wrap(&std_dev, deps);
     let mid_price = wrap(&mid_price, deps);
-    let varience = std_dev * std_dev;
+    let varience = safe_varience(std_dev);
 
     // Load state
     let state = config_read(deps.storage).load().unwrap();
@@ -145,7 +145,7 @@ fn get_action(
     let (open_buys, open_sells) = split_open_orders(open_orders);
 
     // Ensure that the heads have changed enough that we are willing to make an action
-    if head_chg_gt_tol(&open_buys, new_buy_head, state.head_chg_tol_perct) && head_chg_gt_tol(&open_sells, new_sell_head, state.head_chg_tol_perct) {
+    if head_chg_is_gt_tol(&open_buys, new_buy_head, state.head_chg_tol_perct) && head_chg_is_gt_tol(&open_sells, new_sell_head, state.head_chg_tol_perct) {
         // Get new tails
         let (new_buy_tail, new_sell_tail) = new_tail_prices(
             new_buy_head,
@@ -155,16 +155,12 @@ fn get_action(
             state.min_tail_dist_perct,
         );
 
-        // Get information for buy order creation/cancellation
-        let buy_hashes_to_cancel = orders_to_cancel(open_buys);
+        // Cancel all open buy/sell from the preceeding block
+        let buy_hashes_to_cancel = open_buys.iter().map(|o| o.order_hash.clone()).collect();
+        let sell_hashes_to_cancel = open_sells.iter().map(|o| o.order_hash.clone()).collect();
 
-        // Get information for sell order creation/cancellation
-        let sell_hashes_to_cancel = orders_to_cancel(open_sells);
-
-        // Get new buy orders
+        // Get new buy/sell orders
         let buy_orders_to_open = create_orders(new_buy_head, new_buy_tail, inv_val, position.clone(), is_deriv, true, &state);
-
-        // Get new sell orders
         let sell_orders_to_open = create_orders(new_sell_head, new_sell_tail, inv_val, position, is_deriv, false, &state);
 
         Ok(WrappedGetActionResponse {
@@ -181,10 +177,6 @@ fn get_action(
             sell_orders_to_open: Vec::new(),
         })
     }
-}
-
-pub fn orders_to_cancel(open_orders: Vec<WrappedOpenOrder>) -> Vec<String> {
-    open_orders.iter().map(|o| o.order_hash.clone()).collect()
 }
 
 fn create_orders(
@@ -215,6 +207,14 @@ fn create_orders(
     }
 }
 
+/// Uses the inventory imbalance to 
+/// # Arguments
+/// * `varience` - The square of the the standard deviation that gets passed in as a param to get action
+/// * `reservation_price` - The a price that is shifted from the mid price depending on the inventory imbalance
+/// * `risk_aversion` - Risk aversion param configured upon intialization
+/// # Returns
+/// * `buy_head` - The new buy head
+/// * `sell_head` - The new sell head
 fn reservation_price(
     mid_price: Decimal,
     inv_imbal: Decimal,
@@ -234,6 +234,15 @@ fn reservation_price(
     }
 }
 
+/// Uses the reservation price and variation to calculate where the buy/sell heads should be. Both buy and
+/// sell heads will be equi-distant from the reservation price. 
+/// # Arguments
+/// * `varience` - The square of the the standard deviation that gets passed in as a param to get action
+/// * `reservation_price` - The a price that is shifted from the mid price depending on the inventory imbalance
+/// * `risk_aversion` - Risk aversion param configured upon intialization
+/// # Returns
+/// * `buy_head` - The new buy head
+/// * `sell_head` - The new sell head
 fn new_head_prices(varience: Decimal, reservation_price: Decimal, risk_aversion: Decimal) -> (Decimal, Decimal) {
     let dist_from_reservation_price = div_dec(varience * risk_aversion, Decimal::from_str("2").unwrap());
     (
@@ -242,7 +251,15 @@ fn new_head_prices(varience: Decimal, reservation_price: Decimal, risk_aversion:
     )
 }
 
-fn head_chg_gt_tol(open_orders: &Vec<WrappedOpenOrder>, new_head: Decimal, head_chg_tol_perct: Decimal) -> bool {
+/// Determines whether the new head for the next block will be different enough than that of the previous to warrent
+/// order cancellation and the creation of new orders.
+/// # Arguments
+/// * `open_orders` - The buy or sell side orders from the previous block
+/// * `new_head` - The new proposed buy or sell head
+/// * `head_chg_tol_perct` - Our tolerance to change in the head price
+/// # Returns
+/// * `should_change` - Whether we should cancel and place new orders at the new head
+fn head_chg_is_gt_tol(open_orders: &Vec<WrappedOpenOrder>, new_head: Decimal, head_chg_tol_perct: Decimal) -> bool {
     if open_orders.len() == 0 {
         true
     } else {
@@ -251,6 +268,18 @@ fn head_chg_gt_tol(open_orders: &Vec<WrappedOpenOrder>, new_head: Decimal, head_
     }
 }
 
+/// Calculates the correct tail prices for buy and sell sides based off of the mid price. If either of
+/// the distances between the head and tail fall below the minimum spread defined at initialization, risk
+/// manager returns a tail that meets the minimum spread constraint.
+/// # Arguments
+/// * `buy_head` - The new buy head
+/// * `sell_head` - The new sell head
+/// * `mid_price` - The mid price (or oracle price passed in with the query)
+/// * `tail_dist_from_mid_perct` - The distance from the mid price, in either direction, that we want tails to be located
+/// * `min_tail_dist_perct` - The min distance that can exist between any head and tail
+/// # Returns
+/// * `buy_tail` - The new buy tail
+/// * `sell_tail` - The new sell tail
 pub fn new_tail_prices(
     buy_head: Decimal,
     sell_head: Decimal,
@@ -271,8 +300,16 @@ pub fn new_tail_prices(
 /// * `buy_orders` - The sorted buyside orders
 /// * `sell_orders` - The sorted sellside orders
 fn split_open_orders(open_orders: Vec<WrappedOpenOrder>) -> (Vec<WrappedOpenOrder>, Vec<WrappedOpenOrder>) {
-    let mut buy_orders: Vec<WrappedOpenOrder> = open_orders.clone().into_iter().filter(|o| o.is_buy).collect();
-    let mut sell_orders: Vec<WrappedOpenOrder> = open_orders.into_iter().filter(|o| !o.is_buy).collect();
+    let mut buy_orders: Vec<WrappedOpenOrder> = Vec::new();
+    let mut sell_orders: Vec<WrappedOpenOrder> = open_orders
+        .into_iter()
+        .filter(|o| {
+            if o.is_buy {
+                buy_orders.push(o.clone());
+            }
+            !o.is_buy
+        })
+        .collect();
 
     // Sort both so the head is at index 0
     buy_orders.sort_by(|a, b| b.price.partial_cmp(&a.price).unwrap());
@@ -283,10 +320,59 @@ fn split_open_orders(open_orders: Vec<WrappedOpenOrder>) -> (Vec<WrappedOpenOrde
 
 #[cfg(test)]
 mod tests {
-    use super::split_open_orders;
+    use super::{new_tail_prices, split_open_orders, head_chg_is_gt_tol};
     use crate::msg::WrappedOpenOrder;
     use cosmwasm_std::Decimal256 as Decimal;
     use std::str::FromStr;
+    #[test]
+    fn head_chg_is_gt_tol_test() {
+        let mut open_orders: Vec<WrappedOpenOrder> = Vec::new();
+        let new_head = Decimal::from_str("1").unwrap();
+        let head_chg_tol_perct = Decimal::from_str("0.01").unwrap();
+        let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_chg_tol_perct);
+        assert!(should_change);
+
+        open_orders.push(WrappedOpenOrder {
+            is_buy: true,
+            order_hash: String::from(""),
+            qty: Decimal::zero(),
+            price: Decimal::from_str("1").unwrap(),
+            is_reduce_only: false,
+        });
+
+        let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_chg_tol_perct);
+        assert!(!should_change);
+
+        open_orders.pop();
+        open_orders.push(WrappedOpenOrder {
+            is_buy: true,
+            order_hash: String::from(""),
+            qty: Decimal::zero(),
+            price: Decimal::from_str("1.011").unwrap(),
+            is_reduce_only: false,
+        });
+
+        let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_chg_tol_perct);
+        assert!(should_change);
+    }
+
+    #[test]
+    fn new_tail_prices_test() {
+        let buy_head = Decimal::from_str("3999").unwrap();
+        let mid_price = Decimal::from_str("4000").unwrap();
+        let sell_head = Decimal::from_str("4001").unwrap();
+        let tail_dist_from_mid_perct = Decimal::from_str("0.05").unwrap();
+        let min_tail_dist_perct = Decimal::from_str("0.01").unwrap();
+        let (buy_tail, sell_tail) = new_tail_prices(buy_head, sell_head, mid_price, tail_dist_from_mid_perct, min_tail_dist_perct);
+        assert_eq!(buy_tail, mid_price * (Decimal::one() - tail_dist_from_mid_perct));
+        assert_eq!(sell_tail, mid_price * (Decimal::one() + tail_dist_from_mid_perct));
+
+        let tail_dist_from_mid_perct = Decimal::from_str("0.001").unwrap();
+        let min_tail_dist_perct = Decimal::from_str("0.01").unwrap();
+        let (buy_tail, sell_tail) = new_tail_prices(buy_head, sell_head, mid_price, tail_dist_from_mid_perct, min_tail_dist_perct);
+        assert_eq!(buy_tail, buy_head * (Decimal::one() - min_tail_dist_perct));
+        assert_eq!(sell_tail, sell_head * (Decimal::one() + min_tail_dist_perct));
+    }
 
     #[test]
     fn split_open_orders_test() {

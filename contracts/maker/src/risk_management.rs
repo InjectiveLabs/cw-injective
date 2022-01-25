@@ -68,11 +68,37 @@ pub fn check_tail_dist(
     (buy_tail, sell_tail)
 }
 
+/// Ensures that the varience will never be smaller than the std deviation.
+/// # Arguments
+/// * `std_dev` - The standard deviation
+/// # Returns
+/// * `safe_varience` - The varience
+pub fn safe_varience(mut std_dev: Decimal) -> Decimal {
+    let mut shift = Decimal::one();
+    let multiplier = Decimal::from_str("10").unwrap();
+    while std_dev * std_dev < std_dev {
+        std_dev = std_dev * multiplier;
+        shift = shift * multiplier;
+    }
+    div_dec(std_dev * std_dev, shift)
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{check_tail_dist, get_alloc_bal_new_orders};
+    use super::{check_tail_dist, get_alloc_bal_new_orders, safe_varience};
     use cosmwasm_std::Decimal256 as Decimal;
     use std::str::FromStr;
+
+    #[test] 
+    fn safe_varience_test() {
+        let std_dev = Decimal::from_str("2").unwrap();
+        let varience = safe_varience(std_dev);
+        assert_eq!(varience, Decimal::from_str("4").unwrap());
+
+        let std_dev = Decimal::from_str("0.4").unwrap();
+        let varience = safe_varience(std_dev);
+        assert_eq!(varience, Decimal::from_str("1.6").unwrap());
+    }
 
     #[test]
     fn get_alloc_bal_new_orders_test() {
@@ -95,8 +121,8 @@ mod tests {
 
     #[test]
     fn check_tail_dist_test() {
-        let buy_head = Decimal::from_str("4001").unwrap();
-        let sell_head = Decimal::from_str("3999").unwrap();
+        let buy_head = Decimal::from_str("3999").unwrap();
+        let sell_head = Decimal::from_str("4001").unwrap();
         let proposed_buy_tail = Decimal::from_str("2000").unwrap();
         let proposed_sell_tail = Decimal::from_str("7000").unwrap();
         let min_tail_dist_perct = Decimal::from_str("0.01").unwrap();

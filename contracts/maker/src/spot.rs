@@ -59,7 +59,7 @@ pub fn create_new_orders_spot(
 
 #[cfg(test)]
 mod tests {
-    use crate::{spot::create_new_orders_spot, state::State, utils::div_dec};
+    use crate::{spot::create_new_orders_spot, state::State};
     use cosmwasm_std::{Decimal256 as Decimal, Uint256};
     use std::str::FromStr;
 
