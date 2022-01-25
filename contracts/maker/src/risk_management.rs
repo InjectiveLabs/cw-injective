@@ -89,7 +89,7 @@ mod tests {
     use cosmwasm_std::Decimal256 as Decimal;
     use std::str::FromStr;
 
-    #[test] 
+    #[test]
     fn safe_varience_test() {
         let std_dev = Decimal::from_str("2").unwrap();
         let varience = safe_varience(std_dev);

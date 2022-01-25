@@ -8,7 +8,7 @@ use crate::msg::{
 use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, safe_varience};
 use crate::spot::{create_new_orders_spot, inv_imbalance_spot};
 use crate::state::{config, config_read, State};
-use crate::utils::{bp_to_perct, div_dec, sub_abs, sub_no_overflow, wrap};
+use crate::utils::{bp_to_perct, div_dec, sub_abs,  wrap};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, Coin, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint256,
 };
@@ -145,7 +145,9 @@ fn get_action(
     let (open_buys, open_sells) = split_open_orders(open_orders);
 
     // Ensure that the heads have changed enough that we are willing to make an action
-    if head_chg_is_gt_tol(&open_buys, new_buy_head, state.head_chg_tol_perct) && head_chg_is_gt_tol(&open_sells, new_sell_head, state.head_chg_tol_perct) {
+    if head_chg_is_gt_tol(&open_buys, new_buy_head, state.head_chg_tol_perct)
+        && head_chg_is_gt_tol(&open_sells, new_sell_head, state.head_chg_tol_perct)
+    {
         // Get new tails
         let (new_buy_tail, new_sell_tail) = new_tail_prices(
             new_buy_head,
@@ -207,7 +209,7 @@ fn create_orders(
     }
 }
 
-/// Uses the inventory imbalance to 
+/// Uses the inventory imbalance to
 /// # Arguments
 /// * `varience` - The square of the the standard deviation that gets passed in as a param to get action
 /// * `reservation_price` - The a price that is shifted from the mid price depending on the inventory imbalance
@@ -235,7 +237,7 @@ fn reservation_price(
 }
 
 /// Uses the reservation price and variation to calculate where the buy/sell heads should be. Both buy and
-/// sell heads will be equi-distant from the reservation price. 
+/// sell heads will be equi-distant from the reservation price.
 /// # Arguments
 /// * `varience` - The square of the the standard deviation that gets passed in as a param to get action
 /// * `reservation_price` - The a price that is shifted from the mid price depending on the inventory imbalance
@@ -320,7 +322,7 @@ fn split_open_orders(open_orders: Vec<WrappedOpenOrder>) -> (Vec<WrappedOpenOrde
 
 #[cfg(test)]
 mod tests {
-    use super::{new_tail_prices, split_open_orders, head_chg_is_gt_tol};
+    use super::{head_chg_is_gt_tol, new_tail_prices, split_open_orders};
     use crate::msg::WrappedOpenOrder;
     use cosmwasm_std::Decimal256 as Decimal;
     use std::str::FromStr;
