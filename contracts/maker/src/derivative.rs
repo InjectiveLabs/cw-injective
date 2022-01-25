@@ -95,7 +95,7 @@ mod tests {
             let decimal_base_shift = 10_i128.pow(i);
             let state = mock_state(leverage.to_string(), String::from("10"), decimal_base_shift.to_string());
             let head_price = Decimal::from_str(&10_i32.pow(i).to_string()).unwrap();
-            let tail_price = head_price * (Decimal::one() - div_dec(state.tail_dist_to_head_bp, Decimal::from_str("10000").unwrap()));
+            let tail_price = head_price * (Decimal::one() - div_dec(state.min_tail_dist_bp, Decimal::from_str("10000").unwrap()));
             for j in 3..10 {
                 let alloc_value = Decimal::from_str(&10_i32.pow(j).to_string()).unwrap();
                 create_new_orders_deriv_test(head_price, tail_price, alloc_value, Decimal::zero(), true, &state);
@@ -123,7 +123,7 @@ mod tests {
             let decimal_base_shift = 10_i128.pow(i);
             let state = mock_state(leverage.to_string(), String::from("10"), decimal_base_shift.to_string());
             let head_price = Decimal::from_str(&10_i32.pow(i).to_string()).unwrap();
-            let tail_price = head_price * (Decimal::one() + div_dec(state.tail_dist_to_head_bp, Decimal::from_str("10000").unwrap()));
+            let tail_price = head_price * (Decimal::one() + div_dec(state.min_tail_dist_bp, Decimal::from_str("10000").unwrap()));
             for j in 3..10 {
                 let alloc_value = Decimal::from_str(&10_i32.pow(j).to_string()).unwrap();
                 create_new_orders_deriv_test(
@@ -226,12 +226,10 @@ mod tests {
             risk_aversion: Decimal::from_str("0.2").unwrap(),
             order_density: Uint256::from_str(&order_density).unwrap(),
             active_capital_perct: Decimal::from_str("0.2").unwrap(),
-            max_notional_position_perct: Decimal::zero(),
-            min_pnl: Decimal::zero(),
             manual_offset_perct: Decimal::zero(),
-            tail_dist_to_head_bp: Decimal::from_str("300").unwrap(),
+            min_tail_dist_bp: Decimal::from_str("300").unwrap(),
+            tail_dist_from_mid_bp: Decimal::from_str("600").unwrap(),
             head_chg_tol_bp: Decimal::zero(),
-            max_dd: Decimal::one(),
             leverage: Decimal::from_str(&leverage).unwrap(),
             decimal_shift: Uint256::from_str("1000000").unwrap(),
             base_precision_shift: Uint256::from_str(&base_precision_shift.to_string()).unwrap(),
