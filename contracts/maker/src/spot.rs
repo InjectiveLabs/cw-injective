@@ -68,16 +68,16 @@ mod tests {
     fn inv_imbalance_test() {
         let inv_bal = Decimal::from_str("100000").unwrap();
         let base_balanced_bal = Decimal::from_str("50000").unwrap();
-        let (inv_imbal, _) = inv_imbalance_spot(base_balanced_bal, inv_bal );
+        let (inv_imbal, _) = inv_imbalance_spot(base_balanced_bal, inv_bal);
         assert_eq!(inv_imbal, Decimal::zero());
 
         let base_imbal_long_bal = Decimal::from_str("50001").unwrap();
-        let (inv_imbal, imbal_is_long) = inv_imbalance_spot(base_imbal_long_bal, inv_bal );
+        let (inv_imbal, imbal_is_long) = inv_imbalance_spot(base_imbal_long_bal, inv_bal);
         assert!(inv_imbal > Decimal::zero());
         assert!(imbal_is_long);
 
         let base_imbal_short_bal = Decimal::from_str("49999").unwrap();
-        let (inv_imbal, imbal_is_long) = inv_imbalance_spot(base_imbal_short_bal, inv_bal );
+        let (inv_imbal, imbal_is_long) = inv_imbalance_spot(base_imbal_short_bal, inv_bal);
         assert!(inv_imbal > Decimal::zero());
         assert!(!imbal_is_long);
     }
