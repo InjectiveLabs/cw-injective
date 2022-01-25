@@ -57,7 +57,7 @@ pub fn check_tail_dist(
     let sell_tail = if sell_head < proposed_sell_tail {
         let proposed_sell_tail_dist_perct = div_dec(sub_abs(sell_head, proposed_sell_tail), sell_head);
         if proposed_sell_tail_dist_perct < min_tail_dist_perct {
-            sell_head * (Decimal::one() +  min_tail_dist_perct)
+            sell_head * (Decimal::one() + min_tail_dist_perct)
         } else {
             proposed_sell_tail
         }
@@ -70,9 +70,9 @@ pub fn check_tail_dist(
 
 #[cfg(test)]
 mod tests {
+    use super::{check_tail_dist, get_alloc_bal_new_orders};
     use cosmwasm_std::Decimal256 as Decimal;
     use std::str::FromStr;
-    use super::{check_tail_dist, get_alloc_bal_new_orders};
 
     #[test]
     fn get_alloc_bal_new_orders_test() {

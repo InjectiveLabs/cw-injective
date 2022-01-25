@@ -124,7 +124,7 @@ mod tests {
             let decimal_base_shift = 10_i128.pow(i);
             let state = mock_state(leverage.to_string(), String::from("10"), decimal_base_shift.to_string());
             let head_price = Decimal::from_str(&10_i32.pow(i).to_string()).unwrap();
-            let tail_price = head_price * (Decimal::one() + state.min_tail_dist_perct  );
+            let tail_price = head_price * (Decimal::one() + state.min_tail_dist_perct);
             for j in 3..10 {
                 let alloc_value = Decimal::from_str(&10_i32.pow(j).to_string()).unwrap();
                 create_new_orders_deriv_test(
