@@ -8,7 +8,7 @@ use crate::msg::{
 use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, safe_varience};
 use crate::spot::{create_new_orders_spot, inv_imbalance_spot};
 use crate::state::{config, config_read, State};
-use crate::utils::{bp_to_perct, div_dec, sub_abs,  wrap};
+use crate::utils::{bp_to_perct, div_dec, sub_abs, wrap};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, Coin, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint256,
 };

@@ -1,25 +1,31 @@
-use std::str::FromStr;
-
+use crate::state::{config_read, State};
 use cosmwasm_std::{Decimal256 as Decimal, Deps, Fraction, Uint256};
 use injective_bindings::InjectiveQueryWrapper;
-
-use crate::state::{config_read, State};
+use std::str::FromStr;
 
 pub fn wrap(unwrapped_num: &String, deps: Deps<InjectiveQueryWrapper>) -> Decimal {
     let state = config_read(deps.storage).load().unwrap();
-    Decimal::from_str(unwrapped_num).unwrap() / state.decimal_shift
+    div_int(Decimal::from_str(unwrapped_num).unwrap(), state.decimal_shift)
 }
 
 pub fn wrap_from_state(unwrapped_num: &String, state: &State) -> Decimal {
-    Decimal::from_str(unwrapped_num).unwrap() * Decimal::from_ratio(Uint256::from_str("1").unwrap(), state.decimal_shift)
+    div_int(Decimal::from_str(unwrapped_num).unwrap(), state.decimal_shift)
 }
 
 pub fn div_int(num: Decimal, denom: Uint256) -> Decimal {
-    num * Decimal::from_ratio(Uint256::from_str("1").unwrap(), denom)
+    if denom == Uint256::zero() {
+        Decimal::zero()
+    } else {
+        num / denom
+    }
 }
 
 pub fn div_dec(num: Decimal, denom: Decimal) -> Decimal {
-    num * denom.inv().unwrap()
+    if denom == Decimal::zero() {
+        denom
+    } else {
+        num * denom.inv().unwrap()
+    }
 }
 
 pub fn sub_abs(lhs: Decimal, rhs: Decimal) -> Decimal {
@@ -47,4 +53,82 @@ pub fn round_to_precision(num: Decimal, precision_shift: Uint256) -> Decimal {
 
 pub fn bp_to_perct(bp: Decimal) -> Decimal {
     div_dec(bp, Decimal::from_str("10000").unwrap())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::sub_no_overflow;
+    use crate::utils::{div_dec, div_int, round_to_precision, sub_abs};
+    use cosmwasm_std::{Decimal256, Uint256};
+    use std::str::FromStr;
+
+    #[test]
+    fn div_int_test() {
+        let num = Decimal256::from_str("1").unwrap();
+        let denom = Uint256::zero();
+        let ans = div_int(num, denom);
+        assert_eq!(Decimal256::zero(), ans);
+
+        let num = Decimal256::from_str("3").unwrap();
+        let denom = Uint256::from_str("1").unwrap();
+        let ans = div_int(num, denom);
+        assert_eq!(Decimal256::from_str("3").unwrap(), ans);
+
+        let num = Decimal256::from_str("3").unwrap();
+        let denom = Uint256::from_str("2").unwrap();
+        let ans = div_int(num, denom);
+        assert_eq!(Decimal256::from_str("1.5").unwrap(), ans);
+    }
+
+    #[test]
+    fn div_dec_test() {
+        let num = Decimal256::from_str("1").unwrap();
+        let denom = Decimal256::zero();
+        let ans = div_dec(num, denom);
+        assert_eq!(Decimal256::zero(), ans);
+
+        let num = Decimal256::from_str("3").unwrap();
+        let denom = Decimal256::from_str("1").unwrap();
+        let ans = div_dec(num, denom);
+        assert_eq!(Decimal256::from_str("3").unwrap(), ans);
+
+        let num = Decimal256::from_str("3").unwrap();
+        let denom = Decimal256::from_str("2").unwrap();
+        let ans = div_dec(num, denom);
+        assert_eq!(Decimal256::from_str("1.5").unwrap(), ans);
+    }
+
+    #[test]
+    fn sub_abs_test() {
+        let lhs = Decimal256::from_str("2").unwrap();
+        let rhs = Decimal256::from_str("3").unwrap();
+        let ans = sub_abs(lhs, rhs);
+        assert_eq!(Decimal256::one(), ans);
+
+        let lhs = Decimal256::from_str("3").unwrap();
+        let rhs = Decimal256::from_str("1").unwrap();
+        let ans = sub_abs(lhs, rhs);
+        assert_eq!(Decimal256::from_str("2").unwrap(), ans);
+    }
+
+    #[test]
+    fn sub_no_overflow_test() {
+        let lhs = Decimal256::from_str("2").unwrap();
+        let rhs = Decimal256::from_str("3").unwrap();
+        let ans = sub_no_overflow(lhs, rhs);
+        assert_eq!(Decimal256::zero(), ans);
+
+        let lhs = Decimal256::from_str("3").unwrap();
+        let rhs = Decimal256::from_str("1").unwrap();
+        let ans = sub_no_overflow(lhs, rhs);
+        assert_eq!(Decimal256::from_str("2").unwrap(), ans);
+    }
+
+    #[test]
+    fn round_to_precision_test() {
+        let num = Decimal256::from_str("1.1111111111111").unwrap();
+        let precision_shift = Uint256::from_str("10000").unwrap();
+        let rounded_num = round_to_precision(num, precision_shift);
+        assert_eq!(Decimal256::from_str("1.1111").unwrap(), rounded_num);
+    }
 }
