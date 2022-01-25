@@ -20,8 +20,9 @@ pub fn inv_imbalance_spot(inv_base_val: Decimal, inv_val: Decimal) -> (Decimal, 
 }
 
 /// Determines the new orders that should be placed between the new head/tail. Ensures
-/// that the notional value of all open orders will be equal to the percent of active
-/// capital defined upon instantiation.
+/// that the notional value of all open orders will be equal to the allocated value
+/// passed in as a parameter. The value of each order will be constant (close to constant)
+/// accross each price step.
 /// # Arguments
 /// * `new_head` - The new head (closest to the reservation price)
 /// * `new_tail` - The new tail (farthest from the reservation price)
@@ -61,6 +62,25 @@ mod tests {
     use crate::{spot::create_new_orders_spot, state::State, utils::div_dec};
     use cosmwasm_std::{Decimal256 as Decimal, Uint256};
     use std::str::FromStr;
+
+    use super::inv_imbalance_spot;
+    #[test]
+    fn inv_imbalance_test() {
+        let inv_bal = Decimal::from_str("100000").unwrap();
+        let base_balanced_bal = Decimal::from_str("50000").unwrap();
+        let (inv_imbal, _) = inv_imbalance_spot(base_balanced_bal, inv_bal );
+        assert_eq!(inv_imbal, Decimal::zero());
+
+        let base_imbal_long_bal = Decimal::from_str("50001").unwrap();
+        let (inv_imbal, imbal_is_long) = inv_imbalance_spot(base_imbal_long_bal, inv_bal );
+        assert!(inv_imbal > Decimal::zero());
+        assert!(imbal_is_long);
+
+        let base_imbal_short_bal = Decimal::from_str("49999").unwrap();
+        let (inv_imbal, imbal_is_long) = inv_imbalance_spot(base_imbal_short_bal, inv_bal );
+        assert!(inv_imbal > Decimal::zero());
+        assert!(!imbal_is_long);
+    }
 
     #[test]
     fn create_buy_orders_test() {

@@ -1,8 +1,6 @@
-use std::str::FromStr;
-
-use cosmwasm_std::Decimal256 as Decimal;
-
 use crate::utils::{div_dec, sub_abs, sub_no_overflow};
+use cosmwasm_std::Decimal256 as Decimal;
+use std::str::FromStr;
 
 /// Determines the notional balance that we are willing to assign to either the buy/sell side.
 /// Takes into consideration the current margin to limit the new open orders on the side
@@ -27,6 +25,17 @@ pub fn get_alloc_bal_new_orders(inv_val: Decimal, margin: Decimal, active_capita
     }
 }
 
+/// Ensures that the current tails have enough distance between them. We don't want our order spread to be too dense.
+/// If they fall below the minimum distance, we update the tail to something more suitable.
+/// # Arguments
+/// * `buy_head` - The buy head that we are going to use
+/// * `sell_head` - The the sell head that we are going to use
+/// * `proposed_buy_tail` - The buyside tail obtained from the mid price
+/// * `proposed_sell_tail` - The sellside tail obtained from the mid price
+/// * `min_tail_dist_bp` - The minimum distance in BP from the head that we are willing to tolerate
+/// # Returns
+/// * `buy_tail` - The new buyside tail post risk management
+/// * `sell_tail` - The new sellside tail post risk management
 pub fn check_tail_dist(
     buy_head: Decimal,
     sell_head: Decimal,

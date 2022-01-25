@@ -24,8 +24,9 @@ pub fn inv_imbalance_deriv(position: &Option<WrappedPosition>, inv_val: Decimal)
 }
 
 /// Determines the new orders that should be placed between the new head/tail. Ensures
-/// that the notional value of all open orders will be equal to the percent of active
-/// capital defined upon instantiation. If there is a position open, it will place
+/// that the notional value of all open orders will be equal to the allocated value
+/// passed in as a parameter. The value of each order will be constant (close to constant)
+/// accross each price step. If there is a position open on the opposite side, it will place
 /// reduce only orders starting from the head to try to reduce the position.
 /// # Arguments
 /// * `new_head` - The new head (closest to the reservation price)
