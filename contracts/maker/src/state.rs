@@ -9,6 +9,7 @@ pub static CONFIG_KEY: &[u8] = b"config";
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct State {
     pub market_id: String,
+    pub is_deriv: bool,
     pub manager: String,
     pub sub_account: String,
     pub fee_recipient: String,

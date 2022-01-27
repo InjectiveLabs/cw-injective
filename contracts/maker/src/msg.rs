@@ -12,6 +12,7 @@ use std::{fmt, str::FromStr};
 pub struct InstantiateMsg {
     pub manager: String,
     pub market_id: String,
+    pub is_deriv: bool,
     pub sub_account: String,
     pub fee_recipient: String,
     pub risk_aversion: String,

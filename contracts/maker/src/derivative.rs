@@ -221,6 +221,7 @@ mod tests {
     fn mock_state(leverage: String, order_density: String, base_precision_shift: String) -> State {
         State {
             market_id: String::from(""),
+            is_deriv: true,
             manager: String::from(""),
             fee_recipient: String::from(""),
             sub_account: String::from(""),

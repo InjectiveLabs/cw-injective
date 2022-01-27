@@ -5,7 +5,7 @@ use crate::error::ContractError;
 use crate::msg::{
     ExecuteMsg, InstantiateMsg, OpenOrder, Position, QueryMsg, WrappedGetActionResponse, WrappedOpenOrder, WrappedOrderResponse, WrappedPosition,
 };
-use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, safe_varience};
+use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, safe_variance, sanity_check};
 use crate::spot::{create_new_orders_spot, inv_imbalance_spot};
 use crate::state::{config, config_read, State};
 use crate::utils::{bp_to_perct, div_dec, sub_abs, wrap};
@@ -18,6 +18,7 @@ use injective_bindings::{create_subaccount_transfer_msg, InjectiveMsgWrapper, In
 pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, info: MessageInfo, msg: InstantiateMsg) -> Result<Response, StdError> {
     let state = State {
         market_id: msg.market_id.to_string(),
+        is_deriv: msg.is_deriv,
         manager: info.sender.clone().into(),
         sub_account: msg.sub_account.clone(),
         fee_recipient: msg.fee_recipient.clone(),
@@ -116,10 +117,13 @@ fn get_action(
     let inv_val = wrap(&inv_val, deps);
     let std_dev = wrap(&std_dev, deps);
     let mid_price = wrap(&mid_price, deps);
-    let varience = safe_varience(std_dev);
+    let variance = safe_variance(std_dev);
 
     // Load state
     let state = config_read(deps.storage).load().unwrap();
+
+    // Assert necessary assumptions
+    sanity_check(is_deriv, &position, &state);
 
     // Calculate inventory imbalance parameter
     let (inv_imbal, imbal_is_long) = if is_deriv {
@@ -132,14 +136,14 @@ fn get_action(
     let reservation_price = reservation_price(
         mid_price,
         inv_imbal,
-        varience,
+        variance,
         state.risk_aversion,
         state.manual_offset_perct,
         imbal_is_long,
     );
 
     // Calculate the new head prices
-    let (new_buy_head, new_sell_head) = new_head_prices(varience, reservation_price, state.risk_aversion);
+    let (new_buy_head, new_sell_head) = new_head_prices(variance, reservation_price, state.risk_aversion);
 
     // Split open orders
     let (open_buys, open_sells) = split_open_orders(open_orders);
@@ -211,7 +215,7 @@ fn create_orders(
 
 /// Uses the inventory imbalance to
 /// # Arguments
-/// * `varience` - The square of the the standard deviation that gets passed in as a param to get action
+/// * `variance` - The square of the the standard deviation that gets passed in as a param to get action
 /// * `reservation_price` - The a price that is shifted from the mid price depending on the inventory imbalance
 /// * `risk_aversion` - Risk aversion param configured upon intialization
 /// # Returns
@@ -220,7 +224,7 @@ fn create_orders(
 fn reservation_price(
     mid_price: Decimal,
     inv_imbal: Decimal,
-    varience: Decimal,
+    variance: Decimal,
     risk_aversion: Decimal,
     manual_offset_perct: Decimal,
     imbal_is_long: bool,
@@ -229,9 +233,9 @@ fn reservation_price(
         mid_price
     } else {
         if imbal_is_long {
-            (mid_price - (inv_imbal * risk_aversion * varience)) * (Decimal::one() - manual_offset_perct)
+            (mid_price - (inv_imbal * risk_aversion * variance)) * (Decimal::one() - manual_offset_perct)
         } else {
-            (mid_price + (inv_imbal * risk_aversion * varience)) * (Decimal::one() + manual_offset_perct)
+            (mid_price + (inv_imbal * risk_aversion * variance)) * (Decimal::one() + manual_offset_perct)
         }
     }
 }
@@ -239,14 +243,14 @@ fn reservation_price(
 /// Uses the reservation price and variation to calculate where the buy/sell heads should be. Both buy and
 /// sell heads will be equi-distant from the reservation price.
 /// # Arguments
-/// * `varience` - The square of the the standard deviation that gets passed in as a param to get action
+/// * `variance` - The square of the the standard deviation that gets passed in as a param to get action
 /// * `reservation_price` - The a price that is shifted from the mid price depending on the inventory imbalance
 /// * `risk_aversion` - Risk aversion param configured upon intialization
 /// # Returns
 /// * `buy_head` - The new buy head
 /// * `sell_head` - The new sell head
-fn new_head_prices(varience: Decimal, reservation_price: Decimal, risk_aversion: Decimal) -> (Decimal, Decimal) {
-    let dist_from_reservation_price = div_dec(varience * risk_aversion, Decimal::from_str("2").unwrap());
+fn new_head_prices(variance: Decimal, reservation_price: Decimal, risk_aversion: Decimal) -> (Decimal, Decimal) {
+    let dist_from_reservation_price = div_dec(variance * risk_aversion, Decimal::from_str("2").unwrap());
     (
         reservation_price - dist_from_reservation_price,
         reservation_price + dist_from_reservation_price,
