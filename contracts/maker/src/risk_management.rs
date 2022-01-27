@@ -6,8 +6,9 @@ use cosmwasm_std::Decimal256 as Decimal;
 use std::str::FromStr;
 
 // TODO: add more 
-pub fn sanity_check(is_deriv: bool, position: &Option<WrappedPosition>, state: &State) {
+pub fn sanity_check(is_deriv: bool, position: &Option<WrappedPosition>, inv_base_bal: Decimal, state: &State) {
     assert_eq!(is_deriv, state.is_deriv);
+    assert!(is_deriv && inv_base_bal == Decimal::zero());
     assert!(!is_deriv || position.is_none());
 }
 

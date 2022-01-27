@@ -54,7 +54,6 @@ pub struct Position {
     pub quantity: String,
     pub avg_price: String,
     pub margin: String,
-    pub cum_funding_entry: String,
 }
 impl Position {
     pub fn wrap(&self, deps: Deps<InjectiveQueryWrapper>) -> Result<WrappedPosition, StdError> {
@@ -64,7 +63,6 @@ impl Position {
             quantity: Decimal::from_str(&self.quantity).unwrap(),
             avg_price: wrap_from_state(&self.avg_price, &state),
             margin: wrap_from_state(&self.margin, &state),
-            cum_funding_entry: wrap_from_state(&self.cum_funding_entry, &state),
         })
     }
 }
@@ -96,7 +94,6 @@ pub struct WrappedPosition {
     pub quantity: Decimal,
     pub avg_price: Decimal,
     pub margin: Decimal,
-    pub cum_funding_entry: Decimal,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
