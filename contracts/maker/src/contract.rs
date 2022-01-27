@@ -123,7 +123,7 @@ fn get_action(
     let state = config_read(deps.storage).load().unwrap();
 
     // Assert necessary assumptions
-    sanity_check(is_deriv, &position, &state);
+    sanity_check(is_deriv, &position, inv_base_val, &state);
 
     // Calculate inventory imbalance parameter
     let (inv_imbal, imbal_is_long) = if is_deriv {
