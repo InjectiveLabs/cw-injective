@@ -5,7 +5,7 @@ use crate::error::ContractError;
 use crate::msg::{
     ExecuteMsg, InstantiateMsg, OpenOrder, Position, QueryMsg, WrappedGetActionResponse, WrappedOpenOrder, WrappedOrderResponse, WrappedPosition,
 };
-use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, safe_variance, sanity_check};
+use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, sanity_check};
 use crate::spot::{create_new_orders_spot, inv_imbalance_spot};
 use crate::state::{config, config_read, State};
 use crate::utils::{bp_to_perct, div_dec, sub_abs, wrap};
@@ -17,21 +17,23 @@ use injective_bindings::{create_subaccount_transfer_msg, InjectiveMsgWrapper, In
 #[entry_point]
 pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, info: MessageInfo, msg: InstantiateMsg) -> Result<Response, StdError> {
     let state = State {
+        manager: info.sender,
         market_id: msg.market_id.to_string(),
+        fee_recipient: msg.fee_recipient,
+        sub_account: msg.sub_account,
         is_deriv: msg.is_deriv,
-        manager: info.sender.clone().into(),
-        sub_account: msg.sub_account.clone(),
-        fee_recipient: msg.fee_recipient.clone(),
-        risk_aversion: Decimal::from_str(&msg.risk_aversion.clone()).unwrap(),
-        order_density: Uint256::from_str(&msg.order_density.clone()).unwrap(),
-        active_capital_perct: Decimal::from_str(&msg.active_capital_perct.clone()).unwrap(),
-        decimal_shift: Uint256::from_str(&msg.decimal_shift.clone()).unwrap(),
-        manual_offset_perct: Decimal::from_str(&msg.manual_offset_perct.clone()).unwrap(),
-        min_tail_dist_perct: bp_to_perct(Decimal::from_str(&msg.min_tail_dist_bp.clone()).unwrap()),
-        tail_dist_from_mid_perct: bp_to_perct(Decimal::from_str(&msg.tail_dist_from_mid_bp.clone()).unwrap()),
-        head_chg_tol_perct: bp_to_perct(Decimal::from_str(&msg.head_chg_tol_bp.clone()).unwrap()),
-        leverage: Decimal::from_str(&msg.leverage.clone()).unwrap(),
-        base_precision_shift: Uint256::from_str(&msg.base_precision_shift.clone()).unwrap(),
+        leverage: Decimal::from_str(&msg.leverage).unwrap(),
+        order_density: Uint256::from_str(&msg.order_density).unwrap(),
+        mid_price: Decimal::one(),
+        volitility: Decimal::one(),
+        reservation_param: Decimal::from_str(&msg.reservation_param).unwrap(),
+        spread_param: Decimal::from_str(&msg.spread_param).unwrap(),
+        active_capital_perct: Decimal::from_str(&msg.active_capital_perct).unwrap(),
+        head_chg_tol_perct: bp_to_perct(Decimal::from_str(&msg.head_chg_tol_bp).unwrap()),
+        tail_dist_from_mid_perct: bp_to_perct(Decimal::from_str(&msg.tail_dist_from_mid_bp).unwrap()),
+        min_tail_dist_perct: bp_to_perct(Decimal::from_str(&msg.min_tail_dist_bp).unwrap()),
+        decimal_shift: Uint256::from_str(&msg.decimal_shift).unwrap(),
+        base_precision_shift: Uint256::from_str(&msg.base_precision_shift).unwrap(),
     };
 
     config(deps.storage).save(&state)?;
@@ -48,6 +50,7 @@ pub fn execute(
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     match msg {
         ExecuteMsg::Subscribe { subaccount_id, amount } => subscribe(deps, env, info.sender, subaccount_id, amount),
+        ExecuteMsg::UpdateMarketState { mid_price, volitility } => update_market_state(deps, info, mid_price, volitility),
     }
 }
 
@@ -72,6 +75,20 @@ pub fn subscribe(
     Ok(res)
 }
 
+pub fn update_market_state(
+    deps: DepsMut<InjectiveQueryWrapper>,
+    info: MessageInfo,
+    mid_price: String,
+    volitility: String,
+) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
+    let mut state = config(deps.storage).load().unwrap();
+    assert_eq!(state.manager, info.sender);
+    state.mid_price = Decimal::from_str(&mid_price).unwrap();
+    state.volitility = Decimal::from_str(&volitility).unwrap();
+    let res = Response::new();
+    Ok(res)
+}
+
 #[entry_point]
 pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
@@ -82,18 +99,7 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> Std
             position,
             inv_base_val,
             inv_val,
-            std_dev,
-            mid_price,
-        } => to_binary(&get_action(
-            deps,
-            is_deriv,
-            open_orders,
-            position,
-            inv_base_val,
-            inv_val,
-            std_dev,
-            mid_price,
-        )?),
+        } => to_binary(&get_action(deps, is_deriv, open_orders, position, inv_base_val, inv_val)?),
     }
 }
 
@@ -104,8 +110,6 @@ fn get_action(
     position: Option<Position>,
     inv_base_val: String,
     inv_val: String,
-    std_dev: String,
-    mid_price: String,
 ) -> StdResult<WrappedGetActionResponse> {
     // Wrap everything
     let open_orders: Vec<WrappedOpenOrder> = open_orders.into_iter().map(|o| o.wrap(deps).unwrap()).collect();
@@ -115,9 +119,6 @@ fn get_action(
     };
     let inv_base_val = wrap(&inv_base_val, deps);
     let inv_val = wrap(&inv_val, deps);
-    let std_dev = wrap(&std_dev, deps);
-    let mid_price = wrap(&mid_price, deps);
-    let variance = safe_variance(std_dev);
 
     // Load state
     let state = config_read(deps.storage).load().unwrap();
@@ -133,17 +134,10 @@ fn get_action(
     };
 
     // Calculate reservation price
-    let reservation_price = reservation_price(
-        mid_price,
-        inv_imbal,
-        variance,
-        state.risk_aversion,
-        state.manual_offset_perct,
-        imbal_is_long,
-    );
+    let reservation_price = reservation_price(state.mid_price, inv_imbal, state.volitility, state.reservation_param, imbal_is_long);
 
     // Calculate the new head prices
-    let (new_buy_head, new_sell_head) = new_head_prices(variance, reservation_price, state.risk_aversion);
+    let (new_buy_head, new_sell_head) = new_head_prices(state.volitility, reservation_price, state.spread_param);
 
     // Split open orders
     let (open_buys, open_sells) = split_open_orders(open_orders);
@@ -156,7 +150,7 @@ fn get_action(
         let (new_buy_tail, new_sell_tail) = new_tail_prices(
             new_buy_head,
             new_sell_head,
-            mid_price,
+            state.mid_price,
             state.tail_dist_from_mid_perct,
             state.min_tail_dist_perct,
         );
@@ -213,29 +207,23 @@ fn create_orders(
     }
 }
 
-/// Uses the inventory imbalance to
+/// Uses the inventory imbalance to calculate a price around which we will center the mid price
 /// # Arguments
-/// * `variance` - The square of the the standard deviation that gets passed in as a param to get action
-/// * `reservation_price` - The a price that is shifted from the mid price depending on the inventory imbalance
-/// * `risk_aversion` - Risk aversion param configured upon intialization
+/// * `mid_price` - A mid_price that we update on a block by block basis
+/// * `inv_imbal` - A measure of inventory imbalance
+/// * `volitility` - A measure of volitility that we update on a block by block basis
+/// * `reservation_param` - The constant to control the sensitivity of the volitility param
+/// * `imbal_is_long` - The direction of the inventory imbalance
 /// # Returns
-/// * `buy_head` - The new buy head
-/// * `sell_head` - The new sell head
-fn reservation_price(
-    mid_price: Decimal,
-    inv_imbal: Decimal,
-    variance: Decimal,
-    risk_aversion: Decimal,
-    manual_offset_perct: Decimal,
-    imbal_is_long: bool,
-) -> Decimal {
+/// * `reservation_price` - The price around which we will center both heads
+fn reservation_price(mid_price: Decimal, inv_imbal: Decimal, volitility: Decimal, reservation_param: Decimal, imbal_is_long: bool) -> Decimal {
     if inv_imbal == Decimal::zero() {
         mid_price
     } else {
         if imbal_is_long {
-            (mid_price - (inv_imbal * risk_aversion * variance)) * (Decimal::one() - manual_offset_perct)
+            mid_price - (inv_imbal * volitility * reservation_param)
         } else {
-            (mid_price + (inv_imbal * risk_aversion * variance)) * (Decimal::one() + manual_offset_perct)
+            mid_price + (inv_imbal * volitility * reservation_param)
         }
     }
 }
@@ -243,14 +231,14 @@ fn reservation_price(
 /// Uses the reservation price and variation to calculate where the buy/sell heads should be. Both buy and
 /// sell heads will be equi-distant from the reservation price.
 /// # Arguments
-/// * `variance` - The square of the the standard deviation that gets passed in as a param to get action
+/// * `volitility` - A measure of volitility that we update on a block by block basis
 /// * `reservation_price` - The a price that is shifted from the mid price depending on the inventory imbalance
-/// * `risk_aversion` - Risk aversion param configured upon intialization
+/// * `spread_param` - The constant to control the sensitivity of the spread
 /// # Returns
 /// * `buy_head` - The new buy head
 /// * `sell_head` - The new sell head
-fn new_head_prices(variance: Decimal, reservation_price: Decimal, risk_aversion: Decimal) -> (Decimal, Decimal) {
-    let dist_from_reservation_price = div_dec(variance * risk_aversion, Decimal::from_str("2").unwrap());
+fn new_head_prices(volitility: Decimal, reservation_price: Decimal, spread_param: Decimal) -> (Decimal, Decimal) {
+    let dist_from_reservation_price = div_dec(volitility * spread_param, Decimal::from_str("2").unwrap());
     (
         reservation_price - dist_from_reservation_price,
         reservation_price + dist_from_reservation_price,
@@ -280,7 +268,7 @@ fn head_chg_is_gt_tol(open_orders: &Vec<WrappedOpenOrder>, new_head: Decimal, he
 /// # Arguments
 /// * `buy_head` - The new buy head
 /// * `sell_head` - The new sell head
-/// * `mid_price` - The mid price (or oracle price passed in with the query)
+/// * `mid_price` - A mid_price that we update on a block by block basis
 /// * `tail_dist_from_mid_perct` - The distance from the mid price, in either direction, that we want tails to be located
 /// * `min_tail_dist_perct` - The min distance that can exist between any head and tail
 /// # Returns

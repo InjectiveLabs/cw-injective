@@ -12,17 +12,17 @@ use std::{fmt, str::FromStr};
 pub struct InstantiateMsg {
     pub manager: String,
     pub market_id: String,
-    pub is_deriv: bool,
-    pub sub_account: String,
     pub fee_recipient: String,
-    pub risk_aversion: String,
-    pub order_density: String,
-    pub active_capital_perct: String,
-    pub manual_offset_perct: String,
-    pub min_tail_dist_bp: String,
-    pub tail_dist_from_mid_bp: String,
-    pub head_chg_tol_bp: String,
+    pub sub_account: String,
+    pub is_deriv: bool,
     pub leverage: String,
+    pub order_density: String,
+    pub reservation_param: String,
+    pub spread_param: String,
+    pub active_capital_perct: String,
+    pub head_chg_tol_bp: String,
+    pub tail_dist_from_mid_bp: String,
+    pub min_tail_dist_bp: String,
     pub decimal_shift: String,
     pub base_precision_shift: String,
 }
@@ -31,6 +31,7 @@ pub struct InstantiateMsg {
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
     Subscribe { subaccount_id: String, amount: Coin },
+    UpdateMarketState { mid_price: String, volitility: String },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -43,8 +44,6 @@ pub enum QueryMsg {
         position: Option<Position>, // Will be None if is deriv == false
         inv_base_val: String,       // Will be 0.0 if deriv == true
         inv_val: String,            // This includes any notional balance that may be tied up in a position
-        std_dev: String,
-        mid_price: String,
     },
 }
 

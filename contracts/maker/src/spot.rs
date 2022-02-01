@@ -60,7 +60,7 @@ pub fn create_new_orders_spot(
 #[cfg(test)]
 mod tests {
     use crate::{spot::create_new_orders_spot, state::State};
-    use cosmwasm_std::{Decimal256 as Decimal, Uint256};
+    use cosmwasm_std::{Addr, Decimal256 as Decimal, Uint256};
     use std::str::FromStr;
 
     use super::inv_imbalance_spot;
@@ -151,19 +151,21 @@ mod tests {
         State {
             market_id: String::from(""),
             is_deriv: false,
-            manager: String::from(""),
             fee_recipient: String::from(""),
             sub_account: String::from(""),
-            risk_aversion: Decimal::from_str("0.2").unwrap(),
             order_density: Uint256::from_str(&order_density).unwrap(),
             active_capital_perct: Decimal::from_str("0.2").unwrap(),
-            manual_offset_perct: Decimal::zero(),
             min_tail_dist_perct: Decimal::from_str("0.03").unwrap(),
             tail_dist_from_mid_perct: Decimal::from_str("0.08").unwrap(),
             head_chg_tol_perct: Decimal::zero(),
             leverage: Decimal::from_str(&leverage).unwrap(),
             decimal_shift: Uint256::from_str("1000000").unwrap(),
             base_precision_shift: Uint256::from_str(&base_precision_shift.to_string()).unwrap(),
+            mid_price: Decimal::zero(),
+            volitility: Decimal::zero(),
+            reservation_param: Decimal::zero(),
+            spread_param: Decimal::zero(),
+            manager: Addr::unchecked(""),
         }
     }
 }

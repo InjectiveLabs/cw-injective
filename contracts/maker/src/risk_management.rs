@@ -1,11 +1,12 @@
 use crate::{
+    msg::WrappedPosition,
     state::State,
-    utils::{div_dec, sub_abs, sub_no_overflow}, msg::WrappedPosition,
+    utils::{div_dec, sub_abs, sub_no_overflow},
 };
 use cosmwasm_std::Decimal256 as Decimal;
 use std::str::FromStr;
 
-// TODO: add more 
+// TODO: add more
 pub fn sanity_check(is_deriv: bool, position: &Option<WrappedPosition>, inv_base_bal: Decimal, state: &State) {
     assert_eq!(is_deriv, state.is_deriv);
     assert!(is_deriv && inv_base_bal == Decimal::zero());
