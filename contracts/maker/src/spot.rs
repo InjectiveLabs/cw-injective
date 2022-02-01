@@ -88,7 +88,7 @@ mod tests {
             let decimal_base_shift = 10_i128.pow(i);
             let state = mock_state(String::from("1"), String::from("10"), decimal_base_shift.to_string());
             let head_price = Decimal::from_str(&10_i32.pow(i).to_string()).unwrap();
-            let tail_price = head_price * (Decimal::one() - state.min_tail_dist_perct);
+            let tail_price = head_price * (Decimal::one() - state.min_tail_dist);
             for j in 3..10 {
                 let alloc_value = 10_i32.pow(j);
                 create_new_orders_spot_test(head_price, tail_price, Decimal::from_str(&alloc_value.to_string()).unwrap(), true, &state);
@@ -102,7 +102,7 @@ mod tests {
             let decimal_base_shift = 10_i128.pow(i);
             let state = mock_state(String::from("1"), String::from("10"), decimal_base_shift.to_string());
             let head_price = Decimal::from_str(&10_i32.pow(i).to_string()).unwrap();
-            let tail_price = head_price * (Decimal::one() + state.min_tail_dist_perct);
+            let tail_price = head_price * (Decimal::one() + state.min_tail_dist);
             for j in 3..10 {
                 let alloc_value = 10_i32.pow(j);
                 create_new_orders_spot_test(
@@ -151,13 +151,12 @@ mod tests {
         State {
             market_id: String::from(""),
             is_deriv: false,
-            fee_recipient: String::from(""),
             sub_account: String::from(""),
             order_density: Uint256::from_str(&order_density).unwrap(),
-            active_capital_perct: Decimal::from_str("0.2").unwrap(),
-            min_tail_dist_perct: Decimal::from_str("0.03").unwrap(),
-            tail_dist_from_mid_perct: Decimal::from_str("0.08").unwrap(),
-            head_chg_tol_perct: Decimal::zero(),
+            active_capital: Decimal::from_str("0.2").unwrap(),
+            min_tail_dist: Decimal::from_str("0.03").unwrap(),
+            tail_dist_from_mid: Decimal::from_str("0.08").unwrap(),
+            head_chg_tol: Decimal::zero(),
             leverage: Decimal::from_str(&leverage).unwrap(),
             decimal_shift: Uint256::from_str("1000000").unwrap(),
             base_precision_shift: Uint256::from_str(&base_precision_shift.to_string()).unwrap(),
@@ -167,7 +166,7 @@ mod tests {
             spread_param: Decimal::zero(),
             manager: Addr::unchecked(""),
             last_update_utc: 0,
-            min_market_data_delay_sec: 0,
+            max_market_data_delay: 0,
         }
     }
 }

@@ -8,7 +8,7 @@ use crate::msg::{
 use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, only_owner, sanity_check};
 use crate::spot::{create_new_orders_spot, inv_imbalance_spot};
 use crate::state::{config, config_read, State};
-use crate::utils::{bp_to_perct, div_dec, sub_abs, wrap};
+use crate::utils::{bp_to_dec, div_dec, sub_abs, wrap};
 use chrono::Utc;
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, Coin, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint256,
@@ -23,7 +23,6 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, info: Messag
     let state = State {
         manager: info.sender,
         market_id: msg.market_id.to_string(),
-        fee_recipient: msg.fee_recipient,
         sub_account: msg.sub_account,
         is_deriv: msg.is_deriv,
         leverage: Decimal::from_str(&msg.leverage).unwrap(),
@@ -31,13 +30,13 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, info: Messag
         mid_price: Decimal::one(),
         volitility: Decimal::one(),
         last_update_utc: 0,
-        min_market_data_delay_sec: msg.min_market_data_delay_sec.parse::<i64>().unwrap(),
+        max_market_data_delay: msg.max_market_data_delay.parse::<i64>().unwrap(),
         reservation_param: Decimal::from_str(&msg.reservation_param).unwrap(),
         spread_param: Decimal::from_str(&msg.spread_param).unwrap(),
-        active_capital_perct: Decimal::from_str(&msg.active_capital_perct).unwrap(),
-        head_chg_tol_perct: bp_to_perct(Decimal::from_str(&msg.head_chg_tol_bp).unwrap()),
-        tail_dist_from_mid_perct: bp_to_perct(Decimal::from_str(&msg.tail_dist_from_mid_bp).unwrap()),
-        min_tail_dist_perct: bp_to_perct(Decimal::from_str(&msg.min_tail_dist_bp).unwrap()),
+        active_capital: Decimal::from_str(&msg.active_capital).unwrap(),
+        head_chg_tol: bp_to_dec(Decimal::from_str(&msg.head_chg_tol_bp).unwrap()),
+        tail_dist_from_mid: bp_to_dec(Decimal::from_str(&msg.tail_dist_from_mid_bp).unwrap()),
+        min_tail_dist: bp_to_dec(Decimal::from_str(&msg.min_tail_dist_bp).unwrap()),
         decimal_shift: Uint256::from_str(&msg.decimal_shift).unwrap(),
         base_precision_shift: Uint256::from_str(&msg.base_precision_shift).unwrap(),
     };
@@ -165,16 +164,14 @@ fn get_action(
     let (open_buys, open_sells) = split_open_orders(open_orders);
 
     // Ensure that the heads have changed enough that we are willing to make an action
-    if head_chg_is_gt_tol(&open_buys, new_buy_head, state.head_chg_tol_perct)
-        && head_chg_is_gt_tol(&open_sells, new_sell_head, state.head_chg_tol_perct)
-    {
+    if head_chg_is_gt_tol(&open_buys, new_buy_head, state.head_chg_tol) && head_chg_is_gt_tol(&open_sells, new_sell_head, state.head_chg_tol) {
         // Get new tails
         let (new_buy_tail, new_sell_tail) = new_tail_prices(
             new_buy_head,
             new_sell_head,
             state.mid_price,
-            state.tail_dist_from_mid_perct,
-            state.min_tail_dist_perct,
+            state.tail_dist_from_mid,
+            state.min_tail_dist,
         );
 
         // Cancel all open buy/sell from the preceeding block
@@ -232,10 +229,10 @@ fn create_orders(
             }
             None => (Decimal::zero(), Decimal::zero()),
         };
-        let alloc_val_for_new_orders = get_alloc_bal_new_orders(inv_val, position_margin, state.active_capital_perct);
+        let alloc_val_for_new_orders = get_alloc_bal_new_orders(inv_val, position_margin, state.active_capital);
         create_new_orders_deriv(new_head, new_tail, alloc_val_for_new_orders, position_qty, is_buy, &state).0
     } else {
-        let alloc_val_for_new_orders = get_alloc_bal_new_orders(inv_val, Decimal::zero(), state.active_capital_perct);
+        let alloc_val_for_new_orders = get_alloc_bal_new_orders(inv_val, Decimal::zero(), state.active_capital);
         create_new_orders_spot(new_head, new_tail, alloc_val_for_new_orders, is_buy, &state)
     }
 }
@@ -283,15 +280,15 @@ fn new_head_prices(volitility: Decimal, reservation_price: Decimal, spread_param
 /// # Arguments
 /// * `open_orders` - The buy or sell side orders from the previous block
 /// * `new_head` - The new proposed buy or sell head
-/// * `head_chg_tol_perct` - Our tolerance to change in the head price
+/// * `head_chg_tol` - Our tolerance to change in the head price
 /// # Returns
 /// * `should_change` - Whether we should cancel and place new orders at the new head
-fn head_chg_is_gt_tol(open_orders: &Vec<WrappedOpenOrder>, new_head: Decimal, head_chg_tol_perct: Decimal) -> bool {
+fn head_chg_is_gt_tol(open_orders: &Vec<WrappedOpenOrder>, new_head: Decimal, head_chg_tol: Decimal) -> bool {
     if open_orders.len() == 0 {
         true
     } else {
         let old_head = open_orders.first().unwrap().price;
-        div_dec(sub_abs(old_head, new_head), old_head) > head_chg_tol_perct
+        div_dec(sub_abs(old_head, new_head), old_head) > head_chg_tol
     }
 }
 
@@ -302,8 +299,8 @@ fn head_chg_is_gt_tol(open_orders: &Vec<WrappedOpenOrder>, new_head: Decimal, he
 /// * `buy_head` - The new buy head
 /// * `sell_head` - The new sell head
 /// * `mid_price` - A mid_price that we update on a block by block basis
-/// * `tail_dist_from_mid_perct` - The distance from the mid price, in either direction, that we want tails to be located
-/// * `min_tail_dist_perct` - The min distance that can exist between any head and tail
+/// * `tail_dist_from_mid` - The distance from the mid price, in either direction, that we want tails to be located (between 0..1)
+/// * `min_tail_dist` - The min distance that can exist between any head and tail (between 0..1)
 /// # Returns
 /// * `buy_tail` - The new buy tail
 /// * `sell_tail` - The new sell tail
@@ -311,12 +308,12 @@ pub fn new_tail_prices(
     buy_head: Decimal,
     sell_head: Decimal,
     mid_price: Decimal,
-    tail_dist_from_mid_perct: Decimal,
-    min_tail_dist_perct: Decimal,
+    tail_dist_from_mid: Decimal,
+    min_tail_dist: Decimal,
 ) -> (Decimal, Decimal) {
-    let proposed_buy_tail = mid_price * (Decimal::one() - tail_dist_from_mid_perct);
-    let proposed_sell_tail = mid_price * (Decimal::one() + tail_dist_from_mid_perct);
-    check_tail_dist(buy_head, sell_head, proposed_buy_tail, proposed_sell_tail, min_tail_dist_perct)
+    let proposed_buy_tail = mid_price * (Decimal::one() - tail_dist_from_mid);
+    let proposed_sell_tail = mid_price * (Decimal::one() + tail_dist_from_mid);
+    check_tail_dist(buy_head, sell_head, proposed_buy_tail, proposed_sell_tail, min_tail_dist)
 }
 
 /// Splits the vec of orders to buyside and sellside orders. Sorts them so that the head from the previous block is at index == 0. Buyside
@@ -355,8 +352,8 @@ mod tests {
     fn head_chg_is_gt_tol_test() {
         let mut open_orders: Vec<WrappedOpenOrder> = Vec::new();
         let new_head = Decimal::from_str("1").unwrap();
-        let head_chg_tol_perct = Decimal::from_str("0.01").unwrap();
-        let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_chg_tol_perct);
+        let head_chg_tol = Decimal::from_str("0.01").unwrap();
+        let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_chg_tol);
         assert!(should_change);
 
         open_orders.push(WrappedOpenOrder {
@@ -367,7 +364,7 @@ mod tests {
             is_reduce_only: false,
         });
 
-        let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_chg_tol_perct);
+        let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_chg_tol);
         assert!(!should_change);
 
         open_orders.pop();
@@ -379,7 +376,7 @@ mod tests {
             is_reduce_only: false,
         });
 
-        let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_chg_tol_perct);
+        let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_chg_tol);
         assert!(should_change);
     }
 
@@ -388,17 +385,17 @@ mod tests {
         let buy_head = Decimal::from_str("3999").unwrap();
         let mid_price = Decimal::from_str("4000").unwrap();
         let sell_head = Decimal::from_str("4001").unwrap();
-        let tail_dist_from_mid_perct = Decimal::from_str("0.05").unwrap();
-        let min_tail_dist_perct = Decimal::from_str("0.01").unwrap();
-        let (buy_tail, sell_tail) = new_tail_prices(buy_head, sell_head, mid_price, tail_dist_from_mid_perct, min_tail_dist_perct);
-        assert_eq!(buy_tail, mid_price * (Decimal::one() - tail_dist_from_mid_perct));
-        assert_eq!(sell_tail, mid_price * (Decimal::one() + tail_dist_from_mid_perct));
+        let tail_dist_from_mid = Decimal::from_str("0.05").unwrap();
+        let min_tail_dist = Decimal::from_str("0.01").unwrap();
+        let (buy_tail, sell_tail) = new_tail_prices(buy_head, sell_head, mid_price, tail_dist_from_mid, min_tail_dist);
+        assert_eq!(buy_tail, mid_price * (Decimal::one() - tail_dist_from_mid));
+        assert_eq!(sell_tail, mid_price * (Decimal::one() + tail_dist_from_mid));
 
-        let tail_dist_from_mid_perct = Decimal::from_str("0.001").unwrap();
-        let min_tail_dist_perct = Decimal::from_str("0.01").unwrap();
-        let (buy_tail, sell_tail) = new_tail_prices(buy_head, sell_head, mid_price, tail_dist_from_mid_perct, min_tail_dist_perct);
-        assert_eq!(buy_tail, buy_head * (Decimal::one() - min_tail_dist_perct));
-        assert_eq!(sell_tail, sell_head * (Decimal::one() + min_tail_dist_perct));
+        let tail_dist_from_mid = Decimal::from_str("0.001").unwrap();
+        let min_tail_dist = Decimal::from_str("0.01").unwrap();
+        let (buy_tail, sell_tail) = new_tail_prices(buy_head, sell_head, mid_price, tail_dist_from_mid, min_tail_dist);
+        assert_eq!(buy_tail, buy_head * (Decimal::one() - min_tail_dist));
+        assert_eq!(sell_tail, sell_head * (Decimal::one() + min_tail_dist));
     }
 
     #[test]
