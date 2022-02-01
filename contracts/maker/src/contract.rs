@@ -5,14 +5,18 @@ use crate::error::ContractError;
 use crate::msg::{
     ExecuteMsg, InstantiateMsg, OpenOrder, Position, QueryMsg, WrappedGetActionResponse, WrappedOpenOrder, WrappedOrderResponse, WrappedPosition,
 };
-use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, sanity_check};
+use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, only_owner, sanity_check};
 use crate::spot::{create_new_orders_spot, inv_imbalance_spot};
 use crate::state::{config, config_read, State};
 use crate::utils::{bp_to_perct, div_dec, sub_abs, wrap};
+use chrono::Utc;
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, Coin, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint256,
 };
-use injective_bindings::{create_subaccount_transfer_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, SubaccountDepositResponse};
+use injective_bindings::{
+    create_market_mid_price_update_msg, create_market_volitility_update_msg, create_subaccount_transfer_msg, InjectiveMsgWrapper, InjectiveQuerier,
+    InjectiveQueryWrapper, SubaccountDepositResponse,
+};
 
 #[entry_point]
 pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, info: MessageInfo, msg: InstantiateMsg) -> Result<Response, StdError> {
@@ -26,6 +30,8 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, info: Messag
         order_density: Uint256::from_str(&msg.order_density).unwrap(),
         mid_price: Decimal::one(),
         volitility: Decimal::one(),
+        last_update_utc: 0,
+        min_market_data_delay_sec: msg.min_market_data_delay_sec.parse::<i64>().unwrap(),
         reservation_param: Decimal::from_str(&msg.reservation_param).unwrap(),
         spread_param: Decimal::from_str(&msg.spread_param).unwrap(),
         active_capital_perct: Decimal::from_str(&msg.active_capital_perct).unwrap(),
@@ -75,6 +81,9 @@ pub fn subscribe(
     Ok(res)
 }
 
+/// This is an external, state changing method that will give the bot a more accurate perspective of the
+/// current state of markets. It updates the volitility and the mid_price properties on the state struct.
+/// The method should be called on some repeating interval.
 pub fn update_market_state(
     deps: DepsMut<InjectiveQueryWrapper>,
     info: MessageInfo,
@@ -82,10 +91,25 @@ pub fn update_market_state(
     volitility: String,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let mut state = config(deps.storage).load().unwrap();
-    assert_eq!(state.manager, info.sender);
+
+    // Ensure that only the contract creator has permission to update market data
+    only_owner(&state.manager, &info.sender);
+
+    // Update the mid price
+    let previous_mid_price = state.mid_price;
     state.mid_price = Decimal::from_str(&mid_price).unwrap();
+
+    // Update the volitility
+    let previous_volitility = state.volitility;
     state.volitility = Decimal::from_str(&volitility).unwrap();
-    let res = Response::new();
+
+    // Update the timestamp of this most recent update
+    let time_of_update = Utc::now().timestamp();
+    state.last_update_utc = time_of_update;
+
+    let volitility_msg = create_market_volitility_update_msg(info.sender.clone(), previous_volitility, state.volitility);
+    let mid_price_msg = create_market_mid_price_update_msg(info.sender, previous_mid_price, state.mid_price);
+    let res = Response::new().add_message(volitility_msg).add_message(mid_price_msg);
     Ok(res)
 }
 
@@ -94,18 +118,16 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> Std
     match msg {
         QueryMsg::Config {} => to_binary(&config_read(deps.storage).load()?),
         QueryMsg::GetAction {
-            is_deriv,
             open_orders,
             position,
             inv_base_val,
             inv_val,
-        } => to_binary(&get_action(deps, is_deriv, open_orders, position, inv_base_val, inv_val)?),
+        } => to_binary(&get_action(deps, open_orders, position, inv_base_val, inv_val)?),
     }
 }
 
 fn get_action(
     deps: Deps<InjectiveQueryWrapper>,
-    is_deriv: bool,
     open_orders: Vec<OpenOrder>,
     position: Option<Position>,
     inv_base_val: String,
@@ -124,10 +146,10 @@ fn get_action(
     let state = config_read(deps.storage).load().unwrap();
 
     // Assert necessary assumptions
-    sanity_check(is_deriv, &position, inv_base_val, &state);
+    sanity_check(&position, inv_base_val, &state);
 
     // Calculate inventory imbalance parameter
-    let (inv_imbal, imbal_is_long) = if is_deriv {
+    let (inv_imbal, imbal_is_long) = if state.is_deriv {
         inv_imbalance_deriv(&position, inv_val)
     } else {
         inv_imbalance_spot(inv_base_val, inv_val)
@@ -160,8 +182,8 @@ fn get_action(
         let sell_hashes_to_cancel = open_sells.iter().map(|o| o.order_hash.clone()).collect();
 
         // Get new buy/sell orders
-        let buy_orders_to_open = create_orders(new_buy_head, new_buy_tail, inv_val, position.clone(), is_deriv, true, &state);
-        let sell_orders_to_open = create_orders(new_sell_head, new_sell_tail, inv_val, position, is_deriv, false, &state);
+        let buy_orders_to_open = create_orders(new_buy_head, new_buy_tail, inv_val, position.clone(), state.is_deriv, true, &state);
+        let sell_orders_to_open = create_orders(new_sell_head, new_sell_tail, inv_val, position, state.is_deriv, false, &state);
 
         Ok(WrappedGetActionResponse {
             buy_hashes_to_cancel,
@@ -179,6 +201,17 @@ fn get_action(
     }
 }
 
+/// Decides what new new orders need to be created
+/// # Arguments
+/// * `new_head` - The new head (closest to the reservation price)
+/// * `new_tail` - The new tail (farthest from the reservation price)
+/// * `inv_val` - The total notional value of all assets
+/// * `position` - The current position taken by the bot, if any
+/// * `is_deriv` - If the contract is configured for a derivative market
+/// * `is_buy` - If we are looking to create buy-side orders
+/// * `state` - All state of the contract
+/// # Returns
+/// * `new_wrapped_orders` - The new orders that we would like to open
 fn create_orders(
     new_head: Decimal,
     new_tail: Decimal,

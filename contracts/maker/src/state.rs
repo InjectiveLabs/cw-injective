@@ -17,6 +17,8 @@ pub struct State {
     pub order_density: Uint256,
     pub mid_price: Decimal,
     pub volitility: Decimal,
+    pub last_update_utc: i64,
+    pub min_market_data_delay_sec: i64,
     pub reservation_param: Decimal,
     pub spread_param: Decimal,
     pub active_capital_perct: Decimal,

@@ -237,6 +237,8 @@ mod tests {
             reservation_param: Decimal::zero(),
             spread_param: Decimal::zero(),
             manager: Addr::unchecked(""),
+            last_update_utc: 0,
+            min_market_data_delay_sec: 0,
         }
     }
 }

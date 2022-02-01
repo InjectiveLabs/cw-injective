@@ -23,6 +23,7 @@ pub struct InstantiateMsg {
     pub head_chg_tol_bp: String,
     pub tail_dist_from_mid_bp: String,
     pub min_tail_dist_bp: String,
+    pub min_market_data_delay_sec: String,
     pub decimal_shift: String,
     pub base_precision_shift: String,
 }
@@ -31,7 +32,7 @@ pub struct InstantiateMsg {
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
     Subscribe { subaccount_id: String, amount: Coin },
-    UpdateMarketState { mid_price: String, volitility: String },
+    UpdateMarketState { mid_price: String, volitility: String }, // The chain will not be responsible for calling this
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -39,11 +40,10 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     Config {},
     GetAction {
-        is_deriv: bool,
-        open_orders: Vec<OpenOrder>,
-        position: Option<Position>, // Will be None if is deriv == false
-        inv_base_val: String,       // Will be 0.0 if deriv == true
-        inv_val: String,            // This includes any notional balance that may be tied up in a position
+        open_orders: Vec<OpenOrder>, // Open orders that are currently on the book at the time of the call
+        position: Option<Position>,  // Will be None if is deriv == false
+        inv_base_val: String,        // Will be 0.0 if deriv == true
+        inv_val: String,             // This includes any notional balance that may be tied up in a position
     },
 }
 

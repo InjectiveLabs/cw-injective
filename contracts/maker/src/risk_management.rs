@@ -3,14 +3,20 @@ use crate::{
     state::State,
     utils::{div_dec, sub_abs, sub_no_overflow},
 };
-use cosmwasm_std::Decimal256 as Decimal;
+use chrono::Utc;
+use cosmwasm_std::{Addr, Decimal256 as Decimal};
 use std::str::FromStr;
 
+pub fn only_owner(sender: &Addr, owner: &Addr) {
+    assert_eq!(sender, owner);
+}
+
 // TODO: add more
-pub fn sanity_check(is_deriv: bool, position: &Option<WrappedPosition>, inv_base_bal: Decimal, state: &State) {
-    assert_eq!(is_deriv, state.is_deriv);
-    assert!(is_deriv && inv_base_bal == Decimal::zero());
-    assert!(!is_deriv || position.is_none());
+pub fn sanity_check(position: &Option<WrappedPosition>, inv_base_bal: Decimal, state: &State) {
+    assert!(state.is_deriv && inv_base_bal == Decimal::zero());
+    assert!(!state.is_deriv || position.is_none());
+    //TODO: come back to this one
+    assert!(state.last_update_utc + state.min_market_data_delay_sec > Utc::now().timestamp());
 }
 
 /// Determines the notional balance that we are willing to assign to either the buy/sell side.
@@ -79,37 +85,11 @@ pub fn check_tail_dist(
     (buy_tail, sell_tail)
 }
 
-/// Ensures that the variance will never be smaller than the std deviation.
-/// # Arguments
-/// * `std_dev` - The standard deviation
-/// # Returns
-/// * `safe_variance` - The variance
-pub fn safe_variance(mut std_dev: Decimal) -> Decimal {
-    let mut shift = Decimal::one();
-    let multiplier = Decimal::from_str("10").unwrap();
-    while std_dev * std_dev < std_dev {
-        std_dev = std_dev * multiplier;
-        shift = shift * multiplier;
-    }
-    div_dec(std_dev * std_dev, shift)
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{check_tail_dist, get_alloc_bal_new_orders, safe_variance};
+    use super::{check_tail_dist, get_alloc_bal_new_orders};
     use cosmwasm_std::Decimal256 as Decimal;
     use std::str::FromStr;
-
-    #[test]
-    fn safe_variance_test() {
-        let std_dev = Decimal::from_str("2").unwrap();
-        let variance = safe_variance(std_dev);
-        assert_eq!(variance, Decimal::from_str("4").unwrap());
-
-        let std_dev = Decimal::from_str("0.4").unwrap();
-        let variance = safe_variance(std_dev);
-        assert_eq!(variance, Decimal::from_str("1.6").unwrap());
-    }
 
     #[test]
     fn get_alloc_bal_new_orders_test() {

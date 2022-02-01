@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::route::InjectiveRoute;
-use cosmwasm_std::{Addr, Coin, CosmosMsg, CustomMsg};
+use cosmwasm_std::{Addr, Coin, CosmosMsg, CustomMsg, Decimal256};
 use schemars::gen::SchemaGenerator;
 use schemars::schema::Schema;
 
@@ -31,6 +31,16 @@ pub enum InjectiveMsg {
         destination_subaccount_id: String,
         amount: Coin,
     },
+    MarketVolitilityUpdate {
+        sender: Addr,
+        previous: String,
+        new: String,
+    },
+    MarketMidPriceUpdate {
+        sender: Addr,
+        previous: String,
+        new: String,
+    },
 }
 
 pub fn create_subaccount_transfer_msg(
@@ -46,6 +56,30 @@ pub fn create_subaccount_transfer_msg(
             source_subaccount_id: source_subaccount_id.to_string(),
             destination_subaccount_id: destination_subaccount_id.to_string(),
             amount,
+        },
+    }
+    .into()
+}
+
+pub fn create_market_volitility_update_msg(sender: Addr, previous: Decimal256, new: Decimal256) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Exchange,
+        msg_data: InjectiveMsg::MarketVolitilityUpdate {
+            sender,
+            previous: previous.to_string(),
+            new: new.to_string(),
+        },
+    }
+    .into()
+}
+
+pub fn create_market_mid_price_update_msg(sender: Addr, previous: Decimal256, new: Decimal256) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Exchange,
+        msg_data: InjectiveMsg::MarketMidPriceUpdate {
+            sender,
+            previous: previous.to_string(),
+            new: new.to_string(),
         },
     }
     .into()
