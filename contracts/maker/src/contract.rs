@@ -11,10 +11,11 @@ use crate::state::{config, config_read, State};
 use crate::utils::{bp_to_dec, div_dec, sub_abs, wrap};
 use chrono::Utc;
 use cosmwasm_std::{
-    entry_point, to_binary, Binary, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint256, Uint128, Addr, WasmMsg,
+    entry_point, to_binary, Addr, Binary, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128, Uint256,
+    WasmMsg,
 };
 use cw20::Cw20ExecuteMsg;
-use injective_bindings::{InjectiveQueryWrapper, InjectiveMsgWrapper, create_market_volitility_update_msg, create_market_mid_price_update_msg};
+use injective_bindings::{create_market_mid_price_update_msg, create_market_volitility_update_msg, InjectiveMsgWrapper, InjectiveQueryWrapper};
 
 #[entry_point]
 pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, info: MessageInfo, msg: InstantiateMsg) -> Result<Response, StdError> {
@@ -54,8 +55,14 @@ pub fn execute(
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     match msg {
         ExecuteMsg::UpdateMarketState { mid_price, volitility } => update_market_state(deps, info, mid_price, volitility),
-        ExecuteMsg::MintToUser { subaccount_id_sender, amount } => mint_to_user(deps, env, info.sender, subaccount_id_sender, amount),
-        ExecuteMsg::BurnFromUser { subaccount_id_sender, amount } => burn_from_user(deps, env, info.sender, subaccount_id_sender, amount),
+        ExecuteMsg::MintToUser {
+            subaccount_id_sender,
+            amount,
+        } => mint_to_user(deps, env, info.sender, subaccount_id_sender, amount),
+        ExecuteMsg::BurnFromUser {
+            subaccount_id_sender,
+            amount,
+        } => burn_from_user(deps, env, info.sender, subaccount_id_sender, amount),
     }
 }
 
