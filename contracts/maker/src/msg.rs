@@ -2,7 +2,7 @@ use crate::{
     state::{config_read, State},
     utils::{div_dec, round_to_precision, wrap_from_state},
 };
-use cosmwasm_std::{Coin, Decimal256 as Decimal, Deps, StdError, Uint256};
+use cosmwasm_std::{Decimal256 as Decimal, Deps, StdError, Uint256, Uint128};
 use injective_bindings::InjectiveQueryWrapper;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -26,13 +26,15 @@ pub struct InstantiateMsg {
     pub min_market_data_delay_sec: String,
     pub decimal_shift: String,
     pub base_precision_shift: String,
+    pub lp_token_address: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    Subscribe { subaccount_id: String, amount: Coin },
     UpdateMarketState { mid_price: String, volitility: String }, // The chain will not be responsible for calling this
+    MintToUser { subaccount_id_sender: String, amount: Uint128 },
+    BurnFromUser { subaccount_id_sender: String, amount: Uint128 },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

@@ -27,6 +27,7 @@ pub struct State {
     pub min_tail_dist_perct: Decimal,
     pub decimal_shift: Uint256,
     pub base_precision_shift: Uint256,
+    pub lp_token_address: String,
 }
 
 pub fn config(storage: &mut dyn Storage) -> Singleton<State> {

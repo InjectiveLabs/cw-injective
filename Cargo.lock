@@ -878,6 +878,7 @@ dependencies = [
  "cosmwasm-std",
  "cosmwasm-storage",
  "cosmwasm-vm",
+ "cw20",
  "injective-bindings",
  "injective-mocks",
  "schemars",

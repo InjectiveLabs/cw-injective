@@ -11,12 +11,10 @@ use crate::state::{config, config_read, State};
 use crate::utils::{bp_to_perct, div_dec, sub_abs, wrap};
 use chrono::Utc;
 use cosmwasm_std::{
-    entry_point, to_binary, Addr, Binary, Coin, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint256,
+    entry_point, to_binary, Binary, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint256, Uint128, Addr, WasmMsg,
 };
-use injective_bindings::{
-    create_market_mid_price_update_msg, create_market_volitility_update_msg, create_subaccount_transfer_msg, InjectiveMsgWrapper, InjectiveQuerier,
-    InjectiveQueryWrapper, SubaccountDepositResponse,
-};
+use cw20::Cw20ExecuteMsg;
+use injective_bindings::{InjectiveQueryWrapper, InjectiveMsgWrapper, create_market_volitility_update_msg, create_market_mid_price_update_msg};
 
 #[entry_point]
 pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, info: MessageInfo, msg: InstantiateMsg) -> Result<Response, StdError> {
@@ -40,6 +38,7 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, info: Messag
         min_tail_dist_perct: bp_to_perct(Decimal::from_str(&msg.min_tail_dist_bp).unwrap()),
         decimal_shift: Uint256::from_str(&msg.decimal_shift).unwrap(),
         base_precision_shift: Uint256::from_str(&msg.base_precision_shift).unwrap(),
+        lp_token_address: msg.lp_token_address.clone(),
     };
 
     config(deps.storage).save(&state)?;
@@ -55,30 +54,60 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     match msg {
-        ExecuteMsg::Subscribe { subaccount_id, amount } => subscribe(deps, env, info.sender, subaccount_id, amount),
         ExecuteMsg::UpdateMarketState { mid_price, volitility } => update_market_state(deps, info, mid_price, volitility),
+        ExecuteMsg::MintToUser { subaccount_id_sender, amount } => mint_to_user(deps, env, info.sender, subaccount_id_sender, amount),
+        ExecuteMsg::BurnFromUser { subaccount_id_sender, amount } => burn_from_user(deps, env, info.sender, subaccount_id_sender, amount),
     }
 }
 
-pub fn subscribe(
-    _deps: DepsMut<InjectiveQueryWrapper>,
-    env: Env,
-    sender: Addr,
-    subaccount_id: String,
-    amount: Coin,
+pub fn mint_to_user(
+    deps: DepsMut<InjectiveQueryWrapper>,
+    _env: Env,
+    _sender: Addr,
+    subaccount_id_sender: String,
+    amount: Uint128,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
-    let contract = env.contract.address;
+    let state = config_read(deps.storage).load().unwrap();
+    let lp_token_address = state.lp_token_address.clone();
 
-    let querier = InjectiveQuerier::new(&_deps.querier);
-    let res: SubaccountDepositResponse = querier.query_subaccount_deposit(subaccount_id.clone(), amount.denom.clone().into())?;
+    // TODO if _sender != state.manager return error and initialize manager as Cosmos exchange module
 
-    // just log the available balance for now
-    _deps.api.debug(res.deposits.available_balance.to_string().as_str());
+    let mint = Cw20ExecuteMsg::Mint {
+        recipient: subaccount_id_sender,
+        amount: amount,
+    };
+    let message = WasmMsg::Execute {
+        contract_addr: lp_token_address.into(),
+        msg: to_binary(&mint)?,
+        funds: vec![],
+    };
 
-    let msg = create_subaccount_transfer_msg(sender, subaccount_id.into(), contract.into(), amount);
+    Ok(Response::new().add_message(message))
+}
 
-    let res = Response::new().add_message(msg);
-    Ok(res)
+pub fn burn_from_user(
+    deps: DepsMut<InjectiveQueryWrapper>,
+    _env: Env,
+    _sender: Addr,
+    subaccount_id_sender: String,
+    amount: Uint128,
+) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
+    let state = config_read(deps.storage).load().unwrap();
+    let lp_token_address = state.lp_token_address.clone();
+
+    // TODO if _sender != state.manager return error and initialize manager as Cosmos exchange module
+
+    let burn = Cw20ExecuteMsg::BurnFrom {
+        owner: subaccount_id_sender,
+        amount: amount,
+    };
+    let message = WasmMsg::Execute {
+        contract_addr: lp_token_address.into(),
+        msg: to_binary(&burn)?,
+        funds: vec![],
+    };
+
+    Ok(Response::new().add_message(message))
 }
 
 /// This is an external, state changing method that will give the bot a more accurate perspective of the
