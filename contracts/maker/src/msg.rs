@@ -10,22 +10,21 @@ use std::{fmt, str::FromStr};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
-    pub manager: String,
-    pub market_id: String,
-    pub fee_recipient: String,
-    pub sub_account: String,
-    pub is_deriv: bool,
-    pub leverage: String,
-    pub order_density: String,
-    pub reservation_param: String,
-    pub spread_param: String,
-    pub active_capital_perct: String,
-    pub head_chg_tol_bp: String,
-    pub tail_dist_from_mid_bp: String,
-    pub min_tail_dist_bp: String,
-    pub min_market_data_delay_sec: String,
-    pub decimal_shift: String,
-    pub base_precision_shift: String,
+    pub manager: String,               // Contract creator's address
+    pub market_id: String,             // Market Id
+    pub sub_account: String,           // The contract's delegated subaccount
+    pub is_deriv: bool,                // Whether the contract will be operating on a derivative market
+    pub leverage: String,              // Leverage that a contract will use on its orders
+    pub order_density: String,         // Number of orders to place between the head and the tail
+    pub reservation_param: String,     // A constant between 0..1 that will be used to control the sensitivity of the reservation_price
+    pub spread_param: String,          // A constant between 0..1 that will be used to control the sensitivity of the spread around the mid_price
+    pub active_capital: String,        // A constant between 0..1 that will be used to determine how much of our capital we want resting on the book
+    pub head_chg_tol_bp: String, // A threshold for which we actually want to take action in BP (if new head is more than x dist away from old head)
+    pub tail_dist_from_mid_bp: String, // The distance in BP from the mid_price that we want to place our tails
+    pub min_tail_dist_bp: String, // The minimum distance in BP from the head that we want our tail (risk management param)
+    pub max_market_data_delay: String, // The maximum time we are willing to tolerate since the last market data update for which the contract will behave expectedly
+    pub decimal_shift: String,         // 10^(number of decimals of the quote currency)
+    pub base_precision_shift: String,  // 10^(decimal precision of base quantity respective of the market)
     pub lp_token_address: String,
 }
 
@@ -53,7 +52,6 @@ pub enum QueryMsg {
 pub struct Position {
     pub is_long: bool,
     pub quantity: String,
-    pub avg_price: String,
     pub margin: String,
 }
 impl Position {
@@ -62,7 +60,6 @@ impl Position {
         Ok(WrappedPosition {
             is_long: self.is_long,
             quantity: Decimal::from_str(&self.quantity).unwrap(),
-            avg_price: wrap_from_state(&self.avg_price, &state),
             margin: wrap_from_state(&self.margin, &state),
         })
     }
@@ -93,7 +90,6 @@ impl OpenOrder {
 pub struct WrappedPosition {
     pub is_long: bool,
     pub quantity: Decimal,
-    pub avg_price: Decimal,
     pub margin: Decimal,
 }
 
@@ -110,7 +106,6 @@ pub struct WrappedOpenOrder {
 pub struct WrappedOrderResponse {
     pub market_id: String,
     pub subaccount_id: String,
-    pub fee_recipient: String,
     pub price: String,
     pub quantity: String,
     pub leverage: String,
@@ -123,7 +118,6 @@ impl WrappedOrderResponse {
         WrappedOrderResponse {
             market_id: state.market_id.clone(),
             subaccount_id: state.sub_account.clone(),
-            fee_recipient: state.fee_recipient.clone(),
             price: round_to_precision(
                 price * Decimal::from_str(&state.decimal_shift.to_string()).unwrap(),
                 Uint256::from_str("1").unwrap(),

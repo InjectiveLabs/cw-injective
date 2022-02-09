@@ -51,7 +51,7 @@ pub fn round_to_precision(num: Decimal, precision_shift: Uint256) -> Decimal {
     div_dec(shifted, precision_shift)
 }
 
-pub fn bp_to_perct(bp: Decimal) -> Decimal {
+pub fn bp_to_dec(bp: Decimal) -> Decimal {
     div_dec(bp, Decimal::from_str("10000").unwrap())
 }
 
