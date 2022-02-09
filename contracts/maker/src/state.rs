@@ -26,6 +26,7 @@ pub struct State {
     pub min_tail_dist: Decimal, // The minimum between 0..1 format from the head that we want our tail (risk management param)
     pub decimal_shift: Uint256, // 10^(number of decimals of the quote currency)
     pub base_precision_shift: Uint256, // 10^(decimal precision of base quantity respective of the market)
+    pub lp_token_address: String,
 }
 
 pub fn config(storage: &mut dyn Storage) -> Singleton<State> {

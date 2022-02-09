@@ -238,6 +238,7 @@ mod tests {
             manager: Addr::unchecked(""),
             last_update_utc: 0,
             max_market_data_delay: 0,
+            lp_token_address: String::from("")
         }
     }
 }
