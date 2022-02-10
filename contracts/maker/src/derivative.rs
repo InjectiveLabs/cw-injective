@@ -232,7 +232,7 @@ mod tests {
             decimal_shift: Uint256::from_str("1000000").unwrap(),
             base_precision_shift: Uint256::from_str(&base_precision_shift.to_string()).unwrap(),
             mid_price: Decimal::zero(),
-            volitility: Decimal::zero(),
+            volatility: Decimal::zero(),
             reservation_param: Decimal::zero(),
             spread_param: Decimal::zero(),
             manager: Addr::unchecked(""),

@@ -15,7 +15,7 @@ use cosmwasm_std::{
     Uint128, Uint256, WasmMsg,
 };
 use cw20::{Cw20ExecuteMsg, MinterResponse};
-use injective_bindings::{create_market_mid_price_update_msg, create_market_volitility_update_msg, InjectiveMsgWrapper, InjectiveQueryWrapper};
+use injective_bindings::{create_market_mid_price_update_msg, create_market_volatility_update_msg, InjectiveMsgWrapper, InjectiveQueryWrapper};
 
 use cw0::parse_reply_instantiate_data;
 
@@ -31,7 +31,7 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, info: Message
         leverage: Decimal::from_str(&msg.leverage).unwrap(),
         order_density: Uint256::from_str(&msg.order_density).unwrap(),
         mid_price: Decimal::one(),
-        volitility: Decimal::one(),
+        volatility: Decimal::one(),
         last_update_utc: 0,
         max_market_data_delay: msg.max_market_data_delay.parse::<i64>().unwrap(),
         reservation_param: Decimal::from_str(&msg.reservation_param).unwrap(),
@@ -102,7 +102,7 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     match msg {
-        ExecuteMsg::UpdateMarketState { mid_price, volitility } => update_market_state(deps, info, mid_price, volitility),
+        ExecuteMsg::UpdateMarketState { mid_price, volatility } => update_market_state(deps, info, mid_price, volatility),
         ExecuteMsg::MintToUser {
             subaccount_id_sender,
             amount,
@@ -165,13 +165,13 @@ pub fn burn_from_user(
 }
 
 /// This is an external, state changing method that will give the bot a more accurate perspective of the
-/// current state of markets. It updates the volitility and the mid_price properties on the state struct.
+/// current state of markets. It updates the volatility and the mid_price properties on the state struct.
 /// The method should be called on some repeating interval.
 pub fn update_market_state(
     deps: DepsMut<InjectiveQueryWrapper>,
     info: MessageInfo,
     mid_price: String,
-    volitility: String,
+    volatility: String,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let mut state = config(deps.storage).load().unwrap();
 
@@ -182,17 +182,17 @@ pub fn update_market_state(
     let previous_mid_price = state.mid_price;
     state.mid_price = Decimal::from_str(&mid_price).unwrap();
 
-    // Update the volitility
-    let previous_volitility = state.volitility;
-    state.volitility = Decimal::from_str(&volitility).unwrap();
+    // Update the volatility
+    let previous_volatility = state.volatility;
+    state.volatility = Decimal::from_str(&volatility).unwrap();
 
     // Update the timestamp of this most recent update
     let time_of_update = Utc::now().timestamp();
     state.last_update_utc = time_of_update;
 
-    let volitility_msg = create_market_volitility_update_msg(info.sender.clone(), previous_volitility, state.volitility);
+    let volatility_msg = create_market_volatility_update_msg(info.sender.clone(), previous_volatility, state.volatility);
     let mid_price_msg = create_market_mid_price_update_msg(info.sender, previous_mid_price, state.mid_price);
-    let res = Response::new().add_message(volitility_msg).add_message(mid_price_msg);
+    let res = Response::new().add_message(volatility_msg).add_message(mid_price_msg);
     Ok(res)
 }
 
@@ -239,10 +239,10 @@ fn get_action(
     };
 
     // Calculate reservation price
-    let reservation_price = reservation_price(state.mid_price, inv_imbal, state.volitility, state.reservation_param, imbal_is_long);
+    let reservation_price = reservation_price(state.mid_price, inv_imbal, state.volatility, state.reservation_param, imbal_is_long);
 
     // Calculate the new head prices
-    let (new_buy_head, new_sell_head) = new_head_prices(state.volitility, reservation_price, state.spread_param);
+    let (new_buy_head, new_sell_head) = new_head_prices(state.volatility, reservation_price, state.spread_param);
 
     // Split open orders
     let (open_buys, open_sells) = split_open_orders(open_orders);
@@ -325,19 +325,19 @@ fn create_orders(
 /// # Arguments
 /// * `mid_price` - A mid_price that we update on a block by block basis
 /// * `inv_imbal` - A measure of inventory imbalance
-/// * `volitility` - A measure of volitility that we update on a block by block basis
-/// * `reservation_param` - The constant to control the sensitivity of the volitility param
+/// * `volatility` - A measure of volatility that we update on a block by block basis
+/// * `reservation_param` - The constant to control the sensitivity of the volatility param
 /// * `imbal_is_long` - The direction of the inventory imbalance
 /// # Returns
 /// * `reservation_price` - The price around which we will center both heads
-fn reservation_price(mid_price: Decimal, inv_imbal: Decimal, volitility: Decimal, reservation_param: Decimal, imbal_is_long: bool) -> Decimal {
+fn reservation_price(mid_price: Decimal, inv_imbal: Decimal, volatility: Decimal, reservation_param: Decimal, imbal_is_long: bool) -> Decimal {
     if inv_imbal == Decimal::zero() {
         mid_price
     } else {
         if imbal_is_long {
-            mid_price - (inv_imbal * volitility * reservation_param)
+            mid_price - (inv_imbal * volatility * reservation_param)
         } else {
-            mid_price + (inv_imbal * volitility * reservation_param)
+            mid_price + (inv_imbal * volatility * reservation_param)
         }
     }
 }
@@ -345,14 +345,14 @@ fn reservation_price(mid_price: Decimal, inv_imbal: Decimal, volitility: Decimal
 /// Uses the reservation price and variation to calculate where the buy/sell heads should be. Both buy and
 /// sell heads will be equi-distant from the reservation price.
 /// # Arguments
-/// * `volitility` - A measure of volitility that we update on a block by block basis
+/// * `volatility` - A measure of volatility that we update on a block by block basis
 /// * `reservation_price` - The a price that is shifted from the mid price depending on the inventory imbalance
 /// * `spread_param` - The constant to control the sensitivity of the spread
 /// # Returns
 /// * `buy_head` - The new buy head
 /// * `sell_head` - The new sell head
-fn new_head_prices(volitility: Decimal, reservation_price: Decimal, spread_param: Decimal) -> (Decimal, Decimal) {
-    let dist_from_reservation_price = div_dec(volitility * spread_param, Decimal::from_str("2").unwrap());
+fn new_head_prices(volatility: Decimal, reservation_price: Decimal, spread_param: Decimal) -> (Decimal, Decimal) {
+    let dist_from_reservation_price = div_dec(volatility * spread_param, Decimal::from_str("2").unwrap());
     (
         reservation_price - dist_from_reservation_price,
         reservation_price + dist_from_reservation_price,
