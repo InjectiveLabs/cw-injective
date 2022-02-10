@@ -11,14 +11,19 @@ use crate::state::{config, config_read, State};
 use crate::utils::{bp_to_dec, div_dec, sub_abs, wrap};
 use chrono::Utc;
 use cosmwasm_std::{
-    entry_point, to_binary, Addr, Binary, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128, Uint256,
-    WasmMsg,
+    entry_point, to_binary, Addr, Binary, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdError, StdResult, SubMsg,
+    Uint128, Uint256, WasmMsg,
 };
-use cw20::Cw20ExecuteMsg;
+
+use cw20::{Cw20ExecuteMsg, MinterResponse};
 use injective_bindings::{InjectiveMsgWrapper, InjectiveQueryWrapper};
 
+use cw0::parse_reply_instantiate_data;
+
+const INSTANTIATE_REPLY_ID: u64 = 1u64;
+
 #[entry_point]
-pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, info: MessageInfo, msg: InstantiateMsg) -> Result<Response, StdError> {
+pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, info: MessageInfo, msg: InstantiateMsg) -> Result<Response, StdError> {
     let state = State {
         manager: info.sender,
         market_id: msg.market_id.to_string(),
@@ -27,7 +32,7 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, info: Messag
         leverage: Decimal::from_str(&msg.leverage).unwrap(),
         order_density: Uint256::from_str(&msg.order_density).unwrap(),
         mid_price: Decimal::one(),
-        volitility: Decimal::one(),
+        volatility: Decimal::one(),
         last_update_utc: 0,
         max_market_data_delay: msg.max_market_data_delay.parse::<i64>().unwrap(),
         reservation_param: Decimal::from_str(&msg.reservation_param).unwrap(),
@@ -38,12 +43,56 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, info: Messag
         min_tail_dist: bp_to_dec(Decimal::from_str(&msg.min_tail_dist_bp).unwrap()),
         decimal_shift: Uint256::from_str(&msg.decimal_shift).unwrap(),
         base_precision_shift: Uint256::from_str(&msg.base_precision_shift).unwrap(),
-        lp_token_address: msg.lp_token_address.clone(),
+        lp_token_address: "LP-Token".to_string(),
     };
 
     config(deps.storage).save(&state)?;
 
-    Ok(Response::new())
+    let code_id = msg.cw20_code_id.parse::<u64>().unwrap();
+    let decimals = msg.lp_decimals.parse::<u8>().unwrap();
+
+    let cw20_instantiate_msg = cw20_base::msg::InstantiateMsg {
+        name: msg.lp_name,
+        symbol: msg.lp_symbol,
+        decimals: decimals,
+        initial_balances: vec![],
+        mint: Some(MinterResponse {
+            minter: env.contract.address.to_string(),
+            cap: None,
+        }),
+        marketing: None,
+    };
+
+    let instantiate_message = WasmMsg::Instantiate {
+        admin: None,
+        code_id,
+        msg: to_binary(&cw20_instantiate_msg)?,
+        funds: vec![],
+        label: "LP-Token".to_string(),
+    };
+
+    let submessage = SubMsg::reply_on_success(instantiate_message, INSTANTIATE_REPLY_ID);
+    Ok(Response::new().add_submessage(submessage))
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn reply(deps: DepsMut, _: Env, msg: Reply) -> StdResult<Response> {
+    match msg.id {
+        INSTANTIATE_REPLY_ID => handle_instantiate_reply(deps, msg),
+        id => Err(StdError::generic_err(format!("Unknown reply id: {}", id))),
+    }
+}
+
+fn handle_instantiate_reply(deps: DepsMut, msg: Reply) -> StdResult<Response> {
+    let res = parse_reply_instantiate_data(msg).unwrap();
+    let child_contract = deps.api.addr_validate(&res.contract_address)?;
+
+    let mut state = config_read(deps.storage).load().unwrap();
+    state.lp_token_address = child_contract.to_string();
+
+    config(deps.storage).save(&state)?;
+
+    return Ok(Response::default());
 }
 
 #[entry_point]
@@ -54,7 +103,7 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     match msg {
-        ExecuteMsg::UpdateMarketState { mid_price, volitility } => update_market_state(deps, info, mid_price, volitility),
+        ExecuteMsg::UpdateMarketState { mid_price, volatility } => update_market_state(deps, info, mid_price, volatility),
         ExecuteMsg::MintToUser {
             subaccount_id_sender,
             amount,
@@ -117,13 +166,13 @@ pub fn burn_from_user(
 }
 
 /// This is an external, state changing method that will give the bot a more accurate perspective of the
-/// current state of markets. It updates the volitility and the mid_price properties on the state struct.
+/// current state of markets. It updates the volatility and the mid_price properties on the state struct.
 /// The method should be called on some repeating interval.
 pub fn update_market_state(
     deps: DepsMut<InjectiveQueryWrapper>,
     info: MessageInfo,
     mid_price: String,
-    volitility: String,
+    volatility: String,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let mut state = config(deps.storage).load().unwrap();
 
@@ -133,8 +182,8 @@ pub fn update_market_state(
     // Update the mid price
     state.mid_price = Decimal::from_str(&mid_price).unwrap();
 
-    // Update the volitility
-    state.volitility = Decimal::from_str(&volitility).unwrap();
+    // Update the volatility
+    state.volatility = Decimal::from_str(&volatility).unwrap();
 
     // Update the timestamp of this most recent update
     let time_of_update = Utc::now().timestamp();
@@ -187,10 +236,10 @@ fn get_action(
     };
 
     // Calculate reservation price
-    let reservation_price = reservation_price(state.mid_price, inv_imbal, state.volitility, state.reservation_param, imbal_is_long);
+    let reservation_price = reservation_price(state.mid_price, inv_imbal, state.volatility, state.reservation_param, imbal_is_long);
 
     // Calculate the new head prices
-    let (new_buy_head, new_sell_head) = new_head_prices(state.volitility, reservation_price, state.spread_param);
+    let (new_buy_head, new_sell_head) = new_head_prices(state.volatility, reservation_price, state.spread_param);
 
     // Split open orders
     let (open_buys, open_sells) = split_open_orders(open_orders);
@@ -273,19 +322,19 @@ fn create_orders(
 /// # Arguments
 /// * `mid_price` - A mid_price that we update on a block by block basis
 /// * `inv_imbal` - A measure of inventory imbalance
-/// * `volitility` - A measure of volitility that we update on a block by block basis
-/// * `reservation_param` - The constant to control the sensitivity of the volitility param
+/// * `volatility` - A measure of volatility that we update on a block by block basis
+/// * `reservation_param` - The constant to control the sensitivity of the volatility param
 /// * `imbal_is_long` - The direction of the inventory imbalance
 /// # Returns
 /// * `reservation_price` - The price around which we will center both heads
-fn reservation_price(mid_price: Decimal, inv_imbal: Decimal, volitility: Decimal, reservation_param: Decimal, imbal_is_long: bool) -> Decimal {
+fn reservation_price(mid_price: Decimal, inv_imbal: Decimal, volatility: Decimal, reservation_param: Decimal, imbal_is_long: bool) -> Decimal {
     if inv_imbal == Decimal::zero() {
         mid_price
     } else {
         if imbal_is_long {
-            mid_price - (inv_imbal * volitility * reservation_param)
+            mid_price - (inv_imbal * volatility * reservation_param)
         } else {
-            mid_price + (inv_imbal * volitility * reservation_param)
+            mid_price + (inv_imbal * volatility * reservation_param)
         }
     }
 }
@@ -293,14 +342,14 @@ fn reservation_price(mid_price: Decimal, inv_imbal: Decimal, volitility: Decimal
 /// Uses the reservation price and variation to calculate where the buy/sell heads should be. Both buy and
 /// sell heads will be equi-distant from the reservation price.
 /// # Arguments
-/// * `volitility` - A measure of volitility that we update on a block by block basis
+/// * `volatility` - A measure of volatility that we update on a block by block basis
 /// * `reservation_price` - The a price that is shifted from the mid price depending on the inventory imbalance
 /// * `spread_param` - The constant to control the sensitivity of the spread
 /// # Returns
 /// * `buy_head` - The new buy head
 /// * `sell_head` - The new sell head
-fn new_head_prices(volitility: Decimal, reservation_price: Decimal, spread_param: Decimal) -> (Decimal, Decimal) {
-    let dist_from_reservation_price = div_dec(volitility * spread_param, Decimal::from_str("2").unwrap());
+fn new_head_prices(volatility: Decimal, reservation_price: Decimal, spread_param: Decimal) -> (Decimal, Decimal) {
+    let dist_from_reservation_price = div_dec(volatility * spread_param, Decimal::from_str("2").unwrap());
     (
         reservation_price - dist_from_reservation_price,
         reservation_price + dist_from_reservation_price,
