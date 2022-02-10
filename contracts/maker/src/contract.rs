@@ -15,7 +15,7 @@ use cosmwasm_std::{
     WasmMsg,
 };
 use cw20::Cw20ExecuteMsg;
-use injective_bindings::{create_market_mid_price_update_msg, create_market_volitility_update_msg, InjectiveMsgWrapper, InjectiveQueryWrapper};
+use injective_bindings::{InjectiveMsgWrapper, InjectiveQueryWrapper};
 
 #[entry_point]
 pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, info: MessageInfo, msg: InstantiateMsg) -> Result<Response, StdError> {
@@ -131,20 +131,16 @@ pub fn update_market_state(
     only_owner(&state.manager, &info.sender);
 
     // Update the mid price
-    let previous_mid_price = state.mid_price;
     state.mid_price = Decimal::from_str(&mid_price).unwrap();
 
     // Update the volitility
-    let previous_volitility = state.volitility;
     state.volitility = Decimal::from_str(&volitility).unwrap();
 
     // Update the timestamp of this most recent update
     let time_of_update = Utc::now().timestamp();
     state.last_update_utc = time_of_update;
 
-    let volitility_msg = create_market_volitility_update_msg(info.sender.clone(), previous_volitility, state.volitility);
-    let mid_price_msg = create_market_mid_price_update_msg(info.sender, previous_mid_price, state.mid_price);
-    let res = Response::new().add_message(volitility_msg).add_message(mid_price_msg);
+    let res = Response::new();
     Ok(res)
 }
 

@@ -30,17 +30,7 @@ pub enum InjectiveMsg {
         source_subaccount_id: String,
         destination_subaccount_id: String,
         amount: Coin,
-    },
-    MarketVolitilityUpdate {
-        sender: Addr,
-        previous: String,
-        new: String,
-    },
-    MarketMidPriceUpdate {
-        sender: Addr,
-        previous: String,
-        new: String,
-    },
+    }
 }
 
 pub fn create_subaccount_transfer_msg(
@@ -56,30 +46,6 @@ pub fn create_subaccount_transfer_msg(
             source_subaccount_id: source_subaccount_id.to_string(),
             destination_subaccount_id: destination_subaccount_id.to_string(),
             amount,
-        },
-    }
-    .into()
-}
-
-pub fn create_market_volitility_update_msg(sender: Addr, previous: Decimal256, new: Decimal256) -> CosmosMsg<InjectiveMsgWrapper> {
-    InjectiveMsgWrapper {
-        route: InjectiveRoute::Exchange,
-        msg_data: InjectiveMsg::MarketVolitilityUpdate {
-            sender,
-            previous: previous.to_string(),
-            new: new.to_string(),
-        },
-    }
-    .into()
-}
-
-pub fn create_market_mid_price_update_msg(sender: Addr, previous: Decimal256, new: Decimal256) -> CosmosMsg<InjectiveMsgWrapper> {
-    InjectiveMsgWrapper {
-        route: InjectiveRoute::Exchange,
-        msg_data: InjectiveMsg::MarketMidPriceUpdate {
-            sender,
-            previous: previous.to_string(),
-            new: new.to_string(),
         },
     }
     .into()

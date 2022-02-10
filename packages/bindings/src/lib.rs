@@ -4,7 +4,7 @@ mod query;
 mod route;
 
 pub use msg::{
-    create_market_mid_price_update_msg, create_market_volitility_update_msg, create_subaccount_transfer_msg, InjectiveMsg, InjectiveMsgWrapper,
+    create_subaccount_transfer_msg, InjectiveMsg, InjectiveMsgWrapper,
 };
 pub use querier::InjectiveQuerier;
 pub use query::{Deposit, InjectiveQuery, InjectiveQueryWrapper, SubaccountDepositResponse};
