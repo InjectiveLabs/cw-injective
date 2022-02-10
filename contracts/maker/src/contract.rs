@@ -11,14 +11,18 @@ use crate::state::{config, config_read, State};
 use crate::utils::{bp_to_dec, div_dec, sub_abs, wrap};
 use chrono::Utc;
 use cosmwasm_std::{
-    entry_point, to_binary, Addr, Binary, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128, Uint256,
-    WasmMsg,
+    entry_point, to_binary, Addr, Binary, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdError, StdResult, SubMsg,
+    Uint128, Uint256, WasmMsg,
 };
-use cw20::Cw20ExecuteMsg;
+use cw20::{Cw20ExecuteMsg, MinterResponse};
 use injective_bindings::{create_market_mid_price_update_msg, create_market_volitility_update_msg, InjectiveMsgWrapper, InjectiveQueryWrapper};
 
+use cw0::parse_reply_instantiate_data;
+
+const INSTANTIATE_REPLY_ID: u64 = 1u64;
+
 #[entry_point]
-pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, info: MessageInfo, msg: InstantiateMsg) -> Result<Response, StdError> {
+pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, info: MessageInfo, msg: InstantiateMsg) -> Result<Response, StdError> {
     let state = State {
         manager: info.sender,
         market_id: msg.market_id.to_string(),
@@ -38,12 +42,56 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, info: Messag
         min_tail_dist: bp_to_dec(Decimal::from_str(&msg.min_tail_dist_bp).unwrap()),
         decimal_shift: Uint256::from_str(&msg.decimal_shift).unwrap(),
         base_precision_shift: Uint256::from_str(&msg.base_precision_shift).unwrap(),
-        lp_token_address: msg.lp_token_address.clone(),
+        lp_token_address: "LP-Token".to_string(),
     };
 
     config(deps.storage).save(&state)?;
 
-    Ok(Response::new())
+    let code_id = msg.cw20_code_id.parse::<u64>().unwrap();
+    let decimals = msg.lp_decimals.parse::<u8>().unwrap();
+
+    let cw20_instantiate_msg = cw20_base::msg::InstantiateMsg {
+        name: msg.lp_name,
+        symbol: msg.lp_symbol,
+        decimals: decimals,
+        initial_balances: vec![],
+        mint: Some(MinterResponse {
+            minter: env.contract.address.to_string(),
+            cap: None,
+        }),
+        marketing: None,
+    };
+
+    let instantiate_message = WasmMsg::Instantiate {
+        admin: None,
+        code_id,
+        msg: to_binary(&cw20_instantiate_msg)?,
+        funds: vec![],
+        label: "LP-Token".to_string(),
+    };
+
+    let submessage = SubMsg::reply_on_success(instantiate_message, INSTANTIATE_REPLY_ID);
+    Ok(Response::new().add_submessage(submessage))
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn reply(deps: DepsMut, _: Env, msg: Reply) -> StdResult<Response> {
+    match msg.id {
+        INSTANTIATE_REPLY_ID => handle_instantiate_reply(deps, msg),
+        id => Err(StdError::generic_err(format!("Unknown reply id: {}", id))),
+    }
+}
+
+fn handle_instantiate_reply(deps: DepsMut, msg: Reply) -> StdResult<Response> {
+    let res = parse_reply_instantiate_data(msg).unwrap();
+    let child_contract = deps.api.addr_validate(&res.contract_address)?;
+
+    let mut state = config_read(deps.storage).load().unwrap();
+    state.lp_token_address = child_contract.to_string();
+
+    config(deps.storage).save(&state)?;
+
+    return Ok(Response::default());
 }
 
 #[entry_point]

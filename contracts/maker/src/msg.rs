@@ -25,7 +25,10 @@ pub struct InstantiateMsg {
     pub max_market_data_delay: String, // The maximum time we are willing to tolerate since the last market data update for which the contract will behave expectedly
     pub decimal_shift: String,         // 10^(number of decimals of the quote currency)
     pub base_precision_shift: String,  // 10^(decimal precision of base quantity respective of the market)
-    pub lp_token_address: String,
+    pub cw20_code_id: String,
+    pub lp_name: String,
+    pub lp_symbol: String,
+    pub lp_decimals: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
