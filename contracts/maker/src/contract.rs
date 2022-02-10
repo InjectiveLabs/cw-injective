@@ -1,5 +1,4 @@
 use std::str::FromStr;
-
 use crate::derivative::{create_new_orders_deriv, inv_imbalance_deriv};
 use crate::error::ContractError;
 use crate::msg::{

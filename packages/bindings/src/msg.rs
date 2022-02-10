@@ -30,7 +30,7 @@ pub enum InjectiveMsg {
         source_subaccount_id: String,
         destination_subaccount_id: String,
         amount: Coin,
-    }
+    },
 }
 
 pub fn create_subaccount_transfer_msg(
