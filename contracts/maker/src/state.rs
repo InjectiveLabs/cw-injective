@@ -8,9 +8,10 @@ pub static CONFIG_KEY: &[u8] = b"config";
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct State {
-    pub manager: Addr,                 // Contract creator's address
-    pub market_id: String,             // Market Id
-    pub sub_account: String,           // The contract's delegated subaccount
+    pub manager: Addr,       // Contract creator's address
+    pub market_id: String,   // Market Id
+    pub sub_account: String, // The contract's delegated subaccount
+    pub fee_recipient: String,
     pub is_deriv: bool,                // Whether the contract will be operating on a derivative market
     pub leverage: Decimal,             // Leverage that a contract will use on its orders
     pub order_density: Uint256,        // Number of orders to place between the head and the tail

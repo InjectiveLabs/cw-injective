@@ -1,3 +1,7 @@
+use crate::exchange::{
+    Deposit, DerivativeLimitOrder, DerivativeMarket, PerpetualMarketFunding, PerpetualMarketInfo, Position, WrappedDeposit,
+    WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedPerpetualMarketFunding, WrappedPerpetualMarketInfo, WrappedPosition,
+};
 use crate::{
     state::State,
     utils::{div_dec, sub_abs, sub_no_overflow},
@@ -5,7 +9,6 @@ use crate::{
 use chrono::Utc;
 use cosmwasm_std::{Addr, Decimal256 as Decimal};
 use std::str::FromStr;
-use crate::exchange::{DerivativeMarket, WrappedDerivativeMarket, PerpetualMarketInfo, WrappedPerpetualMarketInfo, PerpetualMarketFunding, WrappedPerpetualMarketFunding, DerivativeLimitOrder, WrappedDerivativeLimitOrder, Deposit, WrappedDeposit, Position, WrappedPosition};
 
 pub fn only_owner(sender: &Addr, owner: &Addr) {
     assert_eq!(sender, owner);

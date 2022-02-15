@@ -1,10 +1,11 @@
-use std::str::FromStr;
 use crate::derivative::{create_new_orders_deriv, inv_imbalance_deriv};
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, WrappedGetActionResponse, WrappedOrderResponse};
-use crate::exchange::{DerivativeMarket, WrappedDerivativeMarket, PerpetualMarketInfo, WrappedPerpetualMarketInfo, PerpetualMarketFunding, WrappedPerpetualMarketFunding, DerivativeLimitOrder, WrappedDerivativeLimitOrder, Deposit, WrappedDeposit, Position, WrappedPosition};
-use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, only_owner, sanity_check};
-use crate::spot::{create_new_orders_spot, inv_imbalance_spot};
+use crate::exchange::{
+    Deposit, DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, PerpetualMarketFunding, PerpetualMarketInfo, Position,
+    WrappedDerivativeLimitOrder, WrappedPosition,
+};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, WrappedGetActionResponse};
+use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, only_owner};
 use crate::state::{config, config_read, State};
 use crate::utils::{bp_to_dec, div_dec, sub_abs, wrap};
 use chrono::Utc;
@@ -12,13 +13,13 @@ use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdError, StdResult, SubMsg,
     Uint128, Uint256, WasmMsg,
 };
+use std::str::FromStr;
 
 use cw20::{Cw20ExecuteMsg, MinterResponse};
 use injective_bindings::{InjectiveMsgWrapper, InjectiveQueryWrapper};
 
+use crate::exchange::{ExchangeMsg, MsgBatchUpdateOrders};
 use cw0::parse_reply_instantiate_data;
-use crate::exchange::{ExchangeMsg, ExchangeMsg::BatchUpdateOrders, MsgBatchUpdateOrders};
-
 
 const INSTANTIATE_REPLY_ID: u64 = 1u64;
 
@@ -28,6 +29,7 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, info: Message
         manager: info.sender,
         market_id: msg.market_id.to_string(),
         sub_account: msg.sub_account,
+        fee_recipient: msg.fee_recipient,
         is_deriv: msg.is_deriv,
         leverage: Decimal::from_str(&msg.leverage).unwrap(),
         order_density: Uint256::from_str(&msg.order_density).unwrap(),
@@ -207,42 +209,44 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, env: Env, msg: QueryMsg) -> StdR
             deposit,
             position,
             oracle_price,
-        } => to_binary(&get_action(deps, env, market, perpetual_market_info, perpetual_market_funding, open_orders, deposit, position, oracle_price)?),
+        } => to_binary(&get_action(
+            deps,
+            env,
+            market,
+            perpetual_market_info,
+            perpetual_market_funding,
+            open_orders,
+            deposit,
+            position,
+            oracle_price,
+        )?),
     }
 }
 
 fn get_action(
     deps: Deps<InjectiveQueryWrapper>,
     env: Env,
-    market: DerivativeMarket,
-    perpetual_market_info: Option<PerpetualMarketInfo>,
-    perpetual_market_funding: Option<PerpetualMarketFunding>,
-    // Trader's open orders that are currently on the book at the time of the call
+    _market: DerivativeMarket,
+    _perpetual_market_info: Option<PerpetualMarketInfo>,
+    _perpetual_market_funding: Option<PerpetualMarketFunding>,
     open_orders: Vec<DerivativeLimitOrder>,
     deposit: Deposit,
     position: Option<Position>,
-    oracle_price: String,
+    _oracle_price: String,
 ) -> StdResult<WrappedGetActionResponse> {
     // Wrap everything
-    let open_orders: Vec<WrappedOpenOrder> = open_orders.into_iter().map(|o| o.wrap().unwrap()).collect();
+    let open_orders: Vec<WrappedDerivativeLimitOrder> = open_orders.into_iter().map(|o| o.wrap().unwrap()).collect();
     let position = match position {
         None => None,
-        Some(p) => Some(p.wrap(deps).unwrap()),
+        Some(p) => Some(p.wrap().unwrap()),
     };
-    let inv_base_val = wrap(&inv_base_val, deps);
-    let inv_val = wrap(&inv_val, deps);
+    let inv_val = wrap(&deposit.total_balance);
 
     // Load state
     let state = config_read(deps.storage).load().unwrap();
 
-    // TODO: Assert necessary assumptions
-
     // Calculate inventory imbalance parameter
-    let (inv_imbal, imbal_is_long) = if state.is_deriv {
-        inv_imbalance_deriv(&position, inv_val)
-    } else {
-        inv_imbalance_spot(inv_base_val, inv_val)
-    };
+    let (inv_imbal, imbal_is_long) = inv_imbalance_deriv(&position, inv_val);
 
     // Calculate reservation price
     let reservation_price = reservation_price(state.mid_price, inv_imbal, state.volatility, state.reservation_param, imbal_is_long);
@@ -264,35 +268,25 @@ fn get_action(
             state.min_tail_dist,
         );
 
-        // TODO: one can just cancel all orders with derivative_market_ids_to_cancel_all
-        // Cancel all open buy/sell from the preceeding block
-        let buy_hashes_to_cancel = open_buys.iter().map(|o| o.hash.clone()).collect();
-        let sell_hashes_to_cancel = open_sells.iter().map(|o| o.hash.clone()).collect();
-
         // Get new buy/sell orders
-        let buy_orders_to_open = create_orders(new_buy_head, new_buy_tail, inv_val, position.clone(), state.is_deriv, true, &state);
-        let sell_orders_to_open = create_orders(new_sell_head, new_sell_tail, inv_val, position, state.is_deriv, false, &state);
+        let buy_orders_to_open = create_orders(new_buy_head, new_buy_tail, inv_val, position.clone(), true, &state);
+        let sell_orders_to_open = create_orders(new_sell_head, new_sell_tail, inv_val, position, false, &state);
 
-
-        let batchOrder = MsgBatchUpdateOrders {
+        let batch_order = MsgBatchUpdateOrders {
             sender: env.contract.address.to_string(),
             subaccount_id: "".to_string(), // TODO: convert sender address to subaccountID
             spot_market_ids_to_cancel_all: Vec::new(),
-            derivative_market_ids_to_cancel_all: Vec::new(),
+            derivative_market_ids_to_cancel_all: vec![state.market_id],
             spot_orders_to_cancel: Vec::new(),
             derivative_orders_to_cancel: vec![],
             spot_orders_to_create: Vec::new(),
-            derivative_orders_to_create: vec![],
+            derivative_orders_to_create: vec![buy_orders_to_open, sell_orders_to_open].concat(),
         };
         Ok(WrappedGetActionResponse {
-            msgs: vec![ExchangeMsg {
-                batchOrder
-            }]
+            msgs: vec![ExchangeMsg::BatchUpdateOrders(batch_order)],
         })
     } else {
-        Ok(WrappedGetActionResponse {
-            msgs: Vec::new(),
-        })
+        Ok(WrappedGetActionResponse { msgs: Vec::new() })
     }
 }
 
@@ -302,7 +296,6 @@ fn get_action(
 /// * `new_tail` - The new tail (farthest from the reservation price)
 /// * `inv_val` - The total notional value of all assets
 /// * `position` - The current position taken by the bot, if any
-/// * `is_deriv` - If the contract is configured for a derivative market
 /// * `is_buy` - If we are looking to create buy-side orders
 /// * `state` - All state of the contract
 /// # Returns
@@ -312,27 +305,21 @@ fn create_orders(
     new_tail: Decimal,
     inv_val: Decimal,
     position: Option<WrappedPosition>,
-    is_deriv: bool,
     is_buy: bool,
     state: &State,
-) -> Vec<WrappedOrderResponse> {
-    if is_deriv {
-        let (position_qty, position_margin) = match position {
-            Some(position) => {
-                if position.is_long == is_buy {
-                    (Decimal::zero(), position.margin)
-                } else {
-                    (position.quantity, Decimal::zero())
-                }
+) -> Vec<DerivativeOrder> {
+    let (position_qty, position_margin) = match position {
+        Some(position) => {
+            if position.is_long == is_buy {
+                (Decimal::zero(), position.margin)
+            } else {
+                (position.quantity, Decimal::zero())
             }
-            None => (Decimal::zero(), Decimal::zero()),
-        };
-        let alloc_val_for_new_orders = get_alloc_bal_new_orders(inv_val, position_margin, state.active_capital);
-        create_new_orders_deriv(new_head, new_tail, alloc_val_for_new_orders, position_qty, is_buy, &state).0
-    } else {
-        let alloc_val_for_new_orders = get_alloc_bal_new_orders(inv_val, Decimal::zero(), state.active_capital);
-        create_new_orders_spot(new_head, new_tail, alloc_val_for_new_orders, is_buy, &state)
-    }
+        }
+        None => (Decimal::zero(), Decimal::zero()),
+    };
+    let alloc_val_for_new_orders = get_alloc_bal_new_orders(inv_val, position_margin, state.active_capital);
+    create_new_orders_deriv(new_head, new_tail, alloc_val_for_new_orders, position_qty, is_buy, &state).0
 }
 
 /// Uses the inventory imbalance to calculate a price around which we will center the mid price
@@ -381,11 +368,11 @@ fn new_head_prices(volatility: Decimal, reservation_price: Decimal, spread_param
 /// * `head_chg_tol` - Our tolerance to change in the head price
 /// # Returns
 /// * `should_change` - Whether we should cancel and place new orders at the new head
-fn head_chg_is_gt_tol(open_orders: &Vec<WrappedOpenOrder>, new_head: Decimal, head_chg_tol: Decimal) -> bool {
+fn head_chg_is_gt_tol(open_orders: &Vec<WrappedDerivativeLimitOrder>, new_head: Decimal, head_chg_tol: Decimal) -> bool {
     if open_orders.len() == 0 {
         true
     } else {
-        let old_head = open_orders.first().unwrap().price;
+        let old_head = open_orders.first().unwrap().order_info.price;
         div_dec(sub_abs(old_head, new_head), old_head) > head_chg_tol
     }
 }
@@ -421,60 +408,71 @@ pub fn new_tail_prices(
 /// # Returns
 /// * `buy_orders` - The sorted buyside orders
 /// * `sell_orders` - The sorted sellside orders
-fn split_open_orders(open_orders: Vec<WrappedOpenOrder>) -> (Vec<WrappedOpenOrder>, Vec<WrappedOpenOrder>) {
-    let mut buy_orders: Vec<WrappedOpenOrder> = Vec::new();
-    let mut sell_orders: Vec<WrappedOpenOrder> = open_orders
+fn split_open_orders(open_orders: Vec<WrappedDerivativeLimitOrder>) -> (Vec<WrappedDerivativeLimitOrder>, Vec<WrappedDerivativeLimitOrder>) {
+    let mut buy_orders: Vec<WrappedDerivativeLimitOrder> = Vec::new();
+    let mut sell_orders: Vec<WrappedDerivativeLimitOrder> = open_orders
         .into_iter()
         .filter(|o| {
-            if o.is_buy {
+            if o.order_type == 1 {
                 buy_orders.push(o.clone());
             }
-            !o.is_buy
+            o.order_type == 2
         })
         .collect();
 
     // Sort both so the head is at index 0
-    buy_orders.sort_by(|a, b| b.price.partial_cmp(&a.price).unwrap());
-    sell_orders.sort_by(|a, b| a.price.partial_cmp(&b.price).unwrap());
+    buy_orders.sort_by(|a, b| b.order_info.price.partial_cmp(&a.order_info.price).unwrap());
+    sell_orders.sort_by(|a, b| a.order_info.price.partial_cmp(&b.order_info.price).unwrap());
 
     (buy_orders, sell_orders)
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::exchange::{WrappedDerivativeLimitOrder, WrappedOrderInfo};
+
     use super::{head_chg_is_gt_tol, new_tail_prices, split_open_orders};
-    use crate::msg::WrappedOpenOrder;
     use cosmwasm_std::Decimal256 as Decimal;
     use std::str::FromStr;
 
     #[test]
     fn head_chg_is_gt_tol_test() {
-        let mut open_orders: Vec<WrappedOpenOrder> = Vec::new();
-        let new_head = Decimal::from_str("1").unwrap();
+        let mut open_orders: Vec<WrappedDerivativeLimitOrder> = Vec::new();
+        let new_head = Decimal::from_str("100000000100").unwrap();
         let head_chg_tol = Decimal::from_str("0.01").unwrap();
         let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_chg_tol);
         assert!(should_change);
 
-        open_orders.push(WrappedOpenOrder {
-            is_buy: true,
-            hash: String::from(""),
-            quantity: Decimal::zero(),
-            price: Decimal::from_str("1").unwrap(),
+        open_orders.push(WrappedDerivativeLimitOrder {
             fillable: Default::default(),
             margin: Default::default(),
+            order_info: WrappedOrderInfo {
+                subaccount_id: String::from(""),
+                fee_recipient: String::from(""),
+                price: Decimal::from_str("100000000000").unwrap(),
+                quantity: Decimal::zero(),
+            },
+            order_type: 1,
+            trigger_price: None,
+            order_hash: Vec::new(),
         });
 
         let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_chg_tol);
         assert!(!should_change);
 
         open_orders.pop();
-        open_orders.push(WrappedOpenOrder {
-            is_buy: true,
-            hash: String::from(""),
-            quantity: Decimal::zero(),
-            price: Decimal::from_str("1.011").unwrap(),
+        open_orders.push(WrappedDerivativeLimitOrder {
             fillable: Default::default(),
             margin: Default::default(),
+            order_info: WrappedOrderInfo {
+                subaccount_id: String::from(""),
+                fee_recipient: String::from(""),
+                price: Decimal::from_str("110000000000").unwrap(),
+                quantity: Decimal::zero(),
+            },
+            order_type: 1,
+            trigger_price: None,
+            order_hash: Vec::new(),
         });
 
         let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_chg_tol);
@@ -501,28 +499,34 @@ mod tests {
 
     #[test]
     fn split_open_orders_test() {
-        let mut open_orders: Vec<WrappedOpenOrder> = Vec::new();
-        let order = WrappedOpenOrder {
-            hash: String::from(""),
-            is_buy: true,
+        let mut open_orders: Vec<WrappedDerivativeLimitOrder> = Vec::new();
+        let order = WrappedDerivativeLimitOrder {
             fillable: Default::default(),
-            quantity: Decimal::zero(),
-            price: Decimal::one(),
             margin: Default::default(),
+            order_info: WrappedOrderInfo {
+                subaccount_id: String::from(""),
+                fee_recipient: String::from(""),
+                price: Decimal::from_str("110000000000").unwrap(),
+                quantity: Decimal::zero(),
+            },
+            order_type: 1,
+            trigger_price: None,
+            order_hash: Vec::new(),
         };
         let mut buy = order.clone();
         let mut sell = order.clone();
         for _ in 0..25 {
-            sell.is_buy = false;
-            buy.price = buy.price + Decimal::one();
-            sell.price = sell.price + Decimal::one();
+            sell.order_type = 2;
+            buy.order_info.price = buy.order_info.price + Decimal::one();
+            sell.order_info.price = sell.order_info.price + Decimal::one();
             open_orders.push(buy.clone());
             open_orders.push(sell.clone());
         }
         let (buy_orders, sell_orders) = split_open_orders(open_orders);
         for i in 1..25 {
-            assert!(buy_orders[i].price < buy_orders[i - 1].price); // These should be decreasing
-            assert!(sell_orders[i].price > sell_orders[i - 1].price); // These should be increasing
+            assert!(buy_orders[i].order_info.price < buy_orders[i - 1].order_info.price); // These should be decreasing
+            assert!(sell_orders[i].order_info.price > sell_orders[i - 1].order_info.price);
+            // These should be increasing
         }
     }
 }

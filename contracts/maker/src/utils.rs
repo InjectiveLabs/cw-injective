@@ -3,13 +3,8 @@ use cosmwasm_std::{Decimal256 as Decimal, Deps, Fraction, Uint256};
 use injective_bindings::InjectiveQueryWrapper;
 use std::str::FromStr;
 
-pub fn wrap(unwrapped_num: &String, deps: Deps<InjectiveQueryWrapper>) -> Decimal {
-    let state = config_read(deps.storage).load().unwrap();
-    div_int(Decimal::from_str(unwrapped_num).unwrap(), state.decimal_shift)
-}
-
-pub fn wrap_from_state(unwrapped_num: &String, state: &State) -> Decimal {
-    div_int(Decimal::from_str(unwrapped_num).unwrap(), state.decimal_shift)
+pub fn wrap(unwrapped_num: &String) -> Decimal {
+    Decimal::from_str(unwrapped_num).unwrap()
 }
 
 pub fn div_int(num: Decimal, denom: Uint256) -> Decimal {

@@ -1,7 +1,7 @@
 use crate::{
-    msg::{WrappedOrderResponse, WrappedPosition},
+    exchange::{DerivativeOrder, WrappedPosition},
     state::State,
-    utils::{div_dec, div_int, sub_abs},
+    utils::{div_dec, div_int, sub_abs, sub_no_overflow},
 };
 use cosmwasm_std::Decimal256 as Decimal;
 
@@ -44,8 +44,8 @@ pub fn create_new_orders_deriv(
     mut position_qty: Decimal,
     is_buy: bool,
     state: &State,
-) -> (Vec<WrappedOrderResponse>, Decimal) {
-    let mut orders_to_open: Vec<WrappedOrderResponse> = Vec::new();
+) -> (Vec<DerivativeOrder>, Decimal) {
+    let mut orders_to_open: Vec<DerivativeOrder> = Vec::new();
     let val_per_order = alloc_val_for_new_orders / state.order_density;
     let val_per_order = val_per_order * state.leverage;
     let price_dist = sub_abs(new_head, new_tail);
@@ -56,21 +56,23 @@ pub fn create_new_orders_deriv(
         let qty = div_dec(val_per_order, current_price);
         if position_qty == Decimal::zero() {
             // If there is no position qty, no need to make reduce only orders
-            let new_order = WrappedOrderResponse::new(state, current_price, qty, is_buy, false);
+            let margin = div_dec(current_price * qty, state.leverage);
+            let new_order = DerivativeOrder::new(state, current_price, qty, is_buy, margin);
             orders_to_open.push(new_order);
         } else {
             // We need to manage reduce only orders here
             if qty > position_qty {
                 // We need to make two orders here, one reduce only and one for the remainder
-                let new_order_reduce = WrappedOrderResponse::new(state, current_price, position_qty, is_buy, true);
-                let new_order = WrappedOrderResponse::new(state, current_price, qty - position_qty, is_buy, false);
+                let new_order_reduce = DerivativeOrder::new(state, current_price, position_qty, is_buy, Decimal::zero());
+                let margin = div_dec(current_price * sub_no_overflow(qty, position_qty), state.leverage);
+                let new_order = DerivativeOrder::new(state, current_price, sub_no_overflow(qty, position_qty), is_buy, margin);
                 orders_to_open.push(new_order_reduce);
                 orders_to_open.push(new_order);
                 position_qty = Decimal::zero();
             } else {
                 // This whole order should be reduce only
-                let new_order_reduce = WrappedOrderResponse::new(state, current_price, qty, is_buy, true);
-                position_qty = position_qty - new_order_reduce.get_qty();
+                let new_order_reduce = DerivativeOrder::new(state, current_price, qty, is_buy, Decimal::zero());
+                position_qty = sub_no_overflow(position_qty, qty);
                 orders_to_open.push(new_order_reduce);
             }
         }
@@ -92,64 +94,53 @@ mod tests {
     #[test]
     fn create_new_buy_orders_deriv_test() {
         let leverage = Decimal::from_str("2.5").unwrap();
-        for i in 2..10 {
-            let decimal_base_shift = 10_i128.pow(i);
-            let state = mock_state(leverage.to_string(), String::from("10"), decimal_base_shift.to_string());
-            let head_price = Decimal::from_str(&10_i32.pow(i).to_string()).unwrap();
-            let tail_price = head_price * Decimal::one() - state.min_tail_dist;
-            for j in 3..10 {
-                let alloc_value = Decimal::from_str(&10_i32.pow(j).to_string()).unwrap();
-                create_new_orders_deriv_test(head_price, tail_price, alloc_value, Decimal::zero(), true, &state);
-                for p in 1..20 {
-                    create_new_orders_deriv_test(
-                        head_price,
-                        tail_price,
-                        alloc_value,
-                        div_dec(
-                            div_dec(alloc_value * state.leverage, head_price),
-                            Decimal::from_str(&p.to_string()).unwrap(),
-                        ),
-                        true,
-                        &state,
-                    );
-                }
-            }
-        }
+        let decimal_base_shift = 100000;
+        let state = mock_state(leverage.to_string(), String::from("10"), decimal_base_shift.to_string());
+        create_new_orders_deriv_test(
+            Decimal::from_str("100000000000000").unwrap(),
+            Decimal::from_str("99990000000000").unwrap(),
+            Decimal::from_str("9999000000000000000").unwrap(),
+            Decimal::zero(),
+            true,
+            &state,
+        );
+        create_new_orders_deriv_test(
+            Decimal::from_str("100000000000000").unwrap(),
+            Decimal::from_str("99990000000000").unwrap(),
+            Decimal::from_str("9999000000000000000").unwrap(),
+            div_dec(
+                Decimal::from_str("999900000000000000").unwrap(),
+                Decimal::from_str("100000000000000").unwrap(),
+            ),
+            true,
+            &state,
+        );
     }
 
     #[test]
     fn create_new_sell_orders_deriv_test() {
         let leverage = Decimal::from_str("2.5").unwrap();
-        for i in 2..10 {
-            let decimal_base_shift = 10_i128.pow(i);
-            let state = mock_state(leverage.to_string(), String::from("10"), decimal_base_shift.to_string());
-            let head_price = Decimal::from_str(&10_i32.pow(i).to_string()).unwrap();
-            let tail_price = head_price * (Decimal::one() + state.min_tail_dist);
-            for j in 3..10 {
-                let alloc_value = Decimal::from_str(&10_i32.pow(j).to_string()).unwrap();
-                create_new_orders_deriv_test(
-                    head_price,
-                    Decimal::from_str(&tail_price.to_string()).unwrap(),
-                    alloc_value,
-                    Decimal::zero(),
-                    false,
-                    &state,
-                );
-                for p in 1..20 {
-                    create_new_orders_deriv_test(
-                        head_price,
-                        Decimal::from_str(&tail_price.to_string()).unwrap(),
-                        alloc_value,
-                        div_dec(
-                            div_dec(alloc_value * state.leverage, head_price),
-                            Decimal::from_str(&p.to_string()).unwrap(),
-                        ),
-                        false,
-                        &state,
-                    );
-                }
-            }
-        }
+        let decimal_base_shift = 100000;
+        let state = mock_state(leverage.to_string(), String::from("10"), decimal_base_shift.to_string());
+        create_new_orders_deriv_test(
+            Decimal::from_str("99990000000000").unwrap(),
+            Decimal::from_str("100000000000000").unwrap(),
+            Decimal::from_str("9999000000000000000").unwrap(),
+            Decimal::zero(),
+            false,
+            &state,
+        );
+        create_new_orders_deriv_test(
+            Decimal::from_str("99990000000000").unwrap(),
+            Decimal::from_str("100000000000000").unwrap(),
+            Decimal::from_str("9999000000000000000").unwrap(),
+            div_dec(
+                Decimal::from_str("999900000000000000").unwrap(),
+                Decimal::from_str("100000000000000").unwrap(),
+            ),
+            false,
+            &state,
+        );
     }
 
     // Test Helpers
@@ -169,13 +160,17 @@ mod tests {
         let mut total_value = Decimal::zero();
         let mut num_same_priced_orders = 0;
         for i in 0..new_orders.len() {
-            if new_orders[i].is_reduce_only {
+            println!("{} {} {}", new_orders[i].get_price(), new_orders[i].get_qty(), new_orders[i].get_val())
+        }
+
+        for i in 0..new_orders.len() {
+            if new_orders[i].is_reduce_only() {
                 total_reduce_only_qty = total_reduce_only_qty + new_orders[i].get_qty();
             }
             total_value = total_value + new_orders[i].get_val();
             if i > 0 {
                 // Ensure that price is changing in the right direction
-                if !(new_orders[i - 1].is_reduce_only && !new_orders[i].is_reduce_only) {
+                if !(new_orders[i - 1].is_reduce_only() && !new_orders[i].is_reduce_only()) {
                     if is_buy {
                         assert!(new_orders[i - 1].get_price() > new_orders[i].get_price());
                     } else {
@@ -183,9 +178,9 @@ mod tests {
                     }
                 }
                 // Ensure that the notional val of orders is consistent
-                let value = if new_orders[i - 1].is_reduce_only && !new_orders[i].is_reduce_only {
+                let value = if new_orders[i - 1].is_reduce_only() && !new_orders[i].is_reduce_only() {
                     new_orders[i - 1].get_val() + new_orders[i].get_val()
-                } else if new_orders[i - 1].is_reduce_only {
+                } else if new_orders[i - 1].is_reduce_only() {
                     new_orders[i - 1].get_val()
                 } else {
                     new_orders[i].get_val()
@@ -209,7 +204,7 @@ mod tests {
             assert!((position_qty * max_tolerance) >= position_qty - total_reduce_only_qty);
         } else {
             for i in 0..new_orders.len() {
-                assert!(new_orders[i].is_reduce_only);
+                assert!(new_orders[i].is_reduce_only());
             }
         }
 
@@ -239,6 +234,7 @@ mod tests {
             last_update_utc: 0,
             max_market_data_delay: 0,
             lp_token_address: String::from(""),
+            fee_recipient: String::from(""),
         }
     }
 }
