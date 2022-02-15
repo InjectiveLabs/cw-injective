@@ -1,11 +1,11 @@
 use crate::{
-    msg::WrappedPosition,
     state::State,
     utils::{div_dec, sub_abs, sub_no_overflow},
 };
 use chrono::Utc;
 use cosmwasm_std::{Addr, Decimal256 as Decimal};
 use std::str::FromStr;
+use crate::exchange::{DerivativeMarket, WrappedDerivativeMarket, PerpetualMarketInfo, WrappedPerpetualMarketInfo, PerpetualMarketFunding, WrappedPerpetualMarketFunding, DerivativeLimitOrder, WrappedDerivativeLimitOrder, Deposit, WrappedDeposit, Position, WrappedPosition};
 
 pub fn only_owner(sender: &Addr, owner: &Addr) {
     assert_eq!(sender, owner);
@@ -13,8 +13,8 @@ pub fn only_owner(sender: &Addr, owner: &Addr) {
 
 // TODO: add more
 pub fn sanity_check(position: &Option<WrappedPosition>, inv_base_bal: Decimal, state: &State) {
-    assert!(state.is_deriv && inv_base_bal == Decimal::zero());
-    assert!(!state.is_deriv || position.is_none());
+    // assert!(state.is_deriv && inv_base_bal == Decimal::zero());
+    // assert!(!state.is_deriv || position.is_none());
     //TODO: come back to this one
     assert!(state.last_update_utc + state.max_market_data_delay > Utc::now().timestamp());
 }
