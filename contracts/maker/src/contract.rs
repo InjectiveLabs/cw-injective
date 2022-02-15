@@ -117,14 +117,15 @@ pub fn execute(
 pub fn mint_to_user(
     deps: DepsMut<InjectiveQueryWrapper>,
     _env: Env,
-    _sender: Addr,
+    sender: Addr,
     subaccount_id_sender: String,
     amount: Uint128,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let state = config_read(deps.storage).load().unwrap();
     let lp_token_address = state.lp_token_address.clone();
 
-    // TODO if _sender != state.manager return error and initialize manager as Cosmos exchange module
+    // Ensure that only the contract creator has permission to update market data
+    only_owner(&state.manager, &sender);
 
     let mint = Cw20ExecuteMsg::Mint {
         recipient: subaccount_id_sender,
@@ -142,14 +143,15 @@ pub fn mint_to_user(
 pub fn burn_from_user(
     deps: DepsMut<InjectiveQueryWrapper>,
     _env: Env,
-    _sender: Addr,
+    sender: Addr,
     subaccount_id_sender: String,
     amount: Uint128,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let state = config_read(deps.storage).load().unwrap();
     let lp_token_address = state.lp_token_address.clone();
 
-    // TODO if _sender != state.manager return error and initialize manager as Cosmos exchange module
+    // Ensure that only the contract creator has permission to update market data
+    only_owner(&state.manager, &sender);
 
     let burn = Cw20ExecuteMsg::BurnFrom {
         owner: subaccount_id_sender,
