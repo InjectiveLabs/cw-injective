@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Decimal256 as Decimal, Storage, Uint256, Addr};
+use cosmwasm_std::{Addr, Decimal256 as Decimal, Storage, Uint256};
 use cosmwasm_storage::{singleton, singleton_read, ReadonlySingleton, Singleton};
 
 pub static CONFIG_KEY: &[u8] = b"config";

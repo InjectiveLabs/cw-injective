@@ -1,6 +1,6 @@
 use crate::state::State;
 use crate::utils::round_to_precision;
-use cosmwasm_std::{Decimal256 as Decimal, StdError, Uint256, Addr};
+use cosmwasm_std::{Addr, Decimal256 as Decimal, StdError, Uint256};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;

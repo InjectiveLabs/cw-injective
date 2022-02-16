@@ -266,10 +266,9 @@ fn get_action(
     let (open_buys, open_sells) = split_open_orders(open_orders);
 
     // Ensure that the heads have changed enough that we are willing to make an action
-    if head_chg_is_gt_tol(&open_buys, new_buy_head, state.head_chg_tol) && head_chg_is_gt_tol(&open_sells, new_sell_head, state.head_chg_tol) {
+    if head_chg_is_gt_tol(&open_buys, new_buy_head, state.head_chg_tol) || head_chg_is_gt_tol(&open_sells, new_sell_head, state.head_chg_tol) {
         // Get new tails
-        let (new_buy_tail, new_sell_tail) =
-            new_tail_prices(new_buy_head, new_sell_head, mid_price, state.tail_dist_from_mid, state.min_tail_dist);
+        let (new_buy_tail, new_sell_tail) = new_tail_prices(new_buy_head, new_sell_head, mid_price, state.tail_dist_from_mid, state.min_tail_dist);
 
         // Get new buy/sell orders
         let buy_orders_to_open = create_orders(new_buy_head, new_buy_tail, inv_val, position.clone(), true, &state);
@@ -412,22 +411,26 @@ pub fn new_tail_prices(
 /// * `buy_orders` - The sorted buyside orders
 /// * `sell_orders` - The sorted sellside orders
 fn split_open_orders(open_orders: Vec<WrappedDerivativeLimitOrder>) -> (Vec<WrappedDerivativeLimitOrder>, Vec<WrappedDerivativeLimitOrder>) {
-    let mut buy_orders: Vec<WrappedDerivativeLimitOrder> = Vec::new();
-    let mut sell_orders: Vec<WrappedDerivativeLimitOrder> = open_orders
-        .into_iter()
-        .filter(|o| {
-            if o.order_type == 1 {
-                buy_orders.push(o.clone());
-            }
-            o.order_type == 2
-        })
-        .collect();
+    if open_orders.len() > 0 {
+        let mut buy_orders: Vec<WrappedDerivativeLimitOrder> = Vec::new();
+        let mut sell_orders: Vec<WrappedDerivativeLimitOrder> = open_orders
+            .into_iter()
+            .filter(|o| {
+                if o.order_type == 1 {
+                    buy_orders.push(o.clone());
+                }
+                o.order_type == 2
+            })
+            .collect();
 
-    // Sort both so the head is at index 0
-    buy_orders.sort_by(|a, b| b.order_info.price.partial_cmp(&a.order_info.price).unwrap());
-    sell_orders.sort_by(|a, b| a.order_info.price.partial_cmp(&b.order_info.price).unwrap());
+        // Sort both so the head is at index 0
+        buy_orders.sort_by(|a, b| b.order_info.price.partial_cmp(&a.order_info.price).unwrap());
+        sell_orders.sort_by(|a, b| a.order_info.price.partial_cmp(&b.order_info.price).unwrap());
 
-    (buy_orders, sell_orders)
+        (buy_orders, sell_orders)
+    } else {
+        (Vec::new(), Vec::new())
+    }
 }
 
 #[cfg(test)]
@@ -479,6 +482,9 @@ mod tests {
         });
 
         let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_chg_tol);
+        assert!(should_change);
+
+        let should_change = head_chg_is_gt_tol(&Vec::new(), new_head, Decimal::from_str("1").unwrap());
         assert!(should_change);
     }
 

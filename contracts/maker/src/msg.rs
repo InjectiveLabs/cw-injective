@@ -1,5 +1,5 @@
 use crate::exchange::{Deposit, DerivativeLimitOrder, DerivativeMarket, ExchangeMsg, PerpetualMarketFunding, PerpetualMarketInfo, Position};
-use cosmwasm_std::{Uint128, Addr};
+use cosmwasm_std::{Addr, Uint128};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 

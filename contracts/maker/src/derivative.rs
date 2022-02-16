@@ -88,7 +88,7 @@ pub fn create_new_orders_deriv(
 #[cfg(test)]
 mod tests {
     use crate::{derivative::create_new_orders_deriv, state::State, utils::div_dec};
-    use cosmwasm_std::{Decimal256 as Decimal, Uint256, Addr};
+    use cosmwasm_std::{Addr, Decimal256 as Decimal, Uint256};
     use std::str::FromStr;
 
     #[test]
