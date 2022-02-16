@@ -14,9 +14,6 @@ pub struct State {
     pub is_deriv: bool,                // Whether the contract will be operating on a derivative market
     pub leverage: Decimal,             // Leverage that a contract will use on its orders
     pub order_density: Uint256,        // Number of orders to place between the head and the tail
-    pub mid_price: Decimal,            // Some measure of mid_price determined by and external caller
-    pub volatility: Decimal,           // Some measure of volatility determined by and external caller
-    pub last_update_utc: i64,          // The last utc time stamp in seconds where we updated volatility and mid_price
     pub max_market_data_delay: i64, // The maximum time in sec we are willing to tolerate since the last market data update for which the contract will behave expectedly
     pub reservation_param: Decimal, // A constant between 0..1 that will be used to control the sensitivity of the reservation_price
     pub spread_param: Decimal,      // A constant between 0..1 that will be used to control the sensitivity of the spread around the mid_price

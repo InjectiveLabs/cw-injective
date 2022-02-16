@@ -8,7 +8,6 @@ use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, WrappedGetActionResponse}
 use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, only_owner};
 use crate::state::{config, config_read, State};
 use crate::utils::{bp_to_dec, div_dec, sub_abs, wrap};
-use chrono::Utc;
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdError, StdResult, SubMsg,
     Uint128, Uint256, WasmMsg,
@@ -32,9 +31,6 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: Messag
         is_deriv: msg.is_deriv,
         leverage: Decimal::from_str(&msg.leverage).unwrap(),
         order_density: Uint256::from_str(&msg.order_density).unwrap(),
-        mid_price: Decimal::one(),
-        volatility: Decimal::one(),
-        last_update_utc: 0,
         max_market_data_delay: msg.max_market_data_delay.parse::<i64>().unwrap(),
         reservation_param: Decimal::from_str(&msg.reservation_param).unwrap(),
         spread_param: Decimal::from_str(&msg.spread_param).unwrap(),
@@ -104,7 +100,6 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     match msg {
-        ExecuteMsg::UpdateMarketState { mid_price, volatility } => update_market_state(deps, env, info, mid_price, volatility),
         ExecuteMsg::MintToUser {
             subaccount_id_sender,
             amount,
@@ -168,34 +163,35 @@ pub fn burn_from_user(
     Ok(Response::new().add_message(message))
 }
 
+// Pass via get_action instead
 /// This is an external, state changing method that will give the bot a more accurate perspective of the
 /// current state of markets. It updates the volatility and the mid_price properties on the state struct.
 /// The method should be called on some repeating interval.
-pub fn update_market_state(
-    deps: DepsMut<InjectiveQueryWrapper>,
-    env: Env,
-    info: MessageInfo,
-    mid_price: String,
-    volatility: String,
-) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
-    let mut state = config(deps.storage).load().unwrap();
+// pub fn update_market_state(
+//     deps: DepsMut<InjectiveQueryWrapper>,
+//     env: Env,
+//     info: MessageInfo,
+//     mid_price: String,
+//     volatility: String,
+// ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
+//     let mut state = config(deps.storage).load().unwrap();
 
-    // Ensure that only the contract creator has permission to update market data
-    only_owner(&env.contract.address, &info.sender);
+//     // Ensure that only the contract creator has permission to update market data
+//     only_owner(&env.contract.address, &info.sender);
 
-    // Update the mid price
-    state.mid_price = Decimal::from_str(&mid_price).unwrap();
+//     // Update the mid price
+//     state.mid_price = Decimal::from_str(&mid_price).unwrap();
 
-    // Update the volatility
-    state.volatility = Decimal::from_str(&volatility).unwrap();
+//     // Update the volatility
+//     state.volatility = Decimal::from_str(&volatility).unwrap();
 
-    // Update the timestamp of this most recent update
-    let time_of_update = Utc::now().timestamp();
-    state.last_update_utc = time_of_update;
+//     // Update the timestamp of this most recent update
+//     let time_of_update = Utc::now().timestamp();
+//     state.last_update_utc = time_of_update;
 
-    let res = Response::new();
-    Ok(res)
-}
+//     let res = Response::new();
+//     Ok(res)
+// }
 
 #[entry_point]
 pub fn query(deps: Deps<InjectiveQueryWrapper>, env: Env, msg: QueryMsg) -> StdResult<Binary> {
@@ -209,6 +205,8 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, env: Env, msg: QueryMsg) -> StdR
             deposit,
             position,
             oracle_price,
+            volatility,
+            mid_price,
         } => to_binary(&get_action(
             deps,
             env,
@@ -219,6 +217,8 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, env: Env, msg: QueryMsg) -> StdR
             deposit,
             position,
             oracle_price,
+            volatility,
+            mid_price,
         )?),
     }
 }
@@ -233,6 +233,8 @@ fn get_action(
     deposit: Deposit,
     position: Option<Position>,
     _oracle_price: String,
+    volatility: String,
+    mid_price: String,
 ) -> StdResult<WrappedGetActionResponse> {
     // Wrap everything
     let open_orders: Vec<WrappedDerivativeLimitOrder> = open_orders.into_iter().map(|o| o.wrap().unwrap()).collect();
@@ -242,6 +244,12 @@ fn get_action(
     };
     let inv_val = wrap(&deposit.total_balance);
 
+    // Update the mid price
+    let mid_price_dec = Decimal::from_str(&mid_price).unwrap();
+
+    // Update the volatility
+    let volatility_dec = Decimal::from_str(&volatility).unwrap();
+
     // Load state
     let state = config_read(deps.storage).load().unwrap();
 
@@ -249,10 +257,10 @@ fn get_action(
     let (inv_imbal, imbal_is_long) = inv_imbalance_deriv(&position, inv_val);
 
     // Calculate reservation price
-    let reservation_price = reservation_price(state.mid_price, inv_imbal, state.volatility, state.reservation_param, imbal_is_long);
+    let reservation_price = reservation_price(mid_price_dec, inv_imbal, volatility_dec, state.reservation_param, imbal_is_long);
 
     // Calculate the new head prices
-    let (new_buy_head, new_sell_head) = new_head_prices(state.volatility, reservation_price, state.spread_param);
+    let (new_buy_head, new_sell_head) = new_head_prices(volatility_dec, reservation_price, state.spread_param);
 
     // Split open orders
     let (open_buys, open_sells) = split_open_orders(open_orders);
@@ -260,13 +268,8 @@ fn get_action(
     // Ensure that the heads have changed enough that we are willing to make an action
     if head_chg_is_gt_tol(&open_buys, new_buy_head, state.head_chg_tol) && head_chg_is_gt_tol(&open_sells, new_sell_head, state.head_chg_tol) {
         // Get new tails
-        let (new_buy_tail, new_sell_tail) = new_tail_prices(
-            new_buy_head,
-            new_sell_head,
-            state.mid_price,
-            state.tail_dist_from_mid,
-            state.min_tail_dist,
-        );
+        let (new_buy_tail, new_sell_tail) =
+            new_tail_prices(new_buy_head, new_sell_head, mid_price_dec, state.tail_dist_from_mid, state.min_tail_dist);
 
         // Get new buy/sell orders
         let buy_orders_to_open = create_orders(new_buy_head, new_buy_tail, inv_val, position.clone(), true, &state);

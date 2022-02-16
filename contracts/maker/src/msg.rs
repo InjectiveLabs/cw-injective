@@ -46,8 +46,6 @@ pub struct InstantiateMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    UpdateMarketState { mid_price: String, volatility: String },
-    // The chain will not be responsible for calling this
     MintToUser { subaccount_id_sender: String, amount: Uint128 },
     BurnFromUser { subaccount_id_sender: String, amount: Uint128 },
 }
@@ -64,6 +62,8 @@ pub enum QueryMsg {
         deposit: Deposit,
         position: Option<Position>,
         oracle_price: String,
+        volatility: String,
+        mid_price: String,
     },
 }
 

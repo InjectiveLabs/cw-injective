@@ -3,7 +3,6 @@ use crate::{
     state::State,
     utils::{div_dec, sub_abs, sub_no_overflow},
 };
-use chrono::Utc;
 use cosmwasm_std::{Addr, Decimal256 as Decimal};
 use std::str::FromStr;
 
@@ -12,11 +11,10 @@ pub fn only_owner(sender: &Addr, owner: &Addr) {
 }
 
 // TODO: add more
-pub fn sanity_check(_position: &Option<WrappedPosition>, _inv_base_ball: Decimal, state: &State) {
+pub fn sanity_check(_position: &Option<WrappedPosition>, _inv_base_ball: Decimal, _state: &State) {
     // assert!(state.is_deriv && inv_base_bal == Decimal::zero());
     // assert!(!state.is_deriv || position.is_none());
     //TODO: come back to this one
-    assert!(state.last_update_utc + state.max_market_data_delay > Utc::now().timestamp());
 }
 
 /// Determines the notional balance that we are willing to assign to either the buy/sell side.
