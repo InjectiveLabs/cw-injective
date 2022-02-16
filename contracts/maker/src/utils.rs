@@ -1,6 +1,4 @@
-use crate::state::{config_read, State};
-use cosmwasm_std::{Decimal256 as Decimal, Deps, Fraction, Uint256};
-use injective_bindings::InjectiveQueryWrapper;
+use cosmwasm_std::{Decimal256 as Decimal, Fraction, Uint256};
 use std::str::FromStr;
 
 pub fn wrap(unwrapped_num: &String) -> Decimal {

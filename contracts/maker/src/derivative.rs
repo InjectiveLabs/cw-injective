@@ -88,7 +88,7 @@ pub fn create_new_orders_deriv(
 #[cfg(test)]
 mod tests {
     use crate::{derivative::create_new_orders_deriv, state::State, utils::div_dec};
-    use cosmwasm_std::{Addr, Decimal256 as Decimal, Uint256};
+    use cosmwasm_std::{Decimal256 as Decimal, Uint256};
     use std::str::FromStr;
 
     #[test]
@@ -230,7 +230,6 @@ mod tests {
             volatility: Decimal::zero(),
             reservation_param: Decimal::zero(),
             spread_param: Decimal::zero(),
-            manager: Addr::unchecked(""),
             last_update_utc: 0,
             max_market_data_delay: 0,
             lp_token_address: String::from(""),

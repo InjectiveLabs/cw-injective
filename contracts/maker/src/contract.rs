@@ -24,9 +24,8 @@ use cw0::parse_reply_instantiate_data;
 const INSTANTIATE_REPLY_ID: u64 = 1u64;
 
 #[entry_point]
-pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, info: MessageInfo, msg: InstantiateMsg) -> Result<Response, StdError> {
+pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: MessageInfo, msg: InstantiateMsg) -> Result<Response, StdError> {
     let state = State {
-        manager: info.sender,
         market_id: msg.market_id.to_string(),
         sub_account: msg.sub_account,
         fee_recipient: msg.fee_recipient,
@@ -105,7 +104,7 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     match msg {
-        ExecuteMsg::UpdateMarketState { mid_price, volatility } => update_market_state(deps, info, mid_price, volatility),
+        ExecuteMsg::UpdateMarketState { mid_price, volatility } => update_market_state(deps, env, info, mid_price, volatility),
         ExecuteMsg::MintToUser {
             subaccount_id_sender,
             amount,
@@ -119,7 +118,7 @@ pub fn execute(
 
 pub fn mint_to_user(
     deps: DepsMut<InjectiveQueryWrapper>,
-    _env: Env,
+    env: Env,
     sender: Addr,
     subaccount_id_sender: String,
     amount: Uint128,
@@ -128,7 +127,7 @@ pub fn mint_to_user(
     let lp_token_address = state.lp_token_address.clone();
 
     // Ensure that only the contract creator has permission to update market data
-    only_owner(&state.manager, &sender);
+    only_owner(&env.contract.address, &sender);
 
     let mint = Cw20ExecuteMsg::Mint {
         recipient: subaccount_id_sender,
@@ -145,7 +144,7 @@ pub fn mint_to_user(
 
 pub fn burn_from_user(
     deps: DepsMut<InjectiveQueryWrapper>,
-    _env: Env,
+    env: Env,
     sender: Addr,
     subaccount_id_sender: String,
     amount: Uint128,
@@ -154,7 +153,7 @@ pub fn burn_from_user(
     let lp_token_address = state.lp_token_address.clone();
 
     // Ensure that only the contract creator has permission to update market data
-    only_owner(&state.manager, &sender);
+    only_owner(&env.contract.address, &sender);
 
     let burn = Cw20ExecuteMsg::BurnFrom {
         owner: subaccount_id_sender,
@@ -174,6 +173,7 @@ pub fn burn_from_user(
 /// The method should be called on some repeating interval.
 pub fn update_market_state(
     deps: DepsMut<InjectiveQueryWrapper>,
+    env: Env,
     info: MessageInfo,
     mid_price: String,
     volatility: String,
@@ -181,7 +181,7 @@ pub fn update_market_state(
     let mut state = config(deps.storage).load().unwrap();
 
     // Ensure that only the contract creator has permission to update market data
-    only_owner(&state.manager, &info.sender);
+    only_owner(&env.contract.address, &info.sender);
 
     // Update the mid price
     state.mid_price = Decimal::from_str(&mid_price).unwrap();

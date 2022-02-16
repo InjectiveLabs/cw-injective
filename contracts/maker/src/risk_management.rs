@@ -1,8 +1,5 @@
-use crate::exchange::{
-    Deposit, DerivativeLimitOrder, DerivativeMarket, PerpetualMarketFunding, PerpetualMarketInfo, Position, WrappedDeposit,
-    WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedPerpetualMarketFunding, WrappedPerpetualMarketInfo, WrappedPosition,
-};
 use crate::{
+    exchange::WrappedPosition,
     state::State,
     utils::{div_dec, sub_abs, sub_no_overflow},
 };
@@ -15,7 +12,7 @@ pub fn only_owner(sender: &Addr, owner: &Addr) {
 }
 
 // TODO: add more
-pub fn sanity_check(position: &Option<WrappedPosition>, inv_base_bal: Decimal, state: &State) {
+pub fn sanity_check(_position: &Option<WrappedPosition>, _inv_base_ball: Decimal, state: &State) {
     // assert!(state.is_deriv && inv_base_bal == Decimal::zero());
     // assert!(!state.is_deriv || position.is_none());
     //TODO: come back to this one

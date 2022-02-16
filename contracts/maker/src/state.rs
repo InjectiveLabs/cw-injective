@@ -1,14 +1,13 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, Decimal256 as Decimal, Storage, Uint256};
+use cosmwasm_std::{Decimal256 as Decimal, Storage, Uint256};
 use cosmwasm_storage::{singleton, singleton_read, ReadonlySingleton, Singleton};
 
 pub static CONFIG_KEY: &[u8] = b"config";
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct State {
-    pub manager: Addr,       // Contract creator's address
     pub market_id: String,   // Market Id
     pub sub_account: String, // The contract's delegated subaccount
     pub fee_recipient: String,
