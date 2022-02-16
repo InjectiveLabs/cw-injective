@@ -5,6 +5,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
+#[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativeMarket {
     pub ticker: String,
@@ -24,6 +25,7 @@ pub struct DerivativeMarket {
     pub min_quantity_tick_size: String,
 }
 
+#[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct WrappedDerivativeMarket {
     pub ticker: String,
