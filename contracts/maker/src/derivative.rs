@@ -88,7 +88,7 @@ pub fn create_new_orders_deriv(
 #[cfg(test)]
 mod tests {
     use crate::{derivative::create_new_orders_deriv, state::State, utils::div_dec};
-    use cosmwasm_std::{Decimal256 as Decimal, Uint256};
+    use cosmwasm_std::{Decimal256 as Decimal, Uint256, Addr};
     use std::str::FromStr;
 
     #[test]
@@ -217,7 +217,7 @@ mod tests {
         State {
             market_id: String::from(""),
             is_deriv: true,
-            sub_account: String::from(""),
+            subaccount_id: Addr::unchecked(""),
             order_density: Uint256::from_str(&order_density).unwrap(),
             active_capital: Decimal::from_str("0.2").unwrap(),
             min_tail_dist: Decimal::from_str("0.03").unwrap(),

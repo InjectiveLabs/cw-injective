@@ -26,7 +26,7 @@ const INSTANTIATE_REPLY_ID: u64 = 1u64;
 pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: MessageInfo, msg: InstantiateMsg) -> Result<Response, StdError> {
     let state = State {
         market_id: msg.market_id.to_string(),
-        sub_account: msg.sub_account,
+        subaccount_id: msg.sub_account,
         fee_recipient: msg.fee_recipient,
         is_deriv: msg.is_deriv,
         leverage: Decimal::from_str(&msg.leverage).unwrap(),
@@ -245,10 +245,10 @@ fn get_action(
     let inv_val = wrap(&deposit.total_balance);
 
     // Update the mid price
-    let mid_price_dec = Decimal::from_str(&mid_price).unwrap();
+    let mid_price = Decimal::from_str(&mid_price).unwrap();
 
     // Update the volatility
-    let volatility_dec = Decimal::from_str(&volatility).unwrap();
+    let volatility = Decimal::from_str(&volatility).unwrap();
 
     // Load state
     let state = config_read(deps.storage).load().unwrap();
@@ -257,10 +257,10 @@ fn get_action(
     let (inv_imbal, imbal_is_long) = inv_imbalance_deriv(&position, inv_val);
 
     // Calculate reservation price
-    let reservation_price = reservation_price(mid_price_dec, inv_imbal, volatility_dec, state.reservation_param, imbal_is_long);
+    let reservation_price = reservation_price(mid_price, inv_imbal, volatility, state.reservation_param, imbal_is_long);
 
     // Calculate the new head prices
-    let (new_buy_head, new_sell_head) = new_head_prices(volatility_dec, reservation_price, state.spread_param);
+    let (new_buy_head, new_sell_head) = new_head_prices(volatility, reservation_price, state.spread_param);
 
     // Split open orders
     let (open_buys, open_sells) = split_open_orders(open_orders);
@@ -269,7 +269,7 @@ fn get_action(
     if head_chg_is_gt_tol(&open_buys, new_buy_head, state.head_chg_tol) && head_chg_is_gt_tol(&open_sells, new_sell_head, state.head_chg_tol) {
         // Get new tails
         let (new_buy_tail, new_sell_tail) =
-            new_tail_prices(new_buy_head, new_sell_head, mid_price_dec, state.tail_dist_from_mid, state.min_tail_dist);
+            new_tail_prices(new_buy_head, new_sell_head, mid_price, state.tail_dist_from_mid, state.min_tail_dist);
 
         // Get new buy/sell orders
         let buy_orders_to_open = create_orders(new_buy_head, new_buy_tail, inv_val, position.clone(), true, &state);
@@ -277,7 +277,7 @@ fn get_action(
 
         let batch_order = MsgBatchUpdateOrders {
             sender: env.contract.address.to_string(),
-            subaccount_id: "".to_string(), // TODO: convert sender address to subaccountID
+            subaccount_id: state.subaccount_id,
             spot_market_ids_to_cancel_all: Vec::new(),
             derivative_market_ids_to_cancel_all: vec![state.market_id],
             spot_orders_to_cancel: Vec::new(),

@@ -1,6 +1,6 @@
 use crate::state::State;
 use crate::utils::round_to_precision;
-use cosmwasm_std::{Decimal256 as Decimal, StdError, Uint256};
+use cosmwasm_std::{Decimal256 as Decimal, StdError, Uint256, Addr};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -123,7 +123,7 @@ impl PerpetualMarketFunding {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct OrderInfo {
-    pub subaccount_id: String,
+    pub subaccount_id: Addr,
     pub fee_recipient: String,
     pub price: String,
     pub quantity: String,
@@ -260,7 +260,7 @@ impl DerivativeOrder {
         DerivativeOrder {
             market_id: state.market_id.clone(),
             order_info: OrderInfo {
-                subaccount_id: state.sub_account.clone(),
+                subaccount_id: state.subaccount_id.clone(),
                 fee_recipient: state.fee_recipient.clone(),
                 price: round_to_precision(price, Uint256::from_str("1").unwrap()).to_string(),
                 quantity: round_to_precision(quantity, state.base_precision_shift).to_string(),
@@ -290,7 +290,7 @@ impl DerivativeOrder {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct MsgBatchUpdateOrders {
     pub sender: String,
-    pub subaccount_id: String,
+    pub subaccount_id: Addr,
     pub spot_market_ids_to_cancel_all: Vec<String>,
     pub derivative_market_ids_to_cancel_all: Vec<String>,
     pub spot_orders_to_cancel: Vec<OrderData>,

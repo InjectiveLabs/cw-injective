@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Decimal256 as Decimal, Storage, Uint256};
+use cosmwasm_std::{Decimal256 as Decimal, Storage, Uint256, Addr};
 use cosmwasm_storage::{singleton, singleton_read, ReadonlySingleton, Singleton};
 
 pub static CONFIG_KEY: &[u8] = b"config";
@@ -9,7 +9,7 @@ pub static CONFIG_KEY: &[u8] = b"config";
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct State {
     pub market_id: String,   // Market Id
-    pub sub_account: String, // The contract's delegated subaccount
+    pub subaccount_id: Addr, // The contract's delegated subaccount
     pub fee_recipient: String,
     pub is_deriv: bool,                // Whether the contract will be operating on a derivative market
     pub leverage: Decimal,             // Leverage that a contract will use on its orders

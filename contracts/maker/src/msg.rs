@@ -1,5 +1,5 @@
 use crate::exchange::{Deposit, DerivativeLimitOrder, DerivativeMarket, ExchangeMsg, PerpetualMarketFunding, PerpetualMarketInfo, Position};
-use cosmwasm_std::Uint128;
+use cosmwasm_std::{Uint128, Addr};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 pub struct InstantiateMsg {
     pub market_id: String,
     // Market Id
-    pub sub_account: String,
+    pub sub_account: Addr,
     pub fee_recipient: String,
     // The contract's delegated subaccount
     pub is_deriv: bool,
