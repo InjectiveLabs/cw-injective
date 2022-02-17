@@ -1,4 +1,4 @@
-use crate::state::State;
+use crate::{state::State, utils::round_to_min_ticker};
 use crate::utils::round_to_precision;
 use cosmwasm_std::{Addr, Decimal256 as Decimal, StdError, Uint256};
 use schemars::JsonSchema;
@@ -256,14 +256,14 @@ pub struct DerivativeOrder {
     pub trigger_price: Option<String>,
 }
 impl DerivativeOrder {
-    pub fn new(state: &State, price: Decimal, quantity: Decimal, is_buy: bool, margin: Decimal) -> DerivativeOrder {
+    pub fn new(state: &State, price: Decimal, quantity: Decimal, is_buy: bool, margin: Decimal, market: &WrappedDerivativeMarket) -> DerivativeOrder {
         DerivativeOrder {
             market_id: state.market_id.clone(),
             order_info: OrderInfo {
                 subaccount_id: state.subaccount_id.clone(),
                 fee_recipient: state.fee_recipient.clone(),
                 price: round_to_precision(price, Uint256::from_str("1").unwrap()).to_string(),
-                quantity: round_to_precision(quantity, state.base_precision_shift).to_string(),
+                quantity: round_to_min_ticker(quantity, market.min_quantity_tick_size).to_string(),
             },
             order_type: if is_buy { 1 } else { 2 },
             margin: round_to_precision(margin, Uint256::from_str("1").unwrap()).to_string(),

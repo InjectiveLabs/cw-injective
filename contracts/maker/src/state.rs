@@ -21,8 +21,6 @@ pub struct State {
     pub head_chg_tol: Decimal, // A threshold for which we actually want to take action between 0..1 (if new head is more than x dist away from old head)
     pub tail_dist_from_mid: Decimal, // The distance between 0..1 from the mid_price that we want to place our tails
     pub min_tail_dist: Decimal, // The minimum between 0..1 format from the head that we want our tail (risk management param)
-    pub decimal_shift: Uint256, // 10^(number of decimals of the quote currency)
-    pub base_precision_shift: Uint256, // 10^(decimal precision of base quantity respective of the market)
     pub lp_token_address: String,
 }
 

@@ -2,7 +2,7 @@ use crate::derivative::{create_new_orders_deriv, inv_imbalance_deriv};
 use crate::error::ContractError;
 use crate::exchange::{
     Deposit, DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, PerpetualMarketFunding, PerpetualMarketInfo, Position,
-    WrappedDerivativeLimitOrder, WrappedPosition,
+    WrappedDerivativeLimitOrder, WrappedPosition, WrappedDerivativeMarket,
 };
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, WrappedGetActionResponse};
 use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, only_owner};
@@ -38,8 +38,6 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: Messag
         head_chg_tol: bp_to_dec(Decimal::from_str(&msg.head_chg_tol_bp).unwrap()),
         tail_dist_from_mid: bp_to_dec(Decimal::from_str(&msg.tail_dist_from_mid_bp).unwrap()),
         min_tail_dist: bp_to_dec(Decimal::from_str(&msg.min_tail_dist_bp).unwrap()),
-        decimal_shift: Uint256::from_str(&msg.decimal_shift).unwrap(),
-        base_precision_shift: Uint256::from_str(&msg.base_precision_shift).unwrap(),
         lp_token_address: "LP-Token".to_string(),
     };
 
@@ -226,7 +224,7 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, env: Env, msg: QueryMsg) -> StdR
 fn get_action(
     deps: Deps<InjectiveQueryWrapper>,
     env: Env,
-    _market: DerivativeMarket,
+    market: DerivativeMarket,
     _perpetual_market_info: Option<PerpetualMarketInfo>,
     _perpetual_market_funding: Option<PerpetualMarketFunding>,
     open_orders: Vec<DerivativeLimitOrder>,
@@ -243,6 +241,7 @@ fn get_action(
         Some(p) => Some(p.wrap().unwrap()),
     };
     let inv_val = wrap(&deposit.total_balance);
+    let market = market.wrap().unwrap();
 
     // Update the mid price
     let mid_price = Decimal::from_str(&mid_price).unwrap();
@@ -271,8 +270,8 @@ fn get_action(
         let (new_buy_tail, new_sell_tail) = new_tail_prices(new_buy_head, new_sell_head, mid_price, state.tail_dist_from_mid, state.min_tail_dist);
 
         // Get new buy/sell orders
-        let buy_orders_to_open = create_orders(new_buy_head, new_buy_tail, inv_val, position.clone(), true, &state);
-        let sell_orders_to_open = create_orders(new_sell_head, new_sell_tail, inv_val, position, false, &state);
+        let buy_orders_to_open = create_orders(new_buy_head, new_buy_tail, inv_val, position.clone(), true, &state, &market);
+        let sell_orders_to_open = create_orders(new_sell_head, new_sell_tail, inv_val, position, false, &state, &market);
 
         let batch_order = MsgBatchUpdateOrders {
             sender: env.contract.address.to_string(),
@@ -309,6 +308,7 @@ fn create_orders(
     position: Option<WrappedPosition>,
     is_buy: bool,
     state: &State,
+    market: &WrappedDerivativeMarket
 ) -> Vec<DerivativeOrder> {
     let (position_qty, position_margin) = match position {
         Some(position) => {
@@ -321,7 +321,7 @@ fn create_orders(
         None => (Decimal::zero(), Decimal::zero()),
     };
     let alloc_val_for_new_orders = get_alloc_bal_new_orders(inv_val, position_margin, state.active_capital);
-    create_new_orders_deriv(new_head, new_tail, alloc_val_for_new_orders, position_qty, is_buy, &state).0
+    create_new_orders_deriv(new_head, new_tail, alloc_val_for_new_orders, position_qty, is_buy, state, market).0
 }
 
 /// Uses the inventory imbalance to calculate a price around which we will center the mid price
