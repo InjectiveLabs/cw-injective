@@ -2,10 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::route::InjectiveRoute;
-use cosmwasm_std::{Addr, Coin, CosmosMsg, CustomMsg, Decimal256};
-use schemars::gen::SchemaGenerator;
-use schemars::schema::Schema;
-
+use cosmwasm_std::{Addr, Coin, CosmosMsg, CustomMsg};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct InjectiveMsgWrapper {

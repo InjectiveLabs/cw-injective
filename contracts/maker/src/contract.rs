@@ -2,7 +2,7 @@ use crate::derivative::{create_new_orders_deriv, inv_imbalance_deriv};
 use crate::error::ContractError;
 use crate::exchange::{
     Deposit, DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, PerpetualMarketFunding, PerpetualMarketInfo, Position,
-    WrappedDerivativeLimitOrder, WrappedPosition, WrappedDerivativeMarket,
+    WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedPosition,
 };
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, WrappedGetActionResponse};
 use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, only_owner};
@@ -308,7 +308,7 @@ fn create_orders(
     position: Option<WrappedPosition>,
     is_buy: bool,
     state: &State,
-    market: &WrappedDerivativeMarket
+    market: &WrappedDerivativeMarket,
 ) -> Vec<DerivativeOrder> {
     let (position_qty, position_margin) = match position {
         Some(position) => {

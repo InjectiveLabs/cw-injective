@@ -58,7 +58,7 @@ pub fn bp_to_dec(bp: Decimal) -> Decimal {
 #[cfg(test)]
 mod tests {
     use super::sub_no_overflow;
-    use crate::utils::{div_dec, div_int, round_to_precision, sub_abs, round_to_min_ticker};
+    use crate::utils::{div_dec, div_int, round_to_min_ticker, round_to_precision, sub_abs};
     use cosmwasm_std::{Decimal256, Uint256};
     use std::str::FromStr;
 
@@ -132,12 +132,12 @@ mod tests {
         assert_eq!(Decimal256::from_str("1.1111").unwrap(), rounded_num);
     }
 
-    #[test] 
+    #[test]
     fn round_to_min_ticker_test() {
         let num = Decimal256::from_str("1.1911111111111").unwrap();
         let precision_shift = Decimal256::from_str("0.1").unwrap();
         let rounded_num = round_to_min_ticker(num, precision_shift);
-        println!("{}",rounded_num.to_string());
+        println!("{}", rounded_num.to_string());
         assert_eq!(Decimal256::from_str("1.1").unwrap(), rounded_num);
     }
 }

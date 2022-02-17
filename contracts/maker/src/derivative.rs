@@ -1,5 +1,5 @@
 use crate::{
-    exchange::{DerivativeOrder, WrappedPosition,  WrappedDerivativeMarket},
+    exchange::{DerivativeOrder, WrappedDerivativeMarket, WrappedPosition},
     state::State,
     utils::{div_dec, div_int, sub_abs, sub_no_overflow},
 };
@@ -44,7 +44,7 @@ pub fn create_new_orders_deriv(
     mut position_qty: Decimal,
     is_buy: bool,
     state: &State,
-    market: &WrappedDerivativeMarket
+    market: &WrappedDerivativeMarket,
 ) -> (Vec<DerivativeOrder>, Decimal) {
     let mut orders_to_open: Vec<DerivativeOrder> = Vec::new();
     let val_per_order = alloc_val_for_new_orders / state.order_density;
@@ -64,9 +64,9 @@ pub fn create_new_orders_deriv(
             // We need to manage reduce only orders here
             if qty > position_qty {
                 // We need to make two orders here, one reduce only and one for the remainder
-                let new_order_reduce = DerivativeOrder::new(state, current_price, position_qty, is_buy, Decimal::zero(),market);
+                let new_order_reduce = DerivativeOrder::new(state, current_price, position_qty, is_buy, Decimal::zero(), market);
                 let margin = div_dec(current_price * sub_no_overflow(qty, position_qty), state.leverage);
-                let new_order = DerivativeOrder::new(state, current_price, sub_no_overflow(qty, position_qty), is_buy, margin,market);
+                let new_order = DerivativeOrder::new(state, current_price, sub_no_overflow(qty, position_qty), is_buy, margin, market);
                 orders_to_open.push(new_order_reduce);
                 orders_to_open.push(new_order);
                 position_qty = Decimal::zero();
@@ -88,15 +88,19 @@ pub fn create_new_orders_deriv(
 
 #[cfg(test)]
 mod tests {
-    use crate::{derivative::create_new_orders_deriv, state::State, utils::div_dec, exchange::{DerivativeMarket, WrappedDerivativeMarket}};
+    use crate::{
+        derivative::create_new_orders_deriv,
+        exchange::{DerivativeMarket, WrappedDerivativeMarket},
+        state::State,
+        utils::div_dec,
+    };
     use cosmwasm_std::{Addr, Decimal256 as Decimal, Uint256};
     use std::str::FromStr;
 
     #[test]
     fn create_new_buy_orders_deriv_test() {
         let leverage = Decimal::from_str("2.5").unwrap();
-        let decimal_base_shift = 100000;
-        let state = mock_state(leverage.to_string(), String::from("10"), decimal_base_shift.to_string());
+        let state = mock_state(leverage.to_string(), String::from("10"));
         let market = mock_market();
         create_new_orders_deriv_test(
             Decimal::from_str("100000000000000").unwrap(),
@@ -105,7 +109,7 @@ mod tests {
             Decimal::zero(),
             true,
             &state,
-            &market
+            &market,
         );
         create_new_orders_deriv_test(
             Decimal::from_str("100000000000000").unwrap(),
@@ -117,15 +121,14 @@ mod tests {
             ),
             true,
             &state,
-            &market
+            &market,
         );
     }
 
     #[test]
     fn create_new_sell_orders_deriv_test() {
         let leverage = Decimal::from_str("2.5").unwrap();
-        let decimal_base_shift = 100000;
-        let state = mock_state(leverage.to_string(), String::from("10"), decimal_base_shift.to_string());
+        let state = mock_state(leverage.to_string(), String::from("10"));
         let market = mock_market();
         create_new_orders_deriv_test(
             Decimal::from_str("99990000000000").unwrap(),
@@ -134,7 +137,7 @@ mod tests {
             Decimal::zero(),
             false,
             &state,
-            &market
+            &market,
         );
         create_new_orders_deriv_test(
             Decimal::from_str("99990000000000").unwrap(),
@@ -146,7 +149,7 @@ mod tests {
             ),
             false,
             &state,
-            &market
+            &market,
         );
     }
 
@@ -158,10 +161,11 @@ mod tests {
         position_qty: Decimal,
         is_buy: bool,
         state: &State,
-        market: &WrappedDerivativeMarket
+        market: &WrappedDerivativeMarket,
     ) {
         let max_tolerance = Decimal::from_str("0.01").unwrap();
-        let (new_orders, rem_position_qty) = create_new_orders_deriv(new_head, new_tail, alloc_val_for_new_orders, position_qty, is_buy, state, market);
+        let (new_orders, rem_position_qty) =
+            create_new_orders_deriv(new_head, new_tail, alloc_val_for_new_orders, position_qty, is_buy, state, market);
         let val_per_order = alloc_val_for_new_orders / state.order_density;
         let val_per_order = val_per_order * state.leverage;
         let mut total_reduce_only_qty = Decimal::zero();
@@ -221,7 +225,7 @@ mod tests {
         assert!(div_dec(total_value, state.leverage) - (alloc_val_for_new_orders * max_tolerance) <= alloc_val_for_new_orders);
     }
 
-    fn mock_state(leverage: String, order_density: String, base_precision_shift: String) -> State {
+    fn mock_state(leverage: String, order_density: String) -> State {
         State {
             market_id: String::from(""),
             is_deriv: true,
@@ -242,21 +246,23 @@ mod tests {
 
     fn mock_market() -> WrappedDerivativeMarket {
         DerivativeMarket {
-             ticker: String::from(""),
-              oracle_base: String::from(""),
-              oracle_quote: String::from(""),
-              oracle_type: 0,
-              oracle_scale_factor: 0,
-              quote_denom: String::from(""),
-              market_id: String::from(""),
-              initial_margin_ratio: String::from("0"),
-              maintenance_margin_ratio: String::from("0"),
-              maker_fee_rate: String::from("0"),
-              taker_fee_rate: String::from("0"),
-              isPerpetual: true,
-              status: 0,
-              min_price_tick_size: String::from("1000000"),
-              min_quantity_tick_size: String::from("0.00001"),
-        }.wrap().unwrap()
+            ticker: String::from(""),
+            oracle_base: String::from(""),
+            oracle_quote: String::from(""),
+            oracle_type: 0,
+            oracle_scale_factor: 0,
+            quote_denom: String::from(""),
+            market_id: String::from(""),
+            initial_margin_ratio: String::from("0"),
+            maintenance_margin_ratio: String::from("0"),
+            maker_fee_rate: String::from("0"),
+            taker_fee_rate: String::from("0"),
+            isPerpetual: true,
+            status: 0,
+            min_price_tick_size: String::from("1000000"),
+            min_quantity_tick_size: String::from("0.00001"),
+        }
+        .wrap()
+        .unwrap()
     }
 }

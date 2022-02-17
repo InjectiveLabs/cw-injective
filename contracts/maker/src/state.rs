@@ -11,9 +11,9 @@ pub struct State {
     pub market_id: String,   // Market Id
     pub subaccount_id: Addr, // The contract's delegated subaccount
     pub fee_recipient: String,
-    pub is_deriv: bool,                // Whether the contract will be operating on a derivative market
-    pub leverage: Decimal,             // Leverage that a contract will use on its orders
-    pub order_density: Uint256,        // Number of orders to place between the head and the tail
+    pub is_deriv: bool,              // Whether the contract will be operating on a derivative market
+    pub leverage: Decimal,           // Leverage that a contract will use on its orders
+    pub order_density: Uint256,      // Number of orders to place between the head and the tail
     pub max_market_data_delay: i64, // The maximum time in sec we are willing to tolerate since the last market data update for which the contract will behave expectedly
     pub reservation_param: Decimal, // A constant between 0..1 that will be used to control the sensitivity of the reservation_price
     pub spread_param: Decimal,      // A constant between 0..1 that will be used to control the sensitivity of the spread around the mid_price
