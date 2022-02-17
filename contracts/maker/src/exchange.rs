@@ -155,7 +155,7 @@ pub struct DerivativeLimitOrder {
     pub margin: String,
     pub fillable: String,
     pub trigger_price: Option<String>,
-    pub order_hash: Vec<u8>,
+    pub order_hash: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -165,7 +165,7 @@ pub struct WrappedDerivativeLimitOrder {
     pub margin: Decimal,
     pub fillable: Decimal,
     pub trigger_price: Option<Decimal>,
-    pub order_hash: Vec<u8>,
+    pub order_hash: String,
 }
 
 impl DerivativeLimitOrder {

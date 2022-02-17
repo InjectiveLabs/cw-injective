@@ -460,7 +460,7 @@ mod tests {
             },
             order_type: 1,
             trigger_price: None,
-            order_hash: Vec::new(),
+            order_hash: String::from(""),
         });
 
         let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_chg_tol);
@@ -478,7 +478,7 @@ mod tests {
             },
             order_type: 1,
             trigger_price: None,
-            order_hash: Vec::new(),
+            order_hash: String::from(""),
         });
 
         let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_chg_tol);
@@ -520,7 +520,7 @@ mod tests {
             },
             order_type: 1,
             trigger_price: None,
-            order_hash: Vec::new(),
+            order_hash: String::from(""),
         };
         let mut buy = order.clone();
         let mut sell = order.clone();
