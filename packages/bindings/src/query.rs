@@ -17,6 +17,10 @@ pub struct InjectiveQueryWrapper {
 pub enum InjectiveQuery {
     // SubaccountDeposit will return the subaccount deposits for a given subaccount_id and denom
     SubaccountDeposit { subaccount_id: String, denom: String },
+    // DerivativeMarket will return the derivative market for a given id
+    DerivativeMarket { market_id: String },
+    SubaccountPositions { subaccount_id: String },
+    TraderDerivativeOrders { market_id: String, subaccount_id: String },
 }
 
 impl CustomQuery for InjectiveQueryWrapper {}
@@ -27,9 +31,105 @@ pub struct SubaccountDepositResponse {
     pub deposits: Deposit,
 }
 
+#[allow(non_snake_case)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct Position {
+    pub isLong: bool,
+    pub quantity: String,
+    pub entry_price: String,
+    pub margin: String,
+    pub cumulative_funding_entry: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct DerivativePosition {
+    pub subaccount_id: String,
+    pub market_id: String,
+    pub position: Position,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct SubaccountPositionsResponse {
+    pub state: Vec<DerivativePosition>,
+}
+#[allow(non_snake_case)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct TrimmedDerivativeLimitOrder {
+    pub price: Decimal,
+    pub quantity: Decimal,
+    pub margin: Decimal,
+    pub fillable: Decimal,
+    pub isBuy: bool,
+    pub order_hash: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct TraderDerivativeOrdersResponse {
+    pub orders: Option<Vec<TrimmedDerivativeLimitOrder>>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct DerivativeMarketResponse {
+    pub market: FullDerivativeMarket,
+}
+
 /// Deposit is data format for the subaccount deposit
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Deposit {
     pub available_balance: Decimal,
     pub total_balance: Decimal,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct PerpetualMarketInfo {
+    pub market_id: String,
+    pub hourly_funding_rate_cap: Decimal,
+    pub hourly_interest_rate: Decimal,
+    pub next_funding_timestamp: i64,
+    pub funding_interval: i64,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct PerpetualMarketFunding {
+    pub cumulative_funding: Decimal,
+    pub cumulative_price: Decimal,
+    pub last_timestamp: i64,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct PerpetualMarketState {
+    pub market_info: PerpetualMarketInfo,
+    pub funding_info: PerpetualMarketFunding,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct FullDerivativeMarketPerpetualInfo {
+    pub perpetual_info: PerpetualMarketState,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct FullDerivativeMarket {
+    pub market: DerivativeMarket,
+    pub info: FullDerivativeMarketPerpetualInfo,
+    pub mark_price: Decimal,
+}
+
+#[allow(non_snake_case)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct DerivativeMarket {
+    pub ticker: String,
+    pub oracle_base: String,
+    pub oracle_quote: String,
+    pub oracle_type: i32,
+    pub oracle_scale_factor: u32,
+    pub quote_denom: String,
+    pub market_id: String,
+    pub initial_margin_ratio: Decimal,
+    pub maintenance_margin_ratio: Decimal,
+    pub maker_fee_rate: Decimal,
+    pub taker_fee_rate: Decimal,
+    pub isPerpetual: bool,
+    pub status: i32,
+    pub min_price_tick_size: Decimal,
+    pub min_quantity_tick_size: Decimal,
 }

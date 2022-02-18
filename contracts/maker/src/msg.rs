@@ -1,5 +1,5 @@
-use crate::exchange::{Deposit, DerivativeLimitOrder, DerivativeMarket, ExchangeMsg, PerpetualMarketFunding, PerpetualMarketInfo, Position};
-use cosmwasm_std::{Addr, Uint128};
+use crate::exchange::ExchangeMsg;
+use cosmwasm_std::Uint128;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 pub struct InstantiateMsg {
     pub market_id: String,
     // Market Id
-    pub sub_account: Addr,
+    pub subaccount_id: String,
     pub fee_recipient: String,
     // The contract's delegated subaccount
     pub is_deriv: bool,
@@ -48,23 +48,24 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {
     MintToUser { subaccount_id_sender: String, amount: Uint128 },
     BurnFromUser { subaccount_id_sender: String, amount: Uint128 },
+    GetActionStateChanging {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     Config {},
-    GetAction {
-        market: DerivativeMarket,
-        perpetual_market_info: Option<PerpetualMarketInfo>,
-        perpetual_market_funding: Option<PerpetualMarketFunding>,
-        open_orders: Vec<DerivativeLimitOrder>,
-        deposit: Deposit,
-        position: Option<Position>,
-        oracle_price: String,
-        volatility: String,
-        mid_price: String,
-    },
+    // GetAction {
+    //     market: DerivativeMarket,
+    //     perpetual_market_info: Option<PerpetualMarketInfo>,
+    //     perpetual_market_funding: Option<PerpetualMarketFunding>,
+    //     open_orders: Vec<DerivativeLimitOrder>,
+    //     deposit: Deposit,
+    //     position: Option<Position>,
+    //     oracle_price: String,
+    //     volatility: String,
+    //     mid_price: String,
+    // },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

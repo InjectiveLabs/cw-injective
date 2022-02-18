@@ -1,7 +1,7 @@
 use crate::derivative::{create_new_orders_deriv, inv_imbalance_deriv};
 use crate::error::ContractError;
 use crate::exchange::{
-    Deposit, DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, PerpetualMarketFunding, PerpetualMarketInfo, Position,
+    Deposit, DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderInfo, PerpetualMarketFunding, PerpetualMarketInfo, Position,
     WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedPosition,
 };
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, WrappedGetActionResponse};
@@ -15,7 +15,7 @@ use cosmwasm_std::{
 use std::str::FromStr;
 
 use cw20::{Cw20ExecuteMsg, MinterResponse};
-use injective_bindings::{InjectiveMsgWrapper, InjectiveQueryWrapper};
+use injective_bindings::{InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper};
 
 use crate::exchange::{ExchangeMsg, MsgBatchUpdateOrders};
 use cw0::parse_reply_instantiate_data;
@@ -26,7 +26,7 @@ const INSTANTIATE_REPLY_ID: u64 = 1u64;
 pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: MessageInfo, msg: InstantiateMsg) -> Result<Response, StdError> {
     let state = State {
         market_id: msg.market_id.to_string(),
-        subaccount_id: msg.sub_account,
+        subaccount_id: msg.subaccount_id,
         fee_recipient: msg.fee_recipient,
         is_deriv: msg.is_deriv,
         leverage: Decimal::from_str(&msg.leverage).unwrap(),
@@ -106,6 +106,7 @@ pub fn execute(
             subaccount_id_sender,
             amount,
         } => burn_from_user(deps, env, info.sender, subaccount_id_sender, amount),
+        ExecuteMsg::GetActionStateChanging {} => get_action_state_changing(deps, env, info.sender),
     }
 }
 
@@ -191,38 +192,143 @@ pub fn burn_from_user(
 //     Ok(res)
 // }
 
+pub fn get_action_state_changing(
+    deps: DepsMut<InjectiveQueryWrapper>,
+    env: Env,
+    sender: Addr,
+) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
+    let state = config(deps.storage).load().unwrap();
+
+    // Ensure that only the contract creator has permission to update market data
+    only_owner(&env.contract.address, &sender);
+
+    let querier = InjectiveQuerier::new(&deps.querier);
+    let market_res = querier.query_derivative_market(state.market_id.clone())?;
+    let deposit_res = querier.query_subaccount_deposit(state.subaccount_id.clone(), market_res.market.market.quote_denom.clone())?;
+    let positions_res = querier.query_subaccount_positions(state.subaccount_id.clone())?;
+    let open_orders_res = querier.query_trader_derivative_orders(state.market_id.clone(), state.subaccount_id.clone())?;
+
+    // just log the available balance for now
+    deps.api.debug(deposit_res.deposits.available_balance.to_string().as_str());
+
+    let market: DerivativeMarket = DerivativeMarket {
+        ticker: market_res.market.market.ticker,
+        oracle_base: market_res.market.market.oracle_base,
+        oracle_quote: market_res.market.market.oracle_quote,
+        oracle_type: market_res.market.market.oracle_type,
+        oracle_scale_factor: market_res.market.market.oracle_scale_factor,
+        quote_denom: market_res.market.market.quote_denom,
+        market_id: market_res.market.market.market_id,
+        initial_margin_ratio: market_res.market.market.initial_margin_ratio.to_string(),
+        maintenance_margin_ratio: market_res.market.market.maintenance_margin_ratio.to_string(),
+        maker_fee_rate: market_res.market.market.maker_fee_rate.to_string(),
+        taker_fee_rate: market_res.market.market.taker_fee_rate.to_string(),
+        isPerpetual: market_res.market.market.isPerpetual,
+        status: market_res.market.market.status,
+        min_price_tick_size: market_res.market.market.min_price_tick_size.to_string(),
+        min_quantity_tick_size: market_res.market.market.min_quantity_tick_size.to_string(),
+    };
+    let open_orders_res_val = open_orders_res.orders.unwrap_or_default();
+    let open_orders = open_orders_res_val
+        .into_iter()
+        .map(|order| {
+            // OrderType_BUY         OrderType = 1
+            // OrderType_SELL        OrderType = 2
+            let order_type = if order.isBuy { 1 } else { 2 };
+            let limit_order: DerivativeLimitOrder = DerivativeLimitOrder {
+                margin: order.margin.to_string(),
+                fillable: order.fillable.to_string(),
+                order_hash: order.order_hash,
+                trigger_price: None,
+                order_type: order_type,
+                order_info: OrderInfo {
+                    subaccount_id: state.subaccount_id.clone(),
+                    fee_recipient: state.fee_recipient.clone(),
+                    price: order.price.to_string(),
+                    quantity: order.quantity.to_string(),
+                },
+            };
+            limit_order
+        })
+        .collect::<Vec<DerivativeLimitOrder>>();
+
+    let deposit = Deposit {
+        available_balance: deposit_res.deposits.available_balance.to_string(),
+        total_balance: deposit_res.deposits.total_balance.to_string(),
+    };
+
+    let first_position_query = positions_res.state.get(0);
+    let first_position: Option<Position> = if first_position_query.is_none() {
+        None
+    } else {
+        Some(Position {
+            isLong: first_position_query.unwrap().position.isLong,
+            quantity: first_position_query.unwrap().position.quantity.clone(),
+            margin: first_position_query.unwrap().position.margin.clone(),
+            entry_price: first_position_query.unwrap().position.entry_price.clone(),
+            cumulative_funding_entry: first_position_query.unwrap().position.cumulative_funding_entry.clone(),
+        })
+    };
+
+    let action_response = get_action(
+        deps,
+        env,
+        market,
+        None,
+        None,
+        open_orders,
+        deposit,
+        first_position,
+        market_res.market.mark_price.to_string(),
+        String::from("80000"), // TODO
+        market_res.market.mark_price.to_string(),
+    );
+
+    let res = Response::new();
+
+    match action_response {
+        Ok(v) => {
+            println!("✅ working action_response: {:?}", v.msgs);
+            res.add_messages(v.msgs);
+        }
+        Err(e) => println!("❌ error parsing action_response: {:?}", e),
+    }
+
+    Ok(res)
+}
+
 #[entry_point]
-pub fn query(deps: Deps<InjectiveQueryWrapper>, env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&config_read(deps.storage).load()?),
-        QueryMsg::GetAction {
-            market,
-            perpetual_market_info,
-            perpetual_market_funding,
-            open_orders,
-            deposit,
-            position,
-            oracle_price,
-            volatility,
-            mid_price,
-        } => to_binary(&get_action(
-            deps,
-            env,
-            market,
-            perpetual_market_info,
-            perpetual_market_funding,
-            open_orders,
-            deposit,
-            position,
-            oracle_price,
-            volatility,
-            mid_price,
-        )?),
+        // QueryMsg::GetAction {
+        //     market,
+        //     perpetual_market_info,
+        //     perpetual_market_funding,
+        //     open_orders,
+        //     deposit,
+        //     position,
+        //     oracle_price,
+        //     volatility,
+        //     mid_price,
+        // } => to_binary(&get_action(
+        //     deps,
+        //     env,
+        //     market,
+        //     perpetual_market_info,
+        //     perpetual_market_funding,
+        //     open_orders,
+        //     deposit,
+        //     position,
+        //     oracle_price,
+        //     volatility,
+        //     mid_price,
+        // )?),
     }
 }
 
 fn get_action(
-    deps: Deps<InjectiveQueryWrapper>,
+    deps: DepsMut<InjectiveQueryWrapper>,
     env: Env,
     market: DerivativeMarket,
     _perpetual_market_info: Option<PerpetualMarketInfo>,

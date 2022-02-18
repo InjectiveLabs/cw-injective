@@ -94,7 +94,7 @@ mod tests {
         state::State,
         utils::div_dec,
     };
-    use cosmwasm_std::{Addr, Decimal256 as Decimal, Uint256};
+    use cosmwasm_std::{Decimal256 as Decimal, Uint256};
     use std::str::FromStr;
 
     #[test]
@@ -229,7 +229,7 @@ mod tests {
         State {
             market_id: String::from(""),
             is_deriv: true,
-            subaccount_id: Addr::unchecked(""),
+            subaccount_id: String::from(""),
             order_density: Uint256::from_str(&order_density).unwrap(),
             active_capital: Decimal::from_str("0.2").unwrap(),
             min_tail_dist: Decimal::from_str("0.03").unwrap(),

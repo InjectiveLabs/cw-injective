@@ -1,6 +1,6 @@
 use crate::utils::round_to_precision;
 use crate::{state::State, utils::round_to_min_ticker};
-use cosmwasm_std::{Addr, Decimal256 as Decimal, StdError, Uint256};
+use cosmwasm_std::{Decimal256 as Decimal, StdError, Uint256};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -123,7 +123,7 @@ impl PerpetualMarketFunding {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct OrderInfo {
-    pub subaccount_id: Addr,
+    pub subaccount_id: String,
     pub fee_recipient: String,
     pub price: String,
     pub quantity: String,
@@ -202,9 +202,10 @@ impl Deposit {
     }
 }
 
+#[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Position {
-    pub is_long: bool,
+    pub isLong: bool,
     pub quantity: String,
     pub entry_price: String,
     pub margin: String,
@@ -223,7 +224,7 @@ pub struct WrappedPosition {
 impl Position {
     pub fn wrap(&self) -> Result<WrappedPosition, StdError> {
         Ok(WrappedPosition {
-            is_long: self.is_long,
+            is_long: self.isLong,
             quantity: Decimal::from_str(&self.quantity).unwrap(),
             entry_price: Decimal::from_str(&self.entry_price).unwrap(),
             margin: Decimal::from_str(&self.margin).unwrap(),
@@ -290,7 +291,7 @@ impl DerivativeOrder {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct MsgBatchUpdateOrders {
     pub sender: String,
-    pub subaccount_id: Addr,
+    pub subaccount_id: String,
     pub spot_market_ids_to_cancel_all: Vec<String>,
     pub derivative_market_ids_to_cancel_all: Vec<String>,
     pub spot_orders_to_cancel: Vec<OrderData>,
