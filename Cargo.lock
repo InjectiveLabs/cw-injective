@@ -913,6 +913,7 @@ dependencies = [
  "injective-mocks",
  "schemars",
  "serde",
+ "serde_json",
  "snafu",
  "thiserror",
 ]

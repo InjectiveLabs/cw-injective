@@ -3,7 +3,9 @@ mod querier;
 mod query;
 mod route;
 
-pub use msg::{create_subaccount_transfer_msg, InjectiveMsg, InjectiveMsgWrapper};
+pub use msg::{
+    create_batch_update_orders_msg, create_subaccount_transfer_msg, DerivativeOrder, InjectiveMsg, InjectiveMsgWrapper, OrderData, SpotOrder,
+};
 pub use querier::InjectiveQuerier;
 pub use query::{Deposit, InjectiveQuery, InjectiveQueryWrapper, SubaccountDepositResponse};
 pub use route::InjectiveRoute;

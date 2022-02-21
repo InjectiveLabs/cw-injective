@@ -9,13 +9,13 @@ use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, only_own
 use crate::state::{config, config_read, State};
 use crate::utils::{bp_to_dec, div_dec, sub_abs, wrap};
 use cosmwasm_std::{
-    entry_point, to_binary, Addr, Binary, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdError, StdResult, SubMsg,
-    Uint128, Uint256, WasmMsg,
+    entry_point, to_binary, Addr, Binary, CosmosMsg, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdError, StdResult,
+    SubMsg, Uint128, Uint256, WasmMsg,
 };
 use std::str::FromStr;
 
 use cw20::{Cw20ExecuteMsg, MinterResponse};
-use injective_bindings::{InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper};
+use injective_bindings::{create_batch_update_orders_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper};
 
 use crate::exchange::{ExchangeMsg, MsgBatchUpdateOrders};
 use cw0::parse_reply_instantiate_data;
@@ -270,7 +270,7 @@ pub fn get_action_state_changing(
         })
     };
 
-    let action_response = get_action(
+    let _action_response = get_action(
         deps,
         env,
         market,
@@ -284,17 +284,32 @@ pub fn get_action_state_changing(
         market_res.market.mark_price.to_string(),
     );
 
-    let res = Response::new();
+    // TODO FIX commented out code, fails already when using MsgStoreCode with:
 
-    match action_response {
-        Ok(v) => {
-            println!("✅ working action_response: {:?}", v.msgs);
-            res.add_messages(v.msgs);
-        }
-        Err(e) => println!("❌ error parsing action_response: {:?}", e),
-    }
+    // raw_log: 'failed to execute message; message index: 0: Error calling the VM: Error
+    // compiling Wasm: Could not compile: WebAssembly translation error: Error in middleware
+    // Gatekeeper: Float operator detected: F64ConvertI64U. The use of floats is not supported.:
+    // create wasm contract failed'
 
-    Ok(res)
+    // let res: Response<InjectiveMsgWrapper> = Response::new();
+    // let message: CosmosMsg<InjectiveMsgWrapper> = match action_response {
+    //     Ok(v) => match v.msgs.get(0).unwrap() {
+    //         ExchangeMsg::BatchUpdateOrders(batch_update_orders_msg) => create_batch_update_orders_msg(
+    //             batch_update_orders_msg.sender.clone(),
+    //             batch_update_orders_msg.subaccount_id.clone(),
+    //             batch_update_orders_msg.spot_market_ids_to_cancel_all.clone(),
+    //             batch_update_orders_msg.derivative_market_ids_to_cancel_all.clone(),
+    //             serde_json::from_str(&serde_json::to_string(&batch_update_orders_msg.spot_orders_to_cancel).unwrap()).unwrap(),
+    //             serde_json::from_str(&serde_json::to_string(&batch_update_orders_msg.derivative_orders_to_cancel).unwrap()).unwrap(),
+    //             serde_json::from_str(&serde_json::to_string(&batch_update_orders_msg.spot_orders_to_create).unwrap()).unwrap(),
+    //             serde_json::from_str(&serde_json::to_string(&batch_update_orders_msg.derivative_orders_to_create).unwrap()).unwrap(),
+    //         ),
+    //         ExchangeMsg::MsgCreateDerivativeMarketOrder => todo!(),
+    //     },
+    //     Err(_) => todo!(),
+    // };
+
+    Ok(Response::new().set_data(Binary::from(b"the result data"))) // .add_message(message)
 }
 
 #[entry_point]

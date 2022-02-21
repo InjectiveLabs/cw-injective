@@ -86,7 +86,7 @@ pub struct WrappedPerpetualMarketInfo {
 }
 
 impl PerpetualMarketInfo {
-    pub fn wrap(&self) -> Result<WrappedPerpetualMarketInfo, StdError> {
+    pub fn _wrap(&self) -> Result<WrappedPerpetualMarketInfo, StdError> {
         Ok(WrappedPerpetualMarketInfo {
             market_id: self.market_id.to_string(),
             hourly_funding_rate_cap: Decimal::from_str(&self.hourly_funding_rate_cap).unwrap(),
@@ -112,7 +112,7 @@ pub struct WrappedPerpetualMarketFunding {
 }
 
 impl PerpetualMarketFunding {
-    pub fn wrap(&self) -> Result<WrappedPerpetualMarketFunding, StdError> {
+    pub fn _wrap(&self) -> Result<WrappedPerpetualMarketFunding, StdError> {
         Ok(WrappedPerpetualMarketFunding {
             cumulative_funding: Decimal::from_str(&self.cumulative_funding).unwrap(),
             cumulative_price: Decimal::from_str(&self.cumulative_price).unwrap(),
@@ -194,7 +194,7 @@ pub struct WrappedDeposit {
 }
 
 impl Deposit {
-    pub fn wrap(&self) -> Result<WrappedDeposit, StdError> {
+    pub fn _wrap(&self) -> Result<WrappedDeposit, StdError> {
         Ok(WrappedDeposit {
             available_balance: Decimal::from_str(&self.available_balance).unwrap(),
             total_balance: Decimal::from_str(&self.total_balance).unwrap(),
