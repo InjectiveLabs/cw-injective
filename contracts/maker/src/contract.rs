@@ -1,7 +1,7 @@
-use crate::derivative::{create_new_orders_deriv, inv_imbalance_deriv};
+use crate::derivative::{base_deriv, create_new_orders_deriv, head_to_tail_deriv, inv_imbalance_deriv, tail_to_head_deriv};
 use crate::error::ContractError;
 use crate::exchange::{
-    Deposit, DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderInfo, PerpetualMarketFunding, PerpetualMarketInfo, Position,
+    Deposit, DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderData, OrderInfo, PerpetualMarketFunding, PerpetualMarketInfo, Position,
     WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedPosition,
 };
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, WrappedGetActionResponse};
@@ -384,17 +384,49 @@ fn get_action(
         // Get new tails
         let (new_buy_tail, new_sell_tail) = new_tail_prices(new_buy_head, new_sell_head, mid_price, state.tail_dist_from_mid, state.min_tail_dist);
 
+        // Get information for buy order creation/cancellation
+        let (mut buy_orders_to_cancel, buy_orders_to_keep, buy_orders_remaining_val, buy_append_to_new_head) =
+            orders_to_cancel(open_buys, new_buy_head, new_buy_tail, true, &state);
+
+        // Get information for sell order creation/cancellation
+        let (mut sell_orders_to_cancel, sell_orders_to_keep, sell_orders_remaining_val, sell_append_to_new_head) =
+            orders_to_cancel(open_sells, new_sell_head, new_sell_tail, false, &state);
+
         // Get new buy/sell orders
-        let buy_orders_to_open = create_orders(new_buy_head, new_buy_tail, inv_val, position.clone(), true, &state, &market);
-        let sell_orders_to_open = create_orders(new_sell_head, new_sell_tail, inv_val, position, false, &state, &market);
+        let buy_orders_to_open = create_orders(
+            new_buy_head,
+            new_buy_tail,
+            inv_val,
+            buy_orders_to_keep,
+            buy_orders_remaining_val,
+            position.clone(),
+            buy_append_to_new_head,
+            &mut buy_orders_to_cancel,
+            true,
+            &state,
+            &market,
+        );
+        let sell_orders_to_open = create_orders(
+            new_sell_head,
+            new_sell_tail,
+            inv_val,
+            sell_orders_to_keep,
+            sell_orders_remaining_val,
+            position,
+            sell_append_to_new_head,
+            &mut sell_orders_to_cancel,
+            false,
+            &state,
+            &market,
+        );
 
         let batch_order = MsgBatchUpdateOrders {
             sender: env.contract.address.to_string(),
             subaccount_id: state.subaccount_id,
             spot_market_ids_to_cancel_all: Vec::new(),
-            derivative_market_ids_to_cancel_all: vec![state.market_id],
+            derivative_market_ids_to_cancel_all: vec![],
             spot_orders_to_cancel: Vec::new(),
-            derivative_orders_to_cancel: vec![],
+            derivative_orders_to_cancel: vec![buy_orders_to_cancel, sell_orders_to_cancel].concat(),
             spot_orders_to_create: Vec::new(),
             derivative_orders_to_create: vec![buy_orders_to_open, sell_orders_to_open].concat(),
         };
@@ -406,21 +438,51 @@ fn get_action(
     }
 }
 
-/// Decides what new new orders need to be created
-/// # Arguments
-/// * `new_head` - The new head (closest to the reservation price)
-/// * `new_tail` - The new tail (farthest from the reservation price)
-/// * `inv_val` - The total notional value of all assets
-/// * `position` - The current position taken by the bot, if any
-/// * `is_buy` - If we are looking to create buy-side orders
-/// * `state` - All state of the contract
-/// # Returns
-/// * `new_wrapped_orders` - The new orders that we would like to open
+pub fn orders_to_cancel(
+    open_orders: Vec<WrappedDerivativeLimitOrder>,
+    new_head: Decimal,
+    new_tail: Decimal,
+    is_buy: bool,
+    state: &State,
+) -> (Vec<OrderData>, Vec<WrappedDerivativeLimitOrder>, Decimal, bool) {
+    let mut orders_remaining_val = Decimal::zero();
+    let mut orders_to_cancel: Vec<OrderData> = Vec::new();
+    // If there are any open orders, we need to check them to see if we should cancel
+    if open_orders.len() > 0 {
+        // Use the new tail/head to filter out the orders to cancel
+        let orders_to_keep: Vec<WrappedDerivativeLimitOrder> = open_orders
+            .into_iter()
+            .filter(|o| {
+                let keep_if_buy = o.order_info.price <= new_head && o.order_info.price >= new_tail;
+                let keep_if_sell = o.order_info.price >= new_head && o.order_info.price <= new_tail;
+                let keep = (keep_if_buy && is_buy) || (keep_if_sell && !is_buy);
+                if keep {
+                    orders_remaining_val = orders_remaining_val + (o.order_info.price * o.order_info.quantity);
+                } else {
+                    orders_to_cancel.push(OrderData::new(&o, state));
+                }
+                keep
+            })
+            .collect();
+        // Determine if we need to append to new orders to the new head or if we need to
+        // append to the end of the block of orders we will be keeping
+        let append_to_new_head =
+            sub_abs(new_head, orders_to_keep.first().unwrap().order_info.price) > sub_abs(orders_to_keep.last().unwrap().order_info.price, new_tail);
+        (orders_to_cancel, orders_to_keep, orders_remaining_val, append_to_new_head)
+    } else {
+        (orders_to_cancel, Vec::new(), orders_remaining_val, true)
+    }
+}
+
 fn create_orders(
     new_head: Decimal,
     new_tail: Decimal,
     inv_val: Decimal,
+    orders_to_keep: Vec<WrappedDerivativeLimitOrder>,
+    orders_remaining_val: Decimal,
     position: Option<WrappedPosition>,
+    append_to_new_head: bool,
+    orders_to_cancel: &mut Vec<OrderData>,
     is_buy: bool,
     state: &State,
     market: &WrappedDerivativeMarket,
@@ -435,8 +497,31 @@ fn create_orders(
         }
         None => (Decimal::zero(), Decimal::zero()),
     };
-    let alloc_val_for_new_orders = get_alloc_bal_new_orders(inv_val, position_margin, state.active_capital);
-    create_new_orders_deriv(new_head, new_tail, alloc_val_for_new_orders, position_qty, is_buy, state, market).0
+    let alloc_val_for_new_orders = get_alloc_bal_new_orders(inv_val, position_margin, state.active_capital) - orders_remaining_val;
+    if orders_to_keep.len() == 0 {
+        let (new_orders, _) = base_deriv(
+            new_head,
+            new_tail,
+            alloc_val_for_new_orders,
+            orders_to_keep,
+            position_qty,
+            true,
+            is_buy,
+            &state,
+            market,
+        );
+        new_orders
+    } else if append_to_new_head {
+        let (new_orders, mut additional_hashes_to_cancel) =
+            tail_to_head_deriv(new_head, alloc_val_for_new_orders, orders_to_keep, position_qty, is_buy, &state, market);
+        orders_to_cancel.append(&mut additional_hashes_to_cancel);
+        new_orders
+    } else {
+        let (new_orders, mut additional_hashes_to_cancel) =
+            head_to_tail_deriv(new_tail, alloc_val_for_new_orders, orders_to_keep, position_qty, is_buy, &state, market);
+        orders_to_cancel.append(&mut additional_hashes_to_cancel);
+        new_orders
+    }
 }
 
 /// Uses the inventory imbalance to calculate a price around which we will center the mid price

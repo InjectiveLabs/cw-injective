@@ -1,4 +1,4 @@
-use crate::utils::round_to_precision;
+use crate::utils::{div_dec, round_to_precision};
 use crate::{state::State, utils::round_to_min_ticker};
 use cosmwasm_std::{Decimal256 as Decimal, StdError, Uint256};
 use schemars::JsonSchema;
@@ -167,6 +167,11 @@ pub struct WrappedDerivativeLimitOrder {
     pub trigger_price: Option<Decimal>,
     pub order_hash: String,
 }
+impl WrappedDerivativeLimitOrder {
+    pub fn is_reduce_only(&self) -> bool {
+        self.margin.is_zero()
+    }
+}
 
 impl DerivativeLimitOrder {
     pub fn wrap(&self) -> Result<WrappedDerivativeLimitOrder, StdError> {
@@ -240,6 +245,16 @@ pub struct OrderData {
     pub order_hash: String,
 }
 
+impl OrderData {
+    pub fn new(order: &WrappedDerivativeLimitOrder, state: &State) -> OrderData {
+        OrderData {
+            market_id: state.market_id,
+            subaccount_id: state.subaccount_id,
+            order_hash: order.order_hash,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct SpotOrder {
     pub market_id: String,
@@ -257,7 +272,20 @@ pub struct DerivativeOrder {
     pub trigger_price: Option<String>,
 }
 impl DerivativeOrder {
-    pub fn new(state: &State, price: Decimal, quantity: Decimal, is_buy: bool, margin: Decimal, market: &WrappedDerivativeMarket) -> DerivativeOrder {
+    pub fn new(
+        state: &State,
+        price: Decimal,
+        quantity: Decimal,
+        is_buy: bool,
+        is_reduce_only: bool,
+        market: &WrappedDerivativeMarket,
+    ) -> DerivativeOrder {
+        let margin = if is_reduce_only {
+            Decimal::zero()
+        } else {
+            let margin = div_dec(price * quantity, state.leverage);
+            margin
+        };
         DerivativeOrder {
             market_id: state.market_id.clone(),
             order_info: OrderInfo {
