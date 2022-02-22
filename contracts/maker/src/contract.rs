@@ -120,7 +120,7 @@ pub fn mint_to_user(
     let state = config_read(deps.storage).load().unwrap();
     let lp_token_address = state.lp_token_address.clone();
 
-    // Ensure that only the contract creator has permission to update market data
+    // Ensure that only exchange module calls this method
     only_owner(&env.contract.address, &sender);
 
     let mint = Cw20ExecuteMsg::Mint {
@@ -146,7 +146,7 @@ pub fn burn_from_user(
     let state = config_read(deps.storage).load().unwrap();
     let lp_token_address = state.lp_token_address.clone();
 
-    // Ensure that only the contract creator has permission to update market data
+    // Ensure that only exchange module calls this method
     only_owner(&env.contract.address, &sender);
 
     let burn = Cw20ExecuteMsg::BurnFrom {
@@ -199,7 +199,7 @@ pub fn get_action_state_changing(
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let state = config(deps.storage).load().unwrap();
 
-    // Ensure that only the contract creator has permission to update market data
+    // Ensure that only exchange module calls this method
     only_owner(&env.contract.address, &sender);
 
     let querier = InjectiveQuerier::new(&deps.querier);
@@ -207,9 +207,6 @@ pub fn get_action_state_changing(
     let deposit_res = querier.query_subaccount_deposit(state.subaccount_id.clone(), market_res.market.market.quote_denom.clone())?;
     let positions_res = querier.query_subaccount_positions(state.subaccount_id.clone())?;
     let open_orders_res = querier.query_trader_derivative_orders(state.market_id.clone(), state.subaccount_id.clone())?;
-
-    // just log the available balance for now
-    deps.api.debug(deposit_res.deposits.available_balance.to_string().as_str());
 
     let market: DerivativeMarket = DerivativeMarket {
         ticker: market_res.market.market.ticker,
@@ -257,6 +254,7 @@ pub fn get_action_state_changing(
         total_balance: deposit_res.deposits.total_balance.to_string(),
     };
 
+    // TODO change for multi market support
     let first_position_query = positions_res.state.get(0);
     let first_position: Option<Position> = if first_position_query.is_none() {
         None
@@ -270,7 +268,7 @@ pub fn get_action_state_changing(
         })
     };
 
-    let _action_response = get_action(
+    let action_response = get_action(
         deps,
         env,
         market,
@@ -284,32 +282,28 @@ pub fn get_action_state_changing(
         market_res.market.mark_price.to_string(),
     );
 
-    // TODO FIX commented out code, fails already when using MsgStoreCode with:
+    let msgs = match action_response {
+        Ok(v) => v.msgs,
+        Err(_) => todo!(),
+    };
+    let parsed_msgs = msgs.iter().map(|msg| match msg {
+        ExchangeMsg::BatchUpdateOrders(batch_update_orders_msg) => create_batch_update_orders_msg(
+            batch_update_orders_msg.sender.clone(),
+            batch_update_orders_msg.subaccount_id.clone(),
+            batch_update_orders_msg.spot_market_ids_to_cancel_all.clone(),
+            batch_update_orders_msg.derivative_market_ids_to_cancel_all.clone(),
+            serde_json_wasm::from_str(&serde_json_wasm::to_string(&batch_update_orders_msg.spot_orders_to_cancel).unwrap()).unwrap(),
+            serde_json_wasm::from_str(&serde_json_wasm::to_string(&batch_update_orders_msg.derivative_orders_to_cancel).unwrap()).unwrap(),
+            serde_json_wasm::from_str(&serde_json_wasm::to_string(&batch_update_orders_msg.spot_orders_to_create).unwrap()).unwrap(),
+            serde_json_wasm::from_str(&serde_json_wasm::to_string(&batch_update_orders_msg.derivative_orders_to_create).unwrap()).unwrap(),
+        ),
+        ExchangeMsg::MsgCreateDerivativeMarketOrder => todo!(),
+    });
 
-    // raw_log: 'failed to execute message; message index: 0: Error calling the VM: Error
-    // compiling Wasm: Could not compile: WebAssembly translation error: Error in middleware
-    // Gatekeeper: Float operator detected: F64ConvertI64U. The use of floats is not supported.:
-    // create wasm contract failed'
+    let mut messages: Vec<CosmosMsg<InjectiveMsgWrapper>> = Vec::new();
+    parsed_msgs.for_each(|msg| messages.push(msg));
 
-    // let res: Response<InjectiveMsgWrapper> = Response::new();
-    // let message: CosmosMsg<InjectiveMsgWrapper> = match action_response {
-    //     Ok(v) => match v.msgs.get(0).unwrap() {
-    //         ExchangeMsg::BatchUpdateOrders(batch_update_orders_msg) => create_batch_update_orders_msg(
-    //             batch_update_orders_msg.sender.clone(),
-    //             batch_update_orders_msg.subaccount_id.clone(),
-    //             batch_update_orders_msg.spot_market_ids_to_cancel_all.clone(),
-    //             batch_update_orders_msg.derivative_market_ids_to_cancel_all.clone(),
-    //             serde_json::from_str(&serde_json::to_string(&batch_update_orders_msg.spot_orders_to_cancel).unwrap()).unwrap(),
-    //             serde_json::from_str(&serde_json::to_string(&batch_update_orders_msg.derivative_orders_to_cancel).unwrap()).unwrap(),
-    //             serde_json::from_str(&serde_json::to_string(&batch_update_orders_msg.spot_orders_to_create).unwrap()).unwrap(),
-    //             serde_json::from_str(&serde_json::to_string(&batch_update_orders_msg.derivative_orders_to_create).unwrap()).unwrap(),
-    //         ),
-    //         ExchangeMsg::MsgCreateDerivativeMarketOrder => todo!(),
-    //     },
-    //     Err(_) => todo!(),
-    // };
-
-    Ok(Response::new().set_data(Binary::from(b"the result data"))) // .add_message(message)
+    Ok(Response::new().set_data(Binary::from(b"just some test data")).add_messages(messages))
 }
 
 #[entry_point]

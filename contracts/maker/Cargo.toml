@@ -34,7 +34,7 @@ serde = { version = "1.0.125", default-features = false, features = ["derive"] }
 snafu = { version = "0.6.3" }
 thiserror = { version = "1.0.23" }
 chrono = "0.4"
-serde_json = "1.0.59"
+serde-json-wasm = "0.3.2"
 
 [dev-dependencies]
 injective-mocks = { path = "../../packages/mocks", version = "0.1.0" }
