@@ -1,4 +1,4 @@
-use crate::derivative::{base_deriv, create_new_orders_deriv, head_to_tail_deriv, inv_imbalance_deriv, tail_to_head_deriv};
+use crate::derivative::{base_deriv, head_to_tail_deriv, inv_imbalance_deriv, tail_to_head_deriv};
 use crate::error::ContractError;
 use crate::exchange::{
     Deposit, DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderData, OrderInfo, PerpetualMarketFunding, PerpetualMarketInfo, Position,
@@ -503,7 +503,7 @@ fn create_orders(
             new_head,
             new_tail,
             alloc_val_for_new_orders,
-            orders_to_keep,
+            orders_to_keep.len(),
             position_qty,
             true,
             is_buy,
