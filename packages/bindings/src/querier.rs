@@ -1,8 +1,8 @@
 use cosmwasm_std::{QuerierWrapper, StdResult};
 
 use crate::query::{
-    DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, SubaccountDepositResponse, SubaccountPositionsResponse,
-    TraderDerivativeOrdersResponse,
+    DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse,
+    SubaccountDepositResponse, SubaccountPositionsResponse, TraderDerivativeOrdersResponse,
 };
 
 use crate::route::InjectiveRoute;
@@ -61,6 +61,26 @@ impl<'a> InjectiveQuerier<'a> {
         };
 
         let res: TraderDerivativeOrdersResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_perpetual_market_info<T: Into<String>>(&self, market_id: T) -> StdResult<PerpetualMarketInfoResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::PerpetualMarketInfo { market_id: market_id.into() },
+        };
+
+        let res: PerpetualMarketInfoResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_perpetual_market_funding<T: Into<String>>(&self, market_id: T) -> StdResult<PerpetualMarketFundingResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::PerpetualMarketFunding { market_id: market_id.into() },
+        };
+
+        let res: PerpetualMarketFundingResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 }

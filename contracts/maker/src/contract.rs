@@ -207,6 +207,8 @@ pub fn get_action_state_changing(
     let deposit_res = querier.query_subaccount_deposit(state.subaccount_id.clone(), market_res.market.market.quote_denom.clone())?;
     let positions_res = querier.query_subaccount_positions(state.subaccount_id.clone())?;
     let open_orders_res = querier.query_trader_derivative_orders(state.market_id.clone(), state.subaccount_id.clone())?;
+    let perpetual_market_info_res = querier.query_perpetual_market_info(state.market_id.clone())?;
+    let perpetual_market_funding_res = querier.query_perpetual_market_funding(state.market_id.clone())?;
 
     let market: DerivativeMarket = DerivativeMarket {
         ticker: market_res.market.market.ticker,
@@ -259,12 +261,36 @@ pub fn get_action_state_changing(
     let first_position: Option<Position> = if first_position_query.is_none() {
         None
     } else {
+        let position = first_position_query.unwrap().position.clone();
         Some(Position {
-            isLong: first_position_query.unwrap().position.isLong,
-            quantity: first_position_query.unwrap().position.quantity.clone(),
-            margin: first_position_query.unwrap().position.margin.clone(),
-            entry_price: first_position_query.unwrap().position.entry_price.clone(),
-            cumulative_funding_entry: first_position_query.unwrap().position.cumulative_funding_entry.clone(),
+            isLong: position.isLong,
+            quantity: position.quantity.clone(),
+            margin: position.margin.clone(),
+            entry_price: position.entry_price.clone(),
+            cumulative_funding_entry: position.cumulative_funding_entry.clone(),
+        })
+    };
+
+    let perpetual_market_info: Option<PerpetualMarketInfo> = if perpetual_market_info_res.info.is_none() {
+        None
+    } else {
+        let info = perpetual_market_info_res.info.unwrap();
+        Some(PerpetualMarketInfo {
+            market_id: info.market_id,
+            hourly_funding_rate_cap: info.hourly_funding_rate_cap.to_string(),
+            hourly_interest_rate: info.hourly_interest_rate.to_string(),
+            next_funding_timestamp: info.next_funding_timestamp,
+            funding_interval: info.funding_interval,
+        })
+    };
+    let perpetual_market_funding: Option<PerpetualMarketFunding> = if perpetual_market_funding_res.state.is_none() {
+        None
+    } else {
+        let funding = perpetual_market_funding_res.state.unwrap();
+        Some(PerpetualMarketFunding {
+            cumulative_funding: funding.cumulative_funding.to_string(),
+            cumulative_price: funding.cumulative_price.to_string(),
+            last_timestamp: funding.last_timestamp,
         })
     };
 
@@ -272,8 +298,8 @@ pub fn get_action_state_changing(
         deps,
         env,
         market,
-        None,
-        None,
+        perpetual_market_info,
+        perpetual_market_funding,
         open_orders,
         deposit,
         first_position,

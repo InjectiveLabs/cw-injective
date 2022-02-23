@@ -21,6 +21,8 @@ pub enum InjectiveQuery {
     DerivativeMarket { market_id: String },
     SubaccountPositions { subaccount_id: String },
     TraderDerivativeOrders { market_id: String, subaccount_id: String },
+    PerpetualMarketInfo { market_id: String },
+    PerpetualMarketFunding { market_id: String },
 }
 
 impl CustomQuery for InjectiveQueryWrapper {}
@@ -66,6 +68,16 @@ pub struct TrimmedDerivativeLimitOrder {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct TraderDerivativeOrdersResponse {
     pub orders: Option<Vec<TrimmedDerivativeLimitOrder>>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct PerpetualMarketInfoResponse {
+    pub info: Option<PerpetualMarketInfo>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct PerpetualMarketFundingResponse {
+    pub state: Option<PerpetualMarketFunding>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
