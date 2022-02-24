@@ -7,7 +7,7 @@ use crate::exchange::{
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, WrappedGetActionResponse};
 use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, only_owner};
 use crate::state::{config, config_read, State};
-use crate::utils::{bp_to_dec, div_dec, sub_abs, wrap, sub_no_overflow};
+use crate::utils::{bp_to_dec, div_dec, sub_abs, sub_no_overflow, wrap};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, CosmosMsg, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdError, StdResult,
     SubMsg, Uint128, Uint256, WasmMsg,
@@ -398,12 +398,22 @@ fn get_action(
         let (new_buy_tail, new_sell_tail) = new_tail_prices(new_buy_head, new_sell_head, mid_price, state.tail_dist_from_mid, state.min_tail_dist);
 
         // Get information for buy order creation/cancellation
-        let (mut buy_orders_to_cancel, buy_orders_to_keep, buy_orders_remaining_val, buy_append_to_new_head) =
-            orders_to_cancel(open_buys, new_buy_head, new_buy_tail, true, &state);
+        let (
+            mut buy_orders_to_cancel,
+            buy_orders_to_keep,
+            buy_margined_val_from_orders_remaining,
+            buy_margined_val_from_cancelled,
+            buy_append_to_new_head,
+        ) = orders_to_cancel(open_buys, new_buy_head, new_buy_tail, true, &state);
 
         // Get information for sell order creation/cancellation
-        let (mut sell_orders_to_cancel, sell_orders_to_keep, sell_orders_remaining_val, sell_append_to_new_head) =
-            orders_to_cancel(open_sells, new_sell_head, new_sell_tail, false, &state);
+        let (
+            mut sell_orders_to_cancel,
+            sell_orders_to_keep,
+            sell_margined_val_from_orders_remaining,
+            sell_margined_val_from_cancelled,
+            sell_append_to_new_head,
+        ) = orders_to_cancel(open_sells, new_sell_head, new_sell_tail, false, &state);
 
         // Get new buy/sell orders
         let buy_orders_to_open = create_orders(
@@ -411,7 +421,8 @@ fn get_action(
             new_buy_tail,
             inv_val,
             buy_orders_to_keep,
-            buy_orders_remaining_val,
+            buy_margined_val_from_orders_remaining,
+            buy_margined_val_from_cancelled,
             position.clone(),
             buy_append_to_new_head,
             &mut buy_orders_to_cancel,
@@ -424,7 +435,8 @@ fn get_action(
             new_sell_tail,
             inv_val,
             sell_orders_to_keep,
-            sell_orders_remaining_val,
+            sell_margined_val_from_orders_remaining,
+            sell_margined_val_from_cancelled,
             position,
             sell_append_to_new_head,
             &mut sell_orders_to_cancel,
@@ -464,12 +476,12 @@ pub fn orders_to_cancel(
     new_tail: Decimal,
     is_buy: bool,
     state: &State,
-) -> (Vec<OrderData>, Vec<WrappedDerivativeLimitOrder>, Decimal, bool) {
-
+) -> (Vec<OrderData>, Vec<WrappedDerivativeLimitOrder>, Decimal, Decimal, bool) {
     // If there are any open orders, we need to check them to see if we should cancel
     if open_orders.len() > 0 {
-        let mut orders_remaining_val = Decimal::zero();
+        let mut margined_val_from_orders_remaining = Decimal::zero();
         let mut orders_to_cancel: Vec<OrderData> = Vec::new();
+        let mut margined_val_from_cancelled = Decimal::zero();
         // Use the new tail/head to filter out the orders to cancel
         let orders_to_keep: Vec<WrappedDerivativeLimitOrder> = open_orders
             .into_iter()
@@ -478,9 +490,10 @@ pub fn orders_to_cancel(
                 let keep_if_sell = o.order_info.price >= new_head && o.order_info.price <= new_tail;
                 let keep = (keep_if_buy && is_buy) || (keep_if_sell && !is_buy);
                 if keep {
-                    orders_remaining_val = orders_remaining_val + (o.order_info.price * o.order_info.quantity);
+                    margined_val_from_orders_remaining = margined_val_from_orders_remaining + o.margin;
                 } else {
                     orders_to_cancel.push(OrderData::new(&o, state));
+                    margined_val_from_cancelled = margined_val_from_cancelled + o.margin;
                 }
                 keep
             })
@@ -489,9 +502,15 @@ pub fn orders_to_cancel(
         // append to the end of the block of orders we will be keeping
         let append_to_new_head =
             sub_abs(new_head, orders_to_keep.first().unwrap().order_info.price) > sub_abs(orders_to_keep.last().unwrap().order_info.price, new_tail);
-        (orders_to_cancel, orders_to_keep, orders_remaining_val, append_to_new_head)
+        (
+            orders_to_cancel,
+            orders_to_keep,
+            margined_val_from_orders_remaining,
+            margined_val_from_cancelled,
+            append_to_new_head,
+        )
     } else {
-        (Vec::new(), Vec::new(), Decimal::zero(), true)
+        (Vec::new(), Vec::new(), Decimal::zero(), Decimal::zero(), true)
     }
 }
 
@@ -500,7 +519,8 @@ fn create_orders(
     new_tail: Decimal,
     inv_val: Decimal,
     orders_to_keep: Vec<WrappedDerivativeLimitOrder>,
-    orders_remaining_val: Decimal,
+    margined_val_from_orders_remaining: Decimal,
+    margined_val_from_cancelled: Decimal,
     position: Option<WrappedPosition>,
     append_to_new_head: bool,
     orders_to_cancel: &mut Vec<OrderData>,
@@ -518,7 +538,10 @@ fn create_orders(
         }
         None => (Decimal::zero(), Decimal::zero(), false),
     };
-    let alloc_val_for_new_orders = sub_no_overflow(get_alloc_bal_new_orders(inv_val, is_same_side, position_margin, state.active_capital), orders_remaining_val);
+    let alloc_val_for_new_orders = sub_no_overflow(
+        get_alloc_bal_new_orders(inv_val, is_same_side, position_margin, state.active_capital) + margined_val_from_cancelled,
+        margined_val_from_orders_remaining,
+    );
     if orders_to_keep.len() == 0 {
         let (new_orders, _) = base_deriv(
             new_head,
