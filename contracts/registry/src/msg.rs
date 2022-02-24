@@ -4,9 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::state::CONTRACT;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct InstantiateMsg {
-    pub receiver_address: Addr,
-    pub count: i32,
+pub struct InstantiateMsg {    
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
