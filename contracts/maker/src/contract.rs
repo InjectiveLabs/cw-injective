@@ -508,17 +508,17 @@ fn create_orders(
     state: &State,
     market: &WrappedDerivativeMarket,
 ) -> Vec<DerivativeOrder> {
-    let (position_qty, position_margin) = match position {
+    let (position_qty, position_margin, is_same_side) = match position {
         Some(position) => {
             if position.is_long == is_buy {
-                (Decimal::zero(), position.margin)
+                (Decimal::zero(), position.margin, true)
             } else {
-                (position.quantity, Decimal::zero())
+                (position.quantity, Decimal::zero(), false)
             }
         }
-        None => (Decimal::zero(), Decimal::zero()),
+        None => (Decimal::zero(), Decimal::zero(), false),
     };
-    let alloc_val_for_new_orders = get_alloc_bal_new_orders(inv_val, position_margin, state.active_capital) - orders_remaining_val;
+    let alloc_val_for_new_orders = get_alloc_bal_new_orders(inv_val, is_same_side, position_margin, state.active_capital) - orders_remaining_val;
     if orders_to_keep.len() == 0 {
         let (new_orders, _) = base_deriv(
             new_head,

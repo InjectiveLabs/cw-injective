@@ -22,21 +22,18 @@ pub fn sanity_check(_position: &Option<WrappedPosition>, _inv_base_ball: Decimal
 /// that already has a position open.
 /// # Arguments
 /// * `inv_val` - The total notional value of the inventory
-/// * `margin` - The margin value of an open position (is zero if the position is on the opposite side or if there isn't one)
+/// * `margin` - The margin value of an open position 
+/// * `is_same_side` - True if the side is the same as the position
 /// * `active_capital` - The factor by which we multiply the inventory val to get total capital that should be on the book (between 0..1)
 /// # Returns
 /// * `alloc_bal` - The notional balance we are willing to allocate to one side
-pub fn get_alloc_bal_new_orders(inv_val: Decimal, margin: Decimal, active_capital: Decimal) -> Decimal {
+pub fn get_alloc_bal_new_orders(inv_val: Decimal, is_same_side: bool, margin: Decimal, active_capital: Decimal) -> Decimal {
     let alloc_for_both_sides = inv_val * active_capital;
     let alloc_one_side = div_dec(alloc_for_both_sides, Decimal::from_str("2").unwrap());
-
-    if margin == Decimal::zero() {
-        alloc_one_side
+    if is_same_side {
+        sub_no_overflow(alloc_one_side, margin)
     } else {
-        let inv_val = sub_no_overflow(inv_val, alloc_one_side);
-        let inv_val = sub_no_overflow(inv_val, margin);
-        let alloc_for_both_sides = inv_val * active_capital;
-        div_dec(alloc_for_both_sides, Decimal::from_str("2").unwrap())
+        alloc_one_side + margin
     }
 }
 
@@ -91,21 +88,31 @@ mod tests {
 
     #[test]
     fn get_alloc_bal_new_orders_test() {
-        let inv_val = Decimal::from_str("100000").unwrap();
+        let inv_val = Decimal::from_str("1000000000").unwrap();
         let active_capital = Decimal::from_str("0.2").unwrap();
         let margin = Decimal::zero();
 
-        let alloc_bal_a = get_alloc_bal_new_orders(inv_val, margin, active_capital);
-        let alloc_bal_b = get_alloc_bal_new_orders(inv_val, margin, active_capital);
+        let alloc_bal_a = get_alloc_bal_new_orders(inv_val, true, margin, active_capital);
+        let alloc_bal_b = get_alloc_bal_new_orders(inv_val, false, margin, active_capital);
         assert_eq!(alloc_bal_a, alloc_bal_b);
         assert_eq!(alloc_bal_a, Decimal::from_str("0.1").unwrap() * inv_val);
+        println!("{} {}", alloc_bal_a, alloc_bal_b);
 
-        let active_capital = Decimal::from_str("0.1").unwrap();
-        let alloc_bal_a = get_alloc_bal_new_orders(inv_val, margin, active_capital);
-        let margin = Decimal::from_str("5000").unwrap();
-        let alloc_bal_b = get_alloc_bal_new_orders(inv_val, margin, active_capital);
-        assert_eq!(alloc_bal_a, Decimal::from_str("5000").unwrap());
-        assert_eq!(alloc_bal_b, Decimal::from_str("4500").unwrap());
+        let margin = Decimal::from_str("10000").unwrap();
+
+        let alloc_bal_a = get_alloc_bal_new_orders(inv_val, true, margin, active_capital);
+        let alloc_bal_b = get_alloc_bal_new_orders(inv_val, false, margin, active_capital);
+        println!("{} {}", alloc_bal_a, alloc_bal_b);
+        assert_eq!(alloc_bal_a + margin, alloc_bal_b - margin);
+
+        let inv_val = Decimal::from_str("0").unwrap();
+        let margin = Decimal::from_str("10000").unwrap();
+
+        let alloc_bal_a = get_alloc_bal_new_orders(inv_val, true, margin, active_capital);
+        let alloc_bal_b = get_alloc_bal_new_orders(inv_val, false, margin, active_capital);
+        println!("{} {}", alloc_bal_a, alloc_bal_b);
+        assert_eq!(Decimal::zero(), alloc_bal_a);
+        assert_eq!(margin, alloc_bal_b);
     }
 
     #[test]
