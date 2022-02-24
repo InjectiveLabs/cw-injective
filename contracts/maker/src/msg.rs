@@ -48,27 +48,22 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {
     MintToUser { subaccount_id_sender: String, amount: Uint128 },
     BurnFromUser { subaccount_id_sender: String, amount: Uint128 },
-    GetActionStateChanging {},
+    BeginBlocker {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     Config {},
-    // GetAction {
-    //     market: DerivativeMarket,
-    //     perpetual_market_info: Option<PerpetualMarketInfo>,
-    //     perpetual_market_funding: Option<PerpetualMarketFunding>,
-    //     open_orders: Vec<DerivativeLimitOrder>,
-    //     deposit: Deposit,
-    //     position: Option<Position>,
-    //     oracle_price: String,
-    //     volatility: String,
-    //     mid_price: String,
-    // },
+    // GetTotalLPSupply {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct WrappedGetActionResponse {
     pub msgs: Vec<ExchangeMsg>,
 }
+
+// #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+// pub struct TotalSupplyResponse {
+//     pub total_supply: i32,
+// }

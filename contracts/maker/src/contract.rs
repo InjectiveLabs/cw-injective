@@ -106,7 +106,7 @@ pub fn execute(
             subaccount_id_sender,
             amount,
         } => burn_from_user(deps, env, info.sender, subaccount_id_sender, amount),
-        ExecuteMsg::GetActionStateChanging {} => get_action_state_changing(deps, env, info.sender),
+        ExecuteMsg::BeginBlocker {} => begin_blocker(deps, env, info.sender),
     }
 }
 
@@ -192,11 +192,7 @@ pub fn burn_from_user(
 //     Ok(res)
 // }
 
-pub fn get_action_state_changing(
-    deps: DepsMut<InjectiveQueryWrapper>,
-    env: Env,
-    sender: Addr,
-) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
+pub fn begin_blocker(deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Addr) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let state = config(deps.storage).load().unwrap();
 
     // Ensure that only exchange module calls this method
@@ -336,31 +332,22 @@ pub fn get_action_state_changing(
 pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&config_read(deps.storage).load()?),
-        // QueryMsg::GetAction {
-        //     market,
-        //     perpetual_market_info,
-        //     perpetual_market_funding,
-        //     open_orders,
-        //     deposit,
-        //     position,
-        //     oracle_price,
-        //     volatility,
-        //     mid_price,
-        // } => to_binary(&get_action(
-        //     deps,
-        //     env,
-        //     market,
-        //     perpetual_market_info,
-        //     perpetual_market_funding,
-        //     open_orders,
-        //     deposit,
-        //     position,
-        //     oracle_price,
-        //     volatility,
-        //     mid_price,
-        // )?),
+        // QueryMsg::GetTotalLPSupply {} => to_binary(&get_total_lp_supply(deps)?),
     }
 }
+
+// fn get_total_lp_supply(deps: Deps) -> StdResult<TotalSupplyResponse> {
+//     let state = config_read(deps.storage).load().unwrap();
+//     let lp_token_address = state.lp_token_address.clone();
+
+//     let token_info_query = Cw20QueryMsg::TokenInfo {};
+//     let cw20_token_info_response = WasmQuery::Smart {
+//         contract_addr: lp_token_address,
+//         msg: to_binary(&token_info_query)?,
+//     };
+
+//     Ok(TotalSupplyResponse { total_supply: 123 })
+// }
 
 fn get_action(
     deps: DepsMut<InjectiveQueryWrapper>,
