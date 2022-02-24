@@ -12,6 +12,7 @@ use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, CosmosMsg, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdError, StdResult,
     SubMsg, Uint128, Uint256, WasmMsg,
 };
+use std::os::macos::raw::stat;
 use std::str::FromStr;
 
 use cw20::{Cw20ExecuteMsg, MinterResponse};
@@ -432,7 +433,14 @@ fn get_action(
             &state,
             &market,
         );
-
+        let derivative_orders_to_create = vec![buy_orders_to_open, sell_orders_to_open]
+            .concat()
+            .into_iter()
+            .filter(|order| {
+                Decimal::from_str(&order.order_info.quantity).unwrap().gt(&market.min_quantity_tick_size)
+                    && Decimal::from_str(&order.order_info.price).unwrap().gt(&market.min_price_tick_size)
+            })
+            .collect();
         let batch_order = MsgBatchUpdateOrders {
             sender: env.contract.address.to_string(),
             subaccount_id: String::from(""), // use only when passing market ids to cancel all: state.subaccount_id,
@@ -441,7 +449,7 @@ fn get_action(
             spot_orders_to_cancel: Vec::new(),
             derivative_orders_to_cancel: vec![buy_orders_to_cancel, sell_orders_to_cancel].concat(),
             spot_orders_to_create: Vec::new(),
-            derivative_orders_to_create: vec![buy_orders_to_open, sell_orders_to_open].concat(),
+            derivative_orders_to_create,
         };
         Ok(WrappedGetActionResponse {
             msgs: vec![ExchangeMsg::BatchUpdateOrders(batch_order)],

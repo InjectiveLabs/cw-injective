@@ -1,11 +1,13 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Addr, BankMsg, coins};
+use cosmwasm_std::{
+    coins, to_binary, Addr, BankMsg, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ContractsResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{State, STATE, CONTRACT};
+use crate::state::{State, CONTRACT, STATE};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:registry";
@@ -38,14 +40,21 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Register {contract_address, gas_limit} => try_register(deps, info, contract_address, gas_limit),        
+        ExecuteMsg::Register {
+            contract_address,
+            gas_limit,
+        } => try_register(deps, info, contract_address, gas_limit),
     }
 }
 
-
-pub fn try_register(deps: DepsMut, info: MessageInfo, contract_addr: Addr, gas_limit: u64) -> Result<Response, ContractError> {
+pub fn try_register(
+    deps: DepsMut,
+    info: MessageInfo,
+    contract_addr: Addr,
+    gas_limit: u64,
+) -> Result<Response, ContractError> {
     let mut state = STATE.load(deps.storage)?;
-    
+
     // if state.contracts.contains(&contract_addr) {
     //     return Err(ContractError::Unauthorized {
     //         msg: "contract already registered".to_string(),
@@ -58,8 +67,7 @@ pub fn try_register(deps: DepsMut, info: MessageInfo, contract_addr: Addr, gas_l
 
     state.contracts.push(contract);
     STATE.save(deps.storage, &state)?;
-    Ok(Response::new()
-        .add_attribute("method", "register"))
+    Ok(Response::new().add_attribute("method", "register"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -71,5 +79,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
 fn query_contracts(deps: Deps) -> StdResult<ContractsResponse> {
     let state = STATE.load(deps.storage)?;
-    Ok(ContractsResponse { contracts: state.contracts })
+    Ok(ContractsResponse {
+        contracts: state.contracts,
+    })
 }

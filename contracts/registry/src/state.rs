@@ -7,7 +7,7 @@ use cw_storage_plus::Item;
 // Contract struct defines begin blocker contract execution params.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct CONTRACT {
-    pub address: Addr,    
+    pub address: Addr,
     pub gas_limit: u64,
 }
 
