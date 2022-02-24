@@ -7,12 +7,11 @@ use crate::exchange::{
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, WrappedGetActionResponse};
 use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, only_owner};
 use crate::state::{config, config_read, State};
-use crate::utils::{bp_to_dec, div_dec, sub_abs, wrap};
+use crate::utils::{bp_to_dec, div_dec, sub_abs, wrap, sub_no_overflow};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, CosmosMsg, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdError, StdResult,
     SubMsg, Uint128, Uint256, WasmMsg,
 };
-use std::os::macos::raw::stat;
 use std::str::FromStr;
 
 use cw20::{Cw20ExecuteMsg, MinterResponse};
@@ -466,10 +465,11 @@ pub fn orders_to_cancel(
     is_buy: bool,
     state: &State,
 ) -> (Vec<OrderData>, Vec<WrappedDerivativeLimitOrder>, Decimal, bool) {
-    let mut orders_remaining_val = Decimal::zero();
-    let mut orders_to_cancel: Vec<OrderData> = Vec::new();
+
     // If there are any open orders, we need to check them to see if we should cancel
     if open_orders.len() > 0 {
+        let mut orders_remaining_val = Decimal::zero();
+        let mut orders_to_cancel: Vec<OrderData> = Vec::new();
         // Use the new tail/head to filter out the orders to cancel
         let orders_to_keep: Vec<WrappedDerivativeLimitOrder> = open_orders
             .into_iter()
@@ -491,7 +491,7 @@ pub fn orders_to_cancel(
             sub_abs(new_head, orders_to_keep.first().unwrap().order_info.price) > sub_abs(orders_to_keep.last().unwrap().order_info.price, new_tail);
         (orders_to_cancel, orders_to_keep, orders_remaining_val, append_to_new_head)
     } else {
-        (orders_to_cancel, Vec::new(), orders_remaining_val, true)
+        (Vec::new(), Vec::new(), Decimal::zero(), true)
     }
 }
 
@@ -518,7 +518,7 @@ fn create_orders(
         }
         None => (Decimal::zero(), Decimal::zero(), false),
     };
-    let alloc_val_for_new_orders = get_alloc_bal_new_orders(inv_val, is_same_side, position_margin, state.active_capital) - orders_remaining_val;
+    let alloc_val_for_new_orders = sub_no_overflow(get_alloc_bal_new_orders(inv_val, is_same_side, position_margin, state.active_capital), orders_remaining_val);
     if orders_to_keep.len() == 0 {
         let (new_orders, _) = base_deriv(
             new_head,
