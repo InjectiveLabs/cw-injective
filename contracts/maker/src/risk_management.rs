@@ -22,7 +22,7 @@ pub fn sanity_check(_position: &Option<WrappedPosition>, _inv_base_ball: Decimal
 /// that already has a position open.
 /// # Arguments
 /// * `inv_val` - The total notional value of the inventory
-/// * `margin` - The margin value of an open position 
+/// * `margin` - The margin value of an open position
 /// * `is_same_side` - True if the side is the same as the position
 /// * `active_capital` - The factor by which we multiply the inventory val to get total capital that should be on the book (between 0..1)
 /// # Returns
