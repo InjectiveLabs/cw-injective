@@ -513,7 +513,7 @@ fn create_orders(
             if position.is_long == is_buy {
                 (Decimal::zero(), position.margin, true)
             } else {
-                (position.quantity, Decimal::zero(), false)
+                (position.quantity, position.margin, false)
             }
         }
         None => (Decimal::zero(), Decimal::zero(), false),
