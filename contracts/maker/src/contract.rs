@@ -435,7 +435,7 @@ fn get_action(
 
         let batch_order = MsgBatchUpdateOrders {
             sender: env.contract.address.to_string(),
-            subaccount_id: state.subaccount_id,
+            subaccount_id: String::from(""), // use only when passing market ids to cancel all: state.subaccount_id,
             spot_market_ids_to_cancel_all: Vec::new(),
             derivative_market_ids_to_cancel_all: vec![],
             spot_orders_to_cancel: Vec::new(),

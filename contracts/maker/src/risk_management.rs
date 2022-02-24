@@ -19,7 +19,7 @@ pub fn sanity_check(_position: &Option<WrappedPosition>, _inv_base_ball: Decimal
 
 /// Determines the notional balance that we are willing to assign to either the buy/sell side.
 /// Takes into consideration the current margin to limit the new open orders on the side
-/// that already has a positon open.
+/// that already has a position open.
 /// # Arguments
 /// * `inv_val` - The total notional value of the inventory
 /// * `margin` - The margin value of an open position (is zero if the position is on the opposite side or if there isn't one)
