@@ -411,7 +411,6 @@ fn get_action(
             buy_orders_to_cancel,
             buy_orders_to_keep,
             buy_margined_val_from_orders_remaining,
-            buy_margined_val_from_cancelled,
             buy_append_to_new_head,
         ) = orders_to_cancel(open_buys, new_buy_head, new_buy_tail, true, &state);
 
@@ -420,7 +419,6 @@ fn get_action(
             sell_orders_to_cancel,
             sell_orders_to_keep,
             sell_margined_val_from_orders_remaining,
-            sell_margined_val_from_cancelled,
             sell_append_to_new_head,
         ) = orders_to_cancel(open_sells, new_sell_head, new_sell_tail, false, &state);
 
@@ -431,7 +429,6 @@ fn get_action(
             inv_val,
             buy_orders_to_keep,
             buy_margined_val_from_orders_remaining,
-            buy_margined_val_from_cancelled,
             position.clone(),
             buy_append_to_new_head,
             true,
@@ -444,7 +441,6 @@ fn get_action(
             inv_val,
             sell_orders_to_keep,
             sell_margined_val_from_orders_remaining,
-            sell_margined_val_from_cancelled,
             position,
             sell_append_to_new_head,
             false,
@@ -489,12 +485,11 @@ pub fn orders_to_cancel(
     new_tail: Decimal,
     is_buy: bool,
     state: &State,
-) -> (Vec<OrderData>, Vec<WrappedDerivativeLimitOrder>, Decimal, Decimal, bool) {
+) -> (Vec<OrderData>, Vec<WrappedDerivativeLimitOrder>, Decimal, bool) {
     // If there are any open orders, we need to check them to see if we should cancel
     if open_orders.len() > 0 {
         let mut margined_val_from_orders_remaining = Decimal::zero();
         let mut orders_to_cancel: Vec<OrderData> = Vec::new();
-        let mut margined_val_from_cancelled = Decimal::zero();
         // Use the new tail/head to filter out the orders to cancel
         let orders_to_keep: Vec<WrappedDerivativeLimitOrder> = open_orders
             .into_iter()
@@ -506,7 +501,6 @@ pub fn orders_to_cancel(
                     margined_val_from_orders_remaining = margined_val_from_orders_remaining + o.margin;
                 } else {
                     orders_to_cancel.push(OrderData::new(&o, state));
-                    margined_val_from_cancelled = margined_val_from_cancelled + o.margin;
                 }
                 keep
             })
@@ -519,11 +513,10 @@ pub fn orders_to_cancel(
             orders_to_cancel,
             orders_to_keep,
             margined_val_from_orders_remaining,
-            margined_val_from_cancelled,
             append_to_new_head,
         )
     } else {
-        (Vec::new(), Vec::new(), Decimal::zero(), Decimal::zero(), true)
+        (Vec::new(), Vec::new(), Decimal::zero(), true)
     }
 }
 
@@ -533,7 +526,6 @@ fn create_orders(
     inv_val: Decimal,
     orders_to_keep: Vec<WrappedDerivativeLimitOrder>,
     margined_val_from_orders_remaining: Decimal,
-    margined_val_from_cancelled: Decimal,
     position: Option<WrappedPosition>,
     append_to_new_head: bool,
     is_buy: bool,
@@ -555,9 +547,9 @@ fn create_orders(
         is_same_side,
         position_margin,
         state.active_capital,
-        margined_val_from_cancelled,
         margined_val_from_orders_remaining,
     );
+    println!("alloc bal {}", alloc_val_for_new_orders);
     if orders_to_keep.len() == 0 {
         let (new_orders, _, _) = base_deriv(
             new_head,
@@ -702,28 +694,28 @@ mod tests {
 
     #[test]
     fn cancellation_test() {
-        let inv_val = Decimal::from_str("10000000").unwrap();
-        let value = Decimal::from_str("1000000").unwrap();
-        let mp = Decimal::from_str("1000").unwrap();
+        let inv_val = Decimal::from_str("1000").unwrap();
+        let value = Decimal::from_str("62.5").unwrap();
+        let mp = Decimal::from_str("20").unwrap();
         let price_step_mult = Decimal::from_str("1").unwrap();
         let leverage = Decimal::from_str("1").unwrap();
 
         let state = mock_state("1".to_string(), "10".to_string());
-        let open_buys = mock_wrapped_deriv_limit(value, mp, price_step_mult, 5, 10, true, leverage);
+        let open_buys = mock_wrapped_deriv_limit(value, mp, price_step_mult, 2, 10, true, leverage);
 
         open_buys.iter().for_each(|o| {
             println!("{} {} {} {}", o.order_hash, o.order_info.price, o.order_info.quantity, o.margin);
         });
-        let new_head = Decimal::from_str("1001").unwrap();
-        let new_tail = Decimal::from_str("992").unwrap();
-        let (orders_to_cancel, orders_to_keep, margined_val_from_orders_remaining, margined_val_from_cancelled, append_to_new_head) =
+        let new_head = Decimal::from_str("15").unwrap();
+        let new_tail = Decimal::from_str("6").unwrap();
+        let (orders_to_cancel, orders_to_keep, margined_val_from_orders_remaining, append_to_new_head) =
             orders_to_cancel(open_buys, new_head, new_tail, true, &state);
 
         let position = WrappedPosition {
-            is_long: false,
-            quantity: Decimal::from_str("5004").unwrap(),
+            is_long: true,
+            quantity: Decimal::from_str("5").unwrap(),
             entry_price: Decimal::zero(),
-            margin: Decimal::from_str("50000000").unwrap(),
+            margin: Decimal::from_str("125").unwrap(),
             cumulative_funding_entry: Decimal::zero(),
         };
         let (orders, cancels) = create_orders(
@@ -732,15 +724,14 @@ mod tests {
             inv_val,
             orders_to_keep.clone(),
             margined_val_from_orders_remaining,
-            margined_val_from_cancelled,
-            Some(position),
+            Some(position.clone()),
             append_to_new_head,
             true,
             &state,
             &mock_market(),
         );
         orders.iter().for_each(|o| {
-            println!("{} {} {}", o.order_info.price, o.order_info.quantity, o.margin);
+            println!(" {} {} {}", o.order_info.price, o.order_info.quantity, o.margin);
         });
         orders_to_cancel.iter().for_each(|o| {
             println!("cancel from h-t {}", o.order_hash);
@@ -750,8 +741,17 @@ mod tests {
         });
         println!("{}", orders_to_keep.len());
         println!("{}", margined_val_from_orders_remaining);
-        println!("{}", margined_val_from_cancelled);
         println!("{}", append_to_new_head);
+        let mut val = Decimal::zero();
+        orders.iter().for_each(|o| val = val + o.get_margin());
+        orders_to_keep.iter().for_each(|o| val = val + o.margin);
+
+        let expected_val = div_dec(inv_val, Decimal::from_str("2").unwrap());
+        if position.is_long {
+            println!("{} {}", val + position.margin, expected_val);
+        } else {
+            println!("{} {}", val , expected_val);
+        }
     }
 
     #[test]

@@ -50,7 +50,6 @@ pub fn base_deriv(
     state: &State,
     market: &WrappedDerivativeMarket,
 ) -> (Vec<DerivativeOrder>, Decimal, Decimal) {
-    println!("bal2 {}", alloc_val_for_new_orders);
     let mut orders_to_open: Vec<DerivativeOrder> = Vec::new();
     let num_open_orders = Uint256::from_str(&num_orders_to_keep.to_string()).unwrap();
     let num_orders_to_open = state.order_density - num_open_orders;
@@ -119,7 +118,7 @@ pub fn tail_to_head_deriv(
         market,
     );
     let (additional_orders_to_cancel, orders_to_open_b, _, _) =
-        handle_reduce_only(orders_to_keep.clone(), alloc_val_for_new_orders, position_qty, is_buy, state, market);
+        handle_reduce_only(orders_to_keep.clone(), alloc_val_for_new_orders, position_qty, false, is_buy, state, market);
     (vec![orders_to_open_a, orders_to_open_b].concat(), additional_orders_to_cancel)
 }
 
@@ -134,7 +133,7 @@ pub fn head_to_tail_deriv(
 ) -> (Vec<DerivativeOrder>, Vec<OrderData>) {
     println!("bal: {}", alloc_val_for_new_orders);
     let (additional_orders_to_cancel, orders_to_open_a, alloc_val_for_new_orders, position_qty) =
-        handle_reduce_only(orders_to_keep.clone(), alloc_val_for_new_orders, position_qty, is_buy, state, market);
+        handle_reduce_only(orders_to_keep.clone(), alloc_val_for_new_orders, position_qty, true, is_buy, state, market);
     let (orders_to_open_b, _, _) = base_deriv(
         orders_to_keep.last().unwrap().order_info.price,
         new_tail,
@@ -153,6 +152,7 @@ fn handle_reduce_only(
     orders_to_keep: Vec<WrappedDerivativeLimitOrder>,
     mut alloc_val_for_new_orders: Decimal,
     mut position_qty: Decimal,
+    is_first: bool,
     is_buy: bool,
     state: &State,
     market: &WrappedDerivativeMarket,
@@ -166,7 +166,9 @@ fn handle_reduce_only(
                 let new_order_reduce = DerivativeOrder::new(state, o.order_info.price, position_qty, is_buy, true, market);
                 additional_orders_to_open.push(new_order_reduce);
                 position_qty = Decimal::zero();
-                alloc_val_for_new_orders = alloc_val_for_new_orders + o.margin;
+                if !is_first {
+                    alloc_val_for_new_orders = alloc_val_for_new_orders + o.margin;
+                }
             } else {
                 if o.is_reduce_only() {
                     position_qty = position_qty - o.order_info.quantity;
@@ -176,7 +178,9 @@ fn handle_reduce_only(
                     let new_order_reduce = DerivativeOrder::new(state, o.order_info.price, o.order_info.quantity, is_buy, true, market);
                     additional_orders_to_open.push(new_order_reduce);
                     position_qty = position_qty - o.order_info.quantity;
-                    alloc_val_for_new_orders = alloc_val_for_new_orders + o.margin;
+                    if !is_first {
+                        alloc_val_for_new_orders = alloc_val_for_new_orders + o.margin;
+                    }
                 }
             }
         } else {
