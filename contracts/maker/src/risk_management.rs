@@ -40,8 +40,7 @@ pub fn get_alloc_bal_new_orders(
     if is_same_side {
         sub_no_overflow(alloc_one_side, margin)
     } else {
-
-        alloc_one_side 
+        alloc_one_side
     }
 }
 

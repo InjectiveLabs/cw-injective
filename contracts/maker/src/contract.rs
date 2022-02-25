@@ -407,20 +407,12 @@ fn get_action(
         let (new_buy_tail, new_sell_tail) = new_tail_prices(new_buy_head, new_sell_head, mid_price, state.tail_dist_from_mid, state.min_tail_dist);
 
         // Get information for buy order creation/cancellation
-        let (
-            buy_orders_to_cancel,
-            buy_orders_to_keep,
-            buy_margined_val_from_orders_remaining,
-            buy_append_to_new_head,
-        ) = orders_to_cancel(open_buys, new_buy_head, new_buy_tail, true, &state);
+        let (buy_orders_to_cancel, buy_orders_to_keep, buy_margined_val_from_orders_remaining, buy_append_to_new_head) =
+            orders_to_cancel(open_buys, new_buy_head, new_buy_tail, true, &state);
 
         // Get information for sell order creation/cancellation
-        let (
-            sell_orders_to_cancel,
-            sell_orders_to_keep,
-            sell_margined_val_from_orders_remaining,
-            sell_append_to_new_head,
-        ) = orders_to_cancel(open_sells, new_sell_head, new_sell_tail, false, &state);
+        let (sell_orders_to_cancel, sell_orders_to_keep, sell_margined_val_from_orders_remaining, sell_append_to_new_head) =
+            orders_to_cancel(open_sells, new_sell_head, new_sell_tail, false, &state);
 
         // Get new buy/sell orders
         let (buy_orders_to_open, additional_buys_to_cancel) = create_orders(
@@ -509,12 +501,7 @@ pub fn orders_to_cancel(
         // append to the end of the block of orders we will be keeping
         let append_to_new_head =
             sub_abs(new_head, orders_to_keep.first().unwrap().order_info.price) > sub_abs(orders_to_keep.last().unwrap().order_info.price, new_tail);
-        (
-            orders_to_cancel,
-            orders_to_keep,
-            margined_val_from_orders_remaining,
-            append_to_new_head,
-        )
+        (orders_to_cancel, orders_to_keep, margined_val_from_orders_remaining, append_to_new_head)
     } else {
         (Vec::new(), Vec::new(), Decimal::zero(), true)
     }
@@ -750,7 +737,7 @@ mod tests {
         if position.is_long {
             println!("{} {}", val + position.margin, expected_val);
         } else {
-            println!("{} {}", val , expected_val);
+            println!("{} {}", val, expected_val);
         }
     }
 

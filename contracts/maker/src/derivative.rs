@@ -117,8 +117,15 @@ pub fn tail_to_head_deriv(
         state,
         market,
     );
-    let (additional_orders_to_cancel, orders_to_open_b, _, _) =
-        handle_reduce_only(orders_to_keep.clone(), alloc_val_for_new_orders, position_qty, false, is_buy, state, market);
+    let (additional_orders_to_cancel, orders_to_open_b, _, _) = handle_reduce_only(
+        orders_to_keep.clone(),
+        alloc_val_for_new_orders,
+        position_qty,
+        false,
+        is_buy,
+        state,
+        market,
+    );
     (vec![orders_to_open_a, orders_to_open_b].concat(), additional_orders_to_cancel)
 }
 
@@ -132,8 +139,15 @@ pub fn head_to_tail_deriv(
     market: &WrappedDerivativeMarket,
 ) -> (Vec<DerivativeOrder>, Vec<OrderData>) {
     println!("bal: {}", alloc_val_for_new_orders);
-    let (additional_orders_to_cancel, orders_to_open_a, alloc_val_for_new_orders, position_qty) =
-        handle_reduce_only(orders_to_keep.clone(), alloc_val_for_new_orders, position_qty, true, is_buy, state, market);
+    let (additional_orders_to_cancel, orders_to_open_a, alloc_val_for_new_orders, position_qty) = handle_reduce_only(
+        orders_to_keep.clone(),
+        alloc_val_for_new_orders,
+        position_qty,
+        true,
+        is_buy,
+        state,
+        market,
+    );
     let (orders_to_open_b, _, _) = base_deriv(
         orders_to_keep.last().unwrap().order_info.price,
         new_tail,
