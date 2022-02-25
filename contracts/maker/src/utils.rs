@@ -22,7 +22,7 @@ pub fn div_dec(num: Decimal, denom: Decimal) -> Decimal {
 }
 
 pub fn sub_abs(lhs: Decimal, rhs: Decimal) -> Decimal {
-    if lhs > rhs {
+    if lhs.gt(&rhs)  {
         lhs - rhs
     } else {
         rhs - lhs
@@ -30,7 +30,7 @@ pub fn sub_abs(lhs: Decimal, rhs: Decimal) -> Decimal {
 }
 
 pub fn sub_no_overflow(lhs: Decimal, rhs: Decimal) -> Decimal {
-    if lhs > rhs {
+    if lhs.gt(&rhs) {
         lhs - rhs
     } else {
         Decimal::zero()
