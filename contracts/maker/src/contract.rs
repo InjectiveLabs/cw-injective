@@ -425,7 +425,7 @@ fn get_action(
         ) = orders_to_cancel(open_sells, new_sell_head, new_sell_tail, false, &state);
 
         // Get new buy/sell orders
-        let buy_orders_to_open = create_orders(
+        let (buy_orders_to_open, additional_buys_to_cancel) = create_orders(
             new_buy_head,
             new_buy_tail,
             inv_val,
@@ -434,12 +434,11 @@ fn get_action(
             buy_margined_val_from_cancelled,
             position.clone(),
             buy_append_to_new_head,
-            &mut buy_orders_to_cancel,
             true,
             &state,
             &market,
         );
-        let sell_orders_to_open = create_orders(
+        let (sell_orders_to_open, additional_sells_to_cancel) = create_orders(
             new_sell_head,
             new_sell_tail,
             inv_val,
@@ -448,7 +447,6 @@ fn get_action(
             sell_margined_val_from_cancelled,
             position,
             sell_append_to_new_head,
-            &mut sell_orders_to_cancel,
             false,
             &state,
             &market,
@@ -467,7 +465,13 @@ fn get_action(
             spot_market_ids_to_cancel_all: Vec::new(),
             derivative_market_ids_to_cancel_all: vec![],
             spot_orders_to_cancel: Vec::new(),
-            derivative_orders_to_cancel: vec![buy_orders_to_cancel, sell_orders_to_cancel].concat(),
+            derivative_orders_to_cancel: vec![
+                buy_orders_to_cancel,
+                sell_orders_to_cancel,
+                additional_buys_to_cancel,
+                additional_sells_to_cancel,
+            ]
+            .concat(),
             spot_orders_to_create: Vec::new(),
             derivative_orders_to_create,
         };
@@ -532,11 +536,10 @@ fn create_orders(
     margined_val_from_cancelled: Decimal,
     position: Option<WrappedPosition>,
     append_to_new_head: bool,
-    orders_to_cancel: &mut Vec<OrderData>,
     is_buy: bool,
     state: &State,
     market: &WrappedDerivativeMarket,
-) -> Vec<DerivativeOrder> {
+) -> (Vec<DerivativeOrder>, Vec<OrderData>) {
     let (position_qty, position_margin, is_same_side) = match position {
         Some(position) => {
             if position.is_long == is_buy {
@@ -563,17 +566,11 @@ fn create_orders(
             &state,
             market,
         );
-        new_orders
+        (new_orders, Vec::new())
     } else if append_to_new_head {
-        let (new_orders, mut additional_hashes_to_cancel) =
-            tail_to_head_deriv(new_head, alloc_val_for_new_orders, orders_to_keep, position_qty, is_buy, &state, market);
-        orders_to_cancel.append(&mut additional_hashes_to_cancel);
-        new_orders
+        tail_to_head_deriv(new_head, alloc_val_for_new_orders, orders_to_keep, position_qty, is_buy, &state, market)
     } else {
-        let (new_orders, mut additional_hashes_to_cancel) =
-            head_to_tail_deriv(new_tail, alloc_val_for_new_orders, orders_to_keep, position_qty, is_buy, &state, market);
-        orders_to_cancel.append(&mut additional_hashes_to_cancel);
-        new_orders
+        head_to_tail_deriv(new_tail, alloc_val_for_new_orders, orders_to_keep, position_qty, is_buy, &state, market)
     }
 }
 

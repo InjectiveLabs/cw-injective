@@ -104,7 +104,7 @@ pub fn tail_to_head_deriv(
     state: &State,
     market: &WrappedDerivativeMarket,
 ) -> (Vec<DerivativeOrder>, Vec<OrderData>) {
-    let (mut orders_to_open, position_qty) = base_deriv(
+    let (orders_to_open_a, position_qty) = base_deriv(
         new_head,
         orders_to_keep.first().unwrap().order_info.price,
         alloc_val_for_new_orders,
@@ -115,8 +115,8 @@ pub fn tail_to_head_deriv(
         state,
         market,
     );
-    let additional_orders_to_cancel = handle_reduce_only(orders_to_keep.clone(), position_qty, &mut orders_to_open, is_buy, state, market);
-    (orders_to_open, additional_orders_to_cancel)
+    let (additional_orders_to_cancel, orders_to_open_b) = handle_reduce_only(orders_to_keep.clone(), position_qty, is_buy, state, market);
+    (vec![orders_to_open_a, orders_to_open_b].concat(), additional_orders_to_cancel)
 }
 
 pub fn head_to_tail_deriv(
@@ -128,9 +128,8 @@ pub fn head_to_tail_deriv(
     state: &State,
     market: &WrappedDerivativeMarket,
 ) -> (Vec<DerivativeOrder>, Vec<OrderData>) {
-    let mut orders_to_open: Vec<DerivativeOrder> = Vec::new();
-    let additional_orders_to_cancel = handle_reduce_only(orders_to_keep.clone(), position_qty, &mut orders_to_open, is_buy, state, market);
-    let (mut orders_to_open_b, _) = base_deriv(
+    let (additional_orders_to_cancel, orders_to_open_a) = handle_reduce_only(orders_to_keep.clone(), position_qty, is_buy, state, market);
+    let (orders_to_open_b, _) = base_deriv(
         orders_to_keep.last().unwrap().order_info.price,
         new_tail,
         alloc_val_for_new_orders,
@@ -141,25 +140,24 @@ pub fn head_to_tail_deriv(
         state,
         market,
     );
-    orders_to_open.append(&mut orders_to_open_b);
-    (orders_to_open, additional_orders_to_cancel)
+    (vec![orders_to_open_a, orders_to_open_b].concat(), additional_orders_to_cancel)
 }
 
 fn handle_reduce_only(
     orders_to_keep: Vec<WrappedDerivativeLimitOrder>,
     mut position_qty: Decimal,
-    orders_to_open: &mut Vec<DerivativeOrder>,
     is_buy: bool,
     state: &State,
     market: &WrappedDerivativeMarket,
-) -> Vec<OrderData> {
+) -> (Vec<OrderData>, Vec<DerivativeOrder>) {
+    let mut additional_orders_to_open: Vec<DerivativeOrder> = Vec::new();
     let mut additional_orders_to_cancel: Vec<OrderData> = Vec::new();
     orders_to_keep.iter().for_each(|o| {
         if position_qty > Decimal::zero() {
             if o.order_info.quantity > position_qty {
                 additional_orders_to_cancel.push(OrderData::new(o, state));
                 let new_order_reduce = DerivativeOrder::new(state, o.order_info.price, position_qty, is_buy, true, market);
-                orders_to_open.push(new_order_reduce);
+                additional_orders_to_open.push(new_order_reduce);
                 position_qty = Decimal::zero();
             } else {
                 if o.is_reduce_only() {
@@ -168,7 +166,7 @@ fn handle_reduce_only(
                     // This whole order should be reduce only
                     additional_orders_to_cancel.push(OrderData::new(o, state));
                     let new_order_reduce = DerivativeOrder::new(state, o.order_info.price, o.order_info.quantity, is_buy, true, market);
-                    orders_to_open.push(new_order_reduce);
+                    additional_orders_to_open.push(new_order_reduce);
                     position_qty = position_qty - o.order_info.quantity;
                 }
             }
@@ -183,11 +181,11 @@ fn handle_reduce_only(
                     false,
                     market,
                 );
-                orders_to_open.push(new_order);
+                additional_orders_to_open.push(new_order);
             }
         }
     });
-    additional_orders_to_cancel
+    (additional_orders_to_cancel, additional_orders_to_open)
 }
 
 #[cfg(test)]
@@ -330,23 +328,9 @@ mod tests {
             true,
             leverage,
         );
-        handle_reduce_only_test(orders_to_keep.clone(), Decimal::zero(), &mut Vec::new(), true, &state, &market);
-        handle_reduce_only_test(
-            orders_to_keep.clone(),
-            Decimal::from_str("2").unwrap(),
-            &mut Vec::new(),
-            true,
-            &state,
-            &market,
-        );
-        handle_reduce_only_test(
-            orders_to_keep,
-            Decimal::from_str("200000000").unwrap(),
-            &mut Vec::new(),
-            true,
-            &state,
-            &market,
-        );
+        handle_reduce_only_test(orders_to_keep.clone(), Decimal::zero(), true, &state, &market);
+        handle_reduce_only_test(orders_to_keep.clone(), Decimal::from_str("2").unwrap(), true, &state, &market);
+        handle_reduce_only_test(orders_to_keep, Decimal::from_str("200000000").unwrap(), true, &state, &market);
 
         let orders_to_keep = mock_wrapped_deriv_limit(
             Decimal::from_str("10000000000000000").unwrap(),
@@ -356,23 +340,9 @@ mod tests {
             true,
             leverage,
         );
-        handle_reduce_only_test(orders_to_keep.clone(), Decimal::zero(), &mut Vec::new(), true, &state, &market);
-        handle_reduce_only_test(
-            orders_to_keep.clone(),
-            Decimal::from_str("2").unwrap(),
-            &mut Vec::new(),
-            true,
-            &state,
-            &market,
-        );
-        handle_reduce_only_test(
-            orders_to_keep,
-            Decimal::from_str("200000000").unwrap(),
-            &mut Vec::new(),
-            true,
-            &state,
-            &market,
-        );
+        handle_reduce_only_test(orders_to_keep.clone(), Decimal::zero(), true, &state, &market);
+        handle_reduce_only_test(orders_to_keep.clone(), Decimal::from_str("2").unwrap(), true, &state, &market);
+        handle_reduce_only_test(orders_to_keep, Decimal::from_str("200000000").unwrap(), true, &state, &market);
     }
 
     #[test]
@@ -388,23 +358,9 @@ mod tests {
             false,
             leverage,
         );
-        handle_reduce_only_test(orders_to_keep.clone(), Decimal::zero(), &mut Vec::new(), false, &state, &market);
-        handle_reduce_only_test(
-            orders_to_keep.clone(),
-            Decimal::from_str("2").unwrap(),
-            &mut Vec::new(),
-            false,
-            &state,
-            &market,
-        );
-        handle_reduce_only_test(
-            orders_to_keep,
-            Decimal::from_str("200000000").unwrap(),
-            &mut Vec::new(),
-            false,
-            &state,
-            &market,
-        );
+        handle_reduce_only_test(orders_to_keep.clone(), Decimal::zero(), false, &state, &market);
+        handle_reduce_only_test(orders_to_keep.clone(), Decimal::from_str("2").unwrap(), false, &state, &market);
+        handle_reduce_only_test(orders_to_keep, Decimal::from_str("200000000").unwrap(), false, &state, &market);
 
         let orders_to_keep = mock_wrapped_deriv_limit(
             Decimal::from_str("10000000000000000").unwrap(),
@@ -414,23 +370,9 @@ mod tests {
             false,
             leverage,
         );
-        handle_reduce_only_test(orders_to_keep.clone(), Decimal::zero(), &mut Vec::new(), false, &state, &market);
-        handle_reduce_only_test(
-            orders_to_keep.clone(),
-            Decimal::from_str("2").unwrap(),
-            &mut Vec::new(),
-            false,
-            &state,
-            &market,
-        );
-        handle_reduce_only_test(
-            orders_to_keep,
-            Decimal::from_str("200000000").unwrap(),
-            &mut Vec::new(),
-            false,
-            &state,
-            &market,
-        );
+        handle_reduce_only_test(orders_to_keep.clone(), Decimal::zero(), false, &state, &market);
+        handle_reduce_only_test(orders_to_keep.clone(), Decimal::from_str("2").unwrap(), false, &state, &market);
+        handle_reduce_only_test(orders_to_keep, Decimal::from_str("200000000").unwrap(), false, &state, &market);
     }
 
     // Test Helpers
@@ -523,12 +465,11 @@ mod tests {
     fn handle_reduce_only_test(
         orders_to_keep: Vec<WrappedDerivativeLimitOrder>,
         position_qty: Decimal,
-        orders_to_open: &mut Vec<DerivativeOrder>,
         is_buy: bool,
         state: &State,
         market: &WrappedDerivativeMarket,
     ) {
-        let additional_orders_to_cancel = handle_reduce_only(orders_to_keep.clone(), position_qty, orders_to_open, is_buy, state, market);
+        let (additional_orders_to_cancel, orders_to_open) = handle_reduce_only(orders_to_keep.clone(), position_qty, is_buy, state, market);
         let mut total_val_before: Decimal = Decimal::zero();
         for order in orders_to_keep.iter() {
             total_val_before = total_val_before + (order.order_info.price * order.order_info.quantity);
