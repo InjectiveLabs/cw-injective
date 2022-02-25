@@ -408,7 +408,7 @@ fn get_action(
 
         // Get information for buy order creation/cancellation
         let (
-            mut buy_orders_to_cancel,
+            buy_orders_to_cancel,
             buy_orders_to_keep,
             buy_margined_val_from_orders_remaining,
             buy_margined_val_from_cancelled,
@@ -417,7 +417,7 @@ fn get_action(
 
         // Get information for sell order creation/cancellation
         let (
-            mut sell_orders_to_cancel,
+            sell_orders_to_cancel,
             sell_orders_to_keep,
             sell_margined_val_from_orders_remaining,
             sell_margined_val_from_cancelled,
@@ -550,12 +550,10 @@ fn create_orders(
         }
         None => (Decimal::zero(), Decimal::zero(), false),
     };
-    let alloc_val_for_new_orders = sub_no_overflow(
-        get_alloc_bal_new_orders(inv_val, is_same_side, position_margin, state.active_capital) + margined_val_from_cancelled,
-        margined_val_from_orders_remaining,
-    );
+    let alloc_val_for_new_orders = 
+        get_alloc_bal_new_orders(inv_val, is_same_side, position_margin, state.active_capital, margined_val_from_cancelled, margined_val_from_orders_remaining);
     if orders_to_keep.len() == 0 {
-        let (new_orders, _) = base_deriv(
+        let (new_orders, _, _) = base_deriv(
             new_head,
             new_tail,
             alloc_val_for_new_orders,
@@ -685,11 +683,59 @@ fn split_open_orders(open_orders: Vec<WrappedDerivativeLimitOrder>) -> (Vec<Wrap
 
 #[cfg(test)]
 mod tests {
-    use crate::exchange::{WrappedDerivativeLimitOrder, WrappedOrderInfo};
+    use crate::{exchange::{WrappedDerivativeLimitOrder, WrappedOrderInfo, WrappedPosition, WrappedDerivativeMarket, DerivativeMarket}, utils::div_dec, state::State, contract::create_orders};
 
-    use super::{head_chg_is_gt_tol, new_tail_prices, split_open_orders};
-    use cosmwasm_std::Decimal256 as Decimal;
+    use super::{head_chg_is_gt_tol, new_tail_prices, split_open_orders, orders_to_cancel};
+    use cosmwasm_std::{Decimal256 as Decimal, Uint256};
     use std::str::FromStr;
+
+    #[test]
+    fn cancellation_test() {
+        let inv_val = Decimal::from_str("10000000").unwrap();
+        let value = Decimal::from_str("1000000").unwrap();
+        let mp = Decimal::from_str("1000").unwrap();
+        let price_step_mult = Decimal::from_str("1").unwrap();
+        let leverage = Decimal::from_str("1").unwrap();
+
+        let state = mock_state("1".to_string(), "10".to_string());
+        let open_buys = mock_wrapped_deriv_limit(value, mp, price_step_mult, 5, 10, true, leverage);
+
+        open_buys.iter().for_each(|o| {
+            println!("{} {} {} {}", o.order_hash, o.order_info.price, o.order_info.quantity, o.margin);
+        });
+        let new_head = Decimal::from_str("1001").unwrap();
+        let new_tail = Decimal::from_str("992").unwrap();
+        let (
+            orders_to_cancel,
+            orders_to_keep,
+            margined_val_from_orders_remaining,
+            margined_val_from_cancelled,
+            append_to_new_head,
+        ) = orders_to_cancel(open_buys, new_head, new_tail, true, &state);
+        
+        
+        let position = WrappedPosition {
+             is_long: false,
+             quantity: Decimal::from_str("5004").unwrap(),
+             entry_price: Decimal::zero(),
+             margin: Decimal::from_str("50000000").unwrap(),
+             cumulative_funding_entry: Decimal::zero(),
+        };
+        let (orders, cancels) = create_orders(new_head, new_tail, inv_val, orders_to_keep.clone(), margined_val_from_orders_remaining, margined_val_from_cancelled, Some(position), append_to_new_head, true, &state, &mock_market());
+        orders.iter().for_each(|o| {
+            println!("{} {} {}", o.order_info.price, o.order_info.quantity, o.margin);
+        });
+        orders_to_cancel.iter().for_each(|o| {
+            println!("cancel from h-t {}", o.order_hash);
+        });
+        cancels.iter().for_each(|o| {
+            println!("cancel from new o {}", o.order_hash);
+        });
+        println!("{}", orders_to_keep.len());
+        println!("{}", margined_val_from_orders_remaining);
+        println!("{}", margined_val_from_cancelled);
+        println!("{}", append_to_new_head);
+    }
 
     #[test]
     fn head_chg_is_gt_tol_test() {
@@ -787,5 +833,85 @@ mod tests {
             assert!(sell_orders[i].order_info.price > sell_orders[i - 1].order_info.price);
             // These should be increasing
         }
+    }
+
+    fn mock_wrapped_deriv_limit(
+        value: Decimal,
+        mp: Decimal,
+        price_step_mult: Decimal,
+        num_reduce_only: usize,
+        num_orders: usize,
+        is_buy: bool,
+        leverage: Decimal,
+    ) -> Vec<WrappedDerivativeLimitOrder> {
+        let mut orders: Vec<WrappedDerivativeLimitOrder> = Vec::new();
+        for i in 0..num_orders {
+            let price = if is_buy {
+                mp - (Decimal::from_str(&i.to_string()).unwrap() * price_step_mult)
+            } else {
+                mp + (Decimal::from_str(&i.to_string()).unwrap() * price_step_mult)
+            };
+            let quantity = div_dec(value, price);
+            let margin = if i < num_reduce_only {
+                Decimal::zero()
+            } else {
+                div_dec(quantity * price, leverage)
+            };
+            orders.push(WrappedDerivativeLimitOrder {
+                trigger_price: None,
+                order_info: WrappedOrderInfo {
+                    subaccount_id: "".to_string(),
+                    fee_recipient: "".to_string(),
+                    price,
+                    quantity,
+                },
+                order_type: 0,
+                margin,
+                fillable: Decimal::zero(),
+                order_hash: i.to_string(),
+            });
+        }
+        orders
+    }
+
+    fn mock_state(leverage: String, order_density: String) -> State {
+        State {
+            market_id: String::from(""),
+            is_deriv: true,
+            subaccount_id: String::from(""),
+            order_density: Uint256::from_str(&order_density).unwrap(),
+            active_capital: Decimal::from_str("1").unwrap(),
+            min_tail_dist: Decimal::from_str("0.03").unwrap(),
+            tail_dist_from_mid: Decimal::from_str("0.06").unwrap(),
+            head_chg_tol: Decimal::zero(),
+            leverage: Decimal::from_str(&leverage).unwrap(),
+            reservation_param: Decimal::zero(),
+            spread_param: Decimal::zero(),
+            max_market_data_delay: 0,
+            fee_recipient: String::from(""),
+            cw_20_contract: None,
+        }
+    }
+
+    fn mock_market() -> WrappedDerivativeMarket {
+        DerivativeMarket {
+            ticker: String::from(""),
+            oracle_base: String::from(""),
+            oracle_quote: String::from(""),
+            oracle_type: 0,
+            oracle_scale_factor: 0,
+            quote_denom: String::from(""),
+            market_id: String::from(""),
+            initial_margin_ratio: String::from("0"),
+            maintenance_margin_ratio: String::from("0"),
+            maker_fee_rate: String::from("0"),
+            taker_fee_rate: String::from("0"),
+            isPerpetual: true,
+            status: 0,
+            min_price_tick_size: String::from("1000"),
+            min_quantity_tick_size: String::from("0.00001"),
+        }
+        .wrap()
+        .unwrap()
     }
 }
