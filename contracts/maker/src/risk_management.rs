@@ -38,12 +38,9 @@ pub fn get_alloc_bal_new_orders(inv_val: Decimal, is_same_side: bool, margin: De
             margin_skew = Decimal::from_str("0.99").unwrap();
         }
         if is_same_side {
-            sub_no_overflow(alloc_one_side, margin) + (div_dec(alloc_one_side, Decimal::from_str("2").unwrap()) * margin_skew)
+            sub_no_overflow(alloc_one_side, margin) + (div_dec(alloc_one_side, Decimal::from_str("2").unwrap() )* margin_skew)
         } else {
-            sub_no_overflow(
-                alloc_one_side + margin,
-                div_dec(alloc_one_side, Decimal::from_str("2").unwrap()) * margin_skew,
-            )
+            sub_no_overflow(alloc_one_side + margin, div_dec(alloc_one_side, Decimal::from_str("2").unwrap() )* margin_skew)
         }
     }
 }
