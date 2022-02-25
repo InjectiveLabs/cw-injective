@@ -27,13 +27,17 @@ pub fn sanity_check(_position: &Option<WrappedPosition>, _inv_base_ball: Decimal
 /// * `active_capital` - The factor by which we multiply the inventory val to get total capital that should be on the book (between 0..1)
 /// # Returns
 /// * `alloc_bal` - The notional balance we are willing to allocate to one side
-pub fn get_alloc_bal_new_orders(inv_val: Decimal, is_same_side: bool, margin: Decimal, active_capital: Decimal, margined_val_from_cancelled: Decimal, margined_val_from_orders_remaining: Decimal) -> Decimal {
+pub fn get_alloc_bal_new_orders(
+    inv_val: Decimal,
+    is_same_side: bool,
+    margin: Decimal,
+    active_capital: Decimal,
+    margined_val_from_cancelled: Decimal,
+    margined_val_from_orders_remaining: Decimal,
+) -> Decimal {
     let alloc_for_both_sides = inv_val * active_capital;
     let alloc_one_side = div_dec(alloc_for_both_sides, Decimal::from_str("2").unwrap());
-    let alloc_one_side = sub_no_overflow(
-        alloc_one_side + margined_val_from_cancelled,
-        margined_val_from_orders_remaining,
-    );
+    let alloc_one_side = sub_no_overflow(alloc_one_side + margined_val_from_cancelled, margined_val_from_orders_remaining);
     if is_same_side {
         sub_no_overflow(alloc_one_side, margin)
     } else {

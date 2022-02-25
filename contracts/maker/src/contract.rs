@@ -550,8 +550,14 @@ fn create_orders(
         }
         None => (Decimal::zero(), Decimal::zero(), false),
     };
-    let alloc_val_for_new_orders = 
-        get_alloc_bal_new_orders(inv_val, is_same_side, position_margin, state.active_capital, margined_val_from_cancelled, margined_val_from_orders_remaining);
+    let alloc_val_for_new_orders = get_alloc_bal_new_orders(
+        inv_val,
+        is_same_side,
+        position_margin,
+        state.active_capital,
+        margined_val_from_cancelled,
+        margined_val_from_orders_remaining,
+    );
     if orders_to_keep.len() == 0 {
         let (new_orders, _, _) = base_deriv(
             new_head,
@@ -683,9 +689,14 @@ fn split_open_orders(open_orders: Vec<WrappedDerivativeLimitOrder>) -> (Vec<Wrap
 
 #[cfg(test)]
 mod tests {
-    use crate::{exchange::{WrappedDerivativeLimitOrder, WrappedOrderInfo, WrappedPosition, WrappedDerivativeMarket, DerivativeMarket}, utils::div_dec, state::State, contract::create_orders};
+    use crate::{
+        contract::create_orders,
+        exchange::{DerivativeMarket, WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedOrderInfo, WrappedPosition},
+        state::State,
+        utils::div_dec,
+    };
 
-    use super::{head_chg_is_gt_tol, new_tail_prices, split_open_orders, orders_to_cancel};
+    use super::{head_chg_is_gt_tol, new_tail_prices, orders_to_cancel, split_open_orders};
     use cosmwasm_std::{Decimal256 as Decimal, Uint256};
     use std::str::FromStr;
 
@@ -705,23 +716,29 @@ mod tests {
         });
         let new_head = Decimal::from_str("1001").unwrap();
         let new_tail = Decimal::from_str("992").unwrap();
-        let (
-            orders_to_cancel,
-            orders_to_keep,
+        let (orders_to_cancel, orders_to_keep, margined_val_from_orders_remaining, margined_val_from_cancelled, append_to_new_head) =
+            orders_to_cancel(open_buys, new_head, new_tail, true, &state);
+
+        let position = WrappedPosition {
+            is_long: false,
+            quantity: Decimal::from_str("5004").unwrap(),
+            entry_price: Decimal::zero(),
+            margin: Decimal::from_str("50000000").unwrap(),
+            cumulative_funding_entry: Decimal::zero(),
+        };
+        let (orders, cancels) = create_orders(
+            new_head,
+            new_tail,
+            inv_val,
+            orders_to_keep.clone(),
             margined_val_from_orders_remaining,
             margined_val_from_cancelled,
+            Some(position),
             append_to_new_head,
-        ) = orders_to_cancel(open_buys, new_head, new_tail, true, &state);
-        
-        
-        let position = WrappedPosition {
-             is_long: false,
-             quantity: Decimal::from_str("5004").unwrap(),
-             entry_price: Decimal::zero(),
-             margin: Decimal::from_str("50000000").unwrap(),
-             cumulative_funding_entry: Decimal::zero(),
-        };
-        let (orders, cancels) = create_orders(new_head, new_tail, inv_val, orders_to_keep.clone(), margined_val_from_orders_remaining, margined_val_from_cancelled, Some(position), append_to_new_head, true, &state, &mock_market());
+            true,
+            &state,
+            &mock_market(),
+        );
         orders.iter().for_each(|o| {
             println!("{} {} {}", o.order_info.price, o.order_info.quantity, o.margin);
         });
