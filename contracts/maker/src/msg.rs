@@ -55,7 +55,7 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     Config {},
-    // GetTotalLPSupply {},
+    GetTotalLpSupply {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -63,7 +63,7 @@ pub struct WrappedGetActionResponse {
     pub msgs: Vec<ExchangeMsg>,
 }
 
-// #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-// pub struct TotalSupplyResponse {
-//     pub total_supply: i32,
-// }
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct TotalSupplyResponse {
+    pub total_supply: Uint128,
+}

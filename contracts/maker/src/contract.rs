@@ -4,17 +4,19 @@ use crate::exchange::{
     Deposit, DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderData, OrderInfo, PerpetualMarketFunding, PerpetualMarketInfo, Position,
     WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedPosition,
 };
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, WrappedGetActionResponse};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TotalSupplyResponse, WrappedGetActionResponse};
 use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, only_owner};
 use crate::state::{config, config_read, State};
 use crate::utils::{bp_to_dec, div_dec, sub_abs, sub_no_overflow, wrap};
 use cosmwasm_std::{
-    entry_point, to_binary, Addr, Binary, CosmosMsg, Decimal256 as Decimal, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdError, StdResult,
-    SubMsg, Uint128, Uint256, WasmMsg,
+    entry_point, to_binary, Addr, Binary, CosmosMsg, Decimal256 as Decimal, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Reply, Response,
+    StdError, StdResult, SubMsg, Uint128, Uint256, WasmMsg, WasmQuery,
 };
+
+use std::ops::Deref;
 use std::str::FromStr;
 
-use cw20::{Cw20ExecuteMsg, MinterResponse};
+use cw20::{Cw20Contract, Cw20ExecuteMsg, Cw20QueryMsg, MinterResponse, TokenInfoResponse};
 use injective_bindings::{create_batch_update_orders_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper};
 
 use crate::exchange::{ExchangeMsg, MsgBatchUpdateOrders};
@@ -38,7 +40,7 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: Messag
         head_chg_tol: bp_to_dec(Decimal::from_str(&msg.head_chg_tol_bp).unwrap()),
         tail_dist_from_mid: bp_to_dec(Decimal::from_str(&msg.tail_dist_from_mid_bp).unwrap()),
         min_tail_dist: bp_to_dec(Decimal::from_str(&msg.min_tail_dist_bp).unwrap()),
-        lp_token_address: "LP-Token".to_string(),
+        cw_20_contract: None,
     };
 
     config(deps.storage).save(&state)?;
@@ -81,9 +83,10 @@ pub fn reply(deps: DepsMut, _: Env, msg: Reply) -> StdResult<Response> {
 fn handle_instantiate_reply(deps: DepsMut, msg: Reply) -> StdResult<Response> {
     let res = parse_reply_instantiate_data(msg).unwrap();
     let child_contract = deps.api.addr_validate(&res.contract_address)?;
+    let cw_20_contract = Cw20Contract(child_contract);
 
     let mut state = config_read(deps.storage).load().unwrap();
-    state.lp_token_address = child_contract.to_string();
+    state.cw_20_contract = Some(cw_20_contract);
 
     config(deps.storage).save(&state)?;
 
@@ -118,7 +121,7 @@ pub fn mint_to_user(
     amount: Uint128,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let state = config_read(deps.storage).load().unwrap();
-    let lp_token_address = state.lp_token_address.clone();
+    let lp_token_address = state.cw_20_contract.unwrap().addr().to_string();
 
     // Ensure that only exchange module calls this method
     only_owner(&env.contract.address, &sender);
@@ -144,7 +147,7 @@ pub fn burn_from_user(
     amount: Uint128,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let state = config_read(deps.storage).load().unwrap();
-    let lp_token_address = state.lp_token_address.clone();
+    let lp_token_address = state.cw_20_contract.unwrap().addr().to_string();
 
     // Ensure that only exchange module calls this method
     only_owner(&env.contract.address, &sender);
@@ -332,22 +335,28 @@ pub fn begin_blocker(deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Add
 pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&config_read(deps.storage).load()?),
-        // QueryMsg::GetTotalLPSupply {} => to_binary(&get_total_lp_supply(deps)?),
+        QueryMsg::GetTotalLpSupply {} => to_binary(&get_total_lp_supply(deps)?),
     }
 }
 
-// fn get_total_lp_supply(deps: Deps) -> StdResult<TotalSupplyResponse> {
-//     let state = config_read(deps.storage).load().unwrap();
-//     let lp_token_address = state.lp_token_address.clone();
+fn get_total_lp_supply(deps: Deps<InjectiveQueryWrapper>) -> StdResult<TotalSupplyResponse> {
+    let state = config_read(deps.storage).load().unwrap();
+    let lp_token_address = state.cw_20_contract.unwrap().addr().to_string();
 
-//     let token_info_query = Cw20QueryMsg::TokenInfo {};
-//     let cw20_token_info_response = WasmQuery::Smart {
-//         contract_addr: lp_token_address,
-//         msg: to_binary(&token_info_query)?,
-//     };
+    let msg = Cw20QueryMsg::TokenInfo {};
+    let query = WasmQuery::Smart {
+        contract_addr: lp_token_address,
+        msg: to_binary(&msg)?,
+    }
+    .into();
 
-//     Ok(TotalSupplyResponse { total_supply: 123 })
-// }
+    let querier = QuerierWrapper::<Empty>::new(deps.querier.deref());
+    let res: TokenInfoResponse = querier.query(&query)?;
+
+    Ok(TotalSupplyResponse {
+        total_supply: res.total_supply,
+    })
+}
 
 fn get_action(
     deps: DepsMut<InjectiveQueryWrapper>,

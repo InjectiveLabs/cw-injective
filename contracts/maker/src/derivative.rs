@@ -590,8 +590,8 @@ mod tests {
             reservation_param: Decimal::zero(),
             spread_param: Decimal::zero(),
             max_market_data_delay: 0,
-            lp_token_address: String::from(""),
             fee_recipient: String::from(""),
+            cw_20_contract: None,
         }
     }
 
