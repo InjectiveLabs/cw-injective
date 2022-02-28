@@ -74,7 +74,6 @@ pub fn base_deriv(
                 // If there is no position qty, no need to make reduce only orders
                 let new_order = DerivativeOrder::new(state, current_price, qty, is_buy, false, market);
                 alloc_val_for_new_orders = sub_no_overflow(alloc_val_for_new_orders, new_order.get_margin());
-                println!("{:?}", new_order);
                 orders_to_open.push(new_order);
             } else {
                 // We need to manage reduce only orders here
@@ -140,7 +139,6 @@ pub fn head_to_tail_deriv(
     state: &State,
     market: &WrappedDerivativeMarket,
 ) -> (Vec<DerivativeOrder>, Vec<OrderData>) {
-    println!("bal: {}", alloc_val_for_new_orders);
     let (additional_orders_to_cancel, orders_to_open_a, alloc_val_for_new_orders, position_qty) = handle_reduce_only(
         orders_to_keep.clone(),
         alloc_val_for_new_orders,

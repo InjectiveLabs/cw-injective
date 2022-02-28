@@ -409,20 +409,8 @@ fn get_action(
 
     // Ensure that the heads have changed enough that we are willing to make an action
     if head_chg_is_gt_tol(&open_buys, new_buy_head, state.head_chg_tol) || head_chg_is_gt_tol(&open_sells, new_sell_head, state.head_chg_tol) {
-        // if length_orders > 0 {
-        //     return Err(cosmwasm_std::StdError::GenericErr {
-        //         msg: "TESTING MESSAGE...".to_string(), /* fields */
-        //     });
-        // }
-
         // Get new tails
         let (new_buy_tail, new_sell_tail) = new_tail_prices(new_buy_head, new_sell_head, mid_price, state.tail_dist_from_mid, state.min_tail_dist);
-
-        // if length_orders > 0 {
-        //     return Err(cosmwasm_std::StdError::GenericErr {
-        //         msg: "TESTING MESSAGE...".to_string(), /* fields */
-        //     });
-        // }
 
         // Get information for buy order creation/cancellation
         let (buy_orders_to_cancel, buy_orders_to_keep, buy_margined_val_from_orders_remaining, buy_append_to_new_head) =
@@ -431,12 +419,6 @@ fn get_action(
         // Get information for sell order creation/cancellation
         let (sell_orders_to_cancel, sell_orders_to_keep, sell_margined_val_from_orders_remaining, sell_append_to_new_head) =
             orders_to_cancel(open_sells, new_sell_head, new_sell_tail, false, &state, &market);
-
-        if length_orders > 0 {
-            return Err(cosmwasm_std::StdError::GenericErr {
-                msg: "TESTING MESSAGE...".to_string(), /* fields */
-            });
-        }
 
         // Get new buy/sell orders
         let (buy_orders_to_open, additional_buys_to_cancel) = create_orders(
@@ -488,12 +470,6 @@ fn get_action(
             derivative_orders_to_create,
         };
 
-        // if length_orders > 0 {
-        //     return Err(cosmwasm_std::StdError::GenericErr {
-        //         msg: "TESTING MESSAGE...".to_string(), /* fields */
-        //     });
-        // }
-
         Ok(WrappedGetActionResponse {
             msgs: vec![ExchangeMsg::BatchUpdateOrders(batch_order)],
         })
@@ -533,8 +509,8 @@ pub fn orders_to_cancel(
         } else {
             // Determine if we need to append to new orders to the new head or if we need to
             // append to the end of the block of orders we will be keeping
-            let append_to_new_head =
-                sub_abs(new_head, orders_to_keep.first().unwrap().order_info.price) > sub_abs(orders_to_keep.last().unwrap().order_info.price, new_tail);
+            let append_to_new_head = sub_abs(new_head, orders_to_keep.first().unwrap().order_info.price)
+                > sub_abs(orders_to_keep.last().unwrap().order_info.price, new_tail);
             (orders_to_cancel, orders_to_keep, margined_val_from_orders_remaining, append_to_new_head)
         }
     } else {
@@ -571,7 +547,6 @@ fn create_orders(
         state.active_capital,
         margined_val_from_orders_remaining,
     );
-    println!("alloc bal {}", alloc_val_for_new_orders);
     if orders_to_keep.len() == 0 {
         let (new_orders, _, _) = base_deriv(
             new_head,
@@ -606,7 +581,7 @@ fn reservation_price(mid_price: Decimal, inv_imbal: Decimal, volatility: Decimal
         mid_price
     } else {
         if imbal_is_long {
-            sub_no_overflow(mid_price, (inv_imbal * volatility * reservation_param))
+            sub_no_overflow(mid_price, inv_imbal * volatility * reservation_param)
         } else {
             mid_price + (inv_imbal * volatility * reservation_param)
         }
