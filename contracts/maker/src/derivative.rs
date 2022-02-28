@@ -190,7 +190,7 @@ fn handle_reduce_only(
                     position_qty = sub_no_overflow(position_qty, o.order_info.quantity);
                 } else {
                     // This whole order should be reduce only
-                    additional_orders_to_cancel.push(OrderData::new(o, state, market));
+                    additional_orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
                     let new_order_reduce = DerivativeOrder::new(state, o.order_info.price, o.order_info.quantity, is_buy, true, market);
                     additional_orders_to_open.push(new_order_reduce);
                     position_qty = sub_no_overflow(position_qty, o.order_info.quantity);
@@ -201,7 +201,7 @@ fn handle_reduce_only(
             }
         } else {
             if o.is_reduce_only() {
-                additional_orders_to_cancel.push(OrderData::new(o, state, market));
+                additional_orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
                 let new_order = DerivativeOrder::new(
                     state,
                     o.order_info.price,

@@ -515,20 +515,19 @@ pub fn orders_to_cancel(
         let mut margined_val_from_orders_remaining = Decimal::zero();
         let mut orders_to_cancel: Vec<OrderData> = Vec::new();
         // Use the new tail/head to filter out the orders to cancel
-        let orders_to_keep: Vec<WrappedDerivativeLimitOrder> = open_orders
-            .into_iter()
-            .filter(|o| {
-                let keep_if_buy = o.order_info.price <= new_head && o.order_info.price >= new_tail;
-                let keep_if_sell = o.order_info.price >= new_head && o.order_info.price <= new_tail;
-                let keep = (keep_if_buy && is_buy) || (keep_if_sell && !is_buy);
-                if keep {
-                    margined_val_from_orders_remaining = margined_val_from_orders_remaining + o.margin;
-                } else {
-                    orders_to_cancel.push(OrderData::new(&o, state, market));
-                }
-                keep
-            })
-            .collect();
+        let orders_to_keep: Vec<WrappedDerivativeLimitOrder> = Vec::new();
+
+        open_orders.into_iter().for_each(|o| {
+            let keep_if_buy = o.order_info.price <= new_head && o.order_info.price >= new_tail;
+            let keep_if_sell = o.order_info.price >= new_head && o.order_info.price <= new_tail;
+            let keep = (keep_if_buy && is_buy) || (keep_if_sell && !is_buy);
+            if keep {
+                margined_val_from_orders_remaining = margined_val_from_orders_remaining + o.margin;
+                orders_to_keep.push(o);
+            } else {
+                orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
+            }
+        });
         // Determine if we need to append to new orders to the new head or if we need to
         // append to the end of the block of orders we will be keeping
         let append_to_new_head =
