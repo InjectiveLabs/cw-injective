@@ -293,7 +293,9 @@ pub fn begin_blocker(deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Add
         })
     };
 
-    if open_orders.len() > 0 { return Err(ContractError::TestError("Made it to this line!".to_string()));}
+    if open_orders.len() > 0 {
+        return Err(ContractError::TestError("Made it to this line!".to_string()));
+    }
 
     let action_response = get_action(
         deps,
@@ -573,7 +575,7 @@ fn reservation_price(mid_price: Decimal, inv_imbal: Decimal, volatility: Decimal
         mid_price
     } else {
         if imbal_is_long {
-            mid_price - (inv_imbal * volatility * reservation_param)
+            sub_no_overflow(mid_price, (inv_imbal * volatility * reservation_param))
         } else {
             mid_price + (inv_imbal * volatility * reservation_param)
         }
@@ -592,7 +594,7 @@ fn reservation_price(mid_price: Decimal, inv_imbal: Decimal, volatility: Decimal
 fn new_head_prices(volatility: Decimal, reservation_price: Decimal, spread_param: Decimal) -> (Decimal, Decimal) {
     let dist_from_reservation_price = div_dec(volatility * spread_param, Decimal::from_str("2").unwrap());
     (
-        reservation_price - dist_from_reservation_price,
+        sub_no_overflow(reservation_price, dist_from_reservation_price),
         reservation_price + dist_from_reservation_price,
     )
 }
@@ -633,7 +635,7 @@ pub fn new_tail_prices(
     tail_dist_from_mid: Decimal,
     min_tail_dist: Decimal,
 ) -> (Decimal, Decimal) {
-    let proposed_buy_tail = mid_price * (Decimal::one() - tail_dist_from_mid);
+    let proposed_buy_tail = mid_price * sub_no_overflow(Decimal::one(), tail_dist_from_mid);
     let proposed_sell_tail = mid_price * (Decimal::one() + tail_dist_from_mid);
     check_tail_dist(buy_head, sell_head, proposed_buy_tail, proposed_sell_tail, min_tail_dist)
 }
@@ -674,7 +676,7 @@ mod tests {
         contract::create_orders,
         exchange::{DerivativeMarket, WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedOrderInfo, WrappedPosition},
         state::State,
-        utils::div_dec,
+        utils::{div_dec, sub_no_overflow},
     };
 
     use super::{head_chg_is_gt_tol, new_tail_prices, orders_to_cancel, split_open_orders};
@@ -798,13 +800,13 @@ mod tests {
         let tail_dist_from_mid = Decimal::from_str("0.05").unwrap();
         let min_tail_dist = Decimal::from_str("0.01").unwrap();
         let (buy_tail, sell_tail) = new_tail_prices(buy_head, sell_head, mid_price, tail_dist_from_mid, min_tail_dist);
-        assert_eq!(buy_tail, mid_price * (Decimal::one() - tail_dist_from_mid));
+        assert_eq!(buy_tail, mid_price * sub_no_overflow(Decimal::one(), tail_dist_from_mid));
         assert_eq!(sell_tail, mid_price * (Decimal::one() + tail_dist_from_mid));
 
         let tail_dist_from_mid = Decimal::from_str("0.001").unwrap();
         let min_tail_dist = Decimal::from_str("0.01").unwrap();
         let (buy_tail, sell_tail) = new_tail_prices(buy_head, sell_head, mid_price, tail_dist_from_mid, min_tail_dist);
-        assert_eq!(buy_tail, buy_head * (Decimal::one() - min_tail_dist));
+        assert_eq!(buy_tail, buy_head * sub_no_overflow(Decimal::one(), min_tail_dist));
         assert_eq!(sell_tail, sell_head * (Decimal::one() + min_tail_dist));
     }
 

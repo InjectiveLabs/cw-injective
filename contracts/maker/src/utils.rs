@@ -37,6 +37,14 @@ pub fn sub_no_overflow(lhs: Decimal, rhs: Decimal) -> Decimal {
     }
 }
 
+pub fn sub_no_overflow_int(lhs: Uint256, rhs: Uint256) -> Uint256 {
+    if lhs > rhs {
+        lhs - rhs
+    } else {
+        Uint256::zero()
+    }
+}
+
 pub fn round_to_precision(num: Decimal, precision_shift: Uint256) -> Decimal {
     let precision_shift = Decimal::from_str(&precision_shift.to_string()).unwrap();
     let shifted = (num * precision_shift) * Uint256::from_str("1").unwrap();
