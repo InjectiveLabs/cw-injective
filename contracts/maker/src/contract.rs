@@ -293,6 +293,8 @@ pub fn begin_blocker(deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Add
         })
     };
 
+    if open_orders.len() > 0 { return Err(ContractError::TestError("Made it to this line!".to_string()));}
+
     let action_response = get_action(
         deps,
         env,

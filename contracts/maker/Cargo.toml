@@ -40,3 +40,6 @@ serde-json-wasm = "0.3.2"
 injective-mocks = { path = "../../packages/mocks", version = "0.1.0" }
 cosmwasm-vm = { version = "1.0.0-beta4", default-features = false, features = ["iterator"] }
 cosmwasm-schema = { version = "1.0.0-beta4" }
+
+[profile.release]
+debug = true
