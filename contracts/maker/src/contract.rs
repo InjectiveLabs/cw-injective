@@ -528,11 +528,15 @@ pub fn orders_to_cancel(
                 orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
             }
         });
-        // Determine if we need to append to new orders to the new head or if we need to
-        // append to the end of the block of orders we will be keeping
-        let append_to_new_head =
-            sub_abs(new_head, orders_to_keep.first().unwrap().order_info.price) > sub_abs(orders_to_keep.last().unwrap().order_info.price, new_tail);
-        (orders_to_cancel, orders_to_keep, margined_val_from_orders_remaining, append_to_new_head)
+        if orders_to_keep.len() == 0 {
+            (orders_to_cancel, Vec::new(), Decimal::zero(), true)
+        } else {
+            // Determine if we need to append to new orders to the new head or if we need to
+            // append to the end of the block of orders we will be keeping
+            let append_to_new_head =
+                sub_abs(new_head, orders_to_keep.first().unwrap().order_info.price) > sub_abs(orders_to_keep.last().unwrap().order_info.price, new_tail);
+            (orders_to_cancel, orders_to_keep, margined_val_from_orders_remaining, append_to_new_head)
+        }
     } else {
         (Vec::new(), Vec::new(), Decimal::zero(), true)
     }

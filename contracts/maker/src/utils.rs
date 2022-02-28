@@ -24,6 +24,8 @@ pub fn div_dec(num: Decimal, denom: Decimal) -> Decimal {
 pub fn sub_abs(lhs: Decimal, rhs: Decimal) -> Decimal {
     if lhs > rhs {
         lhs - rhs
+    } else if lhs == rhs {
+        Decimal::zero()
     } else {
         rhs - lhs
     }
