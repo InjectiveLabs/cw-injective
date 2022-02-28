@@ -232,6 +232,7 @@ pub fn begin_blocker(deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Add
         .map(|order| {
             // OrderType_BUY         OrderType = 1
             // OrderType_SELL        OrderType = 2
+            // TODO add PO order types
             let order_type = if order.isBuy { 1 } else { 2 };
             let limit_order: DerivativeLimitOrder = DerivativeLimitOrder {
                 margin: order.margin.to_string(),
@@ -599,7 +600,7 @@ fn new_head_prices(volatility: Decimal, reservation_price: Decimal, spread_param
     )
 }
 
-/// Determines whether the new head for the next block will be different enough than that of the previous to warrent
+/// Determines whether the new head for the next block will be different enough than that of the previous to warrant
 /// order cancellation and the creation of new orders.
 /// # Arguments
 /// * `open_orders` - The buy or sell side orders from the previous block
@@ -643,7 +644,7 @@ pub fn new_tail_prices(
 /// Splits the vec of orders to buyside and sellside orders. Sorts them so that the head from the previous block is at index == 0. Buyside
 /// orders are sorted desc. Sellside are sorted asc.
 /// # Arguments
-/// * `open_orders` - The open orders from both sides that were on the book as of the preceeding block
+/// * `open_orders` - The open orders from both sides that were on the book as of the preceding block
 /// # Returns
 /// * `buy_orders` - The sorted buyside orders
 /// * `sell_orders` - The sorted sellside orders
