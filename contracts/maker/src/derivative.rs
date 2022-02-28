@@ -178,7 +178,7 @@ fn handle_reduce_only(
     orders_to_keep.iter().for_each(|o| {
         if position_qty > Decimal::zero() {
             if o.order_info.quantity > position_qty {
-                additional_orders_to_cancel.push(OrderData::new(o, state, market));
+                additional_orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
                 let new_order_reduce = DerivativeOrder::new(state, o.order_info.price, position_qty, is_buy, true, market);
                 additional_orders_to_open.push(new_order_reduce);
                 position_qty = Decimal::zero();

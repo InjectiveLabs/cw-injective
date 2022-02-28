@@ -515,7 +515,7 @@ pub fn orders_to_cancel(
         let mut margined_val_from_orders_remaining = Decimal::zero();
         let mut orders_to_cancel: Vec<OrderData> = Vec::new();
         // Use the new tail/head to filter out the orders to cancel
-        let orders_to_keep: Vec<WrappedDerivativeLimitOrder> = Vec::new();
+        let mut orders_to_keep: Vec<WrappedDerivativeLimitOrder> = Vec::new();
 
         open_orders.into_iter().for_each(|o| {
             let keep_if_buy = o.order_info.price <= new_head && o.order_info.price >= new_tail;
