@@ -12,4 +12,7 @@ pub enum ContractError {
 
     #[error("Unauthorized")]
     Unauthorized {},
+
+    #[error("Test Error {0:?}")]
+    TestError(String),
 }

@@ -3,7 +3,7 @@ use std::str::FromStr;
 use crate::{
     exchange::{DerivativeOrder, OrderData, WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedPosition},
     state::State,
-    utils::{div_dec, div_int, sub_abs, sub_no_overflow},
+    utils::{div_dec, div_int, sub_abs, sub_no_overflow, sub_no_overflow_int},
 };
 use cosmwasm_std::{Decimal256 as Decimal, Uint256};
 
@@ -52,47 +52,48 @@ pub fn base_deriv(
 ) -> (Vec<DerivativeOrder>, Decimal, Decimal) {
     let mut orders_to_open: Vec<DerivativeOrder> = Vec::new();
     let num_open_orders = Uint256::from_str(&num_orders_to_keep.to_string()).unwrap();
-    let num_orders_to_open = state.order_density - num_open_orders;
-    let val_per_order = alloc_val_for_new_orders / num_orders_to_open;
-    let val_per_order = val_per_order * state.leverage;
-    let price_dist = sub_abs(new_head, new_tail);
-    let price_step = div_int(price_dist, num_orders_to_open);
-    let num_orders_to_open = num_orders_to_open.to_string().parse::<i32>().unwrap();
-    let mut current_price = if touch_head {
-        new_head
-    } else {
-        if is_buy {
-            new_head - price_step
+    let num_orders_to_open = sub_no_overflow_int(state.order_density, num_open_orders);
+    if !num_orders_to_open.is_zero() {
+        let val_per_order = div_int(alloc_val_for_new_orders, num_orders_to_open);
+        let val_per_order = val_per_order * state.leverage;
+        let price_dist = sub_abs(new_head, new_tail);
+        let price_step = div_int(price_dist, num_orders_to_open);
+        let num_orders_to_open = num_orders_to_open.to_string().parse::<i32>().unwrap();
+        let mut current_price = if touch_head {
+            new_head
         } else {
-            new_head + price_step
-        }
-    };
-    for _ in 0..num_orders_to_open {
-        let qty = div_dec(val_per_order, current_price);
-        if position_qty == Decimal::zero() {
-            // If there is no position qty, no need to make reduce only orders
-            let new_order = DerivativeOrder::new(state, current_price, qty, is_buy, false, market);
-            alloc_val_for_new_orders = sub_no_overflow(alloc_val_for_new_orders, new_order.get_margin());
-            println!("{:?}", new_order);
-            orders_to_open.push(new_order);
-        } else {
-            // We need to manage reduce only orders here
-            if qty > position_qty {
-                let new_order_reduce = DerivativeOrder::new(state, current_price, position_qty, is_buy, true, market);
-                orders_to_open.push(new_order_reduce);
-                position_qty = Decimal::zero();
+            if is_buy {
+                sub_no_overflow(new_head, price_step)
             } else {
-                // This whole order should be reduce only
-                let new_order_reduce = DerivativeOrder::new(state, current_price, qty, is_buy, true, market);
-                position_qty = sub_no_overflow(position_qty, qty);
-                orders_to_open.push(new_order_reduce);
+                new_head + price_step
             }
-        }
-        current_price = if is_buy {
-            current_price - price_step
-        } else {
-            current_price + price_step
         };
+        for _ in 0..num_orders_to_open {
+            let qty = div_dec(val_per_order, current_price);
+            if position_qty == Decimal::zero() {
+                // If there is no position qty, no need to make reduce only orders
+                let new_order = DerivativeOrder::new(state, current_price, qty, is_buy, false, market);
+                alloc_val_for_new_orders = sub_no_overflow(alloc_val_for_new_orders, new_order.get_margin());
+                orders_to_open.push(new_order);
+            } else {
+                // We need to manage reduce only orders here
+                if qty > position_qty {
+                    let new_order_reduce = DerivativeOrder::new(state, current_price, position_qty, is_buy, true, market);
+                    orders_to_open.push(new_order_reduce);
+                    position_qty = Decimal::zero();
+                } else {
+                    // This whole order should be reduce only
+                    let new_order_reduce = DerivativeOrder::new(state, current_price, qty, is_buy, true, market);
+                    position_qty = sub_no_overflow(position_qty, qty);
+                    orders_to_open.push(new_order_reduce);
+                }
+            }
+            current_price = if is_buy {
+                sub_no_overflow(current_price, price_step)
+            } else {
+                current_price + price_step
+            };
+        }
     }
     (orders_to_open, position_qty, alloc_val_for_new_orders)
 }
@@ -138,7 +139,6 @@ pub fn head_to_tail_deriv(
     state: &State,
     market: &WrappedDerivativeMarket,
 ) -> (Vec<DerivativeOrder>, Vec<OrderData>) {
-    println!("bal: {}", alloc_val_for_new_orders);
     let (additional_orders_to_cancel, orders_to_open_a, alloc_val_for_new_orders, position_qty) = handle_reduce_only(
         orders_to_keep.clone(),
         alloc_val_for_new_orders,
@@ -176,7 +176,7 @@ fn handle_reduce_only(
     orders_to_keep.iter().for_each(|o| {
         if position_qty > Decimal::zero() {
             if o.order_info.quantity > position_qty {
-                additional_orders_to_cancel.push(OrderData::new(o, state));
+                additional_orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
                 let new_order_reduce = DerivativeOrder::new(state, o.order_info.price, position_qty, is_buy, true, market);
                 additional_orders_to_open.push(new_order_reduce);
                 position_qty = Decimal::zero();
@@ -185,13 +185,13 @@ fn handle_reduce_only(
                 }
             } else {
                 if o.is_reduce_only() {
-                    position_qty = position_qty - o.order_info.quantity;
+                    position_qty = sub_no_overflow(position_qty, o.order_info.quantity);
                 } else {
                     // This whole order should be reduce only
-                    additional_orders_to_cancel.push(OrderData::new(o, state));
+                    additional_orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
                     let new_order_reduce = DerivativeOrder::new(state, o.order_info.price, o.order_info.quantity, is_buy, true, market);
                     additional_orders_to_open.push(new_order_reduce);
-                    position_qty = position_qty - o.order_info.quantity;
+                    position_qty = sub_no_overflow(position_qty, o.order_info.quantity);
                     if !is_first {
                         alloc_val_for_new_orders = alloc_val_for_new_orders + o.margin;
                     }
@@ -199,7 +199,7 @@ fn handle_reduce_only(
             }
         } else {
             if o.is_reduce_only() {
-                additional_orders_to_cancel.push(OrderData::new(o, state));
+                additional_orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
                 let new_order = DerivativeOrder::new(
                     state,
                     o.order_info.price,

@@ -24,6 +24,8 @@ pub fn div_dec(num: Decimal, denom: Decimal) -> Decimal {
 pub fn sub_abs(lhs: Decimal, rhs: Decimal) -> Decimal {
     if lhs > rhs {
         lhs - rhs
+    } else if lhs == rhs {
+        Decimal::zero()
     } else {
         rhs - lhs
     }
@@ -34,6 +36,14 @@ pub fn sub_no_overflow(lhs: Decimal, rhs: Decimal) -> Decimal {
         lhs - rhs
     } else {
         Decimal::zero()
+    }
+}
+
+pub fn sub_no_overflow_int(lhs: Uint256, rhs: Uint256) -> Uint256 {
+    if lhs > rhs {
+        lhs - rhs
+    } else {
+        Uint256::zero()
     }
 }
 

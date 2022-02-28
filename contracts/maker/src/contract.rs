@@ -309,7 +309,7 @@ pub fn begin_blocker(deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Add
 
     let msgs = match action_response {
         Ok(v) => v.msgs,
-        Err(_) => todo!(),
+        Err(_) => return Err(ContractError::TestError("Made it to this line!".to_string())),
     };
     let parsed_msgs = msgs.iter().map(|msg| match msg {
         ExchangeMsg::BatchUpdateOrders(batch_update_orders_msg) => create_batch_update_orders_msg(
@@ -408,11 +408,11 @@ fn get_action(
 
         // Get information for buy order creation/cancellation
         let (buy_orders_to_cancel, buy_orders_to_keep, buy_margined_val_from_orders_remaining, buy_append_to_new_head) =
-            orders_to_cancel(open_buys, new_buy_head, new_buy_tail, true, &state);
+            orders_to_cancel(open_buys, new_buy_head, new_buy_tail, true, &state, &market);
 
         // Get information for sell order creation/cancellation
         let (sell_orders_to_cancel, sell_orders_to_keep, sell_margined_val_from_orders_remaining, sell_append_to_new_head) =
-            orders_to_cancel(open_sells, new_sell_head, new_sell_tail, false, &state);
+            orders_to_cancel(open_sells, new_sell_head, new_sell_tail, false, &state, &market);
 
         // Get new buy/sell orders
         let (buy_orders_to_open, additional_buys_to_cancel) = create_orders(
@@ -463,6 +463,7 @@ fn get_action(
             spot_orders_to_create: Vec::new(),
             derivative_orders_to_create,
         };
+
         Ok(WrappedGetActionResponse {
             msgs: vec![ExchangeMsg::BatchUpdateOrders(batch_order)],
         })
@@ -477,31 +478,35 @@ pub fn orders_to_cancel(
     new_tail: Decimal,
     is_buy: bool,
     state: &State,
+    market: &WrappedDerivativeMarket,
 ) -> (Vec<OrderData>, Vec<WrappedDerivativeLimitOrder>, Decimal, bool) {
     // If there are any open orders, we need to check them to see if we should cancel
     if open_orders.len() > 0 {
         let mut margined_val_from_orders_remaining = Decimal::zero();
         let mut orders_to_cancel: Vec<OrderData> = Vec::new();
         // Use the new tail/head to filter out the orders to cancel
-        let orders_to_keep: Vec<WrappedDerivativeLimitOrder> = open_orders
-            .into_iter()
-            .filter(|o| {
-                let keep_if_buy = o.order_info.price <= new_head && o.order_info.price >= new_tail;
-                let keep_if_sell = o.order_info.price >= new_head && o.order_info.price <= new_tail;
-                let keep = (keep_if_buy && is_buy) || (keep_if_sell && !is_buy);
-                if keep {
-                    margined_val_from_orders_remaining = margined_val_from_orders_remaining + o.margin;
-                } else {
-                    orders_to_cancel.push(OrderData::new(&o, state));
-                }
-                keep
-            })
-            .collect();
-        // Determine if we need to append to new orders to the new head or if we need to
-        // append to the end of the block of orders we will be keeping
-        let append_to_new_head =
-            sub_abs(new_head, orders_to_keep.first().unwrap().order_info.price) > sub_abs(orders_to_keep.last().unwrap().order_info.price, new_tail);
-        (orders_to_cancel, orders_to_keep, margined_val_from_orders_remaining, append_to_new_head)
+        let mut orders_to_keep: Vec<WrappedDerivativeLimitOrder> = Vec::new();
+
+        open_orders.into_iter().for_each(|o| {
+            let keep_if_buy = o.order_info.price <= new_head && o.order_info.price >= new_tail;
+            let keep_if_sell = o.order_info.price >= new_head && o.order_info.price <= new_tail;
+            let keep = (keep_if_buy && is_buy) || (keep_if_sell && !is_buy);
+            if keep {
+                margined_val_from_orders_remaining = margined_val_from_orders_remaining + o.margin;
+                orders_to_keep.push(o);
+            } else {
+                orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
+            }
+        });
+        if orders_to_keep.len() == 0 {
+            (orders_to_cancel, Vec::new(), Decimal::zero(), true)
+        } else {
+            // Determine if we need to append to new orders to the new head or if we need to
+            // append to the end of the block of orders we will be keeping
+            let append_to_new_head = sub_abs(new_head, orders_to_keep.first().unwrap().order_info.price)
+                > sub_abs(orders_to_keep.last().unwrap().order_info.price, new_tail);
+            (orders_to_cancel, orders_to_keep, margined_val_from_orders_remaining, append_to_new_head)
+        }
     } else {
         (Vec::new(), Vec::new(), Decimal::zero(), true)
     }
@@ -536,7 +541,6 @@ fn create_orders(
         state.active_capital,
         margined_val_from_orders_remaining,
     );
-    println!("alloc bal {}", alloc_val_for_new_orders);
     if orders_to_keep.len() == 0 {
         let (new_orders, _, _) = base_deriv(
             new_head,
@@ -571,7 +575,7 @@ fn reservation_price(mid_price: Decimal, inv_imbal: Decimal, volatility: Decimal
         mid_price
     } else {
         if imbal_is_long {
-            mid_price - (inv_imbal * volatility * reservation_param)
+            sub_no_overflow(mid_price, inv_imbal * volatility * reservation_param)
         } else {
             mid_price + (inv_imbal * volatility * reservation_param)
         }
@@ -590,7 +594,7 @@ fn reservation_price(mid_price: Decimal, inv_imbal: Decimal, volatility: Decimal
 fn new_head_prices(volatility: Decimal, reservation_price: Decimal, spread_param: Decimal) -> (Decimal, Decimal) {
     let dist_from_reservation_price = div_dec(volatility * spread_param, Decimal::from_str("2").unwrap());
     (
-        reservation_price - dist_from_reservation_price,
+        sub_no_overflow(reservation_price, dist_from_reservation_price),
         reservation_price + dist_from_reservation_price,
     )
 }
@@ -631,7 +635,7 @@ pub fn new_tail_prices(
     tail_dist_from_mid: Decimal,
     min_tail_dist: Decimal,
 ) -> (Decimal, Decimal) {
-    let proposed_buy_tail = mid_price * (Decimal::one() - tail_dist_from_mid);
+    let proposed_buy_tail = mid_price * sub_no_overflow(Decimal::one(), tail_dist_from_mid);
     let proposed_sell_tail = mid_price * (Decimal::one() + tail_dist_from_mid);
     check_tail_dist(buy_head, sell_head, proposed_buy_tail, proposed_sell_tail, min_tail_dist)
 }
@@ -672,7 +676,7 @@ mod tests {
         contract::create_orders,
         exchange::{DerivativeMarket, WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedOrderInfo, WrappedPosition},
         state::State,
-        utils::div_dec,
+        utils::{div_dec, sub_no_overflow},
     };
 
     use super::{head_chg_is_gt_tol, new_tail_prices, orders_to_cancel, split_open_orders};
@@ -686,6 +690,7 @@ mod tests {
         let mp = Decimal::from_str("20").unwrap();
         let price_step_mult = Decimal::from_str("1").unwrap();
         let leverage = Decimal::from_str("1").unwrap();
+        let market = mock_market();
 
         let state = mock_state("1".to_string(), "10".to_string());
         let open_buys = mock_wrapped_deriv_limit(value, mp, price_step_mult, 2, 10, true, leverage);
@@ -696,7 +701,7 @@ mod tests {
         let new_head = Decimal::from_str("15").unwrap();
         let new_tail = Decimal::from_str("6").unwrap();
         let (orders_to_cancel, orders_to_keep, margined_val_from_orders_remaining, append_to_new_head) =
-            orders_to_cancel(open_buys, new_head, new_tail, true, &state);
+            orders_to_cancel(open_buys, new_head, new_tail, true, &state, &market);
 
         let position = WrappedPosition {
             is_long: true,
@@ -796,13 +801,13 @@ mod tests {
         let tail_dist_from_mid = Decimal::from_str("0.05").unwrap();
         let min_tail_dist = Decimal::from_str("0.01").unwrap();
         let (buy_tail, sell_tail) = new_tail_prices(buy_head, sell_head, mid_price, tail_dist_from_mid, min_tail_dist);
-        assert_eq!(buy_tail, mid_price * (Decimal::one() - tail_dist_from_mid));
+        assert_eq!(buy_tail, mid_price * sub_no_overflow(Decimal::one(), tail_dist_from_mid));
         assert_eq!(sell_tail, mid_price * (Decimal::one() + tail_dist_from_mid));
 
         let tail_dist_from_mid = Decimal::from_str("0.001").unwrap();
         let min_tail_dist = Decimal::from_str("0.01").unwrap();
         let (buy_tail, sell_tail) = new_tail_prices(buy_head, sell_head, mid_price, tail_dist_from_mid, min_tail_dist);
-        assert_eq!(buy_tail, buy_head * (Decimal::one() - min_tail_dist));
+        assert_eq!(buy_tail, buy_head * sub_no_overflow(Decimal::one(), min_tail_dist));
         assert_eq!(sell_tail, sell_head * (Decimal::one() + min_tail_dist));
     }
 
