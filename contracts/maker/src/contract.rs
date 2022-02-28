@@ -371,8 +371,6 @@ fn get_action(
     volatility: String,
     mid_price: String,
 ) -> StdResult<WrappedGetActionResponse> {
-    let length_orders = open_orders.len();
-
     // Wrap everything
     let open_orders: Vec<WrappedDerivativeLimitOrder> = open_orders.into_iter().map(|o| o.wrap().unwrap()).collect();
     let position = match position {
