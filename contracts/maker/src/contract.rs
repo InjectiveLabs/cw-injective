@@ -293,9 +293,9 @@ pub fn begin_blocker(deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Add
         })
     };
 
-    if open_orders.len() > 0 {
-        return Err(ContractError::TestError("Made it to this line!".to_string()));
-    }
+    // if open_orders.len() > 0 {
+    //     return Err(ContractError::TestError("Made it to this line!".to_string()));
+    // }
 
     let action_response = get_action(
         deps,
@@ -313,7 +313,7 @@ pub fn begin_blocker(deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Add
 
     let msgs = match action_response {
         Ok(v) => v.msgs,
-        Err(_) => todo!(),
+        Err(_) => return Err(ContractError::TestError("Made it to this line!".to_string())),
     };
     let parsed_msgs = msgs.iter().map(|msg| match msg {
         ExchangeMsg::BatchUpdateOrders(batch_update_orders_msg) => create_batch_update_orders_msg(
@@ -375,6 +375,8 @@ fn get_action(
     volatility: String,
     mid_price: String,
 ) -> StdResult<WrappedGetActionResponse> {
+    let length_orders = open_orders.len();
+
     // Wrap everything
     let open_orders: Vec<WrappedDerivativeLimitOrder> = open_orders.into_iter().map(|o| o.wrap().unwrap()).collect();
     let position = match position {
@@ -407,8 +409,20 @@ fn get_action(
 
     // Ensure that the heads have changed enough that we are willing to make an action
     if head_chg_is_gt_tol(&open_buys, new_buy_head, state.head_chg_tol) || head_chg_is_gt_tol(&open_sells, new_sell_head, state.head_chg_tol) {
+        // if length_orders > 0 {
+        //     return Err(cosmwasm_std::StdError::GenericErr {
+        //         msg: "TESTING MESSAGE...".to_string(), /* fields */
+        //     });
+        // }
+
         // Get new tails
         let (new_buy_tail, new_sell_tail) = new_tail_prices(new_buy_head, new_sell_head, mid_price, state.tail_dist_from_mid, state.min_tail_dist);
+
+        // if length_orders > 0 {
+        //     return Err(cosmwasm_std::StdError::GenericErr {
+        //         msg: "TESTING MESSAGE...".to_string(), /* fields */
+        //     });
+        // }
 
         // Get information for buy order creation/cancellation
         let (buy_orders_to_cancel, buy_orders_to_keep, buy_margined_val_from_orders_remaining, buy_append_to_new_head) =
@@ -417,6 +431,12 @@ fn get_action(
         // Get information for sell order creation/cancellation
         let (sell_orders_to_cancel, sell_orders_to_keep, sell_margined_val_from_orders_remaining, sell_append_to_new_head) =
             orders_to_cancel(open_sells, new_sell_head, new_sell_tail, false, &state, &market);
+
+        if length_orders > 0 {
+            return Err(cosmwasm_std::StdError::GenericErr {
+                msg: "TESTING MESSAGE...".to_string(), /* fields */
+            });
+        }
 
         // Get new buy/sell orders
         let (buy_orders_to_open, additional_buys_to_cancel) = create_orders(
@@ -467,6 +487,13 @@ fn get_action(
             spot_orders_to_create: Vec::new(),
             derivative_orders_to_create,
         };
+
+        // if length_orders > 0 {
+        //     return Err(cosmwasm_std::StdError::GenericErr {
+        //         msg: "TESTING MESSAGE...".to_string(), /* fields */
+        //     });
+        // }
+
         Ok(WrappedGetActionResponse {
             msgs: vec![ExchangeMsg::BatchUpdateOrders(batch_order)],
         })
@@ -481,7 +508,7 @@ pub fn orders_to_cancel(
     new_tail: Decimal,
     is_buy: bool,
     state: &State,
-    market: &WrappedDerivativeMarket
+    market: &WrappedDerivativeMarket,
 ) -> (Vec<OrderData>, Vec<WrappedDerivativeLimitOrder>, Decimal, bool) {
     // If there are any open orders, we need to check them to see if we should cancel
     if open_orders.len() > 0 {
