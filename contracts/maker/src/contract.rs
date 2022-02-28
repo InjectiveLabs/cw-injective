@@ -412,11 +412,11 @@ fn get_action(
 
         // Get information for buy order creation/cancellation
         let (buy_orders_to_cancel, buy_orders_to_keep, buy_margined_val_from_orders_remaining, buy_append_to_new_head) =
-            orders_to_cancel(open_buys, new_buy_head, new_buy_tail, true, &state);
+            orders_to_cancel(open_buys, new_buy_head, new_buy_tail, true, &state, &market);
 
         // Get information for sell order creation/cancellation
         let (sell_orders_to_cancel, sell_orders_to_keep, sell_margined_val_from_orders_remaining, sell_append_to_new_head) =
-            orders_to_cancel(open_sells, new_sell_head, new_sell_tail, false, &state);
+            orders_to_cancel(open_sells, new_sell_head, new_sell_tail, false, &state, &market);
 
         // Get new buy/sell orders
         let (buy_orders_to_open, additional_buys_to_cancel) = create_orders(
@@ -481,6 +481,7 @@ pub fn orders_to_cancel(
     new_tail: Decimal,
     is_buy: bool,
     state: &State,
+    market: &WrappedDerivativeMarket
 ) -> (Vec<OrderData>, Vec<WrappedDerivativeLimitOrder>, Decimal, bool) {
     // If there are any open orders, we need to check them to see if we should cancel
     if open_orders.len() > 0 {
@@ -496,7 +497,7 @@ pub fn orders_to_cancel(
                 if keep {
                     margined_val_from_orders_remaining = margined_val_from_orders_remaining + o.margin;
                 } else {
-                    orders_to_cancel.push(OrderData::new(&o, state));
+                    orders_to_cancel.push(OrderData::new(&o, state, market));
                 }
                 keep
             })
@@ -690,6 +691,7 @@ mod tests {
         let mp = Decimal::from_str("20").unwrap();
         let price_step_mult = Decimal::from_str("1").unwrap();
         let leverage = Decimal::from_str("1").unwrap();
+        let market = mock_market();
 
         let state = mock_state("1".to_string(), "10".to_string());
         let open_buys = mock_wrapped_deriv_limit(value, mp, price_step_mult, 2, 10, true, leverage);
@@ -700,7 +702,7 @@ mod tests {
         let new_head = Decimal::from_str("15").unwrap();
         let new_tail = Decimal::from_str("6").unwrap();
         let (orders_to_cancel, orders_to_keep, margined_val_from_orders_remaining, append_to_new_head) =
-            orders_to_cancel(open_buys, new_head, new_tail, true, &state);
+            orders_to_cancel(open_buys, new_head, new_tail, true, &state, &market);
 
         let position = WrappedPosition {
             is_long: true,

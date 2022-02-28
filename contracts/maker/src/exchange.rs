@@ -246,9 +246,9 @@ pub struct OrderData {
 }
 
 impl OrderData {
-    pub fn new(order: &WrappedDerivativeLimitOrder, state: &State) -> OrderData {
+    pub fn new(order: &WrappedDerivativeLimitOrder, state: &State, market: &WrappedDerivativeMarket) -> OrderData {
         OrderData {
-            market_id: state.market_id.clone(),
+            market_id: market.market_id.clone(),
             subaccount_id: state.subaccount_id.clone(),
             order_hash: order.order_hash.clone(),
         }

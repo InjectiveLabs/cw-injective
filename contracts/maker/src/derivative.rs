@@ -54,7 +54,7 @@ pub fn base_deriv(
     let num_open_orders = Uint256::from_str(&num_orders_to_keep.to_string()).unwrap();
     let num_orders_to_open = sub_no_overflow_int(state.order_density, num_open_orders);
     if !num_orders_to_open.is_zero() {
-        let val_per_order = alloc_val_for_new_orders / num_orders_to_open;
+        let val_per_order = div_int(alloc_val_for_new_orders, num_orders_to_open);
         let val_per_order = val_per_order * state.leverage;
         let price_dist = sub_abs(new_head, new_tail);
         let price_step = div_int(price_dist, num_orders_to_open);
@@ -178,7 +178,7 @@ fn handle_reduce_only(
     orders_to_keep.iter().for_each(|o| {
         if position_qty > Decimal::zero() {
             if o.order_info.quantity > position_qty {
-                additional_orders_to_cancel.push(OrderData::new(o, state));
+                additional_orders_to_cancel.push(OrderData::new(o, state, market));
                 let new_order_reduce = DerivativeOrder::new(state, o.order_info.price, position_qty, is_buy, true, market);
                 additional_orders_to_open.push(new_order_reduce);
                 position_qty = Decimal::zero();
@@ -190,7 +190,7 @@ fn handle_reduce_only(
                     position_qty = sub_no_overflow(position_qty, o.order_info.quantity);
                 } else {
                     // This whole order should be reduce only
-                    additional_orders_to_cancel.push(OrderData::new(o, state));
+                    additional_orders_to_cancel.push(OrderData::new(o, state, market));
                     let new_order_reduce = DerivativeOrder::new(state, o.order_info.price, o.order_info.quantity, is_buy, true, market);
                     additional_orders_to_open.push(new_order_reduce);
                     position_qty = sub_no_overflow(position_qty, o.order_info.quantity);
@@ -201,7 +201,7 @@ fn handle_reduce_only(
             }
         } else {
             if o.is_reduce_only() {
-                additional_orders_to_cancel.push(OrderData::new(o, state));
+                additional_orders_to_cancel.push(OrderData::new(o, state, market));
                 let new_order = DerivativeOrder::new(
                     state,
                     o.order_info.price,
