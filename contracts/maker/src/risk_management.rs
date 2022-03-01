@@ -1,5 +1,5 @@
 use crate::{
-    exchange::{WrappedPosition, DerivativeOrder,  WrappedDerivativeMarket},
+    exchange::{DerivativeOrder, WrappedDerivativeMarket, WrappedPosition},
     state::State,
     utils::{div_dec, sub_abs, sub_no_overflow},
 };
@@ -63,9 +63,9 @@ pub fn check_tail_dist(
     proposed_sell_tail: Decimal,
     min_head_to_tail_deviation_ratio: Decimal,
 ) -> (Decimal, Decimal) {
-    let new_buy_tail =  {
+    let new_buy_tail = {
         let proposed_buy_tail_dist = div_dec(sub_abs(new_buy_head, proposed_buy_tail), new_buy_head);
-        if proposed_buy_tail_dist < min_head_to_tail_deviation_ratio || proposed_buy_tail >= new_buy_head{
+        if proposed_buy_tail_dist < min_head_to_tail_deviation_ratio || proposed_buy_tail >= new_buy_head {
             new_buy_head * sub_abs(Decimal::one(), min_head_to_tail_deviation_ratio)
         } else {
             proposed_buy_tail
@@ -91,47 +91,48 @@ pub fn check_tail_dist(
 /// # Returns
 /// * `filtered_orders_to_place` - The filtered orders
 pub fn final_check(orders_to_place: Vec<DerivativeOrder>, market: &WrappedDerivativeMarket) -> Vec<DerivativeOrder> {
-    orders_to_place.into_iter()
-    .filter(|order| {
-        Decimal::from_str(&order.order_info.quantity).unwrap().gt(&market.min_quantity_tick_size)
-            && Decimal::from_str(&order.order_info.price).unwrap().gt(&market.min_price_tick_size)
-    })
-    .collect()
+    orders_to_place
+        .into_iter()
+        .filter(|order| {
+            Decimal::from_str(&order.order_info.quantity).unwrap().gt(&market.min_quantity_tick_size)
+                && Decimal::from_str(&order.order_info.price).unwrap().gt(&market.min_price_tick_size)
+        })
+        .collect()
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{check_tail_dist};
+    use super::check_tail_dist;
     use cosmwasm_std::Decimal256 as Decimal;
     use std::str::FromStr;
 
     // #[test]
     // fn get_alloc_bal_new_orders_test() {
-        // let inv_val = Decimal::from_str("1000000000").unwrap();
-        // let max_active_capital_utilization_ratio = Decimal::from_str("1").unwrap();
-        // let margin = Decimal::zero();
+    // let inv_val = Decimal::from_str("1000000000").unwrap();
+    // let max_active_capital_utilization_ratio = Decimal::from_str("1").unwrap();
+    // let margin = Decimal::zero();
 
-        // let alloc_bal_a = get_alloc_bal_new_orders(inv_val, true, margin, max_active_capital_utilization_ratio, Decimal::zero(), Decimal::zero());
-        // let alloc_bal_b = get_alloc_bal_new_orders(inv_val, false, margin, max_active_capital_utilization_ratio, Decimal::zero(), Decimal::zero());
-        // assert_eq!(alloc_bal_a, alloc_bal_b);
-        // assert_eq!(alloc_bal_a, Decimal::from_str("0.5").unwrap() * inv_val);
-        // println!("{} {}", alloc_bal_a, alloc_bal_b);
+    // let alloc_bal_a = get_alloc_bal_new_orders(inv_val, true, margin, max_active_capital_utilization_ratio, Decimal::zero(), Decimal::zero());
+    // let alloc_bal_b = get_alloc_bal_new_orders(inv_val, false, margin, max_active_capital_utilization_ratio, Decimal::zero(), Decimal::zero());
+    // assert_eq!(alloc_bal_a, alloc_bal_b);
+    // assert_eq!(alloc_bal_a, Decimal::from_str("0.5").unwrap() * inv_val);
+    // println!("{} {}", alloc_bal_a, alloc_bal_b);
 
-        // let margin = Decimal::from_str("1000000000").unwrap();
+    // let margin = Decimal::from_str("1000000000").unwrap();
 
-        // let alloc_bal_a = get_alloc_bal_new_orders(inv_val, true, margin, active_capital);
-        // let alloc_bal_b = get_alloc_bal_new_orders(inv_val, false, margin, active_capital);
-        // println!("{} {}", alloc_bal_a, alloc_bal_b);
-        // // assert_eq!(alloc_bal_a + margin, alloc_bal_b);
+    // let alloc_bal_a = get_alloc_bal_new_orders(inv_val, true, margin, active_capital);
+    // let alloc_bal_b = get_alloc_bal_new_orders(inv_val, false, margin, active_capital);
+    // println!("{} {}", alloc_bal_a, alloc_bal_b);
+    // // assert_eq!(alloc_bal_a + margin, alloc_bal_b);
 
-        // let inv_val = Decimal::from_str("0").unwrap();
-        // let margin = Decimal::from_str("10000").unwrap();
+    // let inv_val = Decimal::from_str("0").unwrap();
+    // let margin = Decimal::from_str("10000").unwrap();
 
-        // let alloc_bal_a = get_alloc_bal_new_orders(inv_val, true, margin, active_capital);
-        // let alloc_bal_b = get_alloc_bal_new_orders(inv_val, false, margin, active_capital);
-        // println!("{} {}", alloc_bal_a, alloc_bal_b);
-        // assert_eq!(Decimal::zero(), alloc_bal_a);
-        // assert_eq!(Decimal::zero(), alloc_bal_b);
+    // let alloc_bal_a = get_alloc_bal_new_orders(inv_val, true, margin, active_capital);
+    // let alloc_bal_b = get_alloc_bal_new_orders(inv_val, false, margin, active_capital);
+    // println!("{} {}", alloc_bal_a, alloc_bal_b);
+    // assert_eq!(Decimal::zero(), alloc_bal_a);
+    // assert_eq!(Decimal::zero(), alloc_bal_b);
     // }
 
     #[test]
@@ -141,13 +142,25 @@ mod tests {
         let proposed_buy_tail = Decimal::from_str("2000").unwrap();
         let proposed_sell_tail = Decimal::from_str("7000").unwrap();
         let min_head_to_tail_deviation_ratio = Decimal::from_str("0.01").unwrap();
-        let (buy_tail, sell_tail) = check_tail_dist(buy_head, sell_head, proposed_buy_tail, proposed_sell_tail, min_head_to_tail_deviation_ratio);
+        let (buy_tail, sell_tail) = check_tail_dist(
+            buy_head,
+            sell_head,
+            proposed_buy_tail,
+            proposed_sell_tail,
+            min_head_to_tail_deviation_ratio,
+        );
         assert_eq!(buy_tail, proposed_buy_tail);
         assert_eq!(sell_tail, proposed_sell_tail);
 
         let proposed_buy_tail = Decimal::from_str("3998").unwrap();
         let proposed_sell_tail = Decimal::from_str("4002").unwrap();
-        let (buy_tail, sell_tail) = check_tail_dist(buy_head, sell_head, proposed_buy_tail, proposed_sell_tail, min_head_to_tail_deviation_ratio);
+        let (buy_tail, sell_tail) = check_tail_dist(
+            buy_head,
+            sell_head,
+            proposed_buy_tail,
+            proposed_sell_tail,
+            min_head_to_tail_deviation_ratio,
+        );
         assert_eq!(buy_tail, buy_head * (Decimal::one() - min_head_to_tail_deviation_ratio));
         assert_eq!(sell_tail, sell_head * (Decimal::one() + min_head_to_tail_deviation_ratio));
     }

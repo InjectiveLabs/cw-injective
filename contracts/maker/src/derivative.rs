@@ -3,7 +3,7 @@ use std::str::FromStr;
 use crate::{
     exchange::{DerivativeOrder, OrderData, WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedPosition},
     state::State,
-    utils::{div_dec, div_int, sub_abs, sub_no_overflow, sub_no_overflow_int, min},
+    utils::{div_dec, div_int, min, sub_abs, sub_no_overflow, sub_no_overflow_int},
 };
 use cosmwasm_std::{Decimal256 as Decimal, Uint256};
 
@@ -26,9 +26,9 @@ pub fn inventory_imbalance_deriv(position: &Option<WrappedPosition>, total_depos
     }
 }
 
-/// Determines the new orders that should be placed between the price bounds. The value of each 
+/// Determines the new orders that should be placed between the price bounds. The value of each
 /// order will be constant (close to constant) across each price step. If there is a position
-/// open on the opposite side, it will place reduce only orders from the start_price to try to reduce the 
+/// open on the opposite side, it will place reduce only orders from the start_price to try to reduce the
 /// remaining quantity of the position.
 /// # Arguments
 /// * `start_price` - Could be the price of the new head or the last order to keep
@@ -95,7 +95,7 @@ pub fn create_orders_between_bounds_deriv(
 }
 
 /// Creates orders in the situation where there is more room between the newly proposed head and the first order to keep
-/// than there is between the end of the last order to keep and newly proposed tail. We need to create new orders between it and the tail before we 
+/// than there is between the end of the last order to keep and newly proposed tail. We need to create new orders between it and the tail before we
 /// manage the reduce only orders at the start of the orders to keep block.
 /// # Arguments
 /// * `new_head` - The start price bound for the base case of order creation
@@ -106,8 +106,8 @@ pub fn create_orders_between_bounds_deriv(
 /// * `state` - State that the contract was initialized with
 /// * `market` - Derivative market information
 /// # Returns
-/// * `additional_orders_to_cancel` - A list of all the additional orders that we need to cancel 
-/// * `additional_orders_to_open` - A list of new orders that we need to open 
+/// * `additional_orders_to_cancel` - A list of all the additional orders that we need to cancel
+/// * `additional_orders_to_open` - A list of new orders that we need to open
 pub fn create_orders_tail_to_head_deriv(
     new_head: Decimal,
     total_margin_balance_for_new_orders: Decimal,
@@ -137,11 +137,14 @@ pub fn create_orders_tail_to_head_deriv(
         state,
         market,
     );
-    (vec![orders_to_open_from_base_case, orders_to_open_from_reduce_only_management].concat(), additional_orders_to_cancel)
+    (
+        vec![orders_to_open_from_base_case, orders_to_open_from_reduce_only_management].concat(),
+        additional_orders_to_cancel,
+    )
 }
 
 /// Creates orders in the situation where there is more room between the end of the last order to keep and newly proposed tail
-/// than there is between the newly proposed head and the first order to keep. We need to manage the reduce only orders at the 
+/// than there is between the newly proposed head and the first order to keep. We need to manage the reduce only orders at the
 /// start of the orders to keep block before we create new orders between it and the tail.
 /// # Arguments
 /// * `new_tail` - The end price bound for the base case of order creation
@@ -152,8 +155,8 @@ pub fn create_orders_tail_to_head_deriv(
 /// * `state` - State that the contract was initialized with
 /// * `market` - Derivative market information
 /// # Returns
-/// * `additional_orders_to_cancel` - A list of all the additional orders that we need to cancel 
-/// * `additional_orders_to_open` - A list of new orders that we need to open 
+/// * `additional_orders_to_cancel` - A list of all the additional orders that we need to cancel
+/// * `additional_orders_to_open` - A list of new orders that we need to open
 pub fn create_orders_head_to_tail_deriv(
     new_tail: Decimal,
     total_margin_balance_for_new_orders: Decimal,
@@ -163,15 +166,16 @@ pub fn create_orders_head_to_tail_deriv(
     state: &State,
     market: &WrappedDerivativeMarket,
 ) -> (Vec<DerivativeOrder>, Vec<OrderData>) {
-    let (additional_orders_to_cancel, orders_to_open_from_reduce_only_management, total_margin_balance_for_new_orders, position_qty_to_reduce) = manage_reduce_only_deriv(
-        orders_to_keep.clone(),
-        total_margin_balance_for_new_orders,
-        position_qty_to_reduce,
-        true,
-        is_buy,
-        state,
-        market,
-    );
+    let (additional_orders_to_cancel, orders_to_open_from_reduce_only_management, total_margin_balance_for_new_orders, position_qty_to_reduce) =
+        manage_reduce_only_deriv(
+            orders_to_keep.clone(),
+            total_margin_balance_for_new_orders,
+            position_qty_to_reduce,
+            true,
+            is_buy,
+            state,
+            market,
+        );
     let (orders_to_open_from_base_case, _, _) = create_orders_between_bounds_deriv(
         orders_to_keep.last().unwrap().order_info.price,
         new_tail,
@@ -183,7 +187,10 @@ pub fn create_orders_head_to_tail_deriv(
         state,
         market,
     );
-    (vec![orders_to_open_from_reduce_only_management, orders_to_open_from_base_case].concat(), additional_orders_to_cancel)
+    (
+        vec![orders_to_open_from_reduce_only_management, orders_to_open_from_base_case].concat(),
+        additional_orders_to_cancel,
+    )
 }
 
 /// Traverses through a list of existing orders, either flipping reduce only orders to regular or vice versa depending on the kind of order
@@ -233,14 +240,7 @@ fn manage_reduce_only_deriv(
                 // If we encounter a reduce only order we need to cancel it and replace it if we have sufficient allocated margin balance
                 additional_orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
                 let new_quantity = min(div_dec(total_margin_balance_for_new_orders, o.order_info.price), o.order_info.quantity);
-                let new_order = DerivativeOrder::new(
-                    state,
-                    o.order_info.price,
-                    new_quantity,
-                    is_buy,
-                    false,
-                    market,
-                );
+                let new_order = DerivativeOrder::new(state, o.order_info.price, new_quantity, is_buy, false, market);
                 if new_order.get_margin() <= total_margin_balance_for_new_orders {
                     additional_orders_to_open.push(new_order);
                     total_margin_balance_for_new_orders = sub_no_overflow(total_margin_balance_for_new_orders, o.margin);

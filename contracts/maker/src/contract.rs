@@ -1,11 +1,13 @@
-use crate::derivative::{inventory_imbalance_deriv, create_orders_between_bounds_deriv, create_orders_tail_to_head_deriv, create_orders_head_to_tail_deriv};
+use crate::derivative::{
+    create_orders_between_bounds_deriv, create_orders_head_to_tail_deriv, create_orders_tail_to_head_deriv, inventory_imbalance_deriv,
+};
 use crate::error::ContractError;
 use crate::exchange::{
     Deposit, DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderData, OrderInfo, PerpetualMarketFunding, PerpetualMarketInfo, Position,
     WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedPosition,
 };
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TotalSupplyResponse, WrappedGetActionResponse};
-use crate::risk_management::{check_tail_dist, total_margin_balance_for_new_orders, only_owner, final_check};
+use crate::risk_management::{check_tail_dist, final_check, only_owner, total_margin_balance_for_new_orders};
 use crate::state::{config, config_read, State};
 use crate::utils::{div_dec, sub_abs, sub_no_overflow, wrap};
 use cosmwasm_std::{
@@ -370,7 +372,6 @@ fn get_action(
     volatility: String,
     mid_price: String,
 ) -> StdResult<WrappedGetActionResponse> {
-
     // Wrap everything
     let open_orders: Vec<WrappedDerivativeLimitOrder> = open_orders.into_iter().map(|o| o.wrap().unwrap()).collect();
     let position = match position {
@@ -389,7 +390,13 @@ fn get_action(
     let (inventory_imbalance_ratio, imbalance_is_long) = inventory_imbalance_deriv(&position, total_deposit_balance);
 
     // Calculate reservation price
-    let reservation_price = reservation_price(mid_price, inventory_imbalance_ratio, volatility, state.reservation_price_sensitivity_ratio, imbalance_is_long);
+    let reservation_price = reservation_price(
+        mid_price,
+        inventory_imbalance_ratio,
+        volatility,
+        state.reservation_price_sensitivity_ratio,
+        imbalance_is_long,
+    );
 
     // Calculate the new head prices
     let (new_buy_head, new_sell_head) = new_head_prices(volatility, reservation_price, state.reservation_spread_sensitivity_ratio);
@@ -398,9 +405,17 @@ fn get_action(
     let (open_buy_orders, open_sell_orders) = split_open_orders(open_orders);
 
     // Ensure that the heads have changed enough that we are willing to make an action
-    if should_take_action(&open_buy_orders, new_buy_head, state.head_change_tolerance_ratio) || should_take_action(&open_sell_orders, new_sell_head, state.head_change_tolerance_ratio) {
+    if should_take_action(&open_buy_orders, new_buy_head, state.head_change_tolerance_ratio)
+        || should_take_action(&open_sell_orders, new_sell_head, state.head_change_tolerance_ratio)
+    {
         // Get new tails
-        let (new_buy_tail, new_sell_tail) = new_tail_prices(new_buy_head, new_sell_head, mid_price, state.mid_price_tail_deviation_ratio, state.min_head_to_tail_deviation_ratio);
+        let (new_buy_tail, new_sell_tail) = new_tail_prices(
+            new_buy_head,
+            new_sell_head,
+            mid_price,
+            state.mid_price_tail_deviation_ratio,
+            state.min_head_to_tail_deviation_ratio,
+        );
 
         // Get information for buy order creation/cancellation
         let (buy_orders_to_cancel, buy_orders_to_keep, buy_agg_margin_of_orders_kept, buy_vacancy_is_near_head) =
@@ -575,9 +590,25 @@ fn create_orders(
         );
         (new_orders, Vec::new())
     } else if vacancy_is_near_head {
-        create_orders_tail_to_head_deriv(new_head, total_margin_balance_for_new_orders, orders_to_keep, position_qty_to_reduce, is_buy, state, market)
+        create_orders_tail_to_head_deriv(
+            new_head,
+            total_margin_balance_for_new_orders,
+            orders_to_keep,
+            position_qty_to_reduce,
+            is_buy,
+            state,
+            market,
+        )
     } else {
-        create_orders_head_to_tail_deriv(new_tail, total_margin_balance_for_new_orders, orders_to_keep, position_qty_to_reduce, is_buy, state, market)
+        create_orders_head_to_tail_deriv(
+            new_tail,
+            total_margin_balance_for_new_orders,
+            orders_to_keep,
+            position_qty_to_reduce,
+            is_buy,
+            state,
+            market,
+        )
     }
 }
 
@@ -591,7 +622,13 @@ fn create_orders(
 /// * `imbalance_is_long` - True if the imbalance is skewed towards being long
 /// # Returns
 /// * `reservation_price` - The price around which we will center both heads
-fn reservation_price(mid_price: Decimal, inventory_imbalance_ratio: Decimal, volatility: Decimal, reservation_price_sensitivity_ratio: Decimal, imbalance_is_long: bool) -> Decimal {
+fn reservation_price(
+    mid_price: Decimal,
+    inventory_imbalance_ratio: Decimal,
+    volatility: Decimal,
+    reservation_price_sensitivity_ratio: Decimal,
+    imbalance_is_long: bool,
+) -> Decimal {
     if inventory_imbalance_ratio == Decimal::zero() {
         mid_price
     } else {
@@ -659,7 +696,13 @@ pub fn new_tail_prices(
 ) -> (Decimal, Decimal) {
     let proposed_buy_tail = mid_price * sub_no_overflow(Decimal::one(), mid_price_tail_deviation_ratio);
     let proposed_sell_tail = mid_price * (Decimal::one() + mid_price_tail_deviation_ratio);
-    check_tail_dist(new_buy_head, new_sell_head, proposed_buy_tail, proposed_sell_tail, min_head_to_tail_deviation_ratio)
+    check_tail_dist(
+        new_buy_head,
+        new_sell_head,
+        proposed_buy_tail,
+        proposed_sell_tail,
+        min_head_to_tail_deviation_ratio,
+    )
 }
 
 /// Splits the vec of orders to buyside and sellside orders. Sorts them so that the head from the previous block is at index == 0. Buyside
@@ -701,7 +744,7 @@ mod tests {
         utils::{div_dec, sub_no_overflow},
     };
 
-    use super::{should_take_action, new_tail_prices, orders_to_cancel, split_open_orders};
+    use super::{new_tail_prices, orders_to_cancel, should_take_action, split_open_orders};
     use cosmwasm_std::{Decimal256 as Decimal, Uint256};
     use std::str::FromStr;
 
@@ -822,13 +865,25 @@ mod tests {
         let sell_head = Decimal::from_str("4001").unwrap();
         let max_mid_price_tail_deviation_ratio = Decimal::from_str("0.05").unwrap();
         let min_head_to_tail_deviation_ratio = Decimal::from_str("0.01").unwrap();
-        let (buy_tail, sell_tail) = new_tail_prices(buy_head, sell_head, mid_price, max_mid_price_tail_deviation_ratio, min_head_to_tail_deviation_ratio);
+        let (buy_tail, sell_tail) = new_tail_prices(
+            buy_head,
+            sell_head,
+            mid_price,
+            max_mid_price_tail_deviation_ratio,
+            min_head_to_tail_deviation_ratio,
+        );
         assert_eq!(buy_tail, mid_price * sub_no_overflow(Decimal::one(), max_mid_price_tail_deviation_ratio));
         assert_eq!(sell_tail, mid_price * (Decimal::one() + max_mid_price_tail_deviation_ratio));
 
         let max_mid_price_tail_deviation_ratio = Decimal::from_str("0.001").unwrap();
         let min_head_to_tail_deviation_ratio = Decimal::from_str("0.01").unwrap();
-        let (buy_tail, sell_tail) = new_tail_prices(buy_head, sell_head, mid_price, max_mid_price_tail_deviation_ratio, min_head_to_tail_deviation_ratio);
+        let (buy_tail, sell_tail) = new_tail_prices(
+            buy_head,
+            sell_head,
+            mid_price,
+            max_mid_price_tail_deviation_ratio,
+            min_head_to_tail_deviation_ratio,
+        );
         assert_eq!(buy_tail, buy_head * sub_no_overflow(Decimal::one(), min_head_to_tail_deviation_ratio));
         assert_eq!(sell_tail, sell_head * (Decimal::one() + min_head_to_tail_deviation_ratio));
     }
