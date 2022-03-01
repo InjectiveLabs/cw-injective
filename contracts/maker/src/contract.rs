@@ -531,7 +531,7 @@ pub fn orders_to_cancel(
     }
 }
 
-/// Creates new orders. Determined what kind of order creation we need: base, head to tail, or tail to head
+/// Creates new orders. Determines what kind of order creation we need: base, head to tail, or tail to head
 /// # Arguments
 /// * `new_head` - The new buy or sell head
 /// * `new_tail` - The new buy or sell tail

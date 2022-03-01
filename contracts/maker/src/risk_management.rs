@@ -19,7 +19,6 @@ pub fn sanity_check(_position: &Option<WrappedPosition>, _inv_base_ball: Decimal
 
 /// Determines the total margin that we are allowed to allocate to the new orders. It is influenced by the capital utilization ratio, the
 /// current margined balance of orders we decided to keep on the book, and same sided position margin.
-/// that already has a position open.
 /// # Arguments
 /// * `total_deposit_balance` - The total quote balance LPed
 /// * `position_is_same_side` - True if the side is the same as the position
