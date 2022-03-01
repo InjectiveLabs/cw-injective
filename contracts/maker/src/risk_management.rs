@@ -1,5 +1,5 @@
 use crate::{
-    exchange::WrappedPosition,
+    exchange::{WrappedPosition, DerivativeOrder,  WrappedDerivativeMarket},
     state::State,
     utils::{div_dec, sub_abs, sub_no_overflow},
 };
@@ -17,84 +17,96 @@ pub fn sanity_check(_position: &Option<WrappedPosition>, _inv_base_ball: Decimal
     //TODO: come back to this one
 }
 
-/// Determines the notional balance that we are willing to assign to either the buy/sell side.
-/// Takes into consideration the current margin to limit the new open orders on the side
+/// Determines the total margin that we are allowed to allocate to the new orders. It is influenced by the capital utilization ratio, the
+/// current margined balance of orders we decided to keep on the book, and same sided position margin.
 /// that already has a position open.
 /// # Arguments
-/// * `inv_val` - The total notional value of the inventory
-/// * `margin` - The margin value of an open position
-/// * `is_same_side` - True if the side is the same as the position
-/// * `max_active_capital_utilization_ratio` - The factor by which we multiply the inventory val to get total capital that should be on the book (between 0..1)
+/// * `total_deposit_balance` - The total quote balance LPed
+/// * `position_is_same_side` - True if the side is the same as the position
+/// * `position_margin` - The margin value of a position taken. Is zero if no position is taken
+/// * `max_active_capital_utilization_ratio` - A constant between 0..1 that will be used to determine what percentage of how much of our total deposited balance we want margined on the book
+/// * `agg_margin_of_orders_kept` - The total aggregated margined value of the orders we would like to keep
 /// # Returns
-/// * `alloc_bal` - The notional balance we are willing to allocate to one side
-pub fn get_alloc_bal_new_orders(
-    inv_val: Decimal,
-    is_same_side: bool,
-    margin: Decimal,
+/// * `total_margin_balance_for_new_orders` - The total margin that we are allowed to allocate to the new orders
+pub fn total_margin_balance_for_new_orders(
+    total_deposit_balance: Decimal,
+    position_is_same_side: bool,
+    position_margin: Decimal,
     max_active_capital_utilization_ratio: Decimal,
-    margined_val_from_orders_remaining: Decimal,
+    agg_margin_of_orders_kept: Decimal,
 ) -> Decimal {
-    let alloc_for_both_sides = inv_val * max_active_capital_utilization_ratio;
-    let alloc_one_side = div_dec(alloc_for_both_sides, Decimal::from_str("2").unwrap());
-    let alloc_one_side = sub_no_overflow(alloc_one_side, margined_val_from_orders_remaining);
-    if is_same_side {
-        sub_no_overflow(alloc_one_side, margin)
+    let total_margin_balance_for_both_sides = total_deposit_balance * max_active_capital_utilization_ratio;
+    let total_margin_balance_for_one_side = div_dec(total_margin_balance_for_both_sides, Decimal::from_str("2").unwrap());
+    let total_margin_balance_for_new_orders = sub_no_overflow(total_margin_balance_for_one_side, agg_margin_of_orders_kept);
+    if position_is_same_side {
+        sub_no_overflow(total_margin_balance_for_new_orders, position_margin)
     } else {
-        alloc_one_side
+        total_margin_balance_for_new_orders
     }
 }
 
 /// Ensures that the current tails have enough distance between them. We don't want our order spread to be too dense.
 /// If they fall below the minimum distance, we update the tail to something more suitable.
 /// # Arguments
-/// * `buy_head` - The buy head that we are going to use
-/// * `sell_head` - The the sell head that we are going to use
-/// * `proposed_buy_tail` - The buyside tail obtained from the mid price
-/// * `proposed_sell_tail` - The sellside tail obtained from the mid price
-/// * `min_head_to_tail_deviation_ratio` - The minimum distance in from the head that we are willing to tolerate (between 0..1)
+/// * `new_buy_head` - The buy head that we are going to use
+/// * `new_sell_head` - The the sell head that we are going to use
+/// * `proposed_buy_tail` - The buyside tail obtained from the spread around the mid price
+/// * `proposed_sell_tail` - The sellside tail obtained from the spread around the mid price
+/// * `min_head_to_tail_deviation_ratio` - A constant between 0..1 that ensures our tail is at least some distance from the head
 /// # Returns
-/// * `buy_tail` - The new buyside tail post risk management
-/// * `sell_tail` - The new sellside tail post risk management
+/// * `new_buy_tail` - The new buyside tail post risk management
+/// * `new_sell_tail` - The new sellside tail post risk management
 pub fn check_tail_dist(
-    buy_head: Decimal,
-    sell_head: Decimal,
+    new_buy_head: Decimal,
+    new_sell_head: Decimal,
     proposed_buy_tail: Decimal,
     proposed_sell_tail: Decimal,
     min_head_to_tail_deviation_ratio: Decimal,
 ) -> (Decimal, Decimal) {
-    let buy_tail = if buy_head > proposed_buy_tail {
-        let proposed_buy_tail_dist = div_dec(sub_abs(buy_head, proposed_buy_tail), buy_head);
-        if proposed_buy_tail_dist < min_head_to_tail_deviation_ratio {
-            buy_head * sub_abs(Decimal::one(), min_head_to_tail_deviation_ratio)
+    let new_buy_tail =  {
+        let proposed_buy_tail_dist = div_dec(sub_abs(new_buy_head, proposed_buy_tail), new_buy_head);
+        if proposed_buy_tail_dist < min_head_to_tail_deviation_ratio || proposed_buy_tail >= new_buy_head{
+            new_buy_head * sub_abs(Decimal::one(), min_head_to_tail_deviation_ratio)
         } else {
             proposed_buy_tail
         }
-    } else {
-        proposed_buy_tail
     };
 
-    let sell_tail = if sell_head < proposed_sell_tail {
-        let proposed_sell_tail_dist = div_dec(sub_abs(sell_head, proposed_sell_tail), sell_head);
-        if proposed_sell_tail_dist < min_head_to_tail_deviation_ratio {
-            sell_head * (Decimal::one() + min_head_to_tail_deviation_ratio)
+    let new_sell_tail = {
+        let proposed_sell_tail_dist = div_dec(sub_abs(new_sell_head, proposed_sell_tail), new_sell_head);
+        if proposed_sell_tail_dist < min_head_to_tail_deviation_ratio || proposed_sell_tail <= new_sell_head {
+            new_sell_head * (Decimal::one() + min_head_to_tail_deviation_ratio)
         } else {
             proposed_sell_tail
         }
-    } else {
-        proposed_sell_tail
     };
 
-    (buy_tail, sell_tail)
+    (new_buy_tail, new_sell_tail)
+}
+
+/// Filters out any orders that dont comply with the exchange standards.
+/// # Arguments
+/// * `orders_to_place` - All the orders that we are trying to create
+/// * `market` - Derivative market information
+/// # Returns
+/// * `filtered_orders_to_place` - The filtered orders
+pub fn final_check(orders_to_place: Vec<DerivativeOrder>, market: &WrappedDerivativeMarket) -> Vec<DerivativeOrder> {
+    orders_to_place.into_iter()
+    .filter(|order| {
+        Decimal::from_str(&order.order_info.quantity).unwrap().gt(&market.min_quantity_tick_size)
+            && Decimal::from_str(&order.order_info.price).unwrap().gt(&market.min_price_tick_size)
+    })
+    .collect()
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{check_tail_dist, get_alloc_bal_new_orders};
+    use super::{check_tail_dist};
     use cosmwasm_std::Decimal256 as Decimal;
     use std::str::FromStr;
 
-    #[test]
-    fn get_alloc_bal_new_orders_test() {
+    // #[test]
+    // fn get_alloc_bal_new_orders_test() {
         // let inv_val = Decimal::from_str("1000000000").unwrap();
         // let max_active_capital_utilization_ratio = Decimal::from_str("1").unwrap();
         // let margin = Decimal::zero();
@@ -120,7 +132,7 @@ mod tests {
         // println!("{} {}", alloc_bal_a, alloc_bal_b);
         // assert_eq!(Decimal::zero(), alloc_bal_a);
         // assert_eq!(Decimal::zero(), alloc_bal_b);
-    }
+    // }
 
     #[test]
     fn check_tail_dist_test() {

@@ -1,13 +1,13 @@
-use crate::derivative::{base_deriv, head_to_tail_deriv, inv_imbalance_deriv, tail_to_head_deriv};
+use crate::derivative::{inventory_imbalance_deriv, create_orders_between_bounds_deriv, create_orders_tail_to_head_deriv, create_orders_head_to_tail_deriv};
 use crate::error::ContractError;
 use crate::exchange::{
     Deposit, DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderData, OrderInfo, PerpetualMarketFunding, PerpetualMarketInfo, Position,
     WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedPosition,
 };
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TotalSupplyResponse, WrappedGetActionResponse};
-use crate::risk_management::{check_tail_dist, get_alloc_bal_new_orders, only_owner};
+use crate::risk_management::{check_tail_dist, total_margin_balance_for_new_orders, only_owner, final_check};
 use crate::state::{config, config_read, State};
-use crate::utils::{bp_to_dec, div_dec, sub_abs, sub_no_overflow, wrap};
+use crate::utils::{div_dec, sub_abs, sub_no_overflow, wrap};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, CosmosMsg, Decimal256 as Decimal, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Reply, Response,
     StdError, StdResult, SubMsg, Uint128, Uint256, WasmMsg, WasmQuery,
@@ -33,11 +33,11 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: Messag
         leverage: Decimal::from_str(&msg.leverage).unwrap(),
         order_density: Uint256::from_str(&msg.order_density).unwrap(),
         reservation_price_sensitivity_ratio: Decimal::from_str(&msg.reservation_price_sensitivity_ratio).unwrap(),
-        mid_price_spread_sensitivity_ratio: Decimal::from_str(&msg.mid_price_spread_sensitivity_ratio).unwrap(),
+        reservation_spread_sensitivity_ratio: Decimal::from_str(&msg.reservation_spread_sensitivity_ratio).unwrap(),
         max_active_capital_utilization_ratio: Decimal::from_str(&msg.max_active_capital_utilization_ratio).unwrap(),
-        head_change_tolerance_ratio: bp_to_dec(Decimal::from_str(&msg.head_change_tolerance_ratio_bp).unwrap()),
-        max_mid_price_tail_deviation_ratio: bp_to_dec(Decimal::from_str(&msg.max_mid_price_tail_deviation_ratio_bp).unwrap()),
-        min_head_to_tail_deviation_ratio: bp_to_dec(Decimal::from_str(&msg.min_head_to_tail_deviation_ratio_bp).unwrap()),
+        head_change_tolerance_ratio: Decimal::from_str(&msg.head_change_tolerance_ratio).unwrap(),
+        mid_price_tail_deviation_ratio: Decimal::from_str(&msg.mid_price_tail_deviation_ratio).unwrap(),
+        min_head_to_tail_deviation_ratio: Decimal::from_str(&msg.min_head_to_tail_deviation_ratio).unwrap(),
         lp_token_address: None,
     };
 
@@ -370,58 +370,55 @@ fn get_action(
     volatility: String,
     mid_price: String,
 ) -> StdResult<WrappedGetActionResponse> {
+
     // Wrap everything
     let open_orders: Vec<WrappedDerivativeLimitOrder> = open_orders.into_iter().map(|o| o.wrap().unwrap()).collect();
     let position = match position {
         None => None,
         Some(p) => Some(p.wrap().unwrap()),
     };
-    let inv_val = wrap(&deposit.total_balance);
+    let total_deposit_balance = wrap(&deposit.total_balance);
     let market = market.wrap().unwrap();
-
-    // Update the mid price
     let mid_price = Decimal::from_str(&mid_price).unwrap();
-
-    // Update the volatility
     let volatility = Decimal::from_str(&volatility).unwrap();
 
     // Load state
     let state = config_read(deps.storage).load().unwrap();
 
     // Calculate inventory imbalance parameter
-    let (inv_imbal, imbal_is_long) = inv_imbalance_deriv(&position, inv_val);
+    let (inventory_imbalance_ratio, imbalance_is_long) = inventory_imbalance_deriv(&position, total_deposit_balance);
 
     // Calculate reservation price
-    let reservation_price = reservation_price(mid_price, inv_imbal, volatility, state.reservation_price_sensitivity_ratio, imbal_is_long);
+    let reservation_price = reservation_price(mid_price, inventory_imbalance_ratio, volatility, state.reservation_price_sensitivity_ratio, imbalance_is_long);
 
     // Calculate the new head prices
-    let (new_buy_head, new_sell_head) = new_head_prices(volatility, reservation_price, state.mid_price_spread_sensitivity_ratio);
+    let (new_buy_head, new_sell_head) = new_head_prices(volatility, reservation_price, state.reservation_spread_sensitivity_ratio);
 
     // Split open orders
-    let (open_buys, open_sells) = split_open_orders(open_orders);
+    let (open_buy_orders, open_sell_orders) = split_open_orders(open_orders);
 
     // Ensure that the heads have changed enough that we are willing to make an action
-    if head_chg_is_gt_tol(&open_buys, new_buy_head, state.head_change_tolerance_ratio) || head_chg_is_gt_tol(&open_sells, new_sell_head, state.head_change_tolerance_ratio) {
+    if should_take_action(&open_buy_orders, new_buy_head, state.head_change_tolerance_ratio) || should_take_action(&open_sell_orders, new_sell_head, state.head_change_tolerance_ratio) {
         // Get new tails
-        let (new_buy_tail, new_sell_tail) = new_tail_prices(new_buy_head, new_sell_head, mid_price, state.max_mid_price_tail_deviation_ratio, state.min_head_to_tail_deviation_ratio);
+        let (new_buy_tail, new_sell_tail) = new_tail_prices(new_buy_head, new_sell_head, mid_price, state.mid_price_tail_deviation_ratio, state.min_head_to_tail_deviation_ratio);
 
         // Get information for buy order creation/cancellation
-        let (buy_orders_to_cancel, buy_orders_to_keep, buy_margined_val_from_orders_remaining, buy_append_to_new_head) =
-            orders_to_cancel(open_buys, new_buy_head, new_buy_tail, true, &state, &market);
+        let (buy_orders_to_cancel, buy_orders_to_keep, buy_agg_margin_of_orders_kept, buy_vacancy_is_near_head) =
+            orders_to_cancel(open_buy_orders, new_buy_head, new_buy_tail, true, &state, &market);
 
         // Get information for sell order creation/cancellation
-        let (sell_orders_to_cancel, sell_orders_to_keep, sell_margined_val_from_orders_remaining, sell_append_to_new_head) =
-            orders_to_cancel(open_sells, new_sell_head, new_sell_tail, false, &state, &market);
+        let (sell_orders_to_cancel, sell_orders_to_keep, sell_agg_margin_of_orders_kept, sell_vacancy_is_near_head) =
+            orders_to_cancel(open_sell_orders, new_sell_head, new_sell_tail, false, &state, &market);
 
         // Get new buy/sell orders
         let (buy_orders_to_open, additional_buys_to_cancel) = create_orders(
             new_buy_head,
             new_buy_tail,
-            inv_val,
+            total_deposit_balance,
             buy_orders_to_keep,
-            buy_margined_val_from_orders_remaining,
-            position.clone(),
-            buy_append_to_new_head,
+            buy_agg_margin_of_orders_kept,
+            &position,
+            buy_vacancy_is_near_head,
             true,
             &state,
             &market,
@@ -429,23 +426,19 @@ fn get_action(
         let (sell_orders_to_open, additional_sells_to_cancel) = create_orders(
             new_sell_head,
             new_sell_tail,
-            inv_val,
+            total_deposit_balance,
             sell_orders_to_keep,
-            sell_margined_val_from_orders_remaining,
-            position,
-            sell_append_to_new_head,
+            sell_agg_margin_of_orders_kept,
+            &position,
+            sell_vacancy_is_near_head,
             false,
             &state,
             &market,
         );
-        let derivative_orders_to_create = vec![buy_orders_to_open, sell_orders_to_open]
-            .concat()
-            .into_iter()
-            .filter(|order| {
-                Decimal::from_str(&order.order_info.quantity).unwrap().gt(&market.min_quantity_tick_size)
-                    && Decimal::from_str(&order.order_info.price).unwrap().gt(&market.min_price_tick_size)
-            })
-            .collect();
+
+        // Filter out any faulty orders
+        let derivative_orders_to_create = final_check(vec![buy_orders_to_open, sell_orders_to_open].concat(), &market);
+
         let batch_order = MsgBatchUpdateOrders {
             sender: env.contract.address.to_string(),
             subaccount_id: String::from(""), // use only when passing market ids to cancel all: state.subaccount_id,
@@ -471,6 +464,20 @@ fn get_action(
     }
 }
 
+/// Determines which orders to cancel and which to leave resting on the book depending on the placement of the new tails
+/// # Arguments
+/// * `open_orders` - The buy or sell side orders from the previous block
+/// * `new_head` - The new buy or sell head
+/// * `new_tail` - The new buy or sell tail
+/// * `is_buy` - If this block of orders is on the buyside
+/// * `state` - State that the contract was initialized with
+/// * `market` - Derivative market information
+/// # Returns
+/// * `orders_to_cancel` - The orders we've decided to cancel
+/// * `orders_to_keep` - The orders that we would like to keep resting on the book
+/// * `agg_margin_of_orders_kept` - The total aggregated margined value of the orders we would like to keep
+/// * `vacancy_is_near_head` - True if the space between new head and closest order to keep is greater than that of new tail and its
+///   respective closest order. This will be used to determine if we need to do a head to tail or tail to head later.
 pub fn orders_to_cancel(
     open_orders: Vec<WrappedDerivativeLimitOrder>,
     new_head: Decimal,
@@ -481,17 +488,15 @@ pub fn orders_to_cancel(
 ) -> (Vec<OrderData>, Vec<WrappedDerivativeLimitOrder>, Decimal, bool) {
     // If there are any open orders, we need to check them to see if we should cancel
     if open_orders.len() > 0 {
-        let mut margined_val_from_orders_remaining = Decimal::zero();
+        let mut agg_margin_of_orders_kept = Decimal::zero();
         let mut orders_to_cancel: Vec<OrderData> = Vec::new();
-        // Use the new tail/head to filter out the orders to cancel
         let mut orders_to_keep: Vec<WrappedDerivativeLimitOrder> = Vec::new();
-
         open_orders.into_iter().for_each(|o| {
             let keep_if_buy = o.order_info.price <= new_head && o.order_info.price >= new_tail;
             let keep_if_sell = o.order_info.price >= new_head && o.order_info.price <= new_tail;
             let keep = (keep_if_buy && is_buy) || (keep_if_sell && !is_buy);
             if keep {
-                margined_val_from_orders_remaining = margined_val_from_orders_remaining + o.margin;
+                agg_margin_of_orders_kept = agg_margin_of_orders_kept + o.margin;
                 orders_to_keep.push(o);
             } else {
                 orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
@@ -502,28 +507,43 @@ pub fn orders_to_cancel(
         } else {
             // Determine if we need to append to new orders to the new head or if we need to
             // append to the end of the block of orders we will be keeping
-            let append_to_new_head = sub_abs(new_head, orders_to_keep.first().unwrap().order_info.price)
+            let vacancy_is_near_head = sub_abs(new_head, orders_to_keep.first().unwrap().order_info.price)
                 > sub_abs(orders_to_keep.last().unwrap().order_info.price, new_tail);
-            (orders_to_cancel, orders_to_keep, margined_val_from_orders_remaining, append_to_new_head)
+            (orders_to_cancel, orders_to_keep, agg_margin_of_orders_kept, vacancy_is_near_head)
         }
     } else {
         (Vec::new(), Vec::new(), Decimal::zero(), true)
     }
 }
 
+/// Creates new orders. Determined what kind of order creation we need: base, head to tail, or tail to head
+/// # Arguments
+/// * `new_head` - The new buy or sell head
+/// * `new_tail` - The new buy or sell tail
+/// * `total_deposit_balance` - The total quote balance LPed
+/// * `orders_to_keep` - The orders that we would like to keep resting on the book
+/// * `agg_margin_of_orders_kept` - The total aggregated margined value of the orders we would like to keep
+/// * `position` - The position we have taken, if any
+/// * `vacancy_is_near_head` - True if the space between new head and closest order to keep is greater than that of new tail and its
+/// * `is_buy` - If this block of orders is on the buyside
+/// * `state` - State that the contract was initialized with
+/// * `market` - Derivative market information
+/// # Returns
+/// * `orders_to_create` - The new orders we would like to create
+/// * `additional_orders_to_cancel` - The additional orders we need to cancel
 fn create_orders(
     new_head: Decimal,
     new_tail: Decimal,
-    inv_val: Decimal,
+    total_deposit_balance: Decimal,
     orders_to_keep: Vec<WrappedDerivativeLimitOrder>,
-    margined_val_from_orders_remaining: Decimal,
-    position: Option<WrappedPosition>,
-    append_to_new_head: bool,
+    agg_margin_of_orders_kept: Decimal,
+    position: &Option<WrappedPosition>,
+    vacancy_is_near_head: bool,
     is_buy: bool,
     state: &State,
     market: &WrappedDerivativeMarket,
 ) -> (Vec<DerivativeOrder>, Vec<OrderData>) {
-    let (position_qty, position_margin, is_same_side) = match position {
+    let (position_qty_to_reduce, position_margin, position_is_same_side) = match position {
         Some(position) => {
             if position.is_long == is_buy {
                 (Decimal::zero(), position.margin, true)
@@ -533,65 +553,68 @@ fn create_orders(
         }
         None => (Decimal::zero(), Decimal::zero(), false),
     };
-    let alloc_val_for_new_orders = get_alloc_bal_new_orders(
-        inv_val,
-        is_same_side,
+    let total_margin_balance_for_new_orders = total_margin_balance_for_new_orders(
+        total_deposit_balance,
+        position_is_same_side,
         position_margin,
         state.max_active_capital_utilization_ratio,
-        margined_val_from_orders_remaining,
+        agg_margin_of_orders_kept,
     );
-    if orders_to_keep.len() == 0 {
-        let (new_orders, _, _) = base_deriv(
+    let num_orders_to_keep = orders_to_keep.len();
+    if num_orders_to_keep == 0 {
+        let (new_orders, _, _) = create_orders_between_bounds_deriv(
             new_head,
             new_tail,
-            alloc_val_for_new_orders,
-            orders_to_keep.len(),
-            position_qty,
+            total_margin_balance_for_new_orders,
+            num_orders_to_keep,
+            position_qty_to_reduce,
             true,
             is_buy,
             &state,
             market,
         );
         (new_orders, Vec::new())
-    } else if append_to_new_head {
-        tail_to_head_deriv(new_head, alloc_val_for_new_orders, orders_to_keep, position_qty, is_buy, &state, market)
+    } else if vacancy_is_near_head {
+        create_orders_tail_to_head_deriv(new_head, total_margin_balance_for_new_orders, orders_to_keep, position_qty_to_reduce, is_buy, state, market)
     } else {
-        head_to_tail_deriv(new_tail, alloc_val_for_new_orders, orders_to_keep, position_qty, is_buy, &state, market)
+        create_orders_head_to_tail_deriv(new_tail, total_margin_balance_for_new_orders, orders_to_keep, position_qty_to_reduce, is_buy, state, market)
     }
 }
 
-/// Uses the inventory imbalance to calculate a price around which we will center the mid price
+/// Uses the inventory imbalance and its direction to calculate a price around which we will center the mid price
 /// # Arguments
-/// * `mid_price` - A mid_price that we update on a block by block basis
-/// * `inv_imbal` - A measure of inventory imbalance
+/// * `mid_price` - The true center between the best bid and ask
+/// * `inventory_imbalance_ratio` - A relationship between margined position and total deposit balance (margin/total_deposit_balance). Is
+///    zero if there is no position open.
 /// * `volatility` - A measure of volatility that we update on a block by block basis
 /// * `reservation_price_sensitivity_ratio` - The constant to control the sensitivity of the volatility param
-/// * `imbal_is_long` - The direction of the inventory imbalance
+/// * `imbalance_is_long` - True if the imbalance is skewed towards being long
 /// # Returns
 /// * `reservation_price` - The price around which we will center both heads
-fn reservation_price(mid_price: Decimal, inv_imbal: Decimal, volatility: Decimal, reservation_price_sensitivity_ratio: Decimal, imbal_is_long: bool) -> Decimal {
-    if inv_imbal == Decimal::zero() {
+fn reservation_price(mid_price: Decimal, inventory_imbalance_ratio: Decimal, volatility: Decimal, reservation_price_sensitivity_ratio: Decimal, imbalance_is_long: bool) -> Decimal {
+    if inventory_imbalance_ratio == Decimal::zero() {
         mid_price
     } else {
-        if imbal_is_long {
-            sub_no_overflow(mid_price, inv_imbal * volatility * reservation_price_sensitivity_ratio)
+        let shift_from_mid_price = inventory_imbalance_ratio * volatility * reservation_price_sensitivity_ratio;
+        if imbalance_is_long {
+            sub_no_overflow(mid_price, shift_from_mid_price)
         } else {
-            mid_price + (inv_imbal * volatility * reservation_price_sensitivity_ratio)
+            mid_price + shift_from_mid_price
         }
     }
 }
 
-/// Uses the reservation price and variation to calculate where the buy/sell heads should be. Both buy and
+/// Uses the reservation price and volatility to calculate where the buy/sell heads should be. Both buy and
 /// sell heads will be equi-distant from the reservation price.
 /// # Arguments
 /// * `volatility` - A measure of volatility that we update on a block by block basis
-/// * `reservation_price` - The a price that is shifted from the mid price depending on the inventory imbalance
-/// * `spread_param` - The constant to control the sensitivity of the spread
+/// * `reservation_price` - The price around which we will center both heads
+/// * `reservation_spread_sensitivity_ratio` - The constant to control the sensitivity of the spread around the reservation_price
 /// # Returns
 /// * `buy_head` - The new buy head
 /// * `sell_head` - The new sell head
-fn new_head_prices(volatility: Decimal, reservation_price: Decimal, spread_param: Decimal) -> (Decimal, Decimal) {
-    let dist_from_reservation_price = div_dec(volatility * spread_param, Decimal::from_str("2").unwrap());
+fn new_head_prices(volatility: Decimal, reservation_price: Decimal, reservation_spread_sensitivity_ratio: Decimal) -> (Decimal, Decimal) {
+    let dist_from_reservation_price = div_dec(volatility * reservation_spread_sensitivity_ratio, Decimal::from_str("2").unwrap());
     (
         sub_no_overflow(reservation_price, dist_from_reservation_price),
         reservation_price + dist_from_reservation_price,
@@ -603,10 +626,10 @@ fn new_head_prices(volatility: Decimal, reservation_price: Decimal, spread_param
 /// # Arguments
 /// * `open_orders` - The buy or sell side orders from the previous block
 /// * `new_head` - The new proposed buy or sell head
-/// * `head_change_tolerance_ratio` - Our tolerance to change in the head price
+/// * `head_change_tolerance_ratio` - A constant between 0..1 that serves as a threshold for which we actually want to take action in the new block
 /// # Returns
-/// * `should_change` - Whether we should cancel and place new orders at the new head
-fn head_chg_is_gt_tol(open_orders: &Vec<WrappedDerivativeLimitOrder>, new_head: Decimal, head_change_tolerance_ratio: Decimal) -> bool {
+/// * `should_take_action` - Whether we should cancel and place new orders with respect to the new head and tails
+fn should_take_action(open_orders: &Vec<WrappedDerivativeLimitOrder>, new_head: Decimal, head_change_tolerance_ratio: Decimal) -> bool {
     if open_orders.len() == 0 {
         true
     } else {
@@ -615,28 +638,28 @@ fn head_chg_is_gt_tol(open_orders: &Vec<WrappedDerivativeLimitOrder>, new_head: 
     }
 }
 
-/// Calculates the correct tail prices for buy and sell sides based off of the mid price. If either of
+/// Calculates the correct tail prices for buyside and sellside from the mid price. If either of
 /// the distances between the head and tail fall below the minimum spread defined at initialization, risk
 /// manager returns a tail that meets the minimum spread constraint.
 /// # Arguments
-/// * `buy_head` - The new buy head
-/// * `sell_head` - The new sell head
+/// * `new_buy_head` - The new buy head
+/// * `new_sell_head` - The new sell head
 /// * `mid_price` - A mid_price that we update on a block by block basis
-/// * `max_mid_price_tail_deviation_ratio` - The distance from the mid price, in either direction, that we want tails to be located (between 0..1)
-/// * `min_head_to_tail_deviation_ratio` - The min distance that can exist between any head and tail (between 0..1)
+/// * `mid_price_tail_deviation_ratio` - A constant between 0..1 that is used to determine how far we want to place our tails from the mid_price
+/// * `min_head_to_tail_deviation_ratio` - A constant between 0..1 that ensures our tail is at least some distance from the head (risk management param)
 /// # Returns
-/// * `buy_tail` - The new buy tail
-/// * `sell_tail` - The new sell tail
+/// * `new_buy_tail` - The new buy tail
+/// * `new_sell_tail` - The new sell tail
 pub fn new_tail_prices(
-    buy_head: Decimal,
-    sell_head: Decimal,
+    new_buy_head: Decimal,
+    new_sell_head: Decimal,
     mid_price: Decimal,
-    max_mid_price_tail_deviation_ratio: Decimal,
+    mid_price_tail_deviation_ratio: Decimal,
     min_head_to_tail_deviation_ratio: Decimal,
 ) -> (Decimal, Decimal) {
-    let proposed_buy_tail = mid_price * sub_no_overflow(Decimal::one(), max_mid_price_tail_deviation_ratio);
-    let proposed_sell_tail = mid_price * (Decimal::one() + max_mid_price_tail_deviation_ratio);
-    check_tail_dist(buy_head, sell_head, proposed_buy_tail, proposed_sell_tail, min_head_to_tail_deviation_ratio)
+    let proposed_buy_tail = mid_price * sub_no_overflow(Decimal::one(), mid_price_tail_deviation_ratio);
+    let proposed_sell_tail = mid_price * (Decimal::one() + mid_price_tail_deviation_ratio);
+    check_tail_dist(new_buy_head, new_sell_head, proposed_buy_tail, proposed_sell_tail, min_head_to_tail_deviation_ratio)
 }
 
 /// Splits the vec of orders to buyside and sellside orders. Sorts them so that the head from the previous block is at index == 0. Buyside
@@ -644,26 +667,26 @@ pub fn new_tail_prices(
 /// # Arguments
 /// * `open_orders` - The open orders from both sides that were on the book as of the preceding block
 /// # Returns
-/// * `buy_orders` - The sorted buyside orders
-/// * `sell_orders` - The sorted sellside orders
+/// * `open_buy_orders` - The sorted buyside orders
+/// * `open_sell_orders` - The sorted sellside orders
 fn split_open_orders(open_orders: Vec<WrappedDerivativeLimitOrder>) -> (Vec<WrappedDerivativeLimitOrder>, Vec<WrappedDerivativeLimitOrder>) {
     if open_orders.len() > 0 {
-        let mut buy_orders: Vec<WrappedDerivativeLimitOrder> = Vec::new();
-        let mut sell_orders: Vec<WrappedDerivativeLimitOrder> = open_orders
+        let mut open_buy_orders: Vec<WrappedDerivativeLimitOrder> = Vec::new();
+        let mut open_sell_orders: Vec<WrappedDerivativeLimitOrder> = open_orders
             .into_iter()
             .filter(|o| {
                 if o.order_type == 1 {
-                    buy_orders.push(o.clone());
+                    open_buy_orders.push(o.clone());
                 }
                 o.order_type == 2
             })
             .collect();
 
         // Sort both so the head is at index 0
-        buy_orders.sort_by(|a, b| b.order_info.price.partial_cmp(&a.order_info.price).unwrap());
-        sell_orders.sort_by(|a, b| a.order_info.price.partial_cmp(&b.order_info.price).unwrap());
+        open_buy_orders.sort_by(|a, b| b.order_info.price.partial_cmp(&a.order_info.price).unwrap());
+        open_sell_orders.sort_by(|a, b| a.order_info.price.partial_cmp(&b.order_info.price).unwrap());
 
-        (buy_orders, sell_orders)
+        (open_buy_orders, open_sell_orders)
     } else {
         (Vec::new(), Vec::new())
     }
@@ -678,7 +701,7 @@ mod tests {
         utils::{div_dec, sub_no_overflow},
     };
 
-    use super::{head_chg_is_gt_tol, new_tail_prices, orders_to_cancel, split_open_orders};
+    use super::{should_take_action, new_tail_prices, orders_to_cancel, split_open_orders};
     use cosmwasm_std::{Decimal256 as Decimal, Uint256};
     use std::str::FromStr;
 
@@ -715,7 +738,7 @@ mod tests {
             inv_val,
             orders_to_keep.clone(),
             margined_val_from_orders_remaining,
-            Some(position.clone()),
+            &Some(position.clone()),
             append_to_new_head,
             true,
             &state,
@@ -746,11 +769,11 @@ mod tests {
     }
 
     #[test]
-    fn head_chg_is_gt_tol_test() {
+    fn should_take_action_test() {
         let mut open_orders: Vec<WrappedDerivativeLimitOrder> = Vec::new();
         let new_head = Decimal::from_str("100000000100").unwrap();
         let head_change_tolerance_ratio = Decimal::from_str("0.01").unwrap();
-        let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_change_tolerance_ratio);
+        let should_change = should_take_action(&open_orders, new_head, head_change_tolerance_ratio);
         assert!(should_change);
 
         open_orders.push(WrappedDerivativeLimitOrder {
@@ -767,7 +790,7 @@ mod tests {
             order_hash: String::from(""),
         });
 
-        let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_change_tolerance_ratio);
+        let should_change = should_take_action(&open_orders, new_head, head_change_tolerance_ratio);
         assert!(!should_change);
 
         open_orders.pop();
@@ -785,10 +808,10 @@ mod tests {
             order_hash: String::from(""),
         });
 
-        let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_change_tolerance_ratio);
+        let should_change = should_take_action(&open_orders, new_head, head_change_tolerance_ratio);
         assert!(should_change);
 
-        let should_change = head_chg_is_gt_tol(&Vec::new(), new_head, Decimal::from_str("1").unwrap());
+        let should_change = should_take_action(&Vec::new(), new_head, Decimal::from_str("1").unwrap());
         assert!(should_change);
     }
 
@@ -889,11 +912,11 @@ mod tests {
             order_density: Uint256::from_str(&order_density).unwrap(),
             max_active_capital_utilization_ratio: Decimal::from_str("1").unwrap(),
             min_head_to_tail_deviation_ratio: Decimal::from_str("0.03").unwrap(),
-            max_mid_price_tail_deviation_ratio: Decimal::from_str("0.06").unwrap(),
+            mid_price_tail_deviation_ratio: Decimal::from_str("0.06").unwrap(),
             head_change_tolerance_ratio: Decimal::zero(),
             leverage: Decimal::from_str(&leverage).unwrap(),
             reservation_price_sensitivity_ratio: Decimal::zero(),
-            mid_price_spread_sensitivity_ratio: Decimal::zero(),
+            reservation_spread_sensitivity_ratio: Decimal::zero(),
             fee_recipient: String::from(""),
             lp_token_address: None,
         }

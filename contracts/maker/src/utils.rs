@@ -61,10 +61,13 @@ pub fn round_to_min_ticker(num: Decimal, min_ticker: Decimal) -> Decimal {
     div_dec(shifted, precision_shift)
 }
 
-pub fn bp_to_dec(bp: Decimal) -> Decimal {
-    div_dec(bp, Decimal::from_str("10000").unwrap())
+pub fn min(a: Decimal, b: Decimal) -> Decimal {
+    if a < b {
+        a
+    } else {
+        b
+    }
 }
-
 #[cfg(test)]
 mod tests {
     use super::sub_no_overflow;

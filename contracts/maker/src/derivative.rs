@@ -3,90 +3,86 @@ use std::str::FromStr;
 use crate::{
     exchange::{DerivativeOrder, OrderData, WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedPosition},
     state::State,
-    utils::{div_dec, div_int, sub_abs, sub_no_overflow, sub_no_overflow_int},
+    utils::{div_dec, div_int, sub_abs, sub_no_overflow, sub_no_overflow_int, min},
 };
 use cosmwasm_std::{Decimal256 as Decimal, Uint256};
 
-/// Calculates the inventory imbalance from the margined value of an open position
+/// Calculates the inventory imbalance parameter from the margin of an open position and the total deposited balance
 /// # Arguments
-/// * `inv_base_val` - The notional value of all base assets
-/// * `inv_val` - The total notional value of all assets
+/// * `position` - The position we have taken, if any
+/// * `total_deposit_balance` - The total quote balance LPed
 /// # Returns
-/// * `inv_imbalance` - The inventory imbalance parameter
-/// * `imbal_is_long` - True if the imbalance is skewed in favor of the base asset
-pub fn inv_imbalance_deriv(position: &Option<WrappedPosition>, inv_val: Decimal) -> (Decimal, bool) {
+/// * `inventory_imbalance` - A relationship between margined position and total deposit balance (margin/total_deposit_balance). Is
+///    zero if there is no position open.
+/// * `imbalance_is_long` - True if the imbalance is skewed towards being long
+pub fn inventory_imbalance_deriv(position: &Option<WrappedPosition>, total_deposit_balance: Decimal) -> (Decimal, bool) {
     match position {
         None => (Decimal::zero(), true),
         Some(position) => {
             let position_value = position.margin;
-            let inv_imbalance = div_dec(position_value, inv_val);
-            (inv_imbalance, position.is_long)
+            let inventory_imbalance = div_dec(position_value, total_deposit_balance);
+            (inventory_imbalance, position.is_long)
         }
     }
 }
 
-/// Determines the new orders that should be placed between the new head/tail. Ensures
-/// that the notional value of all open orders will be equal to the allocated value
-/// passed in as a parameter. The value of each order will be constant (close to constant)
-/// across each price step. If there is a position open on the opposite side, it will place
-/// reduce only orders starting from the head to try to reduce the position.
+/// Determines the new orders that should be placed between the price bounds. The value of each 
+/// order will be constant (close to constant) across each price step. If there is a position
+/// open on the opposite side, it will place reduce only orders from the start_price to try to reduce the 
+/// remaining quantity of the position.
 /// # Arguments
-/// * `new_head` - The new head (closest to the reservation price)
-/// * `new_tail` - The new tail (farthest from the reservation price)
-/// * `alloc_val_for_new_orders` - The value that all the new orders should sum to
-/// * `position_qty` - A qty of position that we want to reduce
-/// * `is_buy` - True if all open_orders are buy. False if they are all sell
-/// * `state` - Contract state
+/// * `start_price` - Could be the price of the new head or the last order to keep
+/// * `end_price` - Could be the price of the new tail or the first order to keep
+/// * `total_margin_balance_for_new_orders` - The total margin that we are allowed to allocate to the new orders
+/// * `num_orders_to_keep` - The number of orders that we would like to keep resting on the book
+/// * `position_qty_to_reduce` - The remaining quantity of the position that we need to reduce
+/// * `is_buy` - If this block of orders will be on the buyside
+/// * `state` - State that the contract was initialized with
+/// * `market` - Derivative market information
 /// # Returns
-/// * `orders_to_open` - A list of all the new orders that we would like to place
-pub fn base_deriv(
-    new_head: Decimal,
-    new_tail: Decimal,
-    mut alloc_val_for_new_orders: Decimal,
+/// * `new_orders_to_open` - A list of all the new orders that we would like to place
+/// * `position_qty_to_reduce` - The remaining position quantity that we need to reduce. Is zero if there is none left
+/// * `total_margin_balance_for_new_orders` - The remaining total margin that we are allowed to allocate to any additional new orders
+pub fn create_orders_between_bounds_deriv(
+    start_price: Decimal,
+    end_price: Decimal,
+    mut total_margin_balance_for_new_orders: Decimal,
     num_orders_to_keep: usize,
-    mut position_qty: Decimal,
+    mut position_qty_to_reduce: Decimal,
     touch_head: bool,
     is_buy: bool,
     state: &State,
     market: &WrappedDerivativeMarket,
 ) -> (Vec<DerivativeOrder>, Decimal, Decimal) {
-    let mut orders_to_open: Vec<DerivativeOrder> = Vec::new();
+    let mut new_orders_to_open: Vec<DerivativeOrder> = Vec::new();
     let num_open_orders = Uint256::from_str(&num_orders_to_keep.to_string()).unwrap();
     let num_orders_to_open = sub_no_overflow_int(state.order_density, num_open_orders);
     if !num_orders_to_open.is_zero() {
-        let val_per_order = div_int(alloc_val_for_new_orders, num_orders_to_open);
-        let val_per_order = val_per_order * state.leverage;
-        let price_dist = sub_abs(new_head, new_tail);
-        let price_step = div_int(price_dist, num_orders_to_open);
+        let value_per_order = div_int(total_margin_balance_for_new_orders, num_orders_to_open) * state.leverage;
+        let price_range = sub_abs(start_price, end_price);
+        let price_step = div_int(price_range, num_orders_to_open);
         let num_orders_to_open = num_orders_to_open.to_string().parse::<i32>().unwrap();
         let mut current_price = if touch_head {
-            new_head
+            start_price
         } else {
             if is_buy {
-                sub_no_overflow(new_head, price_step)
+                sub_no_overflow(start_price, price_step)
             } else {
-                new_head + price_step
+                start_price + price_step
             }
         };
         for _ in 0..num_orders_to_open {
-            let qty = div_dec(val_per_order, current_price);
-            if position_qty == Decimal::zero() {
+            let new_order_quantity = div_dec(value_per_order, current_price);
+            if position_qty_to_reduce == Decimal::zero() {
                 // If there is no position qty, no need to make reduce only orders
-                let new_order = DerivativeOrder::new(state, current_price, qty, is_buy, false, market);
-                alloc_val_for_new_orders = sub_no_overflow(alloc_val_for_new_orders, new_order.get_margin());
-                orders_to_open.push(new_order);
+                let new_order = DerivativeOrder::new(state, current_price, new_order_quantity, is_buy, false, market);
+                total_margin_balance_for_new_orders = sub_no_overflow(total_margin_balance_for_new_orders, new_order.get_margin());
+                new_orders_to_open.push(new_order);
             } else {
-                // We need to manage reduce only orders here
-                if qty > position_qty {
-                    let new_order_reduce = DerivativeOrder::new(state, current_price, position_qty, is_buy, true, market);
-                    orders_to_open.push(new_order_reduce);
-                    position_qty = Decimal::zero();
-                } else {
-                    // This whole order should be reduce only
-                    let new_order_reduce = DerivativeOrder::new(state, current_price, qty, is_buy, true, market);
-                    position_qty = sub_no_overflow(position_qty, qty);
-                    orders_to_open.push(new_order_reduce);
-                }
+                // This whole order should be reduce only
+                let new_reduce_only_order = DerivativeOrder::new(state, current_price, new_order_quantity, is_buy, true, market);
+                position_qty_to_reduce = sub_no_overflow(position_qty_to_reduce, new_order_quantity);
+                new_orders_to_open.push(new_reduce_only_order);
             }
             current_price = if is_buy {
                 sub_no_overflow(current_price, price_step)
@@ -95,78 +91,120 @@ pub fn base_deriv(
             };
         }
     }
-    (orders_to_open, position_qty, alloc_val_for_new_orders)
+    (new_orders_to_open, position_qty_to_reduce, total_margin_balance_for_new_orders)
 }
 
-pub fn tail_to_head_deriv(
+/// Creates orders in the situation where there is more room between the newly proposed head and the first order to keep
+/// than there is between the end of the last order to keep and newly proposed tail. We need to create new orders between it and the tail before we 
+/// manage the reduce only orders at the start of the orders to keep block.
+/// # Arguments
+/// * `new_head` - The start price bound for the base case of order creation
+/// * `total_margin_balance_for_new_orders` - The total margin that we are allowed to allocate to the new orders
+/// * `orders_to_keep` - The number of orders that we would like to keep resting on the book
+/// * `position_qty_to_reduce` - The remaining quantity of the position that we need to reduce
+/// * `is_buy` - If this block of orders will be on the buyside
+/// * `state` - State that the contract was initialized with
+/// * `market` - Derivative market information
+/// # Returns
+/// * `additional_orders_to_cancel` - A list of all the additional orders that we need to cancel 
+/// * `additional_orders_to_open` - A list of new orders that we need to open 
+pub fn create_orders_tail_to_head_deriv(
     new_head: Decimal,
-    alloc_val_for_new_orders: Decimal,
+    total_margin_balance_for_new_orders: Decimal,
     orders_to_keep: Vec<WrappedDerivativeLimitOrder>,
-    position_qty: Decimal,
+    position_qty_to_reduce: Decimal,
     is_buy: bool,
     state: &State,
     market: &WrappedDerivativeMarket,
 ) -> (Vec<DerivativeOrder>, Vec<OrderData>) {
-    let (orders_to_open_a, position_qty, alloc_val_for_new_orders) = base_deriv(
+    let (orders_to_open_from_base_case, position_qty_to_reduce, total_margin_balance_for_new_orders) = create_orders_between_bounds_deriv(
         new_head,
         orders_to_keep.first().unwrap().order_info.price,
-        alloc_val_for_new_orders,
+        total_margin_balance_for_new_orders,
         orders_to_keep.len(),
-        position_qty,
+        position_qty_to_reduce,
         true,
         is_buy,
         state,
         market,
     );
-    let (additional_orders_to_cancel, orders_to_open_b, _, _) = handle_reduce_only(
+    let (additional_orders_to_cancel, orders_to_open_from_reduce_only_management, _, _) = manage_reduce_only_deriv(
         orders_to_keep.clone(),
-        alloc_val_for_new_orders,
-        position_qty,
+        total_margin_balance_for_new_orders,
+        position_qty_to_reduce,
         false,
         is_buy,
         state,
         market,
     );
-    (vec![orders_to_open_a, orders_to_open_b].concat(), additional_orders_to_cancel)
+    (vec![orders_to_open_from_base_case, orders_to_open_from_reduce_only_management].concat(), additional_orders_to_cancel)
 }
 
-pub fn head_to_tail_deriv(
+/// Creates orders in the situation where there is more room between the end of the last order to keep and newly proposed tail
+/// than there is between the newly proposed head and the first order to keep. We need to manage the reduce only orders at the 
+/// start of the orders to keep block before we create new orders between it and the tail.
+/// # Arguments
+/// * `new_tail` - The end price bound for the base case of order creation
+/// * `total_margin_balance_for_new_orders` - The total margin that we are allowed to allocate to the new orders
+/// * `orders_to_keep` - The number of orders that we would like to keep resting on the book
+/// * `position_qty_to_reduce` - The remaining quantity of the position that we need to reduce
+/// * `is_buy` - If this block of orders will be on the buyside
+/// * `state` - State that the contract was initialized with
+/// * `market` - Derivative market information
+/// # Returns
+/// * `additional_orders_to_cancel` - A list of all the additional orders that we need to cancel 
+/// * `additional_orders_to_open` - A list of new orders that we need to open 
+pub fn create_orders_head_to_tail_deriv(
     new_tail: Decimal,
-    alloc_val_for_new_orders: Decimal,
+    total_margin_balance_for_new_orders: Decimal,
     orders_to_keep: Vec<WrappedDerivativeLimitOrder>,
-    position_qty: Decimal,
+    position_qty_to_reduce: Decimal,
     is_buy: bool,
     state: &State,
     market: &WrappedDerivativeMarket,
 ) -> (Vec<DerivativeOrder>, Vec<OrderData>) {
-    let (additional_orders_to_cancel, orders_to_open_a, alloc_val_for_new_orders, position_qty) = handle_reduce_only(
+    let (additional_orders_to_cancel, orders_to_open_from_reduce_only_management, total_margin_balance_for_new_orders, position_qty_to_reduce) = manage_reduce_only_deriv(
         orders_to_keep.clone(),
-        alloc_val_for_new_orders,
-        position_qty,
+        total_margin_balance_for_new_orders,
+        position_qty_to_reduce,
         true,
         is_buy,
         state,
         market,
     );
-    let (orders_to_open_b, _, _) = base_deriv(
+    let (orders_to_open_from_base_case, _, _) = create_orders_between_bounds_deriv(
         orders_to_keep.last().unwrap().order_info.price,
         new_tail,
-        alloc_val_for_new_orders,
+        total_margin_balance_for_new_orders,
         orders_to_keep.len(),
-        position_qty,
+        position_qty_to_reduce,
         false,
         is_buy,
         state,
         market,
     );
-    (vec![orders_to_open_a, orders_to_open_b].concat(), additional_orders_to_cancel)
+    (vec![orders_to_open_from_reduce_only_management, orders_to_open_from_base_case].concat(), additional_orders_to_cancel)
 }
 
-fn handle_reduce_only(
+/// Traverses through a list of existing orders, either flipping reduce only orders to regular or vice versa depending on the kind of order
+/// and position quantity remaing for reduction.
+/// # Arguments
+/// * `orders_to_keep` - The number of orders that we would like to keep resting on the book
+/// * `total_margin_balance_for_new_orders` - The total margin that we are allowed to allocate to the new orders
+/// * `position_qty_to_reduce` - The remaining quantity of the position that we need to reduce
+/// * `is_buy` - If this block of orders will be on the buyside
+/// * `state` - State that the contract was initialized with
+/// * `market` - Derivative market information
+/// # Returns
+/// * `additional_orders_to_cancel` - A list of all the additional orders that we need to cancel in order to replace
+/// * `additional_orders_to_open` - A list of alll the additional orders that we need to open to replace the ones we cancelled
+/// * `total_margin_balance_for_new_orders` - The remaining total margin that we are allowed to allocate to any additional new orders
+/// * `position_qty_to_reduce` - The remaining position quantity that we need to reduce. Is zero if there is none left
+fn manage_reduce_only_deriv(
     orders_to_keep: Vec<WrappedDerivativeLimitOrder>,
-    mut alloc_val_for_new_orders: Decimal,
-    mut position_qty: Decimal,
-    is_first: bool,
+    mut total_margin_balance_for_new_orders: Decimal,
+    mut position_qty_to_reduce: Decimal,
+    is_before_base_case: bool,
     is_buy: bool,
     state: &State,
     market: &WrappedDerivativeMarket,
@@ -174,43 +212,38 @@ fn handle_reduce_only(
     let mut additional_orders_to_open: Vec<DerivativeOrder> = Vec::new();
     let mut additional_orders_to_cancel: Vec<OrderData> = Vec::new();
     orders_to_keep.iter().for_each(|o| {
-        if position_qty > Decimal::zero() {
-            if o.order_info.quantity > position_qty {
-                additional_orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
-                let new_order_reduce = DerivativeOrder::new(state, o.order_info.price, position_qty, is_buy, true, market);
-                additional_orders_to_open.push(new_order_reduce);
-                position_qty = Decimal::zero();
-                if !is_first {
-                    alloc_val_for_new_orders = alloc_val_for_new_orders + o.margin;
-                }
+        if position_qty_to_reduce > Decimal::zero() {
+            // There is a position to reduce
+            if o.is_reduce_only() {
+                position_qty_to_reduce = sub_no_overflow(position_qty_to_reduce, o.order_info.quantity);
             } else {
-                if o.is_reduce_only() {
-                    position_qty = sub_no_overflow(position_qty, o.order_info.quantity);
-                } else {
-                    // This whole order should be reduce only
-                    additional_orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
-                    let new_order_reduce = DerivativeOrder::new(state, o.order_info.price, o.order_info.quantity, is_buy, true, market);
-                    additional_orders_to_open.push(new_order_reduce);
-                    position_qty = sub_no_overflow(position_qty, o.order_info.quantity);
-                    if !is_first {
-                        alloc_val_for_new_orders = alloc_val_for_new_orders + o.margin;
-                    }
+                // We need to cancel the order and create an order with the min of remaining position qty to reduce and the cancelled order's qty
+                additional_orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
+                let new_quantity = min(position_qty_to_reduce, o.order_info.quantity);
+                let new_reduce_only_order = DerivativeOrder::new(state, o.order_info.price, new_quantity, is_buy, true, market);
+                additional_orders_to_open.push(new_reduce_only_order);
+                position_qty_to_reduce = sub_no_overflow(position_qty_to_reduce, new_quantity);
+                if !is_before_base_case {
+                    total_margin_balance_for_new_orders = total_margin_balance_for_new_orders + o.margin;
                 }
             }
         } else {
+            // No position to reduce
             if o.is_reduce_only() {
+                // If we encounter a reduce only order we need to cancel it and replace it if we have sufficient allocated margin balance
                 additional_orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
+                let new_quantity = min(div_dec(total_margin_balance_for_new_orders, o.order_info.price), o.order_info.quantity);
                 let new_order = DerivativeOrder::new(
                     state,
                     o.order_info.price,
-                    sub_no_overflow(o.order_info.quantity, position_qty),
+                    new_quantity,
                     is_buy,
                     false,
                     market,
                 );
-                if new_order.get_margin() < alloc_val_for_new_orders {
+                if new_order.get_margin() <= total_margin_balance_for_new_orders {
                     additional_orders_to_open.push(new_order);
-                    alloc_val_for_new_orders = sub_no_overflow(alloc_val_for_new_orders, o.margin);
+                    total_margin_balance_for_new_orders = sub_no_overflow(total_margin_balance_for_new_orders, o.margin);
                 }
             }
         }
@@ -218,8 +251,8 @@ fn handle_reduce_only(
     (
         additional_orders_to_cancel,
         additional_orders_to_open,
-        alloc_val_for_new_orders,
-        position_qty,
+        total_margin_balance_for_new_orders,
+        position_qty_to_reduce,
     )
 }
 
