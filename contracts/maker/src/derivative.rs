@@ -555,19 +555,17 @@ fn handle_reduce_only(
 //     fn mock_state(leverage: String, order_density: String) -> State {
 //         State {
 //             market_id: String::from(""),
-//             is_deriv: true,
 //             subaccount_id: String::from(""),
 //             order_density: Uint256::from_str(&order_density).unwrap(),
 //             active_capital: Decimal::from_str("0.2").unwrap(),
-//             min_tail_dist: Decimal::from_str("0.03").unwrap(),
-//             tail_dist_from_mid: Decimal::from_str("0.06").unwrap(),
-//             head_chg_tol: Decimal::zero(),
+//             min_head_to_tail_deviation_ratio: Decimal::from_str("0.03").unwrap(),
+//             max_mid_price_tail_deviation_ratio: Decimal::from_str("0.06").unwrap(),
+//             head_change_tolerance_ratio: Decimal::zero(),
 //             leverage: Decimal::from_str(&leverage).unwrap(),
-//             reservation_param: Decimal::zero(),
+//             reservation_price_sensitivity_ratio: Decimal::zero(),
 //             spread_param: Decimal::zero(),
-//             max_market_data_delay: 0,
 //             fee_recipient: String::from(""),
-//             cw_20_contract: None,
+//             lp_token_address: None,
 //         }
 //     }
 

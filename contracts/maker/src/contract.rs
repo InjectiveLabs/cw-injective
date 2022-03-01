@@ -30,17 +30,15 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: Messag
         market_id: msg.market_id.to_string(),
         subaccount_id: msg.subaccount_id,
         fee_recipient: msg.fee_recipient,
-        is_deriv: msg.is_deriv,
         leverage: Decimal::from_str(&msg.leverage).unwrap(),
         order_density: Uint256::from_str(&msg.order_density).unwrap(),
-        max_market_data_delay: msg.max_market_data_delay.parse::<i64>().unwrap(),
-        reservation_param: Decimal::from_str(&msg.reservation_param).unwrap(),
-        spread_param: Decimal::from_str(&msg.spread_param).unwrap(),
-        active_capital: Decimal::from_str(&msg.active_capital).unwrap(),
-        head_chg_tol: bp_to_dec(Decimal::from_str(&msg.head_chg_tol_bp).unwrap()),
-        tail_dist_from_mid: bp_to_dec(Decimal::from_str(&msg.tail_dist_from_mid_bp).unwrap()),
-        min_tail_dist: bp_to_dec(Decimal::from_str(&msg.min_tail_dist_bp).unwrap()),
-        cw_20_contract: None,
+        reservation_price_sensitivity_ratio: Decimal::from_str(&msg.reservation_price_sensitivity_ratio).unwrap(),
+        mid_price_spread_sensitivity_ratio: Decimal::from_str(&msg.mid_price_spread_sensitivity_ratio).unwrap(),
+        max_active_capital_utilization_ratio: Decimal::from_str(&msg.max_active_capital_utilization_ratio).unwrap(),
+        head_change_tolerance_ratio: bp_to_dec(Decimal::from_str(&msg.head_change_tolerance_ratio_bp).unwrap()),
+        max_mid_price_tail_deviation_ratio: bp_to_dec(Decimal::from_str(&msg.max_mid_price_tail_deviation_ratio_bp).unwrap()),
+        min_head_to_tail_deviation_ratio: bp_to_dec(Decimal::from_str(&msg.min_head_to_tail_deviation_ratio_bp).unwrap()),
+        lp_token_address: None,
     };
 
     config(deps.storage).save(&state)?;
@@ -83,10 +81,10 @@ pub fn reply(deps: DepsMut, _: Env, msg: Reply) -> StdResult<Response> {
 fn handle_instantiate_reply(deps: DepsMut, msg: Reply) -> StdResult<Response> {
     let res = parse_reply_instantiate_data(msg).unwrap();
     let child_contract = deps.api.addr_validate(&res.contract_address)?;
-    let cw_20_contract = Cw20Contract(child_contract);
+    let lp_token_address = Cw20Contract(child_contract);
 
     let mut state = config_read(deps.storage).load().unwrap();
-    state.cw_20_contract = Some(cw_20_contract);
+    state.lp_token_address = Some(lp_token_address);
 
     config(deps.storage).save(&state)?;
 
@@ -121,7 +119,7 @@ pub fn mint_to_user(
     amount: Uint128,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let state = config_read(deps.storage).load().unwrap();
-    let lp_token_address = state.cw_20_contract.unwrap().addr().to_string();
+    let lp_token_address = state.lp_token_address.unwrap().addr().to_string();
 
     // Ensure that only exchange module calls this method
     only_owner(&env.contract.address, &sender);
@@ -147,7 +145,7 @@ pub fn burn_from_user(
     amount: Uint128,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let state = config_read(deps.storage).load().unwrap();
-    let lp_token_address = state.cw_20_contract.unwrap().addr().to_string();
+    let lp_token_address = state.lp_token_address.unwrap().addr().to_string();
 
     // Ensure that only exchange module calls this method
     only_owner(&env.contract.address, &sender);
@@ -342,7 +340,7 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> Std
 
 fn get_total_lp_supply(deps: Deps<InjectiveQueryWrapper>) -> StdResult<TotalSupplyResponse> {
     let state = config_read(deps.storage).load().unwrap();
-    let lp_token_address = state.cw_20_contract.unwrap().addr().to_string();
+    let lp_token_address = state.lp_token_address.unwrap().addr().to_string();
 
     let msg = Cw20QueryMsg::TokenInfo {};
     let query = WasmQuery::Smart {
@@ -394,18 +392,18 @@ fn get_action(
     let (inv_imbal, imbal_is_long) = inv_imbalance_deriv(&position, inv_val);
 
     // Calculate reservation price
-    let reservation_price = reservation_price(mid_price, inv_imbal, volatility, state.reservation_param, imbal_is_long);
+    let reservation_price = reservation_price(mid_price, inv_imbal, volatility, state.reservation_price_sensitivity_ratio, imbal_is_long);
 
     // Calculate the new head prices
-    let (new_buy_head, new_sell_head) = new_head_prices(volatility, reservation_price, state.spread_param);
+    let (new_buy_head, new_sell_head) = new_head_prices(volatility, reservation_price, state.mid_price_spread_sensitivity_ratio);
 
     // Split open orders
     let (open_buys, open_sells) = split_open_orders(open_orders);
 
     // Ensure that the heads have changed enough that we are willing to make an action
-    if head_chg_is_gt_tol(&open_buys, new_buy_head, state.head_chg_tol) || head_chg_is_gt_tol(&open_sells, new_sell_head, state.head_chg_tol) {
+    if head_chg_is_gt_tol(&open_buys, new_buy_head, state.head_change_tolerance_ratio) || head_chg_is_gt_tol(&open_sells, new_sell_head, state.head_change_tolerance_ratio) {
         // Get new tails
-        let (new_buy_tail, new_sell_tail) = new_tail_prices(new_buy_head, new_sell_head, mid_price, state.tail_dist_from_mid, state.min_tail_dist);
+        let (new_buy_tail, new_sell_tail) = new_tail_prices(new_buy_head, new_sell_head, mid_price, state.max_mid_price_tail_deviation_ratio, state.min_head_to_tail_deviation_ratio);
 
         // Get information for buy order creation/cancellation
         let (buy_orders_to_cancel, buy_orders_to_keep, buy_margined_val_from_orders_remaining, buy_append_to_new_head) =
@@ -539,7 +537,7 @@ fn create_orders(
         inv_val,
         is_same_side,
         position_margin,
-        state.active_capital,
+        state.max_active_capital_utilization_ratio,
         margined_val_from_orders_remaining,
     );
     if orders_to_keep.len() == 0 {
@@ -567,18 +565,18 @@ fn create_orders(
 /// * `mid_price` - A mid_price that we update on a block by block basis
 /// * `inv_imbal` - A measure of inventory imbalance
 /// * `volatility` - A measure of volatility that we update on a block by block basis
-/// * `reservation_param` - The constant to control the sensitivity of the volatility param
+/// * `reservation_price_sensitivity_ratio` - The constant to control the sensitivity of the volatility param
 /// * `imbal_is_long` - The direction of the inventory imbalance
 /// # Returns
 /// * `reservation_price` - The price around which we will center both heads
-fn reservation_price(mid_price: Decimal, inv_imbal: Decimal, volatility: Decimal, reservation_param: Decimal, imbal_is_long: bool) -> Decimal {
+fn reservation_price(mid_price: Decimal, inv_imbal: Decimal, volatility: Decimal, reservation_price_sensitivity_ratio: Decimal, imbal_is_long: bool) -> Decimal {
     if inv_imbal == Decimal::zero() {
         mid_price
     } else {
         if imbal_is_long {
-            sub_no_overflow(mid_price, inv_imbal * volatility * reservation_param)
+            sub_no_overflow(mid_price, inv_imbal * volatility * reservation_price_sensitivity_ratio)
         } else {
-            mid_price + (inv_imbal * volatility * reservation_param)
+            mid_price + (inv_imbal * volatility * reservation_price_sensitivity_ratio)
         }
     }
 }
@@ -605,15 +603,15 @@ fn new_head_prices(volatility: Decimal, reservation_price: Decimal, spread_param
 /// # Arguments
 /// * `open_orders` - The buy or sell side orders from the previous block
 /// * `new_head` - The new proposed buy or sell head
-/// * `head_chg_tol` - Our tolerance to change in the head price
+/// * `head_change_tolerance_ratio` - Our tolerance to change in the head price
 /// # Returns
 /// * `should_change` - Whether we should cancel and place new orders at the new head
-fn head_chg_is_gt_tol(open_orders: &Vec<WrappedDerivativeLimitOrder>, new_head: Decimal, head_chg_tol: Decimal) -> bool {
+fn head_chg_is_gt_tol(open_orders: &Vec<WrappedDerivativeLimitOrder>, new_head: Decimal, head_change_tolerance_ratio: Decimal) -> bool {
     if open_orders.len() == 0 {
         true
     } else {
         let old_head = open_orders.first().unwrap().order_info.price;
-        div_dec(sub_abs(old_head, new_head), old_head) > head_chg_tol
+        div_dec(sub_abs(old_head, new_head), old_head) > head_change_tolerance_ratio
     }
 }
 
@@ -624,8 +622,8 @@ fn head_chg_is_gt_tol(open_orders: &Vec<WrappedDerivativeLimitOrder>, new_head: 
 /// * `buy_head` - The new buy head
 /// * `sell_head` - The new sell head
 /// * `mid_price` - A mid_price that we update on a block by block basis
-/// * `tail_dist_from_mid` - The distance from the mid price, in either direction, that we want tails to be located (between 0..1)
-/// * `min_tail_dist` - The min distance that can exist between any head and tail (between 0..1)
+/// * `max_mid_price_tail_deviation_ratio` - The distance from the mid price, in either direction, that we want tails to be located (between 0..1)
+/// * `min_head_to_tail_deviation_ratio` - The min distance that can exist between any head and tail (between 0..1)
 /// # Returns
 /// * `buy_tail` - The new buy tail
 /// * `sell_tail` - The new sell tail
@@ -633,12 +631,12 @@ pub fn new_tail_prices(
     buy_head: Decimal,
     sell_head: Decimal,
     mid_price: Decimal,
-    tail_dist_from_mid: Decimal,
-    min_tail_dist: Decimal,
+    max_mid_price_tail_deviation_ratio: Decimal,
+    min_head_to_tail_deviation_ratio: Decimal,
 ) -> (Decimal, Decimal) {
-    let proposed_buy_tail = mid_price * sub_no_overflow(Decimal::one(), tail_dist_from_mid);
-    let proposed_sell_tail = mid_price * (Decimal::one() + tail_dist_from_mid);
-    check_tail_dist(buy_head, sell_head, proposed_buy_tail, proposed_sell_tail, min_tail_dist)
+    let proposed_buy_tail = mid_price * sub_no_overflow(Decimal::one(), max_mid_price_tail_deviation_ratio);
+    let proposed_sell_tail = mid_price * (Decimal::one() + max_mid_price_tail_deviation_ratio);
+    check_tail_dist(buy_head, sell_head, proposed_buy_tail, proposed_sell_tail, min_head_to_tail_deviation_ratio)
 }
 
 /// Splits the vec of orders to buyside and sellside orders. Sorts them so that the head from the previous block is at index == 0. Buyside
@@ -751,8 +749,8 @@ mod tests {
     fn head_chg_is_gt_tol_test() {
         let mut open_orders: Vec<WrappedDerivativeLimitOrder> = Vec::new();
         let new_head = Decimal::from_str("100000000100").unwrap();
-        let head_chg_tol = Decimal::from_str("0.01").unwrap();
-        let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_chg_tol);
+        let head_change_tolerance_ratio = Decimal::from_str("0.01").unwrap();
+        let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_change_tolerance_ratio);
         assert!(should_change);
 
         open_orders.push(WrappedDerivativeLimitOrder {
@@ -769,7 +767,7 @@ mod tests {
             order_hash: String::from(""),
         });
 
-        let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_chg_tol);
+        let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_change_tolerance_ratio);
         assert!(!should_change);
 
         open_orders.pop();
@@ -787,7 +785,7 @@ mod tests {
             order_hash: String::from(""),
         });
 
-        let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_chg_tol);
+        let should_change = head_chg_is_gt_tol(&open_orders, new_head, head_change_tolerance_ratio);
         assert!(should_change);
 
         let should_change = head_chg_is_gt_tol(&Vec::new(), new_head, Decimal::from_str("1").unwrap());
@@ -799,17 +797,17 @@ mod tests {
         let buy_head = Decimal::from_str("3999").unwrap();
         let mid_price = Decimal::from_str("4000").unwrap();
         let sell_head = Decimal::from_str("4001").unwrap();
-        let tail_dist_from_mid = Decimal::from_str("0.05").unwrap();
-        let min_tail_dist = Decimal::from_str("0.01").unwrap();
-        let (buy_tail, sell_tail) = new_tail_prices(buy_head, sell_head, mid_price, tail_dist_from_mid, min_tail_dist);
-        assert_eq!(buy_tail, mid_price * sub_no_overflow(Decimal::one(), tail_dist_from_mid));
-        assert_eq!(sell_tail, mid_price * (Decimal::one() + tail_dist_from_mid));
+        let max_mid_price_tail_deviation_ratio = Decimal::from_str("0.05").unwrap();
+        let min_head_to_tail_deviation_ratio = Decimal::from_str("0.01").unwrap();
+        let (buy_tail, sell_tail) = new_tail_prices(buy_head, sell_head, mid_price, max_mid_price_tail_deviation_ratio, min_head_to_tail_deviation_ratio);
+        assert_eq!(buy_tail, mid_price * sub_no_overflow(Decimal::one(), max_mid_price_tail_deviation_ratio));
+        assert_eq!(sell_tail, mid_price * (Decimal::one() + max_mid_price_tail_deviation_ratio));
 
-        let tail_dist_from_mid = Decimal::from_str("0.001").unwrap();
-        let min_tail_dist = Decimal::from_str("0.01").unwrap();
-        let (buy_tail, sell_tail) = new_tail_prices(buy_head, sell_head, mid_price, tail_dist_from_mid, min_tail_dist);
-        assert_eq!(buy_tail, buy_head * sub_no_overflow(Decimal::one(), min_tail_dist));
-        assert_eq!(sell_tail, sell_head * (Decimal::one() + min_tail_dist));
+        let max_mid_price_tail_deviation_ratio = Decimal::from_str("0.001").unwrap();
+        let min_head_to_tail_deviation_ratio = Decimal::from_str("0.01").unwrap();
+        let (buy_tail, sell_tail) = new_tail_prices(buy_head, sell_head, mid_price, max_mid_price_tail_deviation_ratio, min_head_to_tail_deviation_ratio);
+        assert_eq!(buy_tail, buy_head * sub_no_overflow(Decimal::one(), min_head_to_tail_deviation_ratio));
+        assert_eq!(sell_tail, sell_head * (Decimal::one() + min_head_to_tail_deviation_ratio));
     }
 
     #[test]
@@ -887,19 +885,17 @@ mod tests {
     fn mock_state(leverage: String, order_density: String) -> State {
         State {
             market_id: String::from(""),
-            is_deriv: true,
             subaccount_id: String::from(""),
             order_density: Uint256::from_str(&order_density).unwrap(),
-            active_capital: Decimal::from_str("1").unwrap(),
-            min_tail_dist: Decimal::from_str("0.03").unwrap(),
-            tail_dist_from_mid: Decimal::from_str("0.06").unwrap(),
-            head_chg_tol: Decimal::zero(),
+            max_active_capital_utilization_ratio: Decimal::from_str("1").unwrap(),
+            min_head_to_tail_deviation_ratio: Decimal::from_str("0.03").unwrap(),
+            max_mid_price_tail_deviation_ratio: Decimal::from_str("0.06").unwrap(),
+            head_change_tolerance_ratio: Decimal::zero(),
             leverage: Decimal::from_str(&leverage).unwrap(),
-            reservation_param: Decimal::zero(),
-            spread_param: Decimal::zero(),
-            max_market_data_delay: 0,
+            reservation_price_sensitivity_ratio: Decimal::zero(),
+            mid_price_spread_sensitivity_ratio: Decimal::zero(),
             fee_recipient: String::from(""),
-            cw_20_contract: None,
+            lp_token_address: None,
         }
     }
 

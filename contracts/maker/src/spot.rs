@@ -86,9 +86,9 @@ mod tests {
     fn create_buy_orders_test() {
         for i in 2..10 {
             let decimal_base_shift = 10_i128.pow(i);
-            let state = mock_state(String::from("1"), String::from("10"), decimal_base_shift.to_string());
+            let state = mock_state(String::from("1"), String::from("10"));
             let head_price = Decimal::from_str(&10_i32.pow(i).to_string()).unwrap();
-            let tail_price = head_price * (Decimal::one() - state.min_tail_dist);
+            let tail_price = head_price * (Decimal::one() - state.min_head_to_tail_deviation_ratio);
             for j in 3..10 {
                 let alloc_value = 10_i32.pow(j);
                 create_new_orders_spot_test(head_price, tail_price, Decimal::from_str(&alloc_value.to_string()).unwrap(), true, &state);
@@ -100,9 +100,9 @@ mod tests {
     fn create_sell_orders_test() {
         for i in 2..10 {
             let decimal_base_shift = 10_i128.pow(i);
-            let state = mock_state(String::from("1"), String::from("10"), decimal_base_shift.to_string());
+            let state = mock_state(String::from("1"));
             let head_price = Decimal::from_str(&10_i32.pow(i).to_string()).unwrap();
-            let tail_price = head_price * (Decimal::one() + state.min_tail_dist);
+            let tail_price = head_price * (Decimal::one() + state.min_head_to_tail_deviation_ratio);
             for j in 3..10 {
                 let alloc_value = 10_i32.pow(j);
                 create_new_orders_spot_test(
@@ -147,26 +147,22 @@ mod tests {
         assert_eq!(new_orders.first().unwrap().get_price(), new_head);
     }
 
-    fn mock_state(leverage: String, order_density: String, base_precision_shift: String) -> State {
+    fn mock_state(leverage: String, order_density: String) -> State {
         State {
             market_id: String::from(""),
-            is_deriv: false,
             sub_account: String::from(""),
             order_density: Uint256::from_str(&order_density).unwrap(),
-            active_capital: Decimal::from_str("0.2").unwrap(),
-            min_tail_dist: Decimal::from_str("0.03").unwrap(),
-            tail_dist_from_mid: Decimal::from_str("0.08").unwrap(),
-            head_chg_tol: Decimal::zero(),
+            max_active_capital_utilization_ratio: Decimal::from_str("0.2").unwrap(),
+            min_head_to_tail_deviation_ratio: Decimal::from_str("0.03").unwrap(),
+            max_mid_price_tail_deviation_ratio: Decimal::from_str("0.08").unwrap(),
+            head_change_tolerance_ratio: Decimal::zero(),
             leverage: Decimal::from_str(&leverage).unwrap(),
-            decimal_shift: Uint256::from_str("1000000").unwrap(),
-            base_precision_shift: Uint256::from_str(&base_precision_shift.to_string()).unwrap(),
             mid_price: Decimal::zero(),
             volatility: Decimal::zero(),
-            reservation_param: Decimal::zero(),
+            reservation_price_sensitivity_ratio: Decimal::zero(),
             spread_param: Decimal::zero(),
             manager: Addr::unchecked(""),
             last_update_utc: 0,
-            max_market_data_delay: 0,
             lp_token_address: String::from(""),
         }
     }

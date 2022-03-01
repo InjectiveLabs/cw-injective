@@ -9,31 +9,23 @@ pub struct InstantiateMsg {
     // Market Id
     pub subaccount_id: String,
     pub fee_recipient: String,
-    // The contract's delegated subaccount
-    pub is_deriv: bool,
     // Whether the contract will be operating on a derivative market
     pub leverage: String,
     // Leverage that a contract will use on its orders
     pub order_density: String,
     // Number of orders to place between the head and the tail
-    pub reservation_param: String,
+    pub reservation_price_sensitivity_ratio: String,
     // A constant between 0..1 that will be used to control the sensitivity of the reservation_price
-    pub spread_param: String,
+    pub mid_price_spread_sensitivity_ratio: String,
     // A constant between 0..1 that will be used to control the sensitivity of the spread around the mid_price
-    pub active_capital: String,
+    pub max_active_capital_utilization_ratio: String,
     // A constant between 0..1 that will be used to determine how much of our capital we want resting on the book
-    pub head_chg_tol_bp: String,
+    pub head_change_tolerance_ratio_bp: String,
     // A threshold for which we actually want to take action in BP (if new head is more than x dist away from old head)
-    pub tail_dist_from_mid_bp: String,
+    pub max_mid_price_tail_deviation_ratio_bp: String,
     // The distance in BP from the mid_price that we want to place our tails
-    pub min_tail_dist_bp: String,
+    pub min_head_to_tail_deviation_ratio_bp: String,
     // The minimum distance in BP from the head that we want our tail (risk management param)
-    pub max_market_data_delay: String,
-    // The maximum time we are willing to tolerate since the last market data update for which the contract will behave expectedly
-    pub decimal_shift: String,
-    // 10^(number of decimals of the quote currency)
-    pub base_precision_shift: String,
-    // 10^(decimal precision of base quantity respective of the market)
     pub cw20_code_id: String,
     // CW20 Wasm contract code id
     pub lp_name: String,
