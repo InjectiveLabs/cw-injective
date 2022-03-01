@@ -5,34 +5,34 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
-    pub market_id: String,
     // Market Id
+    pub market_id: String,
     pub subaccount_id: String,
     pub fee_recipient: String,
-    // Whether the contract will be operating on a derivative market
-    pub leverage: String,
     // Leverage that a contract will use on its orders
-    pub order_density: String,
+    pub leverage: String,
     // Number of orders to place between the head and the tail
-    pub reservation_price_sensitivity_ratio: String,
+    pub order_density: String,
     // A constant between 0..1 that will be used to control the sensitivity of the reservation_price from mid_price
-    pub reservation_spread_sensitivity_ratio: String,
+    pub reservation_price_sensitivity_ratio: String,
     // A constant between 0..1 that will be used to control the sensitivity of the spread around the reservation_price
+    pub reservation_spread_sensitivity_ratio: String,
+    // A constant between 0..1 that will be used to determine what percentage of how much of our total deposited balance we want margined on the book\
     pub max_active_capital_utilization_ratio: String,
-    // A constant between 0..1 that will be used to determine what percentage of how much of our total deposited balance we want margined on the book
-    pub head_change_tolerance_ratio: String,
     // A constant between 0..1 that serves as a threshold for which we actually want to take action in the new block
-    pub mid_price_tail_deviation_ratio: String,
+    pub head_change_tolerance_ratio: String,
     // A constant between 0..1 that is used to determine how far we want to place our tails from the midprice
-    pub min_head_to_tail_deviation_ratio: String,
+    pub mid_price_tail_deviation_ratio: String,
     // A constant between 0..1 that ensures our tail is at least some distance from the head (risk management param)
-    pub cw20_code_id: String,
+    pub min_head_to_tail_deviation_ratio: String,
     // CW20 Wasm contract code id
-    pub lp_name: String,
+    pub cw20_code_id: String,
     // LP Token Name
-    pub lp_symbol: String,
+    pub lp_name: String,
     // LP Token Symbol
-    pub lp_decimals: String, // LP Token Decimals
+    pub lp_symbol: String,
+    // LP Token Decimals
+    pub lp_decimals: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
