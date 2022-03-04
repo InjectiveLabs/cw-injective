@@ -68,6 +68,14 @@ pub fn min(a: Decimal, b: Decimal) -> Decimal {
         b
     }
 }
+
+pub fn max(a: Decimal, b: Decimal) -> Decimal {
+    if a < b {
+        b
+    } else {
+        a
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::sub_no_overflow;

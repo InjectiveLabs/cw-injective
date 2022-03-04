@@ -479,6 +479,7 @@ fn get_action(
     }
 }
 
+/// # Description
 /// Determines which orders to cancel and which to leave resting on the book depending on the placement of the new tails
 /// # Arguments
 /// * `open_orders` - The buy or sell side orders from the previous block
@@ -531,6 +532,7 @@ pub fn orders_to_cancel(
     }
 }
 
+/// # Description
 /// Creates new orders. Determines what kind of order creation we need: base, head to tail, or tail to head
 /// # Arguments
 /// * `new_head` - The new buy or sell head
@@ -612,7 +614,11 @@ fn create_orders(
     }
 }
 
+/// # Description
 /// Uses the inventory imbalance and its direction to calculate a price around which we will center the mid price
+/// # Formulas
+/// * `reservation price (case: position is long)` =  mid price - (inventory imbalance ratio * volatility * reservation price sensitivity ratio)
+/// * `reservation price (case: position is short)` =  mid price + (inventory imbalance ratio * volatility * reservation price sensitivity ratio)
 /// # Arguments
 /// * `mid_price` - The true center between the best bid and ask
 /// * `inventory_imbalance_ratio` - A relationship between margined position and total deposit balance (margin/total_deposit_balance). Is
@@ -629,20 +635,20 @@ fn reservation_price(
     reservation_price_sensitivity_ratio: Decimal,
     imbalance_is_long: bool,
 ) -> Decimal {
-    if inventory_imbalance_ratio == Decimal::zero() {
-        mid_price
+    let shift_from_mid_price = inventory_imbalance_ratio * volatility * reservation_price_sensitivity_ratio;
+    if imbalance_is_long {
+        sub_no_overflow(mid_price, shift_from_mid_price)
     } else {
-        let shift_from_mid_price = inventory_imbalance_ratio * volatility * reservation_price_sensitivity_ratio;
-        if imbalance_is_long {
-            sub_no_overflow(mid_price, shift_from_mid_price)
-        } else {
-            mid_price + shift_from_mid_price
-        }
+        mid_price + shift_from_mid_price
     }
 }
 
+/// # Description
 /// Uses the reservation price and volatility to calculate where the buy/sell heads should be. Both buy and
 /// sell heads will be equi-distant from the reservation price.
+/// # Formulas
+/// * `buy head` = reservation_price - ((volatility * sensitivity) / 2)
+/// * `sell head` = reservation_price + ((volatility * sensitivity) / 2)
 /// # Arguments
 /// * `volatility` - A measure of volatility that we update on a block by block basis
 /// * `reservation_price` - The price around which we will center both heads
@@ -658,8 +664,13 @@ fn new_head_prices(volatility: Decimal, reservation_price: Decimal, reservation_
     )
 }
 
+/// # Description
 /// Determines whether the new head for the next block will be different enough than that of the previous to warrant
 /// order cancellation and the creation of new orders.
+/// # Formulas (case: no open orders)
+/// * `should take action` = true
+/// # Formulas (case: some open orders)
+/// * `should take action` = (Abs(old head - new head) / old head) > head change tolerande ratio
 /// # Arguments
 /// * `open_orders` - The buy or sell side orders from the previous block
 /// * `new_head` - The new proposed buy or sell head
@@ -675,9 +686,17 @@ fn should_take_action(open_orders: &Vec<WrappedDerivativeLimitOrder>, new_head: 
     }
 }
 
+/// # Description
 /// Calculates the correct tail prices for buyside and sellside from the mid price. If either of
 /// the distances between the head and tail fall below the minimum spread defined at initialization, risk
 /// manager returns a tail that meets the minimum spread constraint.
+/// # Formulas
+/// * `proposed buy tail` = mid price * (1 - mid price deviation ratio)
+/// * `proposed sell tail` = mid price * (1 + mid price deviation ratio)
+/// * `max buy tail` = buy head * (1 - min head to tail deviation ratio)
+/// * `min sell tail` = sell head * (1 + min head to tail deviation ratio)
+/// * `new buy tail` = min(max buy tail, proposed buy tail)
+/// * `new sell tail` = max(min sell tail, proposed sell tail)
 /// # Arguments
 /// * `new_buy_head` - The new buy head
 /// * `new_sell_head` - The new sell head
@@ -705,6 +724,7 @@ pub fn new_tail_prices(
     )
 }
 
+/// # Description
 /// Splits the vec of orders to buyside and sellside orders. Sorts them so that the head from the previous block is at index == 0. Buyside
 /// orders are sorted desc. Sellside are sorted asc.
 /// # Arguments

@@ -7,7 +7,11 @@ use crate::{
 };
 use cosmwasm_std::{Decimal256 as Decimal, Uint256};
 
+/// # Description
 /// Calculates the inventory imbalance parameter from the margin of an open position and the total deposited balance
+/// # Formulas
+/// * `inventory imbalance (case: no position)` = 0
+/// * `inventory imbalance (case: open position)` = (margin + (((mid price - position entry price) / position entry price) * margin)) / (active capital utilization ratio * total deposit balance)
 /// # Arguments
 /// * `position` - The position we have taken, if any
 /// * `mid_price` - The true center between the best bid and ask
@@ -31,6 +35,7 @@ pub fn inventory_imbalance_deriv(position: &Option<WrappedPosition>, mid_price: 
     }
 }
 
+/// # Description
 /// Determines the new orders that should be placed between the price bounds. The value of each
 /// order will be constant (close to constant) across each price step. If there is a position
 /// open on the opposite side, it will place reduce only orders from the start_price to try to reduce the
@@ -99,6 +104,7 @@ pub fn create_orders_between_bounds_deriv(
     (new_orders_to_open, position_qty_to_reduce, total_margin_balance_for_new_orders)
 }
 
+/// # Description
 /// Creates orders in the situation where there is more room between the newly proposed head and the first order to keep
 /// than there is between the end of the last order to keep and newly proposed tail. We need to create new orders between it and the tail before we
 /// manage the reduce only orders at the start of the orders to keep block.
@@ -148,6 +154,7 @@ pub fn create_orders_tail_to_head_deriv(
     )
 }
 
+/// # Description
 /// Creates orders in the situation where there is more room between the end of the last order to keep and newly proposed tail
 /// than there is between the newly proposed head and the first order to keep. We need to manage the reduce only orders at the
 /// start of the orders to keep block before we create new orders between it and the tail.
@@ -198,6 +205,7 @@ pub fn create_orders_head_to_tail_deriv(
     )
 }
 
+/// # Description
 /// Traverses through a list of existing orders, either flipping reduce only orders to regular or vice versa depending on the kind of order
 /// and position quantity remaing for reduction.
 /// # Arguments

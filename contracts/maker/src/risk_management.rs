@@ -1,7 +1,7 @@
 use crate::{
     exchange::{DerivativeOrder, WrappedDerivativeMarket, WrappedPosition},
     state::State,
-    utils::{div_dec, sub_abs, sub_no_overflow},
+    utils::{div_dec, sub_abs, sub_no_overflow, max, min},
 };
 use cosmwasm_std::{Addr, Decimal256 as Decimal};
 use std::str::FromStr;
@@ -17,6 +17,7 @@ pub fn sanity_check(_position: &Option<WrappedPosition>, _inv_base_ball: Decimal
     //TODO: come back to this one
 }
 
+/// # Description
 /// Determines the total margin that we are allowed to allocate to the new orders. It is influenced by the capital utilization ratio, the
 /// current margined balance of orders we decided to keep on the book, and same sided position margin.
 /// # Arguments
@@ -44,8 +45,14 @@ pub fn total_marginable_balance_for_new_orders(
     }
 }
 
+/// # Description
 /// Ensures that the current tails have enough distance between them. We don't want our order spread to be too dense.
 /// If they fall below the minimum distance, we update the tail to something more suitable.
+/// # Formulas
+/// * `max buy tail` = buy head * (1 - min head to tail deviation ratio)
+/// * `min sell tail` = sell head * (1 + min head to tail deviation ratio)
+/// * `new buy tail` = min(max buy tail, proposed buy tail)
+/// * `new sell tail` = max(min sell tail, proposed sell tail)
 /// # Arguments
 /// * `new_buy_head` - The buy head that we are going to use
 /// * `new_sell_head` - The the sell head that we are going to use
@@ -62,27 +69,16 @@ pub fn check_tail_dist(
     proposed_sell_tail: Decimal,
     min_head_to_tail_deviation_ratio: Decimal,
 ) -> (Decimal, Decimal) {
-    let new_buy_tail = {
-        let proposed_buy_tail_dist = div_dec(sub_abs(new_buy_head, proposed_buy_tail), new_buy_head);
-        if proposed_buy_tail_dist < min_head_to_tail_deviation_ratio || proposed_buy_tail >= new_buy_head {
-            new_buy_head * sub_abs(Decimal::one(), min_head_to_tail_deviation_ratio)
-        } else {
-            proposed_buy_tail
-        }
-    };
+    let max_buy_tail = new_buy_head * sub_abs(Decimal::one(), min_head_to_tail_deviation_ratio);
+    let new_buy_tail = min(max_buy_tail, proposed_buy_tail);
 
-    let new_sell_tail = {
-        let proposed_sell_tail_dist = div_dec(sub_abs(new_sell_head, proposed_sell_tail), new_sell_head);
-        if proposed_sell_tail_dist < min_head_to_tail_deviation_ratio || proposed_sell_tail <= new_sell_head {
-            new_sell_head * (Decimal::one() + min_head_to_tail_deviation_ratio)
-        } else {
-            proposed_sell_tail
-        }
-    };
+    let min_sell_tail = new_sell_head * (Decimal::one() + min_head_to_tail_deviation_ratio);
+    let new_sell_tail = max(min_sell_tail, proposed_sell_tail);
 
     (new_buy_tail, new_sell_tail)
 }
 
+/// # Description
 /// Filters out any orders that dont comply with the exchange standards.
 /// # Arguments
 /// * `orders_to_place` - All the orders that we are trying to create
