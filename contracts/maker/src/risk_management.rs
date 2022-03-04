@@ -26,8 +26,8 @@ pub fn sanity_check(_position: &Option<WrappedPosition>, _inv_base_ball: Decimal
 /// * `max_active_capital_utilization_ratio` - A constant between 0..1 that will be used to determine what percentage of how much of our total deposited balance we want margined on the book
 /// * `agg_margin_of_orders_kept` - The total aggregated margined value of the orders we would like to keep
 /// # Returns
-/// * `total_margin_balance_for_new_orders` - The total margin that we are allowed to allocate to the new orders
-pub fn total_margin_balance_for_new_orders(
+/// * `total_marginable_balance_for_new_orders` - The total margin that we are allowed to allocate to the new orders
+pub fn total_marginable_balance_for_new_orders(
     total_deposit_balance: Decimal,
     position_is_same_side: bool,
     position_margin: Decimal,
@@ -36,11 +36,11 @@ pub fn total_margin_balance_for_new_orders(
 ) -> Decimal {
     let total_margin_balance_for_both_sides = total_deposit_balance * max_active_capital_utilization_ratio;
     let total_margin_balance_for_one_side = div_dec(total_margin_balance_for_both_sides, Decimal::from_str("2").unwrap());
-    let total_margin_balance_for_new_orders = sub_no_overflow(total_margin_balance_for_one_side, agg_margin_of_orders_kept);
+    let total_marginable_balance_for_new_orders = sub_no_overflow(total_margin_balance_for_one_side, agg_margin_of_orders_kept);
     if position_is_same_side {
-        sub_no_overflow(total_margin_balance_for_new_orders, position_margin)
+        sub_no_overflow(total_marginable_balance_for_new_orders, position_margin)
     } else {
-        total_margin_balance_for_new_orders
+        total_marginable_balance_for_new_orders
     }
 }
 

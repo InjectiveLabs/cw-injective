@@ -10,17 +10,22 @@ use cosmwasm_std::{Decimal256 as Decimal, Uint256};
 /// Calculates the inventory imbalance parameter from the margin of an open position and the total deposited balance
 /// # Arguments
 /// * `position` - The position we have taken, if any
+/// * `mid_price` - The true center between the best bid and ask
+/// * `max_active_capital_utilization_ratio` - A constant between 0..1 that will be used to determine what percentage of how much of our total deposited balance we want margined on the book
 /// * `total_deposit_balance` - The total quote balance LPed
 /// # Returns
 /// * `inventory_imbalance` - A relationship between margined position and total deposit balance (margin/total_deposit_balance). Is
 ///    zero if there is no position open.
 /// * `imbalance_is_long` - True if the imbalance is skewed towards being long
-pub fn inventory_imbalance_deriv(position: &Option<WrappedPosition>, total_deposit_balance: Decimal) -> (Decimal, bool) {
+pub fn inventory_imbalance_deriv(position: &Option<WrappedPosition>, mid_price: Decimal, max_active_capital_utilization_ratio: Decimal, total_deposit_balance: Decimal) -> (Decimal, bool) {
     match position {
         None => (Decimal::zero(), true),
         Some(position) => {
-            let position_value = position.margin;
-            let inventory_imbalance = div_dec(position_value, total_deposit_balance);
+            let unrealized_pnl_ratio = div_dec(mid_price - position.entry_price, position.entry_price);
+            let unrealized_pnl_notionial = unrealized_pnl_ratio * position.margin;
+            let position_value = position.margin + unrealized_pnl_notionial;
+            let max_margin = max_active_capital_utilization_ratio * total_deposit_balance;
+            let inventory_imbalance = div_dec(position_value, max_margin);
             (inventory_imbalance, position.is_long)
         }
     }

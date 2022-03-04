@@ -7,7 +7,7 @@ use crate::exchange::{
     WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedPosition,
 };
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TotalSupplyResponse, WrappedGetActionResponse};
-use crate::risk_management::{check_tail_dist, final_check, only_owner, total_margin_balance_for_new_orders};
+use crate::risk_management::{check_tail_dist, final_check, only_owner, total_marginable_balance_for_new_orders};
 use crate::state::{config, config_read, State};
 use crate::utils::{div_dec, sub_abs, sub_no_overflow, wrap};
 use cosmwasm_std::{
@@ -387,7 +387,7 @@ fn get_action(
     let state = config_read(deps.storage).load().unwrap();
 
     // Calculate inventory imbalance parameter
-    let (inventory_imbalance_ratio, imbalance_is_long) = inventory_imbalance_deriv(&position, total_deposit_balance);
+    let (inventory_imbalance_ratio, imbalance_is_long) = inventory_imbalance_deriv(&position, mid_price, state.max_active_capital_utilization_ratio, total_deposit_balance);
 
     // Calculate reservation price
     let reservation_price = reservation_price(
@@ -568,7 +568,7 @@ fn create_orders(
         }
         None => (Decimal::zero(), Decimal::zero(), false),
     };
-    let total_margin_balance_for_new_orders = total_margin_balance_for_new_orders(
+    let total_margin_balance_for_new_orders = total_marginable_balance_for_new_orders(
         total_deposit_balance,
         position_is_same_side,
         position_margin,
