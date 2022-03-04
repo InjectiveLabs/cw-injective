@@ -129,7 +129,7 @@ pub fn create_orders_tail_to_head_deriv(
         market,
     );
     let (additional_orders_to_cancel, orders_to_open_from_reduce_only_management, _, _) = manage_reduce_only_deriv(
-        orders_to_keep.clone(),
+        orders_to_keep,
         total_margin_balance_for_new_orders,
         position_qty_to_reduce,
         false,
@@ -218,14 +218,14 @@ fn manage_reduce_only_deriv(
 ) -> (Vec<OrderData>, Vec<DerivativeOrder>, Decimal, Decimal) {
     let mut additional_orders_to_open: Vec<DerivativeOrder> = Vec::new();
     let mut additional_orders_to_cancel: Vec<OrderData> = Vec::new();
-    orders_to_keep.iter().for_each(|o| {
+    orders_to_keep.into_iter().for_each(|o| {
         if position_qty_to_reduce > Decimal::zero() {
             // There is a position to reduce
             if o.is_reduce_only() {
                 position_qty_to_reduce = sub_no_overflow(position_qty_to_reduce, o.order_info.quantity);
             } else {
                 // We need to cancel the order and create an order with the min of remaining position qty to reduce and the cancelled order's qty
-                additional_orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
+                additional_orders_to_cancel.push(OrderData::new(o.order_hash, state, market));
                 let new_quantity = min(position_qty_to_reduce, o.order_info.quantity);
                 let new_reduce_only_order = DerivativeOrder::new(state, o.order_info.price, new_quantity, is_buy, true, market);
                 additional_orders_to_open.push(new_reduce_only_order);
@@ -238,7 +238,7 @@ fn manage_reduce_only_deriv(
             // No position to reduce
             if o.is_reduce_only() {
                 // If we encounter a reduce only order we need to cancel it and replace it if we have sufficient allocated margin balance
-                additional_orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
+                additional_orders_to_cancel.push(OrderData::new(o.order_hash, state, market));
                 let new_quantity = min(div_dec(total_margin_balance_for_new_orders, o.order_info.price), o.order_info.quantity);
                 let new_order = DerivativeOrder::new(state, o.order_info.price, new_quantity, is_buy, false, market);
                 if new_order.get_margin() <= total_margin_balance_for_new_orders {
