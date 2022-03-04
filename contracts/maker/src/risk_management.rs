@@ -1,7 +1,7 @@
 use crate::{
     exchange::{DerivativeOrder, WrappedDerivativeMarket, WrappedPosition},
     state::State,
-    utils::{div_dec, sub_abs, sub_no_overflow, max, min},
+    utils::{div_dec, max, min, sub_abs, sub_no_overflow},
 };
 use cosmwasm_std::{Addr, Decimal256 as Decimal};
 use std::str::FromStr;

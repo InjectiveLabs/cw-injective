@@ -387,7 +387,8 @@ fn get_action(
     let state = config_read(deps.storage).load().unwrap();
 
     // Calculate inventory imbalance parameter
-    let (inventory_imbalance_ratio, imbalance_is_long) = inventory_imbalance_deriv(&position, mid_price, state.max_active_capital_utilization_ratio, total_deposit_balance);
+    let (inventory_imbalance_ratio, imbalance_is_long) =
+        inventory_imbalance_deriv(&position, mid_price, state.max_active_capital_utilization_ratio, total_deposit_balance);
 
     // Calculate reservation price
     let reservation_price = reservation_price(

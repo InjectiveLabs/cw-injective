@@ -21,7 +21,12 @@ use cosmwasm_std::{Decimal256 as Decimal, Uint256};
 /// * `inventory_imbalance` - A relationship between margined position and total deposit balance (margin/total_deposit_balance). Is
 ///    zero if there is no position open.
 /// * `imbalance_is_long` - True if the imbalance is skewed towards being long
-pub fn inventory_imbalance_deriv(position: &Option<WrappedPosition>, mid_price: Decimal, max_active_capital_utilization_ratio: Decimal, total_deposit_balance: Decimal) -> (Decimal, bool) {
+pub fn inventory_imbalance_deriv(
+    position: &Option<WrappedPosition>,
+    mid_price: Decimal,
+    max_active_capital_utilization_ratio: Decimal,
+    total_deposit_balance: Decimal,
+) -> (Decimal, bool) {
     match position {
         None => (Decimal::zero(), true),
         Some(position) => {
