@@ -453,7 +453,7 @@ fn get_action(
         );
 
         // Filter out any faulty orders
-        let derivative_orders_to_create = final_check(vec![buy_orders_to_open, sell_orders_to_open].concat(), &market);
+        let derivative_orders_to_create = vec![buy_orders_to_open, sell_orders_to_open].concat();
 
         let batch_order = MsgBatchUpdateOrders {
             sender: env.contract.address.to_string(),
