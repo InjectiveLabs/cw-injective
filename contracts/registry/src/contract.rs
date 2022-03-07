@@ -35,7 +35,7 @@ pub fn instantiate(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
@@ -43,23 +43,25 @@ pub fn execute(
         ExecuteMsg::Register {
             contract_address,
             gas_limit,
-        } => try_register(deps, info, contract_address, gas_limit),
+        } => try_register(deps, env, info, contract_address, gas_limit),
     }
+}
+
+pub fn only_owner(sender: &Addr, owner: &Addr) {
+    assert_eq!(sender, owner);
 }
 
 pub fn try_register(
     deps: DepsMut,
+    env: Env,
     info: MessageInfo,
     contract_addr: Addr,
     gas_limit: u64,
 ) -> Result<Response, ContractError> {
-    let mut state = STATE.load(deps.storage)?;
+    // Ensure that only wasmx module calls this method
+    only_owner(&env.contract.address, &info.sender);
 
-    // if state.contracts.contains(&contract_addr) {
-    //     return Err(ContractError::Unauthorized {
-    //         msg: "contract already registered".to_string(),
-    //     });
-    // }
+    let mut state = STATE.load(deps.storage)?;    
     let contract = CONTRACT {
         address: contract_addr,
         gas_limit: gas_limit,
@@ -69,6 +71,7 @@ pub fn try_register(
     STATE.save(deps.storage, &state)?;
     Ok(Response::new().add_attribute("method", "register"))
 }
+
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
