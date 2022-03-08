@@ -46,7 +46,7 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: Messag
     config(deps.storage).save(&state)?;
 
     let code_id = msg.cw20_code_id.parse::<u64>().unwrap();
-    let decimals = msg.lp_decimals.parse::<u8>().unwrap();
+    let decimals = 6;
 
     let cw20_instantiate_msg = cw20_base::msg::InstantiateMsg {
         name: msg.lp_name,
@@ -65,7 +65,7 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: Messag
         code_id,
         msg: to_binary(&cw20_instantiate_msg)?,
         funds: vec![],
-        label: "LP-Token".to_string(),
+        label: msg.cw20_label,
     };
 
     let submessage = SubMsg::reply_on_success(instantiate_message, INSTANTIATE_REPLY_ID);

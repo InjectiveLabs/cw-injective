@@ -33,6 +33,8 @@ pub struct InstantiateMsg {
     pub lp_symbol: String,
     // LP Token Decimals
     pub lp_decimals: String,
+    // Label for the CW20 Token
+    pub cw20_label: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
