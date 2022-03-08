@@ -7,14 +7,14 @@ use crate::exchange::{
     WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedPosition,
 };
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TotalSupplyResponse, WrappedGetActionResponse};
-use crate::risk_management::{check_tail_dist, final_check, only_owner, total_marginable_balance_for_new_orders};
+use crate::risk_management::{check_tail_dist, only_owner, total_marginable_balance_for_new_orders};
 use crate::state::{config, config_read, State};
 use crate::utils::{div_dec, sub_abs, sub_no_overflow, wrap};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, CosmosMsg, Decimal256 as Decimal, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Reply, Response,
     StdError, StdResult, SubMsg, Uint128, Uint256, WasmMsg, WasmQuery,
 };
-
+use cw20_base::msg::InstantiateMsg as cw20_instantiate_msg;
 use std::ops::Deref;
 use std::str::FromStr;
 
@@ -47,17 +47,26 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: Messag
 
     let code_id = msg.cw20_code_id.parse::<u64>().unwrap();
     let decimals = 6;
+    let marketing = match msg.cw20_marketing_info {
+        Some(info) => Some(cw20_base::msg::InstantiateMarketingInfo {
+            project: info.project,
+            description: info.description,
+            marketing: info.marketing,
+            logo: info.logo,
+        }),
+        None => None,
+    };
 
-    let cw20_instantiate_msg = cw20_base::msg::InstantiateMsg {
+    let cw20_instantiate_msg = cw20_instantiate_msg {
         name: msg.lp_name,
         symbol: msg.lp_symbol,
-        decimals: decimals,
+        decimals,
         initial_balances: vec![],
         mint: Some(MinterResponse {
             minter: env.contract.address.to_string(),
             cap: None,
         }),
-        marketing: None,
+        marketing,
     };
 
     let instantiate_message = WasmMsg::Instantiate {

@@ -1,8 +1,8 @@
 use crate::exchange::ExchangeMsg;
 use cosmwasm_std::Uint128;
+use cw20::Logo;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
     // Market Id
@@ -35,6 +35,8 @@ pub struct InstantiateMsg {
     pub lp_decimals: String,
     // Label for the CW20 Token
     pub cw20_label: String,
+    // Custom marketing info for the CW20 Token
+    pub cw20_marketing_info: Option<InstantiateMarketingInfo>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -60,4 +62,12 @@ pub struct WrappedGetActionResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct TotalSupplyResponse {
     pub total_supply: Uint128,
+}
+
+#[derive(Serialize, Deserialize, JsonSchema, Debug, Clone, PartialEq)]
+pub struct InstantiateMarketingInfo {
+    pub project: Option<String>,
+    pub description: Option<String>,
+    pub marketing: Option<String>,
+    pub logo: Option<Logo>,
 }
