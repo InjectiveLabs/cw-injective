@@ -87,21 +87,18 @@ pub fn create_orders_between_bounds_deriv(
             }
         };
         for _ in 0..num_orders_to_open {
-            let new_order_quantity = div_dec(value_per_order, current_price);
+            let new_order_qty = div_dec(value_per_order, current_price);
             if position_qty_to_reduce == Decimal::zero() {
                 // If there is no position qty, no need to make reduce only orders
-                let new_order = DerivativeOrder::new(state, current_price, new_order_quantity, is_buy, false, market);
-                total_margin_balance_for_new_orders = sub_no_overflow(total_margin_balance_for_new_orders, new_order.get_margin());
-                if !new_order.get_qty().is_zero() && !total_margin_balance_for_new_orders.is_zero() {
+                let new_order = DerivativeOrder::new(state, current_price, new_order_qty, is_buy, false, market);
+                if !new_order.non_reduce_only_is_invalid() && !total_margin_balance_for_new_orders.is_zero() {
+                    total_margin_balance_for_new_orders = sub_no_overflow(total_margin_balance_for_new_orders, new_order.get_margin());
                     new_orders_to_open.push(new_order);
                 }
             } else {
                 // This whole order should be reduce only
-                let new_reduce_only_order = DerivativeOrder::new(state, current_price, new_order_quantity, is_buy, true, market);
-                position_qty_to_reduce = sub_no_overflow(position_qty_to_reduce, new_reduce_only_order.get_qty());
-                if !new_reduce_only_order.get_qty().is_zero() {
-                    new_orders_to_open.push(new_reduce_only_order);
-                }
+                let new_reduce_only_order = DerivativeOrder::new(state, current_price, new_order_qty, is_buy, true, market);
+                position_qty_to_reduce = update_reduce_only(new_reduce_only_order, position_qty_to_reduce, &mut new_orders_to_open);
             }
             current_price = if is_buy {
                 sub_no_overflow(current_price, price_step)
@@ -152,7 +149,6 @@ pub fn create_orders_tail_to_head_deriv(
         orders_to_keep,
         total_margin_balance_for_new_orders,
         position_qty_to_reduce,
-        false,
         is_buy,
         state,
         market,
@@ -192,7 +188,6 @@ pub fn create_orders_head_to_tail_deriv(
             orders_to_keep.clone(),
             total_margin_balance_for_new_orders,
             position_qty_to_reduce,
-            true,
             is_buy,
             state,
             market,
@@ -201,7 +196,7 @@ pub fn create_orders_head_to_tail_deriv(
         orders_to_keep.last().unwrap().order_info.price,
         new_tail,
         total_margin_balance_for_new_orders,
-        orders_to_keep.len(),
+        orders_to_keep.len() + orders_to_open_from_reduce_only_management.len() - additional_orders_to_cancel.len(),
         position_qty_to_reduce,
         false,
         is_buy,
@@ -233,7 +228,6 @@ fn manage_reduce_only_deriv(
     orders_to_keep: Vec<WrappedDerivativeLimitOrder>,
     mut total_margin_balance_for_new_orders: Decimal,
     mut position_qty_to_reduce: Decimal,
-    is_before_base_case: bool,
     is_buy: bool,
     state: &State,
     market: &WrappedDerivativeMarket,
@@ -244,30 +238,35 @@ fn manage_reduce_only_deriv(
         if position_qty_to_reduce > Decimal::zero() {
             // There is a position to reduce
             if o.is_reduce_only() {
-                position_qty_to_reduce = sub_no_overflow(position_qty_to_reduce, o.order_info.quantity);
+                if position_qty_to_reduce > o.order_info.quantity {
+                    // Update the position quantity requiring reduction to consider the RO order that we just encountered
+                    position_qty_to_reduce = sub_no_overflow(position_qty_to_reduce, o.order_info.quantity);
+                } else {
+                    // We need to cancel the old RO and adjust its quantity to be specific to that which needs to be reduced
+                    additional_orders_to_cancel.push(OrderData::new(o.order_hash, state, market));
+                    let new_reduce_only_order = DerivativeOrder::new(state, o.order_info.price, position_qty_to_reduce, is_buy, true, market);
+                    position_qty_to_reduce = update_reduce_only(new_reduce_only_order, position_qty_to_reduce, &mut additional_orders_to_open);
+                }
             } else {
-                // We need to cancel the order and create an order with the min of remaining position qty to reduce and the cancelled order's qty
+                // We need to cancel the order and create a new RO order to try to reduce the remaining position quantity
                 additional_orders_to_cancel.push(OrderData::new(o.order_hash, state, market));
-                let new_quantity = min(position_qty_to_reduce, o.order_info.quantity);
-                let new_reduce_only_order = DerivativeOrder::new(state, o.order_info.price, new_quantity, is_buy, true, market);
-                position_qty_to_reduce = sub_no_overflow(position_qty_to_reduce, new_reduce_only_order.get_qty());
-                if !new_reduce_only_order.get_qty().is_zero() {
-                    additional_orders_to_open.push(new_reduce_only_order);
-                }
-                if !is_before_base_case {
-                    total_margin_balance_for_new_orders = total_margin_balance_for_new_orders + o.margin;
-                }
+                total_margin_balance_for_new_orders = total_margin_balance_for_new_orders + o.margin;
+                let new_qty = min(position_qty_to_reduce, o.order_info.quantity);
+                let new_reduce_only_order = DerivativeOrder::new(state, o.order_info.price, new_qty, is_buy, true, market);
+                position_qty_to_reduce = update_reduce_only(new_reduce_only_order, position_qty_to_reduce, &mut additional_orders_to_open);
             }
         } else {
             // No position to reduce
-            if o.is_reduce_only() && !total_margin_balance_for_new_orders.is_zero() {
+            if o.is_reduce_only() {
                 // If we encounter a reduce only order we need to cancel it and replace it if we have sufficient allocated margin balance
                 additional_orders_to_cancel.push(OrderData::new(o.order_hash, state, market));
-                let new_quantity = min(div_dec(total_margin_balance_for_new_orders, o.order_info.price), o.order_info.quantity);
-                let new_order = DerivativeOrder::new(state, o.order_info.price, new_quantity, is_buy, false, market);
-                if !new_order.get_margin().is_zero() && !new_order.get_qty().is_zero() {
-                    additional_orders_to_open.push(new_order);
-                    total_margin_balance_for_new_orders = sub_no_overflow(total_margin_balance_for_new_orders, o.margin);
+                if !total_margin_balance_for_new_orders.is_zero() {
+                    let new_qty = min(div_dec(total_margin_balance_for_new_orders, o.order_info.price), o.order_info.quantity);
+                    let new_order = DerivativeOrder::new(state, o.order_info.price, new_qty, is_buy, false, market);
+                    if !new_order.non_reduce_only_is_invalid() {
+                        total_margin_balance_for_new_orders = sub_no_overflow(total_margin_balance_for_new_orders, new_order.get_margin());
+                        additional_orders_to_open.push(new_order);
+                    }
                 }
             }
         }
@@ -278,6 +277,20 @@ fn manage_reduce_only_deriv(
         total_margin_balance_for_new_orders,
         position_qty_to_reduce,
     )
+}
+
+fn update_reduce_only(new_reduce_only_order: DerivativeOrder, position_qty_to_reduce: Decimal, orders_to_open: &mut Vec<DerivativeOrder> ) -> Decimal{
+    if !new_reduce_only_order.reduce_only_is_invalid() {
+        // RO order is valid after rounding
+        // Update the remaining position quantity to reduce
+        let new_position_qty_to_reduce = sub_no_overflow(position_qty_to_reduce, new_reduce_only_order.get_qty());
+        // Push new order to open
+        orders_to_open.push(new_reduce_only_order);
+        new_position_qty_to_reduce
+    } else {
+        // Position qty to reduce is likely very small here but we don't want to continue cancelling all subsequent orders so we set it to zero
+        Decimal::zero()
+    }
 }
 
 // #[cfg(test)]

@@ -1,5 +1,5 @@
-use crate::utils::{div_dec, round_to_precision};
-use crate::{state::State, utils::round_to_min_ticker};
+use crate::utils::{div_dec, round_price_to_min_ticker, round_qty_to_min_ticker};
+use crate::{state::State  };
 use cosmwasm_std::{Decimal256 as Decimal, StdError, Uint256};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -275,7 +275,7 @@ impl DerivativeOrder {
     pub fn new(
         state: &State,
         price: Decimal,
-        quantity: Decimal,
+        qty: Decimal,
         is_buy: bool,
         is_reduce_only: bool,
         market: &WrappedDerivativeMarket,
@@ -283,7 +283,7 @@ impl DerivativeOrder {
         let margin = if is_reduce_only {
             Decimal::zero()
         } else {
-            let margin = div_dec(price * quantity, state.leverage);
+            let margin = div_dec(price * qty, state.leverage);
             margin
         };
         DerivativeOrder {
@@ -291,11 +291,11 @@ impl DerivativeOrder {
             order_info: OrderInfo {
                 subaccount_id: state.subaccount_id.clone(),
                 fee_recipient: state.fee_recipient.clone(),
-                price: round_to_precision(price, Uint256::from_str("1").unwrap()).to_string(),
-                quantity: round_to_min_ticker(quantity, market.min_quantity_tick_size).to_string(),
+                price: round_price_to_min_ticker(price, market.min_price_tick_size).to_string(),
+                quantity: round_qty_to_min_ticker(qty, market.min_quantity_tick_size).to_string(),
             },
             order_type: if is_buy { 1 } else { 2 },
-            margin: round_to_precision(margin, Uint256::from_str("1").unwrap()).to_string(),
+            margin: round_price_to_min_ticker(margin, market.min_price_tick_size).to_string(),
             trigger_price: None,
         }
     }
@@ -313,6 +313,12 @@ impl DerivativeOrder {
     }
     pub fn get_margin(&self) -> Decimal {
         Decimal::from_str(&self.margin).unwrap()
+    }
+    pub fn non_reduce_only_is_invalid(&self) -> bool {
+        self.get_margin().is_zero() || self.get_price().is_zero() || self.get_qty().is_zero()
+    }
+    pub fn reduce_only_is_invalid(&self) -> bool {
+        self.get_price().is_zero() || self.get_qty().is_zero()
     }
 }
 

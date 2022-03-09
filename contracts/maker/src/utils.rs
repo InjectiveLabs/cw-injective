@@ -47,14 +47,18 @@ pub fn sub_no_overflow_int(lhs: Uint256, rhs: Uint256) -> Uint256 {
     }
 }
 
-pub fn round_to_precision(num: Decimal, precision_shift: Uint256) -> Decimal {
-    let precision_shift = Decimal::from_str(&precision_shift.to_string()).unwrap();
-    let shifted = (num * precision_shift) * Uint256::from_str("1").unwrap();
-    let shifted = Decimal::from_str(&shifted.to_string()).unwrap();
-    div_dec(shifted, precision_shift)
+pub fn round_price_to_min_ticker(num: Decimal, min_ticker: Decimal) -> Decimal {
+    if num < min_ticker {
+        Decimal::zero()
+    } else {
+        let precision_shift = Decimal::from_str(&min_ticker.to_string()).unwrap();
+        let shifted = div_dec(num, precision_shift) * Uint256::from_str("1").unwrap();
+        let shifted = Decimal::from_str(&shifted.to_string()).unwrap();
+        shifted * precision_shift
+    }
 }
 
-pub fn round_to_min_ticker(num: Decimal, min_ticker: Decimal) -> Decimal {
+pub fn round_qty_to_min_ticker(num: Decimal, min_ticker: Decimal) -> Decimal {
     let precision_shift = min_ticker.inv().unwrap();
     let shifted = (num * precision_shift) * Uint256::from_str("1").unwrap();
     let shifted = Decimal::from_str(&shifted.to_string()).unwrap();
@@ -79,8 +83,8 @@ pub fn max(a: Decimal, b: Decimal) -> Decimal {
 #[cfg(test)]
 mod tests {
     use super::sub_no_overflow;
-    use crate::utils::{div_dec, div_int, round_to_min_ticker, round_to_precision, sub_abs};
-    use cosmwasm_std::{Decimal256, Uint256};
+    use crate::{utils::{div_dec, div_int, round_price_to_min_ticker, round_qty_to_min_ticker, sub_abs}, exchange::DerivativeMarket};
+    use cosmwasm_std::{Decimal256, Uint256, Decimal};
     use std::str::FromStr;
 
     #[test]
@@ -146,19 +150,32 @@ mod tests {
     }
 
     #[test]
-    fn round_to_precision_test() {
-        let num = Decimal256::from_str("1.1111111111111").unwrap();
-        let precision_shift = Uint256::from_str("10000").unwrap();
-        let rounded_num = round_to_precision(num, precision_shift);
-        assert_eq!(Decimal256::from_str("1.1111").unwrap(), rounded_num);
+    fn round_price_to_min_ticker_test() {
+        let num = Decimal256::from_str("11203983129382").unwrap();
+        let precision_shift = Decimal256::from_str("100000").unwrap();
+        let rounded_num = round_price_to_min_ticker(num, precision_shift);
+        println!("{}", rounded_num.to_string());
+        assert_eq!(Decimal256::from_str("11203983100000").unwrap(), rounded_num);
+
+        let num = Decimal256::from_str("0").unwrap();
+        let precision_shift = Decimal256::from_str("100000").unwrap();
+        let rounded_num = round_price_to_min_ticker(num, precision_shift);
+        println!("{}", rounded_num.to_string());
+        assert!(rounded_num.is_zero());
     }
 
     #[test]
-    fn round_to_min_ticker_test() {
+    fn round_qty_to_min_ticker_test() {
         let num = Decimal256::from_str("1.1911111111111").unwrap();
         let precision_shift = Decimal256::from_str("0.1").unwrap();
-        let rounded_num = round_to_min_ticker(num, precision_shift);
+        let rounded_num = round_qty_to_min_ticker(num, precision_shift);
         println!("{}", rounded_num.to_string());
         assert_eq!(Decimal256::from_str("1.1").unwrap(), rounded_num);
-    }
+
+        let num = Decimal256::from_str("0").unwrap();
+        let precision_shift = Decimal256::from_str("0.1").unwrap();
+        let rounded_num = round_qty_to_min_ticker(num, precision_shift);
+        println!("{}", rounded_num.to_string());
+        assert!(rounded_num.is_zero());
+     }
 }
