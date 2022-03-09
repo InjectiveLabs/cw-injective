@@ -1,8 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{
-    coins, to_binary, Addr, BankMsg, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
-};
+use cosmwasm_std::{to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
@@ -18,7 +16,7 @@ pub fn instantiate(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    msg: InstantiateMsg,
+    _msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     let state = State {
         contracts: Vec::new(),
@@ -61,7 +59,7 @@ pub fn try_register(
     // Ensure that only wasmx module calls this method
     only_owner(&env.contract.address, &info.sender);
 
-    let mut state = STATE.load(deps.storage)?;    
+    let mut state = STATE.load(deps.storage)?;
     let contract = CONTRACT {
         address: contract_addr,
         gas_limit: gas_limit,
@@ -71,7 +69,6 @@ pub fn try_register(
     STATE.save(deps.storage, &state)?;
     Ok(Response::new().add_attribute("method", "register"))
 }
-
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {

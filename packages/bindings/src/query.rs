@@ -20,6 +20,7 @@ pub enum InjectiveQuery {
     // DerivativeMarket will return the derivative market for a given id
     DerivativeMarket { market_id: String },
     SubaccountPositions { subaccount_id: String },
+    SubaccountPositionInMarket { market_id: String, subaccount_id: String },
     TraderDerivativeOrders { market_id: String, subaccount_id: String },
     PerpetualMarketInfo { market_id: String },
     PerpetualMarketFunding { market_id: String },
@@ -52,7 +53,7 @@ pub struct DerivativePosition {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct SubaccountPositionsResponse {
-    pub state: Vec<DerivativePosition>,
+    pub state: Option<Position>,
 }
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

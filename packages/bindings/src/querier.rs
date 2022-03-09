@@ -39,10 +39,11 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_subaccount_positions<T: Into<String>>(&self, subaccount_id: T) -> StdResult<SubaccountPositionsResponse> {
+    pub fn query_subaccount_position<T: Into<String>>(&self, market_id: T, subaccount_id: T) -> StdResult<SubaccountPositionsResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
-            query_data: InjectiveQuery::SubaccountPositions {
+            query_data: InjectiveQuery::SubaccountPositionInMarket {
+                market_id: market_id.into(),
                 subaccount_id: subaccount_id.into(),
             },
         };

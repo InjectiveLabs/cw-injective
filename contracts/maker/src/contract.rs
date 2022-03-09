@@ -213,7 +213,7 @@ pub fn begin_blocker(deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Add
     let querier = InjectiveQuerier::new(&deps.querier);
     let market_res = querier.query_derivative_market(state.market_id.clone())?;
     let deposit_res = querier.query_subaccount_deposit(state.subaccount_id.clone(), market_res.market.market.quote_denom.clone())?;
-    let positions_res = querier.query_subaccount_positions(state.subaccount_id.clone())?;
+    let positions_res = querier.query_subaccount_position(state.market_id.clone(), state.subaccount_id.clone())?;
     let open_orders_res = querier.query_trader_derivative_orders(state.market_id.clone(), state.subaccount_id.clone())?;
     let perpetual_market_info_res = querier.query_perpetual_market_info(state.market_id.clone())?;
     let perpetual_market_funding_res = querier.query_perpetual_market_funding(state.market_id.clone())?;
@@ -265,12 +265,10 @@ pub fn begin_blocker(deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Add
         total_balance: deposit_res.deposits.total_balance.to_string(),
     };
 
-    // TODO change for multi market support
-    let first_position_query = positions_res.state.get(0);
-    let first_position: Option<Position> = if first_position_query.is_none() {
+    let first_position: Option<Position> = if positions_res.state.is_none() {
         None
     } else {
-        let position = first_position_query.unwrap().position.clone();
+        let position = positions_res.state.unwrap();
         Some(Position {
             isLong: position.isLong,
             quantity: position.quantity.clone(),
@@ -680,7 +678,7 @@ fn new_head_prices(volatility: Decimal, reservation_price: Decimal, reservation_
 /// # Formulas (case: no open orders)
 /// * `should take action` = true
 /// # Formulas (case: some open orders)
-/// * `should take action` = (Abs(old head - new head) / old head) > head change tolerande ratio
+/// * `should take action` = (Abs(old head - new head) / old head) > head change tolerance ratio
 /// # Arguments
 /// * `open_orders` - The buy or sell side orders from the previous block
 /// * `new_head` - The new proposed buy or sell head
