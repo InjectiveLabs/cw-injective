@@ -279,7 +279,7 @@ fn manage_reduce_only_deriv(
     )
 }
 
-fn update_reduce_only(new_reduce_only_order: DerivativeOrder, position_qty_to_reduce: Decimal, orders_to_open: &mut Vec<DerivativeOrder> ) -> Decimal{
+fn update_reduce_only(new_reduce_only_order: DerivativeOrder, position_qty_to_reduce: Decimal, orders_to_open: &mut Vec<DerivativeOrder>) -> Decimal {
     if !new_reduce_only_order.reduce_only_is_invalid() {
         // RO order is valid after rounding
         // Update the remaining position quantity to reduce

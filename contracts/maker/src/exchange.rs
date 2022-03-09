@@ -1,6 +1,6 @@
+use crate::state::State;
 use crate::utils::{div_dec, round_price_to_min_ticker, round_qty_to_min_ticker};
-use crate::{state::State  };
-use cosmwasm_std::{Decimal256 as Decimal, StdError, Uint256};
+use cosmwasm_std::{Decimal256 as Decimal, StdError};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -272,14 +272,7 @@ pub struct DerivativeOrder {
     pub trigger_price: Option<String>,
 }
 impl DerivativeOrder {
-    pub fn new(
-        state: &State,
-        price: Decimal,
-        qty: Decimal,
-        is_buy: bool,
-        is_reduce_only: bool,
-        market: &WrappedDerivativeMarket,
-    ) -> DerivativeOrder {
+    pub fn new(state: &State, price: Decimal, qty: Decimal, is_buy: bool, is_reduce_only: bool, market: &WrappedDerivativeMarket) -> DerivativeOrder {
         let margin = if is_reduce_only {
             Decimal::zero()
         } else {

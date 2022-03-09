@@ -83,8 +83,10 @@ pub fn max(a: Decimal, b: Decimal) -> Decimal {
 #[cfg(test)]
 mod tests {
     use super::sub_no_overflow;
-    use crate::{utils::{div_dec, div_int, round_price_to_min_ticker, round_qty_to_min_ticker, sub_abs}, exchange::DerivativeMarket};
-    use cosmwasm_std::{Decimal256, Uint256, Decimal};
+    use crate::{
+        utils::{div_dec, div_int, round_price_to_min_ticker, round_qty_to_min_ticker, sub_abs},
+    };
+    use cosmwasm_std::{ Decimal256, Uint256};
     use std::str::FromStr;
 
     #[test]
@@ -177,5 +179,5 @@ mod tests {
         let rounded_num = round_qty_to_min_ticker(num, precision_shift);
         println!("{}", rounded_num.to_string());
         assert!(rounded_num.is_zero());
-     }
+    }
 }
