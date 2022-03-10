@@ -83,10 +83,8 @@ pub fn max(a: Decimal, b: Decimal) -> Decimal {
 #[cfg(test)]
 mod tests {
     use super::sub_no_overflow;
-    use crate::{
-        utils::{div_dec, div_int, round_price_to_min_ticker, round_qty_to_min_ticker, sub_abs},
-    };
-    use cosmwasm_std::{ Decimal256, Uint256};
+    use crate::utils::{div_dec, div_int, round_price_to_min_ticker, round_qty_to_min_ticker, sub_abs};
+    use cosmwasm_std::{Decimal256, Uint256};
     use std::str::FromStr;
 
     #[test]
