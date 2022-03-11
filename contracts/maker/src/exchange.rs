@@ -288,7 +288,7 @@ impl DerivativeOrder {
                 quantity: round_to_min_ticker(qty, market.min_quantity_tick_size).to_string(),
             },
             order_type: if is_buy { 1 } else { 2 },
-            margin: round_to_min_ticker(margin, market.min_price_tick_size).to_string(),
+            margin: round_to_min_ticker(margin, market.min_quantity_tick_size).to_string(),
             trigger_price: None,
         }
     }
