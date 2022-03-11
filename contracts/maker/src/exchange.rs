@@ -1,5 +1,5 @@
 use crate::state::State;
-use crate::utils::{div_dec, round_price_to_min_ticker, round_qty_to_min_ticker};
+use crate::utils::{div_dec, round_to_min_ticker};
 use cosmwasm_std::{Decimal256 as Decimal, StdError};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -284,11 +284,11 @@ impl DerivativeOrder {
             order_info: OrderInfo {
                 subaccount_id: state.subaccount_id.clone(),
                 fee_recipient: state.fee_recipient.clone(),
-                price: round_price_to_min_ticker(price, market.min_price_tick_size).to_string(),
-                quantity: round_qty_to_min_ticker(qty, market.min_quantity_tick_size).to_string(),
+                price: round_to_min_ticker(price, market.min_price_tick_size).to_string(),
+                quantity: round_to_min_ticker(qty, market.min_quantity_tick_size).to_string(),
             },
             order_type: if is_buy { 1 } else { 2 },
-            margin: round_price_to_min_ticker(margin, market.min_price_tick_size).to_string(),
+            margin: round_to_min_ticker(margin, market.min_price_tick_size).to_string(),
             trigger_price: None,
         }
     }
