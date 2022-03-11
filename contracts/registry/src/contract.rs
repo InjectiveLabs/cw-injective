@@ -41,7 +41,8 @@ pub fn execute(
         ExecuteMsg::Register {
             contract_address,
             gas_limit,
-        } => try_register(deps, env, info, contract_address, gas_limit),
+            gas_price,
+        } => try_register(deps, env, info, contract_address, gas_limit, gas_price),
     }
 }
 
@@ -55,6 +56,7 @@ pub fn try_register(
     info: MessageInfo,
     contract_addr: Addr,
     gas_limit: u64,
+    gas_price: String,
 ) -> Result<Response, ContractError> {
     // Ensure that only wasmx module calls this method
     only_owner(&env.contract.address, &info.sender);
@@ -63,6 +65,7 @@ pub fn try_register(
     let contract = CONTRACT {
         address: contract_addr,
         gas_limit: gas_limit,
+        gas_price: gas_price,
     };
 
     state.contracts.push(contract);

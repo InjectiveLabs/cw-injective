@@ -12,6 +12,7 @@ pub enum ExecuteMsg {
     Register {
         contract_address: Addr,
         gas_limit: u64,
+        gas_price: String,
     },
 }
 

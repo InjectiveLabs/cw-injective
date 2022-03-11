@@ -9,6 +9,7 @@ use cw_storage_plus::Item;
 pub struct CONTRACT {
     pub address: Addr,
     pub gas_limit: u64,
+    pub gas_price: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
