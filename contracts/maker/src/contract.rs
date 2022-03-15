@@ -9,7 +9,7 @@ use crate::exchange::{
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TotalSupplyResponse, WrappedGetActionResponse};
 use crate::risk_management::{check_tail_dist, only_owner, total_marginable_balance_for_new_orders};
 use crate::state::{config, config_read, State};
-use crate::utils::{div_dec, sub_abs, sub_no_overflow, wrap};
+use crate::utils::{div_dec, sub_abs, sub_no_overflow, wrap, decode_bech32};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, CosmosMsg, Decimal256 as Decimal, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Reply, Response,
     StdError, StdResult, SubMsg, Uint128, Uint256, WasmMsg, WasmQuery,
@@ -30,7 +30,7 @@ const INSTANTIATE_REPLY_ID: u64 = 1u64;
 pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: MessageInfo, msg: InstantiateMsg) -> Result<Response, StdError> {
     let state = State {
         market_id: msg.market_id.to_string(),
-        subaccount_id: msg.subaccount_id,
+        subaccount_id: decode_bech32(&env.contract.address),
         fee_recipient: msg.fee_recipient,
         leverage: Decimal::from_str(&msg.leverage).unwrap(),
         order_density: Uint256::from_str(&msg.order_density).unwrap(),

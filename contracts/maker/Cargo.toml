@@ -35,11 +35,14 @@ snafu = { version = "0.6.3" }
 thiserror = { version = "1.0.23" }
 chrono = "0.4"
 serde-json-wasm = "0.3.2"
+subtle-encoding = { version = "0.5.1", features = ["bech32-preview"] } 
+ethereum-types = "0.5.2"
 
 [dev-dependencies]
 injective-mocks = { path = "../../packages/mocks", version = "0.1.0" }
 cosmwasm-vm = { version = "1.0.0-beta4", default-features = false, features = ["iterator"] }
 cosmwasm-schema = { version = "1.0.0-beta4" }
+
 
 [profile.release]
 debug = true
