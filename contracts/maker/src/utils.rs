@@ -77,9 +77,10 @@ pub fn max(a: Decimal, b: Decimal) -> Decimal {
 }
 
 pub fn decode_bech32(addr: &Addr) -> String {
+    let zeros_to_append = "000000000000000000000000";
     let decoded_bytes = bech32::decode(addr.as_str()).unwrap().1;
     let decoded_h160 = H160::from_slice(&decoded_bytes);
-    let decoded_string = format!("{:?}", decoded_h160);
+    let decoded_string = format!("{:?}{}", decoded_h160, zeros_to_append);
     decoded_string
 }
 
@@ -92,9 +93,9 @@ mod tests {
 
     #[test]
     fn decode_bech32_test() {
-        let decoded_string = decode_bech32(&Addr::unchecked("inj1akxycslq8cjt0uffw4rjmfm3echchptu52a2dq"));
+        let decoded_string = decode_bech32(&Addr::unchecked("inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv"));
         println!("{}", decoded_string);
-        assert_eq!(decoded_string, "0xed8c4C43E03E24b7F12975472da771Ce2f8b857c".to_lowercase());
+        assert_eq!(decoded_string, "0xB5e09b93aCEb70C1711aF078922fA256011D7e56000000000000000000000000".to_lowercase());
     }
 
     #[test]
