@@ -6,10 +6,10 @@ use crate::exchange::{
     Deposit, DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderData, OrderInfo, PerpetualMarketFunding, PerpetualMarketInfo, Position,
     WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedPosition,
 };
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TotalSupplyResponse, WrappedGetActionResponse};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MarketIdResponse, QueryMsg, TotalSupplyResponse, WrappedGetActionResponse};
 use crate::risk_management::{check_tail_dist, only_owner, total_marginable_balance_for_new_orders};
 use crate::state::{config, config_read, State};
-use crate::utils::{div_dec, sub_abs, sub_no_overflow, wrap, decode_bech32};
+use crate::utils::{decode_bech32, div_dec, sub_abs, sub_no_overflow, wrap};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, CosmosMsg, Decimal256 as Decimal, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Reply, Response,
     StdError, StdResult, SubMsg, Uint128, Uint256, WasmMsg, WasmQuery,
@@ -343,8 +343,16 @@ pub fn begin_blocker(deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Add
 pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&config_read(deps.storage).load()?),
+        QueryMsg::GetMarketId {} => to_binary(&get_market_id(deps)?),
         QueryMsg::GetTotalLpSupply {} => to_binary(&get_total_lp_supply(deps)?),
     }
+}
+
+fn get_market_id(deps: Deps<InjectiveQueryWrapper>) -> StdResult<MarketIdResponse> {
+    let state = config_read(deps.storage).load().unwrap();
+    Ok(MarketIdResponse {
+        market_id: state.market_id.clone(),
+    })
 }
 
 fn get_total_lp_supply(deps: Deps<InjectiveQueryWrapper>) -> StdResult<TotalSupplyResponse> {
