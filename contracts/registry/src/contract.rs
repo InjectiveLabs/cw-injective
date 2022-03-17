@@ -43,7 +43,15 @@ pub fn execute(
             gas_limit,
             gas_price,
             is_executable,
-        } => try_register(deps, env, info, contract_address, gas_limit, gas_price, is_executable),
+        } => try_register(
+            deps,
+            env,
+            info,
+            contract_address,
+            gas_limit,
+            gas_price,
+            is_executable,
+        ),
     }
 }
 
@@ -68,7 +76,7 @@ pub fn try_register(
         address: contract_addr,
         gas_limit: gas_limit,
         gas_price: gas_price,
-        is_executable:is_executable,
+        is_executable: is_executable,
     };
 
     state.contracts.push(contract);
@@ -94,7 +102,11 @@ fn query_contracts(deps: Deps) -> StdResult<ContractsResponse> {
 fn query_active_contracts(deps: Deps) -> StdResult<ContractsResponse> {
     let state = STATE.load(deps.storage)?;
     let active_contracts: Vec<CONTRACT>;
-    active_contracts = state.contracts.into_iter().filter(|contract| contract.is_executable).collect();
+    active_contracts = state
+        .contracts
+        .into_iter()
+        .filter(|contract| contract.is_executable)
+        .collect();
     Ok(ContractsResponse {
         contracts: active_contracts,
     })

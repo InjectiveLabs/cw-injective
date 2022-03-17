@@ -4,15 +4,14 @@ use crate::derivative::{
 use crate::error::ContractError;
 use crate::exchange::{
     Deposit, DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderData, OrderInfo, PerpetualMarketFunding, PerpetualMarketInfo, Position,
-    WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedPosition,
 };
 use crate::msg::{ExecuteMsg, InstantiateMsg, MarketIdResponse, QueryMsg, TotalSupplyResponse, WrappedGetActionResponse};
 use crate::risk_management::{check_tail_dist, only_owner, total_marginable_balance_for_new_orders};
 use crate::state::{config, config_read, State};
-use crate::utils::{decode_bech32, div_dec, sub_abs, sub_no_overflow, wrap};
+use crate::utils::{decode_bech32, div_dec, sub_abs, sub_no_overflow};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, CosmosMsg, Decimal256 as Decimal, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Reply, Response,
-    StdError, StdResult, SubMsg, Uint128, Uint256, WasmMsg, WasmQuery,
+    StdError, StdResult, SubMsg, Uint128, WasmMsg, WasmQuery,
 };
 use cw20_base::msg::InstantiateMsg as cw20_instantiate_msg;
 use std::ops::Deref;
@@ -32,21 +31,19 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: Messag
         market_id: msg.market_id.to_string(),
         subaccount_id: decode_bech32(&env.contract.address),
         fee_recipient: msg.fee_recipient,
-        leverage: Decimal::from_str(&msg.leverage).unwrap(),
-        order_density: Uint256::from_str(&msg.order_density).unwrap(),
-        reservation_price_sensitivity_ratio: Decimal::from_str(&msg.reservation_price_sensitivity_ratio).unwrap(),
-        reservation_spread_sensitivity_ratio: Decimal::from_str(&msg.reservation_spread_sensitivity_ratio).unwrap(),
-        max_active_capital_utilization_ratio: Decimal::from_str(&msg.max_active_capital_utilization_ratio).unwrap(),
-        head_change_tolerance_ratio: Decimal::from_str(&msg.head_change_tolerance_ratio).unwrap(),
-        mid_price_tail_deviation_ratio: Decimal::from_str(&msg.mid_price_tail_deviation_ratio).unwrap(),
-        min_head_to_tail_deviation_ratio: Decimal::from_str(&msg.min_head_to_tail_deviation_ratio).unwrap(),
+        leverage: msg.leverage,
+        order_density: msg.order_density,
+        reservation_price_sensitivity_ratio: msg.reservation_price_sensitivity_ratio,
+        reservation_spread_sensitivity_ratio: msg.reservation_spread_sensitivity_ratio,
+        max_active_capital_utilization_ratio: msg.max_active_capital_utilization_ratio,
+        head_change_tolerance_ratio: msg.head_change_tolerance_ratio,
+        mid_price_tail_deviation_ratio: msg.mid_price_tail_deviation_ratio,
+        min_head_to_tail_deviation_ratio: msg.min_head_to_tail_deviation_ratio,
         lp_token_address: None,
     };
 
     config(deps.storage).save(&state)?;
 
-    let code_id = msg.cw20_code_id.parse::<u64>().unwrap();
-    let decimals = 6;
     let marketing = match msg.cw20_marketing_info {
         Some(info) => Some(cw20_base::msg::InstantiateMarketingInfo {
             project: info.project,
@@ -60,7 +57,7 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: Messag
     let cw20_instantiate_msg = cw20_instantiate_msg {
         name: msg.lp_name,
         symbol: msg.lp_symbol,
-        decimals,
+        decimals: 6,
         initial_balances: vec![],
         mint: Some(MinterResponse {
             minter: env.contract.address.to_string(),
@@ -71,7 +68,7 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: Messag
 
     let instantiate_message = WasmMsg::Instantiate {
         admin: None,
-        code_id,
+        code_id: msg.cw20_code_id,
         msg: to_binary(&cw20_instantiate_msg)?,
         funds: vec![],
         label: msg.cw20_label,
@@ -218,23 +215,7 @@ pub fn begin_blocker(deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Add
     let perpetual_market_info_res = querier.query_perpetual_market_info(state.market_id.clone())?;
     let perpetual_market_funding_res = querier.query_perpetual_market_funding(state.market_id.clone())?;
 
-    let market: DerivativeMarket = DerivativeMarket {
-        ticker: market_res.market.market.ticker,
-        oracle_base: market_res.market.market.oracle_base,
-        oracle_quote: market_res.market.market.oracle_quote,
-        oracle_type: market_res.market.market.oracle_type,
-        oracle_scale_factor: market_res.market.market.oracle_scale_factor,
-        quote_denom: market_res.market.market.quote_denom,
-        market_id: market_res.market.market.market_id,
-        initial_margin_ratio: market_res.market.market.initial_margin_ratio.to_string(),
-        maintenance_margin_ratio: market_res.market.market.maintenance_margin_ratio.to_string(),
-        maker_fee_rate: market_res.market.market.maker_fee_rate.to_string(),
-        taker_fee_rate: market_res.market.market.taker_fee_rate.to_string(),
-        isPerpetual: market_res.market.market.isPerpetual,
-        status: market_res.market.market.status,
-        min_price_tick_size: market_res.market.market.min_price_tick_size.to_string(),
-        min_quantity_tick_size: market_res.market.market.min_quantity_tick_size.to_string(),
-    };
+    let market = DerivativeMarket::from_query(market_res.market.market);
     let open_orders_res_val = open_orders_res.orders.unwrap_or_default();
     let open_orders = open_orders_res_val
         .into_iter()
@@ -243,62 +224,28 @@ pub fn begin_blocker(deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Add
             // OrderType_SELL        OrderType = 2
             // TODO add PO order types
             let order_type = if order.isBuy { 1 } else { 2 };
-            let limit_order: DerivativeLimitOrder = DerivativeLimitOrder {
-                margin: order.margin.to_string(),
-                fillable: order.fillable.to_string(),
-                order_hash: order.order_hash,
-                trigger_price: None,
-                order_type: order_type,
-                order_info: OrderInfo {
-                    subaccount_id: state.subaccount_id.clone(),
-                    fee_recipient: state.fee_recipient.clone(),
-                    price: order.price.to_string(),
-                    quantity: order.quantity.to_string(),
-                },
-            };
-            limit_order
+            let order_info = OrderInfo::new(state.subaccount_id.clone(), state.fee_recipient.clone(), order.price, order.quantity);
+            DerivativeLimitOrder::new(order.margin, order.fillable, order.order_hash, None, order_type, order_info)
         })
         .collect::<Vec<DerivativeLimitOrder>>();
 
-    let deposit = Deposit {
-        available_balance: deposit_res.deposits.available_balance.to_string(),
-        total_balance: deposit_res.deposits.total_balance.to_string(),
-    };
+    let deposit = Deposit::from_query(deposit_res.deposits);
 
     let first_position: Option<Position> = if positions_res.state.is_none() {
         None
     } else {
-        let position = positions_res.state.unwrap();
-        Some(Position {
-            isLong: position.isLong,
-            quantity: position.quantity.clone(),
-            margin: position.margin.clone(),
-            entry_price: position.entry_price.clone(),
-            cumulative_funding_entry: position.cumulative_funding_entry.clone(),
-        })
+        Some(Position::from_query(positions_res.state.unwrap()))
     };
 
     let perpetual_market_info: Option<PerpetualMarketInfo> = if perpetual_market_info_res.info.is_none() {
         None
     } else {
-        let info = perpetual_market_info_res.info.unwrap();
-        Some(PerpetualMarketInfo {
-            market_id: info.market_id,
-            hourly_funding_rate_cap: info.hourly_funding_rate_cap.to_string(),
-            hourly_interest_rate: info.hourly_interest_rate.to_string(),
-            next_funding_timestamp: info.next_funding_timestamp,
-            funding_interval: info.funding_interval,
-        })
+        Some(PerpetualMarketInfo::from_query(perpetual_market_info_res.info.unwrap()))
     };
     let perpetual_market_funding: Option<PerpetualMarketFunding> = if perpetual_market_funding_res.state.is_none() {
         None
     } else {
-        let funding = perpetual_market_funding_res.state.unwrap();
-        Some(PerpetualMarketFunding {
-            cumulative_funding: funding.cumulative_funding.to_string(),
-            cumulative_price: funding.cumulative_price.to_string(),
-            last_timestamp: funding.last_timestamp,
-        })
+        Some(PerpetualMarketFunding::from_query(perpetual_market_funding_res.state.unwrap()))
     };
 
     let action_response = get_action(
@@ -310,9 +257,9 @@ pub fn begin_blocker(deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Add
         open_orders,
         deposit,
         first_position,
-        market_res.market.mark_price.to_string(),
-        String::from("80000"), // TODO
-        market_res.market.mark_price.to_string(),
+        market_res.market.mark_price,
+        Decimal::from_str("80000").unwrap(), // TODO
+        market_res.market.mark_price,
     );
 
     let msgs = match action_response {
@@ -383,27 +330,16 @@ fn get_action(
     open_orders: Vec<DerivativeLimitOrder>,
     deposit: Deposit,
     position: Option<Position>,
-    _oracle_price: String,
-    volatility: String,
-    mid_price: String,
+    _oracle_price: Decimal,
+    volatility: Decimal,
+    mid_price: Decimal,
 ) -> StdResult<WrappedGetActionResponse> {
-    // Wrap everything
-    let open_orders: Vec<WrappedDerivativeLimitOrder> = open_orders.into_iter().map(|o| o.wrap().unwrap()).collect();
-    let position = match position {
-        None => None,
-        Some(p) => Some(p.wrap().unwrap()),
-    };
-    let total_deposit_balance = wrap(&deposit.total_balance);
-    let market = market.wrap().unwrap();
-    let mid_price = Decimal::from_str(&mid_price).unwrap();
-    let volatility = Decimal::from_str(&volatility).unwrap();
-
     // Load state
     let state = config_read(deps.storage).load().unwrap();
 
     // Calculate inventory imbalance parameter
     let (inventory_imbalance_ratio, imbalance_is_long) =
-        inventory_imbalance_deriv(&position, mid_price, state.max_active_capital_utilization_ratio, total_deposit_balance);
+        inventory_imbalance_deriv(&position, mid_price, state.max_active_capital_utilization_ratio, deposit.total_balance);
 
     // Calculate reservation price
     let reservation_price = reservation_price(
@@ -445,7 +381,7 @@ fn get_action(
         let (buy_orders_to_open, additional_buys_to_cancel) = create_orders(
             new_buy_head,
             new_buy_tail,
-            total_deposit_balance,
+            deposit.total_balance,
             buy_orders_to_keep,
             buy_agg_margin_of_orders_kept,
             &position,
@@ -457,7 +393,7 @@ fn get_action(
         let (sell_orders_to_open, additional_sells_to_cancel) = create_orders(
             new_sell_head,
             new_sell_tail,
-            total_deposit_balance,
+            deposit.total_balance,
             sell_orders_to_keep,
             sell_agg_margin_of_orders_kept,
             &position,
@@ -511,18 +447,18 @@ fn get_action(
 /// * `vacancy_is_near_head` - True if the space between new head and closest order to keep is greater than that of new tail and its
 ///   respective closest order. This will be used to determine if we need to do a head to tail or tail to head later.
 pub fn orders_to_cancel(
-    open_orders: Vec<WrappedDerivativeLimitOrder>,
+    open_orders: Vec<DerivativeLimitOrder>,
     new_head: Decimal,
     new_tail: Decimal,
     is_buy: bool,
     state: &State,
-    market: &WrappedDerivativeMarket,
-) -> (Vec<OrderData>, Vec<WrappedDerivativeLimitOrder>, Decimal, bool) {
+    market: &DerivativeMarket,
+) -> (Vec<OrderData>, Vec<DerivativeLimitOrder>, Decimal, bool) {
     // If there are any open orders, we need to check them to see if we should cancel
     if open_orders.len() > 0 {
         let mut agg_margin_of_orders_kept = Decimal::zero();
         let mut orders_to_cancel: Vec<OrderData> = Vec::new();
-        let mut orders_to_keep: Vec<WrappedDerivativeLimitOrder> = Vec::new();
+        let mut orders_to_keep: Vec<DerivativeLimitOrder> = Vec::new();
         open_orders.into_iter().for_each(|o| {
             let keep_if_buy = o.order_info.price <= new_head && o.order_info.price >= new_tail;
             let keep_if_sell = o.order_info.price >= new_head && o.order_info.price <= new_tail;
@@ -568,13 +504,13 @@ fn create_orders(
     new_head: Decimal,
     new_tail: Decimal,
     total_deposit_balance: Decimal,
-    orders_to_keep: Vec<WrappedDerivativeLimitOrder>,
+    orders_to_keep: Vec<DerivativeLimitOrder>,
     agg_margin_of_orders_kept: Decimal,
-    position: &Option<WrappedPosition>,
+    position: &Option<Position>,
     vacancy_is_near_head: bool,
     is_buy: bool,
     state: &State,
-    market: &WrappedDerivativeMarket,
+    market: &DerivativeMarket,
 ) -> (Vec<DerivativeOrder>, Vec<OrderData>) {
     let (position_qty_to_reduce, position_margin, position_is_same_side) = match position {
         Some(position) => {
@@ -693,7 +629,7 @@ fn new_head_prices(volatility: Decimal, reservation_price: Decimal, reservation_
 /// * `head_change_tolerance_ratio` - A constant between 0..1 that serves as a threshold for which we actually want to take action in the new block
 /// # Returns
 /// * `should_take_action` - Whether we should cancel and place new orders with respect to the new head and tails
-fn should_take_action(open_orders: &Vec<WrappedDerivativeLimitOrder>, new_head: Decimal, head_change_tolerance_ratio: Decimal) -> bool {
+fn should_take_action(open_orders: &Vec<DerivativeLimitOrder>, new_head: Decimal, head_change_tolerance_ratio: Decimal) -> bool {
     if open_orders.len() == 0 {
         true
     } else {
@@ -748,10 +684,10 @@ pub fn new_tail_prices(
 /// # Returns
 /// * `open_buy_orders` - The sorted buyside orders
 /// * `open_sell_orders` - The sorted sellside orders
-fn split_open_orders(open_orders: Vec<WrappedDerivativeLimitOrder>) -> (Vec<WrappedDerivativeLimitOrder>, Vec<WrappedDerivativeLimitOrder>) {
+fn split_open_orders(open_orders: Vec<DerivativeLimitOrder>) -> (Vec<DerivativeLimitOrder>, Vec<DerivativeLimitOrder>) {
     if open_orders.len() > 0 {
-        let mut open_buy_orders: Vec<WrappedDerivativeLimitOrder> = Vec::new();
-        let mut open_sell_orders: Vec<WrappedDerivativeLimitOrder> = open_orders
+        let mut open_buy_orders: Vec<DerivativeLimitOrder> = Vec::new();
+        let mut open_sell_orders: Vec<DerivativeLimitOrder> = open_orders
             .into_iter()
             .filter(|o| {
                 if o.order_type == 1 {
@@ -775,7 +711,7 @@ fn split_open_orders(open_orders: Vec<WrappedDerivativeLimitOrder>) -> (Vec<Wrap
 mod tests {
     use crate::{
         contract::create_orders,
-        exchange::{DerivativeMarket, WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedOrderInfo, WrappedPosition},
+        exchange::{DerivativeLimitOrder, DerivativeMarket, OrderInfo, Position},
         state::State,
         utils::{div_dec, sub_no_overflow},
     };
@@ -804,7 +740,7 @@ mod tests {
         let (orders_to_cancel, orders_to_keep, margined_val_from_orders_remaining, append_to_new_head) =
             orders_to_cancel(open_buys, new_head, new_tail, true, &state, &market);
 
-        let position = WrappedPosition {
+        let position = Position {
             is_long: true,
             quantity: Decimal::from_str("5").unwrap(),
             entry_price: Decimal::zero(),
@@ -849,16 +785,16 @@ mod tests {
 
     #[test]
     fn should_take_action_test() {
-        let mut open_orders: Vec<WrappedDerivativeLimitOrder> = Vec::new();
+        let mut open_orders: Vec<DerivativeLimitOrder> = Vec::new();
         let new_head = Decimal::from_str("100000000100").unwrap();
         let head_change_tolerance_ratio = Decimal::from_str("0.01").unwrap();
         let should_change = should_take_action(&open_orders, new_head, head_change_tolerance_ratio);
         assert!(should_change);
 
-        open_orders.push(WrappedDerivativeLimitOrder {
+        open_orders.push(DerivativeLimitOrder {
             fillable: Default::default(),
             margin: Default::default(),
-            order_info: WrappedOrderInfo {
+            order_info: OrderInfo {
                 subaccount_id: String::from(""),
                 fee_recipient: String::from(""),
                 price: Decimal::from_str("100000000000").unwrap(),
@@ -873,10 +809,10 @@ mod tests {
         assert!(!should_change);
 
         open_orders.pop();
-        open_orders.push(WrappedDerivativeLimitOrder {
+        open_orders.push(DerivativeLimitOrder {
             fillable: Default::default(),
             margin: Default::default(),
-            order_info: WrappedOrderInfo {
+            order_info: OrderInfo {
                 subaccount_id: String::from(""),
                 fee_recipient: String::from(""),
                 price: Decimal::from_str("110000000000").unwrap(),
@@ -926,11 +862,11 @@ mod tests {
 
     #[test]
     fn split_open_orders_test() {
-        let mut open_orders: Vec<WrappedDerivativeLimitOrder> = Vec::new();
-        let order = WrappedDerivativeLimitOrder {
+        let mut open_orders: Vec<DerivativeLimitOrder> = Vec::new();
+        let order = DerivativeLimitOrder {
             fillable: Default::default(),
             margin: Default::default(),
-            order_info: WrappedOrderInfo {
+            order_info: OrderInfo {
                 subaccount_id: String::from(""),
                 fee_recipient: String::from(""),
                 price: Decimal::from_str("110000000000").unwrap(),
@@ -965,8 +901,8 @@ mod tests {
         num_orders: usize,
         is_buy: bool,
         leverage: Decimal,
-    ) -> Vec<WrappedDerivativeLimitOrder> {
-        let mut orders: Vec<WrappedDerivativeLimitOrder> = Vec::new();
+    ) -> Vec<DerivativeLimitOrder> {
+        let mut orders: Vec<DerivativeLimitOrder> = Vec::new();
         for i in 0..num_orders {
             let price = if is_buy {
                 mp - (Decimal::from_str(&i.to_string()).unwrap() * price_step_mult)
@@ -979,9 +915,9 @@ mod tests {
             } else {
                 div_dec(quantity * price, leverage)
             };
-            orders.push(WrappedDerivativeLimitOrder {
+            orders.push(DerivativeLimitOrder {
                 trigger_price: None,
-                order_info: WrappedOrderInfo {
+                order_info: OrderInfo {
                     subaccount_id: "".to_string(),
                     fee_recipient: "".to_string(),
                     price,
@@ -1013,7 +949,7 @@ mod tests {
         }
     }
 
-    fn mock_market() -> WrappedDerivativeMarket {
+    fn mock_market() -> DerivativeMarket {
         DerivativeMarket {
             ticker: String::from(""),
             oracle_base: String::from(""),
@@ -1022,16 +958,14 @@ mod tests {
             oracle_scale_factor: 0,
             quote_denom: String::from(""),
             market_id: String::from(""),
-            initial_margin_ratio: String::from("0"),
-            maintenance_margin_ratio: String::from("0"),
-            maker_fee_rate: String::from("0"),
-            taker_fee_rate: String::from("0"),
+            initial_margin_ratio: Decimal::from_str("0").unwrap(),
+            maintenance_margin_ratio: Decimal::from_str("0").unwrap(),
+            maker_fee_rate: Decimal::from_str("0").unwrap(),
+            taker_fee_rate: Decimal::from_str("0").unwrap(),
             isPerpetual: true,
             status: 0,
-            min_price_tick_size: String::from("1000"),
-            min_quantity_tick_size: String::from("0.00001"),
+            min_price_tick_size: Decimal::from_str("1000").unwrap(),
+            min_quantity_tick_size: Decimal::from_str("0.00001").unwrap(),
         }
-        .wrap()
-        .unwrap()
     }
 }

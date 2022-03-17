@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::route::InjectiveRoute;
-use cosmwasm_std::{CustomQuery, Decimal};
+use cosmwasm_std::{CustomQuery, Decimal256 as Decimal};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -37,11 +37,11 @@ pub struct SubaccountDepositResponse {
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Position {
-    pub isLong: bool,
-    pub quantity: String,
-    pub entry_price: String,
-    pub margin: String,
-    pub cumulative_funding_entry: String,
+    pub is_long: bool,
+    pub quantity: Decimal,
+    pub entry_price: Decimal,
+    pub margin: Decimal,
+    pub cumulative_funding_entry: Decimal,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

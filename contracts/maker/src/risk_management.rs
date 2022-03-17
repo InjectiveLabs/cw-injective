@@ -1,5 +1,5 @@
 use crate::{
-    exchange::{DerivativeOrder, WrappedDerivativeMarket, WrappedPosition},
+    exchange::{DerivativeMarket, DerivativeOrder, Position},
     state::State,
     utils::{div_dec, max, min, sub_abs, sub_no_overflow},
 };
@@ -11,7 +11,7 @@ pub fn only_owner(sender: &Addr, owner: &Addr) {
 }
 
 // TODO: add more
-pub fn sanity_check(_position: &Option<WrappedPosition>, _inv_base_ball: Decimal, _state: &State) {
+pub fn sanity_check(_position: &Option<Position>, _inv_base_ball: Decimal, _state: &State) {
     // assert!(inv_base_bal == Decimal::zero());
     // assert!(position.is_none());
     //TODO: come back to this one
@@ -85,13 +85,10 @@ pub fn check_tail_dist(
 /// * `market` - Derivative market information
 /// # Returns
 /// * `filtered_orders_to_place` - The filtered orders
-pub fn final_check(orders_to_place: Vec<DerivativeOrder>, market: &WrappedDerivativeMarket) -> Vec<DerivativeOrder> {
+pub fn final_check(orders_to_place: Vec<DerivativeOrder>, market: &DerivativeMarket) -> Vec<DerivativeOrder> {
     orders_to_place
         .into_iter()
-        .filter(|order| {
-            Decimal::from_str(&order.order_info.quantity).unwrap().gt(&market.min_quantity_tick_size)
-                && Decimal::from_str(&order.order_info.price).unwrap().gt(&market.min_price_tick_size)
-        })
+        .filter(|order| order.order_info.quantity.gt(&market.min_quantity_tick_size) && order.order_info.price.gt(&market.min_price_tick_size))
         .collect()
 }
 

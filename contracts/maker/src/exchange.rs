@@ -1,33 +1,16 @@
 use crate::state::State;
 use crate::utils::{div_dec, round_to_min_ticker};
-use cosmwasm_std::{Decimal256 as Decimal, StdError};
+use cosmwasm_std::Decimal256 as Decimal;
+use injective_bindings::{
+    Deposit as QueriedDeposit, DerivativeMarket as QueriedDerivativeMarket, PerpetualMarketFunding as QueriedPerpetualMarketFunding,
+    PerpetualMarketInfo as QueriedPerpetualMarketInfo, Position as QueriedPosition,
+};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
 
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativeMarket {
-    pub ticker: String,
-    pub oracle_base: String,
-    pub oracle_quote: String,
-    pub oracle_type: i32,
-    pub oracle_scale_factor: u32,
-    pub quote_denom: String,
-    pub market_id: String,
-    pub initial_margin_ratio: String,
-    pub maintenance_margin_ratio: String,
-    pub maker_fee_rate: String,
-    pub taker_fee_rate: String,
-    pub isPerpetual: bool,
-    pub status: i32,
-    pub min_price_tick_size: String,
-    pub min_quantity_tick_size: String,
-}
-
-#[allow(non_snake_case)]
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct WrappedDerivativeMarket {
     pub ticker: String,
     pub oracle_base: String,
     pub oracle_quote: String,
@@ -44,40 +27,30 @@ pub struct WrappedDerivativeMarket {
     pub min_price_tick_size: Decimal,
     pub min_quantity_tick_size: Decimal,
 }
-
 impl DerivativeMarket {
-    pub fn wrap(&self) -> Result<WrappedDerivativeMarket, StdError> {
-        Ok(WrappedDerivativeMarket {
-            ticker: self.ticker.to_string(),
-            oracle_base: self.oracle_base.to_string(),
-            oracle_quote: self.oracle_quote.to_string(),
-            oracle_type: self.oracle_type,
-            oracle_scale_factor: self.oracle_scale_factor,
-            quote_denom: self.quote_denom.to_string(),
-            market_id: self.market_id.to_string(),
-            initial_margin_ratio: Decimal::from_str(&self.initial_margin_ratio).unwrap(),
-            maintenance_margin_ratio: Decimal::from_str(&self.maintenance_margin_ratio).unwrap(),
-            maker_fee_rate: Decimal::from_str(&self.maker_fee_rate).unwrap(),
-            taker_fee_rate: Decimal::from_str(&self.taker_fee_rate).unwrap(),
-            isPerpetual: self.isPerpetual,
-            status: self.status,
-            min_price_tick_size: Decimal::from_str(&self.min_price_tick_size).unwrap(),
-            min_quantity_tick_size: Decimal::from_str(&self.min_quantity_tick_size).unwrap(),
-        })
+    pub fn from_query(queried_market: QueriedDerivativeMarket) -> DerivativeMarket {
+        DerivativeMarket {
+            ticker: queried_market.ticker,
+            oracle_base: queried_market.oracle_base,
+            oracle_quote: queried_market.oracle_quote,
+            oracle_type: queried_market.oracle_type,
+            oracle_scale_factor: queried_market.oracle_scale_factor,
+            quote_denom: queried_market.quote_denom,
+            market_id: queried_market.market_id,
+            initial_margin_ratio: queried_market.initial_margin_ratio,
+            maintenance_margin_ratio: queried_market.maintenance_margin_ratio,
+            maker_fee_rate: queried_market.maker_fee_rate,
+            taker_fee_rate: queried_market.taker_fee_rate,
+            isPerpetual: queried_market.isPerpetual,
+            status: queried_market.status,
+            min_price_tick_size: queried_market.min_price_tick_size,
+            min_quantity_tick_size: queried_market.min_quantity_tick_size,
+        }
     }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct PerpetualMarketInfo {
-    pub market_id: String,
-    pub hourly_funding_rate_cap: String,
-    pub hourly_interest_rate: String,
-    pub next_funding_timestamp: i64,
-    pub funding_interval: i64,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct WrappedPerpetualMarketInfo {
     pub market_id: String,
     pub hourly_funding_rate_cap: Decimal,
     pub hourly_interest_rate: Decimal,
@@ -86,38 +59,31 @@ pub struct WrappedPerpetualMarketInfo {
 }
 
 impl PerpetualMarketInfo {
-    pub fn _wrap(&self) -> Result<WrappedPerpetualMarketInfo, StdError> {
-        Ok(WrappedPerpetualMarketInfo {
-            market_id: self.market_id.to_string(),
-            hourly_funding_rate_cap: Decimal::from_str(&self.hourly_funding_rate_cap).unwrap(),
-            hourly_interest_rate: Decimal::from_str(&self.hourly_interest_rate).unwrap(),
-            next_funding_timestamp: self.next_funding_timestamp,
-            funding_interval: self.funding_interval,
-        })
+    pub fn from_query(queried_perpetual_market_info: QueriedPerpetualMarketInfo) -> PerpetualMarketInfo {
+        PerpetualMarketInfo {
+            market_id: queried_perpetual_market_info.market_id,
+            hourly_funding_rate_cap: queried_perpetual_market_info.hourly_funding_rate_cap,
+            hourly_interest_rate: queried_perpetual_market_info.hourly_interest_rate,
+            next_funding_timestamp: queried_perpetual_market_info.next_funding_timestamp,
+            funding_interval: queried_perpetual_market_info.funding_interval,
+        }
     }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct PerpetualMarketFunding {
-    pub cumulative_funding: String,
-    pub cumulative_price: String,
-    pub last_timestamp: i64,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct WrappedPerpetualMarketFunding {
     pub cumulative_funding: Decimal,
     pub cumulative_price: Decimal,
     pub last_timestamp: i64,
 }
 
 impl PerpetualMarketFunding {
-    pub fn _wrap(&self) -> Result<WrappedPerpetualMarketFunding, StdError> {
-        Ok(WrappedPerpetualMarketFunding {
-            cumulative_funding: Decimal::from_str(&self.cumulative_funding).unwrap(),
-            cumulative_price: Decimal::from_str(&self.cumulative_price).unwrap(),
-            last_timestamp: self.last_timestamp,
-        })
+    pub fn from_query(queried_perpetual_market_funding: QueriedPerpetualMarketFunding) -> PerpetualMarketFunding {
+        PerpetualMarketFunding {
+            cumulative_funding: queried_perpetual_market_funding.cumulative_funding,
+            cumulative_price: queried_perpetual_market_funding.cumulative_price,
+            last_timestamp: queried_perpetual_market_funding.last_timestamp,
+        }
     }
 }
 
@@ -125,26 +91,17 @@ impl PerpetualMarketFunding {
 pub struct OrderInfo {
     pub subaccount_id: String,
     pub fee_recipient: String,
-    pub price: String,
-    pub quantity: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct WrappedOrderInfo {
-    pub subaccount_id: String,
-    pub fee_recipient: String,
     pub price: Decimal,
     pub quantity: Decimal,
 }
-
 impl OrderInfo {
-    pub fn wrap(&self) -> Result<WrappedOrderInfo, StdError> {
-        Ok(WrappedOrderInfo {
-            subaccount_id: self.subaccount_id.to_string(),
-            fee_recipient: self.fee_recipient.to_string(),
-            price: Decimal::from_str(&self.price).unwrap(),
-            quantity: Decimal::from_str(&self.quantity).unwrap(),
-        })
+    pub fn new(subaccount_id: String, fee_recipient: String, price: Decimal, quantity: Decimal) -> OrderInfo {
+        OrderInfo {
+            subaccount_id,
+            fee_recipient,
+            price,
+            quantity,
+        }
     }
 }
 
@@ -152,89 +109,66 @@ impl OrderInfo {
 pub struct DerivativeLimitOrder {
     pub order_info: OrderInfo,
     pub order_type: i32,
-    pub margin: String,
-    pub fillable: String,
-    pub trigger_price: Option<String>,
-    pub order_hash: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct WrappedDerivativeLimitOrder {
-    pub order_info: WrappedOrderInfo,
-    pub order_type: i32,
     pub margin: Decimal,
     pub fillable: Decimal,
     pub trigger_price: Option<Decimal>,
     pub order_hash: String,
 }
-impl WrappedDerivativeLimitOrder {
+impl DerivativeLimitOrder {
+    pub fn new(
+        margin: Decimal,
+        fillable: Decimal,
+        order_hash: String,
+        trigger_price: Option<Decimal>,
+        order_type: i32,
+        order_info: OrderInfo,
+    ) -> DerivativeLimitOrder {
+        DerivativeLimitOrder {
+            margin,
+            fillable,
+            order_hash,
+            trigger_price,
+            order_type,
+            order_info,
+        }
+    }
     pub fn is_reduce_only(&self) -> bool {
         self.margin.is_zero()
     }
 }
 
-impl DerivativeLimitOrder {
-    pub fn wrap(&self) -> Result<WrappedDerivativeLimitOrder, StdError> {
-        Ok(WrappedDerivativeLimitOrder {
-            order_info: self.order_info.wrap()?,
-            order_type: self.order_type,
-            margin: Decimal::from_str(&self.margin).unwrap(),
-            fillable: Decimal::from_str(&self.fillable).unwrap(),
-            trigger_price: None,
-            order_hash: self.order_hash.clone(),
-        })
-    }
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Deposit {
-    pub available_balance: String,
-    pub total_balance: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct WrappedDeposit {
     pub available_balance: Decimal,
     pub total_balance: Decimal,
 }
 
 impl Deposit {
-    pub fn _wrap(&self) -> Result<WrappedDeposit, StdError> {
-        Ok(WrappedDeposit {
-            available_balance: Decimal::from_str(&self.available_balance).unwrap(),
-            total_balance: Decimal::from_str(&self.total_balance).unwrap(),
-        })
+    pub fn from_query(queried_deposit: QueriedDeposit) -> Deposit {
+        Deposit {
+            available_balance: queried_deposit.available_balance,
+            total_balance: queried_deposit.total_balance,
+        }
     }
 }
 
-#[allow(non_snake_case)]
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct Position {
-    pub isLong: bool,
-    pub quantity: String,
-    pub entry_price: String,
-    pub margin: String,
-    pub cumulative_funding_entry: String,
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct WrappedPosition {
+pub struct Position {
     pub is_long: bool,
     pub quantity: Decimal,
     pub entry_price: Decimal,
     pub margin: Decimal,
     pub cumulative_funding_entry: Decimal,
 }
-
 impl Position {
-    pub fn wrap(&self) -> Result<WrappedPosition, StdError> {
-        Ok(WrappedPosition {
-            is_long: self.isLong,
-            quantity: Decimal::from_str(&self.quantity).unwrap(),
-            entry_price: Decimal::from_str(&self.entry_price).unwrap(),
-            margin: Decimal::from_str(&self.margin).unwrap(),
-            cumulative_funding_entry: Decimal::from_str(&self.cumulative_funding_entry).unwrap(),
-        })
+    pub fn from_query(queried_position: QueriedPosition) -> Position {
+        Position {
+            is_long: queried_position.is_long,
+            quantity: queried_position.quantity,
+            margin: queried_position.margin,
+            entry_price: queried_position.entry_price,
+            cumulative_funding_entry: queried_position.cumulative_funding_entry,
+        }
     }
 }
 
@@ -246,7 +180,7 @@ pub struct OrderData {
 }
 
 impl OrderData {
-    pub fn new(order_hash: String, state: &State, market: &WrappedDerivativeMarket) -> OrderData {
+    pub fn new(order_hash: String, state: &State, market: &DerivativeMarket) -> OrderData {
         OrderData {
             market_id: market.market_id.clone(),
             subaccount_id: state.subaccount_id.clone(),
@@ -268,11 +202,11 @@ pub struct DerivativeOrder {
     pub market_id: String,
     pub order_info: OrderInfo,
     pub order_type: i32,
-    pub margin: String,
+    pub margin: Decimal,
     pub trigger_price: Option<String>,
 }
 impl DerivativeOrder {
-    pub fn new(state: &State, price: Decimal, qty: Decimal, is_buy: bool, is_reduce_only: bool, market: &WrappedDerivativeMarket) -> DerivativeOrder {
+    pub fn new(state: &State, price: Decimal, qty: Decimal, is_buy: bool, is_reduce_only: bool, market: &DerivativeMarket) -> DerivativeOrder {
         let margin = if is_reduce_only {
             Decimal::zero()
         } else {
@@ -284,28 +218,28 @@ impl DerivativeOrder {
             order_info: OrderInfo {
                 subaccount_id: state.subaccount_id.clone(),
                 fee_recipient: state.fee_recipient.clone(),
-                price: round_to_min_ticker(price, market.min_price_tick_size).to_string(),
-                quantity: round_to_min_ticker(qty, market.min_quantity_tick_size).to_string(),
+                price: round_to_min_ticker(price, market.min_price_tick_size),
+                quantity: round_to_min_ticker(qty, market.min_quantity_tick_size),
             },
             order_type: if is_buy { 1 } else { 2 },
-            margin: round_to_min_ticker(margin, market.min_quantity_tick_size).to_string(),
+            margin: round_to_min_ticker(margin, market.min_quantity_tick_size),
             trigger_price: None,
         }
     }
     pub fn is_reduce_only(&self) -> bool {
-        Decimal::from_str(&self.margin).unwrap().is_zero()
+        self.margin.is_zero()
     }
     pub fn get_price(&self) -> Decimal {
-        Decimal::from_str(&self.order_info.price).unwrap()
+        self.order_info.price
     }
     pub fn get_qty(&self) -> Decimal {
-        Decimal::from_str(&self.order_info.quantity).unwrap()
+        self.order_info.quantity
     }
     pub fn get_val(&self) -> Decimal {
         self.get_price() * self.get_qty()
     }
     pub fn get_margin(&self) -> Decimal {
-        Decimal::from_str(&self.margin).unwrap()
+        self.margin
     }
     pub fn non_reduce_only_is_invalid(&self) -> bool {
         self.get_margin().is_zero() || self.get_price().is_zero() || self.get_qty().is_zero()

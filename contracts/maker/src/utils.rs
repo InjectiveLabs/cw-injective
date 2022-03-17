@@ -1,6 +1,6 @@
-use cosmwasm_std::{Decimal256 as Decimal, Fraction, Uint256, Addr};
-use std::str::FromStr;
+use cosmwasm_std::{Addr, Decimal256 as Decimal, Fraction, Uint256};
 use ethereum_types::H160;
+use std::str::FromStr;
 use subtle_encoding::bech32;
 
 pub fn wrap(unwrapped_num: &String) -> Decimal {
@@ -87,15 +87,18 @@ pub fn decode_bech32(addr: &Addr) -> String {
 #[cfg(test)]
 mod tests {
     use super::sub_no_overflow;
-    use crate::utils::{div_dec, div_int, round_to_min_ticker, sub_abs, decode_bech32};
-    use cosmwasm_std::{Decimal256, Uint256, Addr};
-    use std::{str::FromStr};
+    use crate::utils::{decode_bech32, div_dec, div_int, round_to_min_ticker, sub_abs};
+    use cosmwasm_std::{Addr, Decimal256, Uint256};
+    use std::str::FromStr;
 
     #[test]
     fn decode_bech32_test() {
         let decoded_string = decode_bech32(&Addr::unchecked("inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv"));
         println!("{}", decoded_string);
-        assert_eq!(decoded_string, "0xB5e09b93aCEb70C1711aF078922fA256011D7e56000000000000000000000000".to_lowercase());
+        assert_eq!(
+            decoded_string,
+            "0xB5e09b93aCEb70C1711aF078922fA256011D7e56000000000000000000000000".to_lowercase()
+        );
     }
 
     #[test]
