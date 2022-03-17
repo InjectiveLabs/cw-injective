@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use crate::{
-    exchange::{DerivativeOrder, OrderData, WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedPosition},
+    exchange::{DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderData, Position},
     state::State,
     utils::{div_dec, div_int, min, sub_abs, sub_no_overflow, sub_no_overflow_int},
 };
@@ -22,7 +22,7 @@ use cosmwasm_std::{Decimal256 as Decimal, Uint256};
 ///    zero if there is no position open.
 /// * `imbalance_is_long` - True if the imbalance is skewed towards being long
 pub fn inventory_imbalance_deriv(
-    position: &Option<WrappedPosition>,
+    position: &Option<Position>,
     mid_price: Decimal,
     max_active_capital_utilization_ratio: Decimal,
     total_deposit_balance: Decimal,
@@ -67,7 +67,7 @@ pub fn create_orders_between_bounds_deriv(
     touch_head: bool,
     is_buy: bool,
     state: &State,
-    market: &WrappedDerivativeMarket,
+    market: &DerivativeMarket,
 ) -> (Vec<DerivativeOrder>, Decimal, Decimal) {
     let mut new_orders_to_open: Vec<DerivativeOrder> = Vec::new();
     let num_open_orders = Uint256::from_str(&num_orders_to_keep.to_string()).unwrap();
@@ -129,11 +129,11 @@ pub fn create_orders_between_bounds_deriv(
 pub fn create_orders_tail_to_head_deriv(
     new_head: Decimal,
     total_margin_balance_for_new_orders: Decimal,
-    orders_to_keep: Vec<WrappedDerivativeLimitOrder>,
+    orders_to_keep: Vec<DerivativeLimitOrder>,
     position_qty_to_reduce: Decimal,
     is_buy: bool,
     state: &State,
-    market: &WrappedDerivativeMarket,
+    market: &DerivativeMarket,
 ) -> (Vec<DerivativeOrder>, Vec<OrderData>) {
     let (orders_to_open_from_base_case, position_qty_to_reduce, total_margin_balance_for_new_orders) = create_orders_between_bounds_deriv(
         new_head,
@@ -178,11 +178,11 @@ pub fn create_orders_tail_to_head_deriv(
 pub fn create_orders_head_to_tail_deriv(
     new_tail: Decimal,
     total_margin_balance_for_new_orders: Decimal,
-    orders_to_keep: Vec<WrappedDerivativeLimitOrder>,
+    orders_to_keep: Vec<DerivativeLimitOrder>,
     position_qty_to_reduce: Decimal,
     is_buy: bool,
     state: &State,
-    market: &WrappedDerivativeMarket,
+    market: &DerivativeMarket,
 ) -> (Vec<DerivativeOrder>, Vec<OrderData>) {
     let (additional_orders_to_cancel, orders_to_open_from_reduce_only_management, total_margin_balance_for_new_orders, position_qty_to_reduce) =
         manage_reduce_only_deriv(
@@ -226,12 +226,12 @@ pub fn create_orders_head_to_tail_deriv(
 /// * `total_margin_balance_for_new_orders` - The remaining total margin that we are allowed to allocate to any additional new orders
 /// * `position_qty_to_reduce` - The remaining position quantity that we need to reduce. Is zero if there is none left
 fn manage_reduce_only_deriv(
-    orders_to_keep: Vec<WrappedDerivativeLimitOrder>,
+    orders_to_keep: Vec<DerivativeLimitOrder>,
     mut total_margin_balance_for_new_orders: Decimal,
     mut position_qty_to_reduce: Decimal,
     is_buy: bool,
     state: &State,
-    market: &WrappedDerivativeMarket,
+    market: &DerivativeMarket,
 ) -> (Vec<OrderData>, Vec<DerivativeOrder>, Decimal, Decimal) {
     let mut additional_orders_to_open: Vec<DerivativeOrder> = Vec::new();
     let mut additional_orders_to_cancel: Vec<OrderData> = Vec::new();
@@ -298,7 +298,7 @@ fn update_reduce_only(new_reduce_only_order: DerivativeOrder, position_qty_to_re
 mod tests {
     use crate::{
         derivative::{create_orders_between_bounds_deriv, manage_reduce_only_deriv},
-        exchange::{DerivativeMarket, DerivativeOrder, WrappedDerivativeLimitOrder, WrappedDerivativeMarket, WrappedOrderInfo},
+        exchange::{DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderInfo},
         state::State,
         utils::div_dec,
     };
@@ -489,7 +489,7 @@ mod tests {
         touch_head: bool,
         is_buy: bool,
         state: &State,
-        market: &WrappedDerivativeMarket,
+        market: &DerivativeMarket,
     ) {
         let (orders_to_open_from_base_case, new_position_qty_to_reduce, new_total_margin_balance_for_new_orders) = create_orders_between_bounds_deriv(
             start_price,
@@ -715,12 +715,12 @@ mod tests {
     }
 
     fn manage_reduce_only_deriv_test(
-        orders_to_keep: Vec<WrappedDerivativeLimitOrder>,
+        orders_to_keep: Vec<DerivativeLimitOrder>,
         total_margin_balance_for_new_orders: Decimal,
         position_qty_to_reduce: Decimal,
         is_buy: bool,
         state: &State,
-        market: &WrappedDerivativeMarket,
+        market: &DerivativeMarket,
     ) {
         println!("BEFORE");
         for o in orders_to_keep.iter() {
@@ -867,7 +867,7 @@ mod tests {
         }
     }
 
-    fn mock_market() -> WrappedDerivativeMarket {
+    fn mock_market() -> DerivativeMarket {
         DerivativeMarket {
             ticker: String::from(""),
             oracle_base: String::from(""),
@@ -876,26 +876,24 @@ mod tests {
             oracle_scale_factor: 0,
             quote_denom: String::from(""),
             market_id: String::from(""),
-            initial_margin_ratio: String::from("0"),
-            maintenance_margin_ratio: String::from("0"),
-            maker_fee_rate: String::from("0"),
-            taker_fee_rate: String::from("0"),
+            initial_margin_ratio: Decimal::from_str("0").unwrap(),
+            maintenance_margin_ratio: Decimal::from_str("0").unwrap(),
+            maker_fee_rate: Decimal::from_str("0").unwrap(),
+            taker_fee_rate: Decimal::from_str("0").unwrap(),
             isPerpetual: true,
             status: 0,
-            min_price_tick_size: String::from("100000.000000000000000000"),
-            min_quantity_tick_size: String::from("0.000100000000000000"),
+            min_price_tick_size: Decimal::from_str("100000.000000000000000000").unwrap(),
+            min_quantity_tick_size: Decimal::from_str("0.000100000000000000").unwrap(),
         }
-        .wrap()
-        .unwrap()
     }
 
-    fn wrap_orders(mocked_orders: Vec<DerivativeOrder>) -> Vec<WrappedDerivativeLimitOrder> {
-        let mut orders: Vec<WrappedDerivativeLimitOrder> = Vec::new();
+    fn wrap_orders(mocked_orders: Vec<DerivativeOrder>) -> Vec<DerivativeLimitOrder> {
+        let mut orders: Vec<DerivativeLimitOrder> = Vec::new();
         let mut hash = 0;
         for o in mocked_orders.into_iter() {
-            orders.push(WrappedDerivativeLimitOrder {
+            orders.push(DerivativeLimitOrder {
                 trigger_price: None,
-                order_info: WrappedOrderInfo {
+                order_info: OrderInfo {
                     subaccount_id: "".to_string(),
                     fee_recipient: "".to_string(),
                     price: o.get_price(),

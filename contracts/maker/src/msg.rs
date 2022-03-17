@@ -1,5 +1,5 @@
 use crate::exchange::ExchangeMsg;
-use cosmwasm_std::Uint128;
+use cosmwasm_std::{Uint128};
 use cw20::Logo;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -30,8 +30,6 @@ pub struct InstantiateMsg {
     pub lp_name: String,
     // LP Token Symbol
     pub lp_symbol: String,
-    // LP Token Decimals
-    pub lp_decimals: String,
     // Label for the CW20 Token
     pub cw20_label: String,
     // Custom marketing info for the CW20 Token
