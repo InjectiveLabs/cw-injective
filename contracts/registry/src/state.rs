@@ -10,6 +10,7 @@ pub struct CONTRACT {
     pub address: Addr,
     pub gas_limit: u64,
     pub gas_price: String,
+    pub is_executable: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

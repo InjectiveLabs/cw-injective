@@ -42,7 +42,8 @@ pub fn execute(
             contract_address,
             gas_limit,
             gas_price,
-        } => try_register(deps, env, info, contract_address, gas_limit, gas_price),
+            is_executable,
+        } => try_register(deps, env, info, contract_address, gas_limit, gas_price, is_executable),
     }
 }
 
@@ -57,6 +58,7 @@ pub fn try_register(
     contract_addr: Addr,
     gas_limit: u64,
     gas_price: String,
+    is_executable: bool,
 ) -> Result<Response, ContractError> {
     // Ensure that only wasmx module calls this method
     only_owner(&env.contract.address, &info.sender);
@@ -66,6 +68,7 @@ pub fn try_register(
         address: contract_addr,
         gas_limit: gas_limit,
         gas_price: gas_price,
+        is_executable:is_executable,
     };
 
     state.contracts.push(contract);
@@ -77,6 +80,7 @@ pub fn try_register(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetContracts {} => to_binary(&query_contracts(deps)?),
+        QueryMsg::GetActiveContracts {} => to_binary(&query_active_contracts(deps)?),
     }
 }
 
@@ -84,5 +88,14 @@ fn query_contracts(deps: Deps) -> StdResult<ContractsResponse> {
     let state = STATE.load(deps.storage)?;
     Ok(ContractsResponse {
         contracts: state.contracts,
+    })
+}
+
+fn query_active_contracts(deps: Deps) -> StdResult<ContractsResponse> {
+    let state = STATE.load(deps.storage)?;
+    let active_contracts: Vec<CONTRACT>;
+    active_contracts = state.contracts.into_iter().filter(|contract| contract.is_executable).collect();
+    Ok(ContractsResponse {
+        contracts: active_contracts,
     })
 }

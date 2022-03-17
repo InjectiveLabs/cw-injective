@@ -13,6 +13,7 @@ pub enum ExecuteMsg {
         contract_address: Addr,
         gas_limit: u64,
         gas_price: String,
+        is_executable: bool,        
     },
 }
 
@@ -21,6 +22,7 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     // GetContracts returns the registered contracts as a json-encoded number
     GetContracts {},
+    GetActiveContracts {},
 }
 
 // We define a custom struct for each query response
