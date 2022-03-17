@@ -11,7 +11,7 @@ use crate::state::{config, config_read, State};
 use crate::utils::{decode_bech32, div_dec, sub_abs, sub_no_overflow};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, CosmosMsg, Decimal256 as Decimal, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Reply, Response,
-    StdError, StdResult, SubMsg, Uint128, WasmMsg, WasmQuery,
+    StdError, StdResult, SubMsg, Uint128, WasmMsg, WasmQuery, Uint256,
 };
 use cw20_base::msg::InstantiateMsg as cw20_instantiate_msg;
 use std::ops::Deref;
@@ -31,14 +31,14 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: Messag
         market_id: msg.market_id.to_string(),
         subaccount_id: decode_bech32(&env.contract.address),
         fee_recipient: msg.fee_recipient,
-        leverage: msg.leverage,
-        order_density: msg.order_density,
-        reservation_price_sensitivity_ratio: msg.reservation_price_sensitivity_ratio,
-        reservation_spread_sensitivity_ratio: msg.reservation_spread_sensitivity_ratio,
-        max_active_capital_utilization_ratio: msg.max_active_capital_utilization_ratio,
-        head_change_tolerance_ratio: msg.head_change_tolerance_ratio,
-        mid_price_tail_deviation_ratio: msg.mid_price_tail_deviation_ratio,
-        min_head_to_tail_deviation_ratio: msg.min_head_to_tail_deviation_ratio,
+        leverage: Decimal::from_str(&msg.leverage).unwrap(),
+        order_density: Uint256::from_str(&msg.order_density).unwrap(),
+        reservation_price_sensitivity_ratio: Decimal::from_str(&msg.reservation_price_sensitivity_ratio).unwrap(),
+        reservation_spread_sensitivity_ratio: Decimal::from_str(&msg.reservation_spread_sensitivity_ratio).unwrap(),
+        max_active_capital_utilization_ratio: Decimal::from_str(&msg.max_active_capital_utilization_ratio).unwrap(),
+        head_change_tolerance_ratio: Decimal::from_str(&msg.head_change_tolerance_ratio).unwrap(),
+        mid_price_tail_deviation_ratio: Decimal::from_str(&msg.mid_price_tail_deviation_ratio).unwrap(),
+        min_head_to_tail_deviation_ratio: Decimal::from_str(&msg.min_head_to_tail_deviation_ratio).unwrap(),
         lp_token_address: None,
     };
 
@@ -68,7 +68,7 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: Messag
 
     let instantiate_message = WasmMsg::Instantiate {
         admin: None,
-        code_id: msg.cw20_code_id,
+        code_id: msg.cw20_code_id.parse::<u64>().unwrap(),
         msg: to_binary(&cw20_instantiate_msg)?,
         funds: vec![],
         label: msg.cw20_label,
