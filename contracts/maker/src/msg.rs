@@ -1,5 +1,4 @@
-use crate::exchange::ExchangeMsg;
-use cosmwasm_std::{Uint128};
+use cosmwasm_std::Uint128;
 use cw20::Logo;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -50,11 +49,6 @@ pub enum QueryMsg {
     Config {},
     GetMarketId {},
     GetTotalLpSupply {},
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct WrappedGetActionResponse {
-    pub msgs: Vec<ExchangeMsg>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

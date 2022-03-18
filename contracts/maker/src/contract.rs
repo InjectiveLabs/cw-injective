@@ -5,13 +5,13 @@ use crate::error::ContractError;
 use crate::exchange::{
     Deposit, DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderData, OrderInfo, PerpetualMarketFunding, PerpetualMarketInfo, Position,
 };
-use crate::msg::{ExecuteMsg, InstantiateMsg, MarketIdResponse, QueryMsg, TotalSupplyResponse, WrappedGetActionResponse};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MarketIdResponse, QueryMsg, TotalSupplyResponse};
 use crate::risk_management::{check_tail_dist, only_owner, total_marginable_balance_for_new_orders};
 use crate::state::{config, config_read, State};
 use crate::utils::{decode_bech32, div_dec, sub_abs, sub_no_overflow};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, CosmosMsg, Decimal256 as Decimal, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Reply, Response,
-    StdError, StdResult, SubMsg, Uint128, WasmMsg, WasmQuery, Uint256,
+    StdError, StdResult, SubMsg, Uint128, Uint256, WasmMsg, WasmQuery,
 };
 use cw20_base::msg::InstantiateMsg as cw20_instantiate_msg;
 use std::ops::Deref;
@@ -20,7 +20,6 @@ use std::str::FromStr;
 use cw20::{Cw20Contract, Cw20ExecuteMsg, Cw20QueryMsg, MinterResponse, TokenInfoResponse};
 use injective_bindings::{create_batch_update_orders_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper};
 
-use crate::exchange::{ExchangeMsg, MsgBatchUpdateOrders};
 use cw0::parse_reply_instantiate_data;
 
 const INSTANTIATE_REPLY_ID: u64 = 1u64;
@@ -262,28 +261,9 @@ pub fn begin_blocker(deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Add
         market_res.market.mark_price,
     );
 
-    let msgs = match action_response {
-        Ok(v) => v.msgs,
-        Err(_) => return Err(ContractError::TestError("Made it to this line!".to_string())),
-    };
-    let parsed_msgs = msgs.iter().map(|msg| match msg {
-        ExchangeMsg::BatchUpdateOrders(batch_update_orders_msg) => create_batch_update_orders_msg(
-            batch_update_orders_msg.sender.clone(),
-            batch_update_orders_msg.subaccount_id.clone(),
-            batch_update_orders_msg.spot_market_ids_to_cancel_all.clone(),
-            batch_update_orders_msg.derivative_market_ids_to_cancel_all.clone(),
-            serde_json_wasm::from_str(&serde_json_wasm::to_string(&batch_update_orders_msg.spot_orders_to_cancel).unwrap()).unwrap(),
-            serde_json_wasm::from_str(&serde_json_wasm::to_string(&batch_update_orders_msg.derivative_orders_to_cancel).unwrap()).unwrap(),
-            serde_json_wasm::from_str(&serde_json_wasm::to_string(&batch_update_orders_msg.spot_orders_to_create).unwrap()).unwrap(),
-            serde_json_wasm::from_str(&serde_json_wasm::to_string(&batch_update_orders_msg.derivative_orders_to_create).unwrap()).unwrap(),
-        ),
-        ExchangeMsg::MsgCreateDerivativeMarketOrder => todo!(),
-    });
-
-    let mut messages: Vec<CosmosMsg<InjectiveMsgWrapper>> = Vec::new();
-    parsed_msgs.for_each(|msg| messages.push(msg));
-
-    Ok(Response::new().set_data(Binary::from(b"just some test data")).add_messages(messages))
+    Ok(Response::new()
+        .set_data(Binary::from(b"just some test data"))
+        .add_messages(action_response.unwrap()))
 }
 
 #[entry_point]
@@ -333,7 +313,7 @@ fn get_action(
     _oracle_price: Decimal,
     volatility: Decimal,
     mid_price: Decimal,
-) -> StdResult<WrappedGetActionResponse> {
+) -> StdResult<Vec<CosmosMsg<InjectiveMsgWrapper>>> {
     // Load state
     let state = config_read(deps.storage).load().unwrap();
 
@@ -403,31 +383,32 @@ fn get_action(
             &market,
         );
 
-        // Filter out any faulty orders
-        let derivative_orders_to_create = vec![buy_orders_to_open, sell_orders_to_open].concat();
+        let batch_order = create_batch_update_orders_msg(
+            env.contract.address.to_string(),
+            String::from(""),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            serde_json_wasm::from_str(
+                &serde_json_wasm::to_string(
+                    &vec![
+                        buy_orders_to_cancel,
+                        sell_orders_to_cancel,
+                        additional_buys_to_cancel,
+                        additional_sells_to_cancel,
+                    ]
+                    .concat(),
+                )
+                .unwrap(),
+            )
+            .unwrap(),
+            Vec::new(),
+            serde_json_wasm::from_str(&serde_json_wasm::to_string(&vec![buy_orders_to_open, sell_orders_to_open].concat()).unwrap()).unwrap(),
+        );
 
-        let batch_order = MsgBatchUpdateOrders {
-            sender: env.contract.address.to_string(),
-            subaccount_id: String::from(""), // use only when passing market ids to cancel all: state.subaccount_id,
-            spot_market_ids_to_cancel_all: Vec::new(),
-            derivative_market_ids_to_cancel_all: vec![],
-            spot_orders_to_cancel: Vec::new(),
-            derivative_orders_to_cancel: vec![
-                buy_orders_to_cancel,
-                sell_orders_to_cancel,
-                additional_buys_to_cancel,
-                additional_sells_to_cancel,
-            ]
-            .concat(),
-            spot_orders_to_create: Vec::new(),
-            derivative_orders_to_create,
-        };
-
-        Ok(WrappedGetActionResponse {
-            msgs: vec![ExchangeMsg::BatchUpdateOrders(batch_order)],
-        })
+        Ok(vec![batch_order])
     } else {
-        Ok(WrappedGetActionResponse { msgs: Vec::new() })
+        Ok(Vec::new())
     }
 }
 
