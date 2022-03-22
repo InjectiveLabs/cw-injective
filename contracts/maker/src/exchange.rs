@@ -163,7 +163,7 @@ pub struct Position {
 impl Position {
     pub fn from_query(queried_position: QueriedPosition) -> Position {
         Position {
-            is_long: queried_position.is_long,
+            is_long: queried_position.isLong,
             quantity: queried_position.quantity,
             margin: queried_position.margin,
             entry_price: queried_position.entry_price,

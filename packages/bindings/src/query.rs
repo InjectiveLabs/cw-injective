@@ -37,7 +37,7 @@ pub struct SubaccountDepositResponse {
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Position {
-    pub is_long: bool,
+    pub isLong: bool,
     pub quantity: Decimal,
     pub entry_price: Decimal,
     pub margin: Decimal,
@@ -52,7 +52,7 @@ pub struct DerivativePosition {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct SubaccountPositionsResponse {
+pub struct SubaccountPositionInMarketResponse {
     pub state: Option<Position>,
 }
 #[allow(non_snake_case)]

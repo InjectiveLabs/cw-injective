@@ -2,7 +2,7 @@ use cosmwasm_std::{QuerierWrapper, StdResult};
 
 use crate::query::{
     DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse,
-    SubaccountDepositResponse, SubaccountPositionsResponse, TraderDerivativeOrdersResponse,
+    SubaccountDepositResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse,
 };
 
 use crate::route::InjectiveRoute;
@@ -39,7 +39,7 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_subaccount_position<T: Into<String>>(&self, market_id: T, subaccount_id: T) -> StdResult<SubaccountPositionsResponse> {
+    pub fn query_subaccount_position<T: Into<String>>(&self, market_id: T, subaccount_id: T) -> StdResult<SubaccountPositionInMarketResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::SubaccountPositionInMarket {
@@ -48,7 +48,7 @@ impl<'a> InjectiveQuerier<'a> {
             },
         };
 
-        let res: SubaccountPositionsResponse = self.querier.query(&request.into())?;
+        let res: SubaccountPositionInMarketResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 
