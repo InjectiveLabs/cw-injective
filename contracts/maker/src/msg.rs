@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 pub struct InstantiateMsg {
     // Market Id
     pub market_id: String,
-    pub fee_recipient: String,
     // Leverage that a contract will use on its orders
     pub leverage: String,
     // Number of orders to place between the head and the tail

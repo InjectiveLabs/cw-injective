@@ -29,7 +29,7 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: Messag
     let state = State {
         market_id: msg.market_id.to_string(),
         subaccount_id: decode_bech32(&env.contract.address),
-        fee_recipient: msg.fee_recipient,
+        fee_recipient: env.contract.address.to_string(),
         leverage: Decimal::from_str(&msg.leverage).unwrap(),
         order_density: Uint256::from_str(&msg.order_density).unwrap(),
         reservation_price_sensitivity_ratio: Decimal::from_str(&msg.reservation_price_sensitivity_ratio).unwrap(),
