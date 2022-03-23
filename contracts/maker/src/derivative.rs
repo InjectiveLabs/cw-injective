@@ -8,6 +8,24 @@ use crate::{
 use cosmwasm_std::{Decimal256 as Decimal, Uint256};
 
 /// # Description
+/// Calculates the total unrealized funding payments of a position.
+pub fn get_funding_payment(position: &Position, perpetual_market_funding: PerpetualMarketFunding) -> (Decimal, bool) {
+    let is_positive_funding_payment: bool;
+    let funding_payment_per_quantity: Decimal;
+
+    if position.is_long {
+        is_positive_funding_payment = position.cumulative_funding_entry >= perpetual_market_funding.cumulative_funding;
+        funding_payment_per_quantity = sub_abs(position.cumulative_funding_entry, perpetual_market_funding.cumulative_funding)
+    } else {
+        is_positive_funding_payment = position.cumulative_funding_entry <= perpetual_market_funding.cumulative_funding;
+        funding_payment_per_quantity = sub_abs(perpetual_market_funding.cumulative_funding, position.cumulative_funding_entry)
+    };
+
+    let funding_payment = funding_payment_per_quantity.mul(position.quantity);
+    return (funding_payment, is_positive_funding_payment);
+}
+
+/// # Description
 /// Calculates the inventory imbalance parameter from the margin of an open position and the total deposited balance
 /// # Formulas
 /// * `inventory imbalance (case: no position)` = 0
@@ -32,24 +50,21 @@ pub fn inventory_imbalance_deriv(
     match position {
         None => (Decimal::zero(), true),
         Some(position) => {
-            let funding_payment = match perpetual_market_funding {
-                None => Decimal::zero(),
-                Some(funding) => {
-                    if position.is_long {
-                        position
-                            .quantity
-                            .mul(sub_no_overflow(position.cumulative_funding_entry, funding.cumulative_funding))
-                    } else {
-                        position
-                            .quantity
-                            .mul(sub_no_overflow(funding.cumulative_funding, position.cumulative_funding_entry))
-                    }
-                }
+            let (funding_payment, is_positive_funding_payment) = match perpetual_market_funding {
+                None => (Decimal::zero(), true),
+                Some(funding) => get_funding_payment(position, funding),
             };
 
             let unrealized_pnl_ratio = div_dec(mid_price - position.entry_price, position.entry_price);
             let unrealized_pnl_notional = unrealized_pnl_ratio * position.quantity;
-            let position_value = position.margin + unrealized_pnl_notional + funding_payment;
+            let mut position_value = position.margin + unrealized_pnl_notional;
+
+            if is_positive_funding_payment {
+                position_value = position_value + funding_payment;
+            } else {
+                position_value = sub_no_overflow(position_value, funding_payment);
+            }
+
             let max_margin = max_active_capital_utilization_ratio * total_deposit_balance;
             let inventory_imbalance = div_dec(position_value, max_margin);
             (inventory_imbalance, position.is_long)
