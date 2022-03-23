@@ -306,7 +306,7 @@ fn get_action(
     env: Env,
     market: DerivativeMarket,
     _perpetual_market_info: Option<PerpetualMarketInfo>,
-    _perpetual_market_funding: Option<PerpetualMarketFunding>,
+    perpetual_market_funding: Option<PerpetualMarketFunding>,
     open_orders: Vec<DerivativeLimitOrder>,
     deposit: Deposit,
     position: Option<Position>,
@@ -318,8 +318,13 @@ fn get_action(
     let state = config_read(deps.storage).load().unwrap();
 
     // Calculate inventory imbalance parameter
-    let (inventory_imbalance_ratio, imbalance_is_long) =
-        inventory_imbalance_deriv(&position, mid_price, state.max_active_capital_utilization_ratio, deposit.total_balance);
+    let (inventory_imbalance_ratio, imbalance_is_long) = inventory_imbalance_deriv(
+        &position,
+        mid_price,
+        state.max_active_capital_utilization_ratio,
+        deposit.total_balance,
+        perpetual_market_funding,
+    );
 
     // Calculate reservation price
     let reservation_price = reservation_price(

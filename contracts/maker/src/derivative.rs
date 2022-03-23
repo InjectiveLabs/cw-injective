@@ -1,7 +1,7 @@
-use std::str::FromStr;
+use std::{ops::Mul, str::FromStr};
 
 use crate::{
-    exchange::{DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderData, Position},
+    exchange::{DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderData, PerpetualMarketFunding, Position},
     state::State,
     utils::{div_dec, div_int, min, sub_abs, sub_no_overflow, sub_no_overflow_int},
 };
@@ -17,6 +17,7 @@ use cosmwasm_std::{Decimal256 as Decimal, Uint256};
 /// * `mid_price` - The true center between the best bid and ask
 /// * `max_active_capital_utilization_ratio` - A constant between 0..1 that will be used to determine what percentage of how much of our total deposited balance we want margined on the book
 /// * `total_deposit_balance` - The total quote balance LPed
+/// * `perpetual_market_funding` - The current market funding
 /// # Returns
 /// * `inventory_imbalance` - A relationship between margined position and total deposit balance (margin/total_deposit_balance). Is
 ///    zero if there is no position open.
@@ -26,13 +27,29 @@ pub fn inventory_imbalance_deriv(
     mid_price: Decimal,
     max_active_capital_utilization_ratio: Decimal,
     total_deposit_balance: Decimal,
+    perpetual_market_funding: Option<PerpetualMarketFunding>,
 ) -> (Decimal, bool) {
     match position {
         None => (Decimal::zero(), true),
         Some(position) => {
+            let funding_payment = match perpetual_market_funding {
+                None => Decimal::zero(),
+                Some(funding) => {
+                    if position.is_long {
+                        position
+                            .quantity
+                            .mul(sub_no_overflow(position.cumulative_funding_entry, funding.cumulative_funding))
+                    } else {
+                        position
+                            .quantity
+                            .mul(sub_no_overflow(funding.cumulative_funding, position.cumulative_funding_entry))
+                    }
+                }
+            };
+
             let unrealized_pnl_ratio = div_dec(mid_price - position.entry_price, position.entry_price);
             let unrealized_pnl_notional = unrealized_pnl_ratio * position.quantity;
-            let position_value = position.margin + unrealized_pnl_notional;
+            let position_value = position.margin + unrealized_pnl_notional + funding_payment;
             let max_margin = max_active_capital_utilization_ratio * total_deposit_balance;
             let inventory_imbalance = div_dec(position_value, max_margin);
             (inventory_imbalance, position.is_long)
@@ -212,7 +229,7 @@ pub fn create_orders_head_to_tail_deriv(
 
 /// # Description
 /// Traverses through a list of existing orders, either flipping reduce only orders to regular or vice versa depending on the kind of order
-/// and position quantity remaing for reduction.
+/// and position quantity remaining for reduction.
 /// # Arguments
 /// * `orders_to_keep` - The number of orders that we would like to keep resting on the book
 /// * `total_margin_balance_for_new_orders` - The total margin that we are allowed to allocate to the new orders
@@ -222,7 +239,7 @@ pub fn create_orders_head_to_tail_deriv(
 /// * `market` - Derivative market information
 /// # Returns
 /// * `additional_orders_to_cancel` - A list of all the additional orders that we need to cancel in order to replace
-/// * `additional_orders_to_open` - A list of alll the additional orders that we need to open to replace the ones we cancelled
+/// * `additional_orders_to_open` - A list of all the additional orders that we need to open to replace the ones we cancelled
 /// * `total_margin_balance_for_new_orders` - The remaining total margin that we are allowed to allocate to any additional new orders
 /// * `position_qty_to_reduce` - The remaining position quantity that we need to reduce. Is zero if there is none left
 fn manage_reduce_only_deriv(
