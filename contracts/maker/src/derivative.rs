@@ -1,62 +1,14 @@
 use std::str::FromStr;
 
 use crate::{
-    exchange::{DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderData, PerpetualMarketFunding, Position},
+    exchange::{DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderData, Position},
     state::State,
     utils::{div_dec, div_int, min, sub_abs, sub_no_overflow, sub_no_overflow_int},
 };
 use cosmwasm_std::{Decimal256 as Decimal, Uint256};
 
 /// # Description
-/// Calculates the total unrealized funding payments of a position.
-pub fn get_funding_payment(position: &Position, perpetual_market_funding: PerpetualMarketFunding) -> (Decimal, bool) {
-    let is_positive_funding_payment = if position.is_long {
-        position.cumulative_funding_entry >= perpetual_market_funding.cumulative_funding
-    } else {
-        position.cumulative_funding_entry <= perpetual_market_funding.cumulative_funding
-    };
-    let funding_payment_per_quantity = sub_abs(perpetual_market_funding.cumulative_funding, position.cumulative_funding_entry);
-    let funding_payment = funding_payment_per_quantity * position.quantity;
-    return (funding_payment, is_positive_funding_payment);
-}
-
-/// # Description
-/// Calculates the total unrealized notional pnl of a position.
-pub fn get_unrealized_pnl_notionial(position: &Position, mid_price: Decimal) -> (Decimal, bool) {
-    let pnl_is_positive = if position.is_long {
-        mid_price >= position.entry_price
-    } else {
-        mid_price <= position.entry_price
-    };
-    let unrealized_pnl_ratio = div_dec(sub_abs(mid_price, position.entry_price), position.entry_price);
-    (unrealized_pnl_ratio * position.margin, pnl_is_positive)
-}
-
-/// # Description
-/// Quantifies a position's value based off its margin, unrealized pnl, and funding payment. We skew its value to reflect our desire to close the position. If
-/// the pnl and funding are favorable, we want to decrease its value, making it less likely to be closed. If the pnl and funding are unfavorable, we want to
-/// decrease its value, making it less likely to be closed.
-pub fn get_skewed_position_value(
-    position: &Position,
-    unrealized_pnl_notionial: Decimal,
-    pnl_is_positive: bool,
-    funding_payment: Decimal,
-    is_positive_funding_payment: bool,
-) -> Decimal {
-    let position_value_skewed = if pnl_is_positive {
-        sub_no_overflow(position.margin, unrealized_pnl_notionial)
-    } else {
-        position.margin + unrealized_pnl_notionial
-    };
-    if is_positive_funding_payment {
-        sub_no_overflow(position_value_skewed, funding_payment)
-    } else {
-        position_value_skewed + funding_payment
-    }
-}
-
-/// # Description
-/// Calculates the inventory imbalance parameter from the margin of an open position and the total deposited balance
+/// Calculates the inventory imbalance parameter from the value of an open position and the total deposited balance
 /// # Formulas
 /// * `inventory imbalance (case: no position)` = 0
 /// * `inventory imbalance (case: open position)` = (margin + (((mid price - position entry price) / position entry price) * margin)) / (active capital utilization ratio * total deposit balance)
@@ -65,7 +17,7 @@ pub fn get_skewed_position_value(
 /// * `mid_price` - The true center between the best bid and ask
 /// * `max_active_capital_utilization_ratio` - A constant between 0..1 that will be used to determine what percentage of how much of our total deposited balance we want margined on the book
 /// * `total_deposit_balance` - The total quote balance LPed
-/// * `perpetual_market_funding` - The current market funding
+/// * `state` - State that the contract was initialized with
 /// # Returns
 /// * `inventory_imbalance` - A relationship between margined position and total deposit balance (margin/total_deposit_balance). Is
 ///    zero if there is no position open.
@@ -75,26 +27,16 @@ pub fn inventory_imbalance_deriv(
     mid_price: Decimal,
     max_active_capital_utilization_ratio: Decimal,
     total_deposit_balance: Decimal,
-    perpetual_market_funding: Option<PerpetualMarketFunding>,
+    state: &State,
 ) -> (Decimal, bool) {
     match position {
         None => (Decimal::zero(), true),
         Some(position) => {
-            let (funding_payment, is_positive_funding_payment) = match perpetual_market_funding {
-                None => (Decimal::zero(), true),
-                Some(funding) => get_funding_payment(position, funding),
-            };
-            let (unrealized_pnl_notionial, pnl_is_positive) = get_unrealized_pnl_notionial(position, mid_price);
-            let position_value_skewed = get_skewed_position_value(
-                position,
-                unrealized_pnl_notionial,
-                pnl_is_positive,
-                funding_payment,
-                is_positive_funding_payment,
+            let inventory_imbalance = div_dec(
+                position.quantity * mid_price,
+                total_deposit_balance * state.leverage * max_active_capital_utilization_ratio,
             );
-            let max_margin = max_active_capital_utilization_ratio * total_deposit_balance;
-            let inventory_imbalance = min(div_dec(position_value_skewed, max_margin), Decimal::one());
-            (inventory_imbalance, position.is_long)
+            (min(inventory_imbalance, Decimal::one()), position.is_long)
         }
     }
 }

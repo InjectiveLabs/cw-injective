@@ -306,7 +306,7 @@ fn get_action(
     env: Env,
     market: DerivativeMarket,
     _perpetual_market_info: Option<PerpetualMarketInfo>,
-    perpetual_market_funding: Option<PerpetualMarketFunding>,
+    _perpetual_market_funding: Option<PerpetualMarketFunding>,
     open_orders: Vec<DerivativeLimitOrder>,
     deposit: Deposit,
     position: Option<Position>,
@@ -323,7 +323,7 @@ fn get_action(
         mid_price,
         state.max_active_capital_utilization_ratio,
         deposit.total_balance,
-        perpetual_market_funding,
+        &state,
     );
 
     // Calculate reservation price
