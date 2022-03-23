@@ -10,17 +10,12 @@ use cosmwasm_std::{Decimal256 as Decimal, Uint256};
 /// # Description
 /// Calculates the total unrealized funding payments of a position.
 pub fn get_funding_payment(position: &Position, perpetual_market_funding: PerpetualMarketFunding) -> (Decimal, bool) {
-    let is_positive_funding_payment: bool;
-    let funding_payment_per_quantity: Decimal;
-
-    if position.is_long {
-        is_positive_funding_payment = position.cumulative_funding_entry >= perpetual_market_funding.cumulative_funding;
-        funding_payment_per_quantity = sub_abs(position.cumulative_funding_entry, perpetual_market_funding.cumulative_funding)
+    let is_positive_funding_payment = if position.is_long {
+        position.cumulative_funding_entry >= perpetual_market_funding.cumulative_funding
     } else {
-        is_positive_funding_payment = position.cumulative_funding_entry <= perpetual_market_funding.cumulative_funding;
-        funding_payment_per_quantity = sub_abs(perpetual_market_funding.cumulative_funding, position.cumulative_funding_entry)
+        position.cumulative_funding_entry <= perpetual_market_funding.cumulative_funding
     };
-
+    let funding_payment_per_quantity = sub_abs(perpetual_market_funding.cumulative_funding, position.cumulative_funding_entry);
     let funding_payment = funding_payment_per_quantity * position.quantity;
     return (funding_payment, is_positive_funding_payment);
 }
