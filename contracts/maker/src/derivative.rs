@@ -1,11 +1,62 @@
 use std::str::FromStr;
 
 use crate::{
-    exchange::{DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderData, Position},
+    exchange::{DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderData, PerpetualMarketFunding, Position},
     state::State,
     utils::{div_dec, div_int, min, sub_abs, sub_no_overflow, sub_no_overflow_int},
 };
 use cosmwasm_std::{Decimal256 as Decimal, Uint256};
+
+/// # Description
+/// Calculates the total unrealized funding payments of a position.
+pub fn get_funding_payment(position: &Position, perpetual_market_funding: PerpetualMarketFunding) -> (Decimal, bool) {
+    let is_positive_funding_payment: bool;
+    let funding_payment_per_quantity: Decimal;
+
+    if position.is_long {
+        is_positive_funding_payment = position.cumulative_funding_entry >= perpetual_market_funding.cumulative_funding;
+        funding_payment_per_quantity = sub_abs(position.cumulative_funding_entry, perpetual_market_funding.cumulative_funding)
+    } else {
+        is_positive_funding_payment = position.cumulative_funding_entry <= perpetual_market_funding.cumulative_funding;
+        funding_payment_per_quantity = sub_abs(perpetual_market_funding.cumulative_funding, position.cumulative_funding_entry)
+    };
+
+    let funding_payment = funding_payment_per_quantity * position.quantity;
+    return (funding_payment, is_positive_funding_payment);
+}
+
+/// # Description
+/// Calculates the total unrealized notional pnl of a position.
+pub fn get_unrealized_pnl_notionial(position: &Position, mid_price: Decimal) -> (Decimal, bool) {
+    let pnl_is_positive = if position.is_long {
+        mid_price >= position.entry_price
+    } else {
+        mid_price <= position.entry_price
+    };
+    let unrealized_pnl_ratio = div_dec(sub_abs(mid_price, position.entry_price), position.entry_price);
+    (unrealized_pnl_ratio * position.margin, pnl_is_positive)
+}
+
+/// # Description
+/// Quantifies a position's value based off its margin, unrealized pnl, and funding payment.
+pub fn get_position_value(
+    position: &Position,
+    unrealized_pnl_notionial: Decimal,
+    pnl_is_positive: bool,
+    funding_payment: Decimal,
+    is_positive_funding_payment: bool,
+) -> Decimal {
+    let position_value = if pnl_is_positive {
+        position.margin + unrealized_pnl_notionial
+    } else {
+        sub_no_overflow(position.margin, unrealized_pnl_notionial)
+    };
+    if is_positive_funding_payment {
+        position_value + funding_payment
+    } else {
+        sub_no_overflow(position_value, funding_payment)
+    }
+}
 
 /// # Description
 /// Calculates the inventory imbalance parameter from the margin of an open position and the total deposited balance
@@ -17,6 +68,7 @@ use cosmwasm_std::{Decimal256 as Decimal, Uint256};
 /// * `mid_price` - The true center between the best bid and ask
 /// * `max_active_capital_utilization_ratio` - A constant between 0..1 that will be used to determine what percentage of how much of our total deposited balance we want margined on the book
 /// * `total_deposit_balance` - The total quote balance LPed
+/// * `perpetual_market_funding` - The current market funding
 /// # Returns
 /// * `inventory_imbalance` - A relationship between margined position and total deposit balance (margin/total_deposit_balance). Is
 ///    zero if there is no position open.
@@ -26,17 +78,23 @@ pub fn inventory_imbalance_deriv(
     mid_price: Decimal,
     max_active_capital_utilization_ratio: Decimal,
     total_deposit_balance: Decimal,
+    perpetual_market_funding: Option<PerpetualMarketFunding>,
 ) -> (Decimal, bool) {
     match position {
         None => (Decimal::zero(), true),
         Some(position) => {
-            let unrealized_pnl_ratio = if position.is_long {
-                div_dec(mid_price - position.entry_price, position.entry_price)
-            } else {
-                div_dec(position.entry_price - mid_price, position.entry_price)
+            let (funding_payment, is_positive_funding_payment) = match perpetual_market_funding {
+                None => (Decimal::zero(), true),
+                Some(funding) => get_funding_payment(position, funding),
             };
-            let unrealized_pnl_notionial = unrealized_pnl_ratio * position.margin;
-            let position_value = position.margin + unrealized_pnl_notionial;
+            let (unrealized_pnl_notionial, pnl_is_positive) = get_unrealized_pnl_notionial(position, mid_price);
+            let position_value = get_position_value(
+                position,
+                unrealized_pnl_notionial,
+                pnl_is_positive,
+                funding_payment,
+                is_positive_funding_payment,
+            );
             let max_margin = max_active_capital_utilization_ratio * total_deposit_balance;
             let inventory_imbalance = div_dec(position_value, max_margin);
             (inventory_imbalance, position.is_long)
