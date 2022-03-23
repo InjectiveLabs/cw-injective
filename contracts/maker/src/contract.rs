@@ -310,7 +310,7 @@ fn get_action(
     open_orders: Vec<DerivativeLimitOrder>,
     deposit: Deposit,
     position: Option<Position>,
-    _oracle_price: Decimal,
+    oracle_price: Decimal,
     volatility: Decimal,
     mid_price: Decimal,
 ) -> StdResult<Vec<CosmosMsg<InjectiveMsgWrapper>>> {
@@ -320,7 +320,7 @@ fn get_action(
     // Calculate inventory imbalance parameter
     let (inventory_imbalance_ratio, imbalance_is_long) = inventory_imbalance_deriv(
         &position,
-        mid_price,
+        oracle_price,
         state.max_active_capital_utilization_ratio,
         deposit.total_balance,
         &state,
