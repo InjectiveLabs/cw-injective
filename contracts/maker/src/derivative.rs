@@ -30,7 +30,11 @@ pub fn inventory_imbalance_deriv(
     match position {
         None => (Decimal::zero(), true),
         Some(position) => {
-            let unrealized_pnl_ratio = div_dec(mid_price - position.entry_price, position.entry_price);
+            let unrealized_pnl_ratio = if position.is_long {
+                div_dec(mid_price - position.entry_price, position.entry_price)
+            } else {
+                div_dec(position.entry_price - mid_price, position.entry_price)
+            };
             let unrealized_pnl_notionial = unrealized_pnl_ratio * position.margin;
             let position_value = position.margin + unrealized_pnl_notionial;
             let max_margin = max_active_capital_utilization_ratio * total_deposit_balance;
