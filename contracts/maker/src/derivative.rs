@@ -8,34 +8,35 @@ use crate::{
 use cosmwasm_std::{Decimal256 as Decimal, Uint256};
 
 /// # Description
-/// Calculates the inventory imbalance parameter from the margin of an open position and the total deposited balance
+/// Calculates the inventory imbalance parameter from the value of an open position and the total deposited balance
 /// # Formulas
 /// * `inventory imbalance (case: no position)` = 0
 /// * `inventory imbalance (case: open position)` = (margin + (((mid price - position entry price) / position entry price) * margin)) / (active capital utilization ratio * total deposit balance)
 /// # Arguments
 /// * `position` - The position we have taken, if any
-/// * `mid_price` - The true center between the best bid and ask
+/// * `oracle_price` - The price from the market's oracle
 /// * `max_active_capital_utilization_ratio` - A constant between 0..1 that will be used to determine what percentage of how much of our total deposited balance we want margined on the book
 /// * `total_deposit_balance` - The total quote balance LPed
+/// * `state` - State that the contract was initialized with
 /// # Returns
 /// * `inventory_imbalance` - A relationship between margined position and total deposit balance (margin/total_deposit_balance). Is
 ///    zero if there is no position open.
 /// * `imbalance_is_long` - True if the imbalance is skewed towards being long
 pub fn inventory_imbalance_deriv(
     position: &Option<Position>,
-    mid_price: Decimal,
+    oracle_price: Decimal,
     max_active_capital_utilization_ratio: Decimal,
     total_deposit_balance: Decimal,
+    state: &State,
 ) -> (Decimal, bool) {
     match position {
         None => (Decimal::zero(), true),
         Some(position) => {
-            let unrealized_pnl_ratio = div_dec(mid_price - position.entry_price, position.entry_price);
-            let unrealized_pnl_notionial = unrealized_pnl_ratio * position.margin;
-            let position_value = position.margin + unrealized_pnl_notionial;
-            let max_margin = max_active_capital_utilization_ratio * total_deposit_balance;
-            let inventory_imbalance = div_dec(position_value, max_margin);
-            (inventory_imbalance, position.is_long)
+            let inventory_imbalance = div_dec(
+                position.quantity * oracle_price,
+                total_deposit_balance * state.leverage * max_active_capital_utilization_ratio,
+            );
+            (min(inventory_imbalance, Decimal::one()), position.is_long)
         }
     }
 }
