@@ -8,7 +8,7 @@ use crate::exchange::{
 use crate::msg::{ExecuteMsg, InstantiateMsg, MarketIdResponse, QueryMsg, TotalSupplyResponse};
 use crate::risk_management::{check_tail_dist, only_owner, total_marginable_balance_for_new_orders};
 use crate::state::{config, config_read, State};
-use crate::utils::{decode_bech32, div_dec, sub_abs, sub_no_overflow};
+use crate::utils::{decode_bech32, div_dec, sub_abs, sub_no_overflow, min, max};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, CosmosMsg, Decimal256 as Decimal, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Reply, Response,
     StdError, StdResult, SubMsg, Uint128, Uint256, WasmMsg, WasmQuery,
@@ -336,7 +336,7 @@ fn get_action(
     );
 
     // Calculate the new head prices
-    let (new_buy_head, new_sell_head) = new_head_prices(volatility, reservation_price, state.reservation_spread_sensitivity_ratio);
+    let (new_buy_head, new_sell_head) = new_head_prices(volatility, mid_price, reservation_price, state.reservation_spread_sensitivity_ratio);
 
     // Split open orders
     let (open_buy_orders, open_sell_orders) = split_open_orders(open_orders);
@@ -585,20 +585,21 @@ fn reservation_price(
 /// Uses the reservation price and volatility to calculate where the buy/sell heads should be. Both buy and
 /// sell heads will be equi-distant from the reservation price.
 /// # Formulas
-/// * `buy head` = reservation_price - ((volatility * sensitivity) / 2)
-/// * `sell head` = reservation_price + ((volatility * sensitivity) / 2)
+/// * `buy head` = max(reservation_price - ((volatility * sensitivity) / 2), mid_price)
+/// * `sell head` = min(reservation_price + ((volatility * sensitivity) / 2), mid_price)
 /// # Arguments
 /// * `volatility` - A measure of volatility that we update on a block by block basis
+/// * `mid_price` - A mid_price that we update on a block by block basis
 /// * `reservation_price` - The price around which we will center both heads
 /// * `reservation_spread_sensitivity_ratio` - The constant to control the sensitivity of the spread around the reservation_price
 /// # Returns
 /// * `buy_head` - The new buy head
 /// * `sell_head` - The new sell head
-fn new_head_prices(volatility: Decimal, reservation_price: Decimal, reservation_spread_sensitivity_ratio: Decimal) -> (Decimal, Decimal) {
+fn new_head_prices(volatility: Decimal, mid_price: Decimal, reservation_price: Decimal, reservation_spread_sensitivity_ratio: Decimal) -> (Decimal, Decimal) {
     let dist_from_reservation_price = div_dec(volatility * reservation_spread_sensitivity_ratio, Decimal::from_str("2").unwrap());
     (
-        sub_no_overflow(reservation_price, dist_from_reservation_price),
-        reservation_price + dist_from_reservation_price,
+        min(sub_no_overflow(reservation_price, dist_from_reservation_price), mid_price),
+        max(reservation_price + dist_from_reservation_price, mid_price)
     )
 }
 
