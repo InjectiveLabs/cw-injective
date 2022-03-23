@@ -38,23 +38,25 @@ pub fn get_unrealized_pnl_notionial(position: &Position, mid_price: Decimal) -> 
 }
 
 /// # Description
-/// Quantifies a position's value based off its margin, unrealized pnl, and funding payment.
-pub fn get_position_value(
+/// Quantifies a position's value based off its margin, unrealized pnl, and funding payment. We skew its value to reflect our desire to close the position. If
+/// the pnl and funding are favorable, we want to decrease its value, making it less likely to be closed. If the pnl and funding are unfavorable, we want to
+/// decrease its value, making it less likely to be closed.
+pub fn get_skewed_position_value(
     position: &Position,
     unrealized_pnl_notionial: Decimal,
     pnl_is_positive: bool,
     funding_payment: Decimal,
     is_positive_funding_payment: bool,
 ) -> Decimal {
-    let position_value = if pnl_is_positive {
-        position.margin + unrealized_pnl_notionial
-    } else {
+    let position_value_skewed = if pnl_is_positive {
         sub_no_overflow(position.margin, unrealized_pnl_notionial)
+    } else {
+        position.margin + unrealized_pnl_notionial
     };
     if is_positive_funding_payment {
-        position_value + funding_payment
+        sub_no_overflow(position_value_skewed, funding_payment)
     } else {
-        sub_no_overflow(position_value, funding_payment)
+        position_value_skewed + funding_payment
     }
 }
 
@@ -88,7 +90,7 @@ pub fn inventory_imbalance_deriv(
                 Some(funding) => get_funding_payment(position, funding),
             };
             let (unrealized_pnl_notionial, pnl_is_positive) = get_unrealized_pnl_notionial(position, mid_price);
-            let position_value = get_position_value(
+            let position_value_skewed = get_skewed_position_value(
                 position,
                 unrealized_pnl_notionial,
                 pnl_is_positive,
@@ -96,7 +98,7 @@ pub fn inventory_imbalance_deriv(
                 is_positive_funding_payment,
             );
             let max_margin = max_active_capital_utilization_ratio * total_deposit_balance;
-            let inventory_imbalance = div_dec(position_value, max_margin);
+            let inventory_imbalance = min(div_dec(position_value_skewed, max_margin), Decimal::one());
             (inventory_imbalance, position.is_long)
         }
     }
