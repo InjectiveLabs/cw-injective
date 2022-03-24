@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use crate::{
-    exchange::{DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderData, Position},
+    exchange::{DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, EffectivePosition, OrderData},
     state::State,
     utils::{div_dec, div_int, min, sub_abs, sub_no_overflow, sub_no_overflow_int},
 };
@@ -23,7 +23,7 @@ use cosmwasm_std::{Decimal256 as Decimal, Uint256};
 ///    zero if there is no position open.
 /// * `imbalance_is_long` - True if the imbalance is skewed towards being long
 pub fn inventory_imbalance_deriv(
-    position: &Option<Position>,
+    position: &Option<EffectivePosition>,
     oracle_price: Decimal,
     max_active_capital_utilization_ratio: Decimal,
     total_deposit_balance: Decimal,

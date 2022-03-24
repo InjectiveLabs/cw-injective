@@ -2,8 +2,8 @@ use crate::state::State;
 use crate::utils::{div_dec, round_to_min_ticker};
 use cosmwasm_std::Decimal256 as Decimal;
 use injective_bindings::{
-    Deposit as QueriedDeposit, DerivativeMarket as QueriedDerivativeMarket, PerpetualMarketFunding as QueriedPerpetualMarketFunding,
-    PerpetualMarketInfo as QueriedPerpetualMarketInfo, Position as QueriedPosition,
+    Deposit as QueriedDeposit, DerivativeMarket as QueriedDerivativeMarket, EffectivePosition as EffectiveQueriedPosition,
+    PerpetualMarketFunding as QueriedPerpetualMarketFunding, PerpetualMarketInfo as QueriedPerpetualMarketInfo,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -153,21 +153,19 @@ impl Deposit {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct Position {
+pub struct EffectivePosition {
     pub is_long: bool,
     pub quantity: Decimal,
     pub entry_price: Decimal,
-    pub margin: Decimal,
-    pub cumulative_funding_entry: Decimal,
+    pub effective_margin: Decimal,
 }
-impl Position {
-    pub fn from_query(queried_position: QueriedPosition) -> Position {
-        Position {
-            is_long: queried_position.isLong,
+impl EffectivePosition {
+    pub fn from_query(queried_position: EffectiveQueriedPosition) -> EffectivePosition {
+        EffectivePosition {
+            is_long: queried_position.is_long,
             quantity: queried_position.quantity,
-            margin: queried_position.margin,
+            effective_margin: queried_position.effective_margin,
             entry_price: queried_position.entry_price,
-            cumulative_funding_entry: queried_position.cumulative_funding_entry,
         }
     }
 }

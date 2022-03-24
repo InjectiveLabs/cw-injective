@@ -8,7 +8,7 @@ pub use msg::{
 };
 pub use querier::InjectiveQuerier;
 pub use query::{
-    Deposit, DerivativeMarket, InjectiveQuery, InjectiveQueryWrapper, PerpetualMarketFunding, PerpetualMarketInfo, Position,
+    Deposit, DerivativeMarket, EffectivePosition, InjectiveQuery, InjectiveQueryWrapper, PerpetualMarketFunding, PerpetualMarketInfo,
     SubaccountDepositResponse,
 };
 pub use route::InjectiveRoute;

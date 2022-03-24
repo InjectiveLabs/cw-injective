@@ -20,7 +20,7 @@ pub enum InjectiveQuery {
     // DerivativeMarket will return the derivative market for a given id
     DerivativeMarket { market_id: String },
     SubaccountPositions { subaccount_id: String },
-    SubaccountPositionInMarket { market_id: String, subaccount_id: String },
+    SubaccountEffectivePositionInMarket { market_id: String, subaccount_id: String },
     TraderDerivativeOrders { market_id: String, subaccount_id: String },
     PerpetualMarketInfo { market_id: String },
     PerpetualMarketFunding { market_id: String },
@@ -45,6 +45,14 @@ pub struct Position {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct EffectivePosition {
+    pub is_long: bool,
+    pub quantity: Decimal,
+    pub entry_price: Decimal,
+    pub effective_margin: Decimal,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativePosition {
     pub subaccount_id: String,
     pub market_id: String,
@@ -52,8 +60,8 @@ pub struct DerivativePosition {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct SubaccountPositionInMarketResponse {
-    pub state: Option<Position>,
+pub struct SubaccountEffectivePositionInMarketResponse {
+    pub state: Option<EffectivePosition>,
 }
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
