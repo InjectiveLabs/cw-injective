@@ -3,12 +3,13 @@ use crate::derivative::{
 };
 use crate::error::ContractError;
 use crate::exchange::{
-    Deposit, DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, OrderData, OrderInfo, PerpetualMarketFunding, PerpetualMarketInfo, Position,
+    Deposit, DerivativeLimitOrder, DerivativeMarket, DerivativeOrder, EffectivePosition, OrderData, OrderInfo, PerpetualMarketFunding,
+    PerpetualMarketInfo,
 };
 use crate::msg::{ExecuteMsg, InstantiateMsg, MarketIdResponse, QueryMsg, TotalSupplyResponse};
 use crate::risk_management::{check_tail_dist, only_owner, total_marginable_balance_for_new_orders};
 use crate::state::{config, config_read, State};
-use crate::utils::{decode_bech32, div_dec, sub_abs, sub_no_overflow, min, max};
+use crate::utils::{decode_bech32, div_dec, max, min, sub_abs, sub_no_overflow};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, CosmosMsg, Decimal256 as Decimal, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Reply, Response,
     StdError, StdResult, SubMsg, Uint128, Uint256, WasmMsg, WasmQuery,
@@ -230,10 +231,10 @@ pub fn begin_blocker(deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Add
 
     let deposit = Deposit::from_query(deposit_res.deposits);
 
-    let first_position: Option<Position> = if positions_res.state.is_none() {
+    let first_position: Option<EffectivePosition> = if positions_res.state.is_none() {
         None
     } else {
-        Some(Position::from_query(positions_res.state.unwrap()))
+        Some(EffectivePosition::from_query(positions_res.state.unwrap()))
     };
 
     let perpetual_market_info: Option<PerpetualMarketInfo> = if perpetual_market_info_res.info.is_none() {
@@ -309,7 +310,7 @@ fn get_action(
     _perpetual_market_funding: Option<PerpetualMarketFunding>,
     open_orders: Vec<DerivativeLimitOrder>,
     deposit: Deposit,
-    position: Option<Position>,
+    position: Option<EffectivePosition>,
     oracle_price: Decimal,
     volatility: Decimal,
     mid_price: Decimal,
@@ -492,7 +493,7 @@ fn create_orders(
     total_deposit_balance: Decimal,
     orders_to_keep: Vec<DerivativeLimitOrder>,
     agg_margin_of_orders_kept: Decimal,
-    position: &Option<Position>,
+    position: &Option<EffectivePosition>,
     vacancy_is_near_head: bool,
     is_buy: bool,
     state: &State,
@@ -501,9 +502,9 @@ fn create_orders(
     let (position_qty_to_reduce, position_margin, position_is_same_side) = match position {
         Some(position) => {
             if position.is_long == is_buy {
-                (Decimal::zero(), position.margin, true)
+                (Decimal::zero(), position.effective_margin, true)
             } else {
-                (position.quantity, position.margin, false)
+                (position.quantity, position.effective_margin, false)
             }
         }
         None => (Decimal::zero(), Decimal::zero(), false),
@@ -595,11 +596,16 @@ fn reservation_price(
 /// # Returns
 /// * `buy_head` - The new buy head
 /// * `sell_head` - The new sell head
-fn new_head_prices(volatility: Decimal, mid_price: Decimal, reservation_price: Decimal, reservation_spread_sensitivity_ratio: Decimal) -> (Decimal, Decimal) {
+fn new_head_prices(
+    volatility: Decimal,
+    mid_price: Decimal,
+    reservation_price: Decimal,
+    reservation_spread_sensitivity_ratio: Decimal,
+) -> (Decimal, Decimal) {
     let dist_from_reservation_price = div_dec(volatility * reservation_spread_sensitivity_ratio, Decimal::from_str("2").unwrap());
     (
         min(sub_no_overflow(reservation_price, dist_from_reservation_price), mid_price),
-        max(reservation_price + dist_from_reservation_price, mid_price)
+        max(reservation_price + dist_from_reservation_price, mid_price),
     )
 }
 
@@ -698,7 +704,7 @@ fn split_open_orders(open_orders: Vec<DerivativeLimitOrder>) -> (Vec<DerivativeL
 mod tests {
     use crate::{
         contract::create_orders,
-        exchange::{DerivativeLimitOrder, DerivativeMarket, OrderInfo, Position},
+        exchange::{DerivativeLimitOrder, DerivativeMarket, EffectivePosition, OrderInfo},
         state::State,
         utils::{div_dec, sub_no_overflow},
     };
@@ -727,12 +733,11 @@ mod tests {
         let (orders_to_cancel, orders_to_keep, margined_val_from_orders_remaining, append_to_new_head) =
             orders_to_cancel(open_buys, new_head, new_tail, true, &state, &market);
 
-        let position = Position {
+        let position = EffectivePosition {
             is_long: true,
             quantity: Decimal::from_str("5").unwrap(),
             entry_price: Decimal::zero(),
-            margin: Decimal::from_str("125").unwrap(),
-            cumulative_funding_entry: Decimal::zero(),
+            effective_margin: Decimal::from_str("125").unwrap(),
         };
         let (orders, cancels) = create_orders(
             new_head,
@@ -764,7 +769,7 @@ mod tests {
 
         let expected_val = div_dec(inv_val, Decimal::from_str("2").unwrap());
         if position.is_long {
-            println!("{} {}", val + position.margin, expected_val);
+            println!("{} {}", val + position.effective_margin, expected_val);
         } else {
             println!("{} {}", val, expected_val);
         }

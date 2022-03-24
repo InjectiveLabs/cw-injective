@@ -1,5 +1,5 @@
 use crate::{
-    exchange::{DerivativeMarket, DerivativeOrder, Position},
+    exchange::{DerivativeMarket, DerivativeOrder, EffectivePosition},
     state::State,
     utils::{div_dec, max, min, sub_abs, sub_no_overflow},
 };
@@ -11,7 +11,7 @@ pub fn only_owner(sender: &Addr, owner: &Addr) {
 }
 
 // TODO: add more
-pub fn sanity_check(_position: &Option<Position>, _inv_base_ball: Decimal, _state: &State) {
+pub fn sanity_check(_position: &Option<EffectivePosition>, _inv_base_ball: Decimal, _state: &State) {
     // assert!(inv_base_bal == Decimal::zero());
     // assert!(position.is_none());
     //TODO: come back to this one
@@ -79,7 +79,7 @@ pub fn check_tail_dist(
 }
 
 /// # Description
-/// Filters out any orders that dont comply with the exchange standards.
+/// Filters out any orders that don't comply with the exchange standards.
 /// # Arguments
 /// * `orders_to_place` - All the orders that we are trying to create
 /// * `market` - Derivative market information
