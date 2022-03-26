@@ -21,7 +21,7 @@ use cosmwasm_std::{coin, coins, from_binary, Coin, CosmosMsg, HandleResponse, In
 use cosmwasm_vm::testing::{handle, init, mock_dependencies, mock_env, query, MockApi, MockQuerier, MockStorage};
 use cosmwasm_vm::{Api, Instance};
 
-use injective_bindings::{ExchangeMsg, InjectiveMsg};
+use injective_cosmwasm::{ExchangeMsg, InjectiveMsg};
 
 use maker::msg::{ConfigResponse, HandleMsg, InitMsg, QueryMsg};
 

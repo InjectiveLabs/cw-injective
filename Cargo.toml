@@ -1,7 +1,7 @@
 [workspace]
 members = ["packages/*", "contracts/*"]
 
-[profile.release.package.injective-bindings]
+[profile.release.package.injective-cosmwasm]
 codegen-units = 1
 incremental = false
 

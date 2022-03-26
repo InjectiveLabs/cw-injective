@@ -1,0 +1,45 @@
+[package]
+name = "ninja-community"
+version = "2.1.1"
+authors = ["Albert Chon <albert@injectiveprotocol.com>"]
+edition = "2018"
+description = "A Community contract for Ninja Protocol - Keeps premined NINJA token which can be spent through governance proposals"
+license = "Apache-2.0"
+
+exclude = [
+  # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
+  "contract.wasm",
+  "hash.txt",
+]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1
+panic = 'abort'
+incremental = false
+overflow-checks = true
+
+[features]
+# for quicker tests, cargo test --lib
+# for more explicit tests, cargo test --features=backtraces
+backtraces = ["cosmwasm-std/backtraces"]
+
+[dependencies]
+cw20 = { version = "0.13.1" }
+cosmwasm-std = { version = "1.0.0-beta7", features = ["iterator"] }
+cosmwasm-storage = { version = "1.0.0-beta7", features = ["iterator"] }
+ninja-protocol = { version = "2.1.1", path = "../../packages/ninja_protocol" }
+schemars = "0.8.8"
+serde = { version = "1.0.125", default-features = false, features = ["derive"] }
+
+[dev-dependencies]
+cosmwasm-schema = { version = "1.0.0-beta7" }

@@ -19,7 +19,7 @@ use std::ops::Deref;
 use std::str::FromStr;
 
 use cw20::{Cw20Contract, Cw20ExecuteMsg, Cw20QueryMsg, MinterResponse, TokenInfoResponse};
-use injective_bindings::{create_batch_update_orders_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper};
+use injective_cosmwasm::{create_batch_update_orders_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper};
 
 use cw0::parse_reply_instantiate_data;
 

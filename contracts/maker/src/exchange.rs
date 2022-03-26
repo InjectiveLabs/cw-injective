@@ -1,7 +1,7 @@
 use crate::state::State;
 use crate::utils::{div_dec, round_to_min_ticker};
 use cosmwasm_std::Decimal256 as Decimal;
-use injective_bindings::{
+use injective_cosmwasm::{
     Deposit as QueriedDeposit, DerivativeMarket as QueriedDerivativeMarket, EffectivePosition as EffectiveQueriedPosition,
     PerpetualMarketFunding as QueriedPerpetualMarketFunding, PerpetualMarketInfo as QueriedPerpetualMarketInfo,
 };
