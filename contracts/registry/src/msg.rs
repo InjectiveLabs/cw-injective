@@ -39,7 +39,7 @@ pub enum QueryMsg {
 
 // Contract struct defines begin blocker contract execution params.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct ContractInfo {
+pub struct ContractExecutionParams {
     pub address: Addr,
     pub gas_limit: u64,
     pub gas_price: String,
@@ -49,12 +49,12 @@ pub struct ContractInfo {
 // We define a custom struct for each query response
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ContractsResponse {
-    pub contracts: Vec<ContractInfo>,
+    pub contracts: Vec<ContractExecutionParams>,
 }
 
 
 // We define a custom struct for each query response
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ContractResponse {
-    pub contract: ContractInfo,
+    pub contract: ContractExecutionParams,
 }

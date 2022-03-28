@@ -1,10 +1,10 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Addr, Binary, Deps,Order, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{to_binary, Addr, Binary, Deps,Order, DepsMut, Env, MessageInfo, Response, StdResult,WasmQuery,ContractInfoResponse};
 use cw2::{set_contract_version, get_contract_version, ContractVersion};
 
 use crate::error::ContractError;
-use crate::msg::{ContractInfo, ContractsResponse,ContractResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ContractExecutionParams, ContractsResponse,ContractResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{CONTRACTS, CONTRACT};
 
 // version info for migration info
@@ -40,8 +40,29 @@ pub fn execute(
     }
 }
 
-pub fn only_owner(sender: &Addr, owner: &Addr) {
-    assert_eq!(sender, owner);
+
+pub fn only_registry(env: Env, info: MessageInfo) -> Result<(), ContractError> {
+    // Check if the sender is the registry contract address (only wasmx module can do this)
+    if  env.contract.address != info.sender{
+        return Err(ContractError::Unauthorized {})
+    } else {
+        return Ok(())
+    }
+}
+
+pub fn only_owner_or_registry(contract_address: &Addr, deps: &DepsMut,env: Env, info: MessageInfo) -> Result<(), ContractError> {
+    // Query contract info
+    let query = WasmQuery::ContractInfo {
+        contract_addr: contract_address.to_string(),
+    };
+    let res: ContractInfoResponse = deps.querier.query(&query.into())?;
+
+    // Check if the sender is the owner of the contract or the registry (only wasmx module can do this)
+    if res.creator != info.sender && env.contract.address != info.sender{
+        return Err(ContractError::Unauthorized {})
+    } else {
+        return Ok(())
+    }
 }
 
 pub fn try_register(
@@ -53,8 +74,12 @@ pub fn try_register(
     gas_price: String,
     is_executable: bool,
 ) -> Result<Response, ContractError> {
-    // Ensure that only wasmx module calls this method
-    only_owner(&env.contract.address, &info.sender);
+    // Validate Authorization
+    let res = only_registry( env, info);
+    match res {
+        Err(error ) => return Err(error),
+        _ => {}
+    }
 
     let contract = CONTRACT {        
         gas_limit: gas_limit,
@@ -72,10 +97,11 @@ pub fn try_register(
     Ok(res)
 }
 
+
 pub fn try_update(
     deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
+    env: Env,
+    info: MessageInfo,
     contract_addr: Addr, 
     gas_limit: u64,
     gas_price: String,
@@ -84,11 +110,17 @@ pub fn try_update(
     // this fails if contract is not available
     let mut contract = CONTRACTS.load(deps.storage, &contract_addr)?;
 
-    // update the contract to be executable 
+    // Validate Authorization
+    let res = only_owner_or_registry(&contract_addr, &deps, env, info);
+    match res {
+        Err(error ) => return Err(error),
+        _ => {}
+    }    
+
+    // update the contract
     if gas_limit != 0 {
         contract.gas_limit = gas_limit;
     }
-    
     if gas_price != "" {
         contract.gas_price = gas_price;
     }
@@ -96,46 +128,60 @@ pub fn try_update(
     // and save
     CONTRACTS.save(deps.storage, &contract_addr, &contract)?;
 
-    let res = Response::new().add_attributes(vec![("action", "activate_contract"), ("addr", contract_addr.as_str())]);
+    let res = Response::new().add_attributes(vec![("action", "update"), ("addr", contract_addr.as_str())]);
     Ok(res)
 }
 
 pub fn try_activate(
     deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
+    env: Env,
+    info: MessageInfo,
     contract_addr: Addr, 
 ) -> Result<Response, ContractError> {
     
     // this fails if contract is not available
     let mut contract = CONTRACTS.load(deps.storage, &contract_addr)?;
 
+    // Validate Authorization
+    let res = only_owner_or_registry(&contract_addr, &deps, env, info);
+    match res {
+        Err(error ) => return Err(error),
+        _ => {}
+    }    
+        
     // update the contract to be executable 
     contract.is_executable = true;
 
     // and save
     CONTRACTS.save(deps.storage, &contract_addr, &contract)?;
 
-    let res = Response::new().add_attributes(vec![("action", "activate_contract"), ("addr", contract_addr.as_str())]);
+    let res = Response::new().add_attributes(vec![("action", "activate"), ("addr", contract_addr.as_str())]);
     Ok(res)
 }
 
 pub fn try_deactivate(
     deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
+    env: Env,
+    info: MessageInfo,
     contract_addr: Addr, 
 ) -> Result<Response, ContractError> {
     
     // this fails if contract is not available
     let mut contract = CONTRACTS.load(deps.storage, &contract_addr)?;
 
+    // Validate Authorization
+    let res = only_owner_or_registry(&contract_addr, &deps, env, info);
+    match res {
+        Err(error ) => return Err(error),
+        _ => {}
+    }    
+    
     contract.is_executable = false;
 
     // and save
     CONTRACTS.save(deps.storage, &contract_addr, &contract)?;
 
-    let res = Response::new().add_attributes(vec![("action", "deactivate_contract"), ("addr", contract_addr.as_str())]);
+    let res = Response::new().add_attributes(vec![("action", "deactivate"), ("addr", contract_addr.as_str())]);
     Ok(res)
 }
 
@@ -153,7 +199,7 @@ pub fn query_contract(deps: Deps, contract_address: Addr) -> StdResult<ContractR
         .may_load(deps.storage, &contract_address)?
         .unwrap();
 
-        let contract_info = ContractInfo {
+        let contract_info = ContractExecutionParams {
             address: contract_address,
             gas_limit: contract.gas_limit,
             gas_price: contract.gas_price,
@@ -170,7 +216,7 @@ fn query_contracts(deps: Deps) -> StdResult<ContractsResponse> {
     let contracts = CONTRACTS    
     .range(deps.storage, None, None, Order::Ascending)    
     .map(|item| {
-        item.map(|(addr, contract)| ContractInfo {
+        item.map(|(addr, contract)| ContractExecutionParams {
             address: addr,
             gas_limit: contract.gas_limit,
             gas_price: contract.gas_price,
@@ -193,7 +239,7 @@ fn query_active_contracts(deps: Deps) -> StdResult<ContractsResponse> {
         }
     })
       .map(|item| {
-          item.map(|(addr, contract)| ContractInfo {
+          item.map(|(addr, contract)| ContractExecutionParams {
               address: addr,
               gas_limit: contract.gas_limit,
               gas_price: contract.gas_price,
@@ -368,6 +414,7 @@ mod tests {
         assert_eq!(market_maker, registered_contract.contract.address);
         assert_eq!(true, registered_contract.contract.is_executable);
         
+        // Mock querier to use
         // Update contract
         let msg = ExecuteMsg::Update {
             contract_address: market_maker.clone(),          
