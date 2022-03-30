@@ -242,8 +242,11 @@ impl DerivativeOrder {
     pub fn non_reduce_only_is_invalid(&self) -> bool {
         self.get_margin().is_zero() || self.get_price().is_zero() || self.get_qty().is_zero()
     }
-    pub fn reduce_only_is_invalid(&self) -> bool {
-        self.get_price().is_zero() || self.get_qty().is_zero()
+    pub fn reduce_only_price_is_invalid(&self) -> bool {
+        self.get_price().is_zero()
+    }
+    pub fn reduce_only_qty_is_invalid(&self) -> bool {
+        self.get_qty().is_zero()
     }
 }
 

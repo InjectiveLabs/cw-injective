@@ -136,17 +136,27 @@ pub fn create_orders_tail_to_head_deriv(
     state: &State,
     market: &DerivativeMarket,
 ) -> (Vec<DerivativeOrder>, Vec<OrderData>) {
-    let (orders_to_open_from_base_case, position_qty_to_reduce, total_margin_balance_for_new_orders) = create_orders_between_bounds_deriv(
-        new_head,
-        orders_to_keep.first().unwrap().order_info.price,
-        total_margin_balance_for_new_orders,
-        orders_to_keep.len(),
-        position_qty_to_reduce,
-        true,
-        is_buy,
-        state,
-        market,
-    );
+    let start_price = new_head;
+    let end_price = orders_to_keep.first().unwrap().order_info.price;
+    let num_orders_to_keep = orders_to_keep.len();
+    let min_vacancy_size = market.min_price_tick_size * Decimal::from_str(&num_orders_to_keep.to_string()).unwrap();
+    let (orders_to_open_from_base_case, position_qty_to_reduce, total_margin_balance_for_new_orders) =
+        if sub_abs(start_price, end_price).gt(&min_vacancy_size) {
+            create_orders_between_bounds_deriv(
+                start_price,
+                end_price,
+                total_margin_balance_for_new_orders,
+                num_orders_to_keep,
+                position_qty_to_reduce,
+                true,
+                is_buy,
+                state,
+                market,
+            )
+        } else {
+            (Vec::new(), position_qty_to_reduce, total_margin_balance_for_new_orders)
+        };
+
     let (additional_orders_to_cancel, orders_to_open_from_reduce_only_management, _, _) = manage_reduce_only_deriv(
         orders_to_keep,
         total_margin_balance_for_new_orders,
@@ -194,17 +204,26 @@ pub fn create_orders_head_to_tail_deriv(
             state,
             market,
         );
-    let (orders_to_open_from_base_case, _, _) = create_orders_between_bounds_deriv(
-        orders_to_keep.last().unwrap().order_info.price,
-        new_tail,
-        total_margin_balance_for_new_orders,
-        orders_to_keep.len() + orders_to_open_from_reduce_only_management.len() - additional_orders_to_cancel.len(),
-        position_qty_to_reduce,
-        false,
-        is_buy,
-        state,
-        market,
-    );
+    let start_price = orders_to_keep.last().unwrap().order_info.price;
+    let end_price = new_tail;
+    let num_orders_to_keep = orders_to_keep.len() + orders_to_open_from_reduce_only_management.len() - additional_orders_to_cancel.len();
+    let min_vacancy_size = market.min_price_tick_size * Decimal::from_str(&num_orders_to_keep.to_string()).unwrap();
+    let orders_to_open_from_base_case = if sub_abs(start_price, end_price).gt(&min_vacancy_size) {
+        let (orders_to_open_from_base_case, _, _) = create_orders_between_bounds_deriv(
+            start_price,
+            end_price,
+            total_margin_balance_for_new_orders,
+            num_orders_to_keep,
+            position_qty_to_reduce,
+            false,
+            is_buy,
+            state,
+            market,
+        );
+        orders_to_open_from_base_case
+    } else {
+        Vec::new()
+    };
     (
         vec![orders_to_open_from_reduce_only_management, orders_to_open_from_base_case].concat(),
         additional_orders_to_cancel,
@@ -282,16 +301,19 @@ fn manage_reduce_only_deriv(
 }
 
 fn update_reduce_only(new_reduce_only_order: DerivativeOrder, position_qty_to_reduce: Decimal, orders_to_open: &mut Vec<DerivativeOrder>) -> Decimal {
-    if !new_reduce_only_order.reduce_only_is_invalid() {
+    if new_reduce_only_order.reduce_only_qty_is_invalid() {
+        // Position qty to reduce is likely very small here but we don't want to continue cancelling all subsequent orders so we set it to zero
+        Decimal::zero()
+    } else if new_reduce_only_order.reduce_only_price_is_invalid() {
+        // Bad price step, we do nothing
+        position_qty_to_reduce
+    } else {
         // RO order is valid after rounding
         // Update the remaining position quantity to reduce
         let new_position_qty_to_reduce = sub_no_overflow(position_qty_to_reduce, new_reduce_only_order.get_qty());
         // Push new order to open
         orders_to_open.push(new_reduce_only_order);
         new_position_qty_to_reduce
-    } else {
-        // Position qty to reduce is likely very small here but we don't want to continue cancelling all subsequent orders so we set it to zero
-        Decimal::zero()
     }
 }
 
@@ -396,8 +418,8 @@ mod tests {
     #[test]
     fn base_sell_deriv_test() {
         let leverage = Decimal::from_str("2.5").unwrap();
-        let start_price = Decimal::from_str("39250700000.000000000000000000").unwrap();
-        let end_price = Decimal::from_str("39300700000.000000000000000000").unwrap();
+        let start_price = Decimal::from_str("39300000000.000000000000000000").unwrap();
+        let end_price = Decimal::from_str("39301000000.000000000000000000").unwrap();
         let total_margin_balance_for_new_orders = Decimal::from_str("40250700000").unwrap();
         let state = mock_state(leverage.to_string(), String::from("10"));
         let market = mock_market();
