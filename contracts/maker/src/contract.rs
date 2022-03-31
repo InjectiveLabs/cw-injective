@@ -39,6 +39,7 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: Messag
         head_change_tolerance_ratio: Decimal::from_str(&msg.head_change_tolerance_ratio).unwrap(),
         mid_price_tail_deviation_ratio: Decimal::from_str(&msg.mid_price_tail_deviation_ratio).unwrap(),
         min_head_to_tail_deviation_ratio: Decimal::from_str(&msg.min_head_to_tail_deviation_ratio).unwrap(),
+        blocks_since_last_clean: 0,
         lp_token_address: None,
     };
 
@@ -316,7 +317,10 @@ fn get_action(
     mid_price: Decimal,
 ) -> StdResult<Vec<CosmosMsg<InjectiveMsgWrapper>>> {
     // Load state
-    let state = config_read(deps.storage).load().unwrap();
+    let mut state = config_read(deps.storage).load().unwrap();
+
+    // Update blocks seen since last clean
+    state.blocks_since_last_clean += 1;
 
     // Calculate inventory imbalance parameter
     let (inventory_imbalance_ratio, imbalance_is_long) = inventory_imbalance_deriv(
@@ -343,7 +347,77 @@ fn get_action(
     let (open_buy_orders, open_sell_orders) = split_open_orders(open_orders);
 
     // Ensure that the heads have changed enough that we are willing to make an action
-    if should_take_action(&open_buy_orders, new_buy_head, state.head_change_tolerance_ratio)
+    if state.blocks_since_last_clean > 5 {
+        state.blocks_since_last_clean = 0;
+        // Get new tails
+        let (new_buy_tail, new_sell_tail) = new_tail_prices(
+            new_buy_head,
+            new_sell_head,
+            mid_price,
+            state.mid_price_tail_deviation_ratio,
+            state.min_head_to_tail_deviation_ratio,
+        );
+
+        // Get information for buy order creation/cancellation
+        let (buy_orders_to_cancel, buy_orders_to_keep, buy_agg_margin_of_orders_kept, buy_vacancy_is_near_head) =
+            orders_to_cancel(open_buy_orders, Decimal::zero(), Decimal::zero(), true, &state, &market);
+
+        // Get information for sell order creation/cancellation
+        let (sell_orders_to_cancel, sell_orders_to_keep, sell_agg_margin_of_orders_kept, sell_vacancy_is_near_head) =
+            orders_to_cancel(open_sell_orders, Decimal::zero(), Decimal::zero(), false, &state, &market);
+
+        // Get new buy/sell orders
+        let (buy_orders_to_open, additional_buys_to_cancel) = create_orders(
+            new_buy_head,
+            new_buy_tail,
+            deposit.total_balance,
+            buy_orders_to_keep,
+            buy_agg_margin_of_orders_kept,
+            &position,
+            buy_vacancy_is_near_head,
+            true,
+            &state,
+            &market,
+        );
+        let (sell_orders_to_open, additional_sells_to_cancel) = create_orders(
+            new_sell_head,
+            new_sell_tail,
+            deposit.total_balance,
+            sell_orders_to_keep,
+            sell_agg_margin_of_orders_kept,
+            &position,
+            sell_vacancy_is_near_head,
+            false,
+            &state,
+            &market,
+        );
+
+        let batch_order = create_batch_update_orders_msg(
+            env.contract.address.to_string(),
+            String::from(""),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            serde_json_wasm::from_str(
+                &serde_json_wasm::to_string(
+                    &vec![
+                        buy_orders_to_cancel,
+                        sell_orders_to_cancel,
+                        additional_buys_to_cancel,
+                        additional_sells_to_cancel,
+                    ]
+                    .concat(),
+                )
+                .unwrap(),
+            )
+            .unwrap(),
+            Vec::new(),
+            serde_json_wasm::from_str(&serde_json_wasm::to_string(&vec![buy_orders_to_open, sell_orders_to_open].concat()).unwrap()).unwrap(),
+        );
+
+        Ok(vec![batch_order])
+    }
+    else if should_take_action(&open_buy_orders, new_buy_head, state.head_change_tolerance_ratio)
         || should_take_action(&open_sell_orders, new_sell_head, state.head_change_tolerance_ratio)
     {
         // Get new tails
@@ -937,6 +1011,7 @@ mod tests {
             reservation_price_sensitivity_ratio: Decimal::zero(),
             reservation_spread_sensitivity_ratio: Decimal::zero(),
             fee_recipient: String::from(""),
+            blocks_since_last_clean: 0,
             lp_token_address: None,
         }
     }

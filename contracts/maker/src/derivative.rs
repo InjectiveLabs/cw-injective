@@ -34,7 +34,7 @@ pub fn inventory_imbalance_deriv(
         Some(position) => {
             let inventory_imbalance = div_dec(
                 position.quantity * oracle_price,
-                total_deposit_balance * state.leverage * max_active_capital_utilization_ratio,
+                total_deposit_balance * state.leverage * div_dec(max_active_capital_utilization_ratio, Decimal::from_str("2").unwrap())
             );
             (min(inventory_imbalance, Decimal::one()), position.is_long)
         }
@@ -886,6 +886,7 @@ mod tests {
             reservation_price_sensitivity_ratio: Decimal::zero(),
             reservation_spread_sensitivity_ratio: Decimal::zero(),
             fee_recipient: String::from(""),
+            blocks_since_last_clean: 0,
             lp_token_address: None,
         }
     }
