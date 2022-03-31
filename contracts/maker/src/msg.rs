@@ -1,4 +1,4 @@
-use cosmwasm_std::Uint128;
+use cosmwasm_std::{Decimal256 as Decimal, Uint128};
 use cw20::Logo;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -37,8 +37,17 @@ pub struct InstantiateMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    MintToUser { subaccount_id_sender: String, amount: Uint128 },
-    BurnFromUser { subaccount_id_sender: String, amount: Uint128 },
+    MintToUser {
+        subaccount_id_sender: String,
+        total_funds_supplied: Decimal,
+        pool_position_execution_margin: Decimal,
+        pool_balance_contribution: Decimal,
+        position_quantity_delta: Decimal,
+    },
+    BurnFromUser {
+        subaccount_id_sender: String,
+        amount: Uint128,
+    },
     BeginBlocker {},
 }
 

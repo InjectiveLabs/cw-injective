@@ -130,8 +130,8 @@ pub struct FullDerivativeMarketPerpetualInfo {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct FullDerivativeMarket {
-    pub market: DerivativeMarket,
-    pub info: FullDerivativeMarketPerpetualInfo,
+    pub market: Option<DerivativeMarket>,
+    pub info: Option<FullDerivativeMarketPerpetualInfo>,
     pub mark_price: Decimal,
 }
 
