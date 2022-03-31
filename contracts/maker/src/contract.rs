@@ -165,20 +165,15 @@ pub fn mint_to_user(
     let deposit_res = querier.query_subaccount_deposit(state.subaccount_id.clone(), market_res.market.market.unwrap().quote_denom.clone())?;
     let positions_res = querier.query_subaccount_position(state.market_id.clone(), state.subaccount_id.clone())?;
 
+    let total_supply_decimal = Decimal::from_atomics(total_supply, 0).unwrap();
     let new_tokens_to_mint: Decimal;
 
     if total_supply.is_zero() {
         new_tokens_to_mint = total_funds_supplied * Decimal::from_atomics(10u64.pow(6), 0).unwrap()
     } else if pool_position_execution_margin.gt(&pool_balance_contribution) {
-        let pool_quantity = positions_res.state.unwrap().quantity;
-        let pool_quantity_scaled = Decimal::from_atomics(10u128.pow(pool_quantity.decimal_places()), 0).unwrap();
-
-        let total_supply_decimal = Decimal::from_atomics(total_supply, 0).unwrap();
-        new_tokens_to_mint = total_supply_decimal * position_quantity_delta * pool_quantity_scaled / pool_quantity.atomics()
+        new_tokens_to_mint = div_dec(total_supply_decimal * position_quantity_delta, positions_res.state.unwrap().quantity)
     } else {
-        let pool_deposits_scaled = Decimal::from_atomics(10u128.pow(deposit_res.deposits.total_balance.decimal_places()), 0).unwrap();
-        let total_supply_decimal = Decimal::from_atomics(total_supply, 0).unwrap();
-        new_tokens_to_mint = total_supply_decimal * pool_balance_contribution * pool_deposits_scaled / deposit_res.deposits.total_balance.atomics()
+        new_tokens_to_mint = div_dec(total_supply_decimal * pool_balance_contribution, deposit_res.deposits.total_balance)
     }
 
     let tokens_to_mint_uint: Uint256 = new_tokens_to_mint * Uint256::from(1u64);
