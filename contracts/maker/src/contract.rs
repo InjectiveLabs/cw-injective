@@ -317,7 +317,7 @@ fn get_action(
     mid_price: Decimal,
 ) -> StdResult<Vec<CosmosMsg<InjectiveMsgWrapper>>> {
     // Load state
-    let mut state = config_read(deps.storage).load().unwrap();
+    let mut state = config(deps.storage).load().unwrap();
 
     // Update blocks seen since last clean
     state.blocks_since_last_clean += 1;
@@ -347,78 +347,8 @@ fn get_action(
     let (open_buy_orders, open_sell_orders) = split_open_orders(open_orders);
 
     // Ensure that the heads have changed enough that we are willing to make an action
-    if state.blocks_since_last_clean > 5 {
-        state.blocks_since_last_clean = 0;
-        // Get new tails
-        let (new_buy_tail, new_sell_tail) = new_tail_prices(
-            new_buy_head,
-            new_sell_head,
-            mid_price,
-            state.mid_price_tail_deviation_ratio,
-            state.min_head_to_tail_deviation_ratio,
-        );
-
-        // Get information for buy order creation/cancellation
-        let (buy_orders_to_cancel, buy_orders_to_keep, buy_agg_margin_of_orders_kept, buy_vacancy_is_near_head) =
-            orders_to_cancel(open_buy_orders, Decimal::zero(), Decimal::zero(), true, &state, &market);
-
-        // Get information for sell order creation/cancellation
-        let (sell_orders_to_cancel, sell_orders_to_keep, sell_agg_margin_of_orders_kept, sell_vacancy_is_near_head) =
-            orders_to_cancel(open_sell_orders, Decimal::zero(), Decimal::zero(), false, &state, &market);
-
-        // Get new buy/sell orders
-        let (buy_orders_to_open, additional_buys_to_cancel) = create_orders(
-            new_buy_head,
-            new_buy_tail,
-            deposit.total_balance,
-            buy_orders_to_keep,
-            buy_agg_margin_of_orders_kept,
-            &position,
-            buy_vacancy_is_near_head,
-            true,
-            &state,
-            &market,
-        );
-        let (sell_orders_to_open, additional_sells_to_cancel) = create_orders(
-            new_sell_head,
-            new_sell_tail,
-            deposit.total_balance,
-            sell_orders_to_keep,
-            sell_agg_margin_of_orders_kept,
-            &position,
-            sell_vacancy_is_near_head,
-            false,
-            &state,
-            &market,
-        );
-
-        let batch_order = create_batch_update_orders_msg(
-            env.contract.address.to_string(),
-            String::from(""),
-            Vec::new(),
-            Vec::new(),
-            Vec::new(),
-            serde_json_wasm::from_str(
-                &serde_json_wasm::to_string(
-                    &vec![
-                        buy_orders_to_cancel,
-                        sell_orders_to_cancel,
-                        additional_buys_to_cancel,
-                        additional_sells_to_cancel,
-                    ]
-                    .concat(),
-                )
-                .unwrap(),
-            )
-            .unwrap(),
-            Vec::new(),
-            serde_json_wasm::from_str(&serde_json_wasm::to_string(&vec![buy_orders_to_open, sell_orders_to_open].concat()).unwrap()).unwrap(),
-        );
-
-        Ok(vec![batch_order])
-    }
-    else if should_take_action(&open_buy_orders, new_buy_head, state.head_change_tolerance_ratio)
-        || should_take_action(&open_sell_orders, new_sell_head, state.head_change_tolerance_ratio)
+    if should_take_action(&open_buy_orders, new_buy_head, state.head_change_tolerance_ratio)
+        || should_take_action(&open_sell_orders, new_sell_head, state.head_change_tolerance_ratio) || state.blocks_since_last_clean > 5
     {
         // Get new tails
         let (new_buy_tail, new_sell_tail) = new_tail_prices(
@@ -431,11 +361,11 @@ fn get_action(
 
         // Get information for buy order creation/cancellation
         let (buy_orders_to_cancel, buy_orders_to_keep, buy_agg_margin_of_orders_kept, buy_vacancy_is_near_head) =
-            orders_to_cancel(open_buy_orders, new_buy_head, new_buy_tail, true, &state, &market);
+            orders_to_cancel(open_buy_orders, new_buy_head, new_buy_tail, true, &state, &market, state.blocks_since_last_clean > 5);
 
         // Get information for sell order creation/cancellation
         let (sell_orders_to_cancel, sell_orders_to_keep, sell_agg_margin_of_orders_kept, sell_vacancy_is_near_head) =
-            orders_to_cancel(open_sell_orders, new_sell_head, new_sell_tail, false, &state, &market);
+            orders_to_cancel(open_sell_orders, new_sell_head, new_sell_tail, false, &state, &market, state.blocks_since_last_clean > 5);
 
         // Get new buy/sell orders
         let (buy_orders_to_open, additional_buys_to_cancel) = create_orders(
@@ -462,6 +392,10 @@ fn get_action(
             &state,
             &market,
         );
+
+        if state.blocks_since_last_clean > 5 {
+            state.blocks_since_last_clean = 0;
+        }
 
         let batch_order = create_batch_update_orders_msg(
             env.contract.address.to_string(),
@@ -514,6 +448,7 @@ pub fn orders_to_cancel(
     is_buy: bool,
     state: &State,
     market: &DerivativeMarket,
+    cancel_all: bool
 ) -> (Vec<OrderData>, Vec<DerivativeLimitOrder>, Decimal, bool) {
     // If there are any open orders, we need to check them to see if we should cancel
     if open_orders.len() > 0 {
@@ -524,7 +459,7 @@ pub fn orders_to_cancel(
             let keep_if_buy = o.order_info.price <= new_head && o.order_info.price >= new_tail;
             let keep_if_sell = o.order_info.price >= new_head && o.order_info.price <= new_tail;
             let keep = (keep_if_buy && is_buy) || (keep_if_sell && !is_buy);
-            if keep {
+            if keep && !cancel_all {
                 agg_margin_of_orders_kept = agg_margin_of_orders_kept + o.margin;
                 orders_to_keep.push(o);
             } else {
@@ -805,7 +740,7 @@ mod tests {
         let new_head = Decimal::from_str("15").unwrap();
         let new_tail = Decimal::from_str("6").unwrap();
         let (orders_to_cancel, orders_to_keep, margined_val_from_orders_remaining, append_to_new_head) =
-            orders_to_cancel(open_buys, new_head, new_tail, true, &state, &market);
+            orders_to_cancel(open_buys, new_head, new_tail, true, &state, &market, false);
 
         let position = EffectivePosition {
             is_long: true,
