@@ -345,7 +345,8 @@ fn get_action(
 
     // Ensure that the heads have changed enough that we are willing to make an action
     if should_take_action(&open_buy_orders, new_buy_head, state.head_change_tolerance_ratio)
-        || should_take_action(&open_sell_orders, new_sell_head, state.head_change_tolerance_ratio) || state.blocks_since_last_clean > 5
+        || should_take_action(&open_sell_orders, new_sell_head, state.head_change_tolerance_ratio)
+        || state.blocks_since_last_clean > 5
     {
         // Get new tails
         let (new_buy_tail, new_sell_tail) = new_tail_prices(
@@ -357,12 +358,26 @@ fn get_action(
         );
 
         // Get information for buy order creation/cancellation
-        let (buy_orders_to_cancel, buy_orders_to_keep, buy_agg_margin_of_orders_kept, buy_vacancy_is_near_head) =
-            orders_to_cancel(open_buy_orders, new_buy_head, new_buy_tail, true, &state, &market, state.blocks_since_last_clean > 5);
+        let (buy_orders_to_cancel, buy_orders_to_keep, buy_agg_margin_of_orders_kept, buy_vacancy_is_near_head) = orders_to_cancel(
+            open_buy_orders,
+            new_buy_head,
+            new_buy_tail,
+            true,
+            &state,
+            &market,
+            state.blocks_since_last_clean > 5,
+        );
 
         // Get information for sell order creation/cancellation
-        let (sell_orders_to_cancel, sell_orders_to_keep, sell_agg_margin_of_orders_kept, sell_vacancy_is_near_head) =
-            orders_to_cancel(open_sell_orders, new_sell_head, new_sell_tail, false, &state, &market, state.blocks_since_last_clean > 5);
+        let (sell_orders_to_cancel, sell_orders_to_keep, sell_agg_margin_of_orders_kept, sell_vacancy_is_near_head) = orders_to_cancel(
+            open_sell_orders,
+            new_sell_head,
+            new_sell_tail,
+            false,
+            &state,
+            &market,
+            state.blocks_since_last_clean > 5,
+        );
 
         // Get new buy/sell orders
         let (buy_orders_to_open, additional_buys_to_cancel) = create_orders(
@@ -451,7 +466,7 @@ pub fn orders_to_cancel(
     is_buy: bool,
     state: &State,
     market: &DerivativeMarket,
-    cancel_all: bool
+    cancel_all: bool,
 ) -> (Vec<OrderData>, Vec<DerivativeLimitOrder>, Decimal, bool) {
     // If there are any open orders, we need to check them to see if we should cancel
     if open_orders.len() > 0 {

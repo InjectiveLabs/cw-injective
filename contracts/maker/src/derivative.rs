@@ -34,7 +34,7 @@ pub fn inventory_imbalance_deriv(
         Some(position) => {
             let inventory_imbalance = div_dec(
                 position.quantity * oracle_price,
-                total_deposit_balance * state.leverage * div_dec(max_active_capital_utilization_ratio, Decimal::from_str("2").unwrap())
+                total_deposit_balance * state.leverage * div_dec(max_active_capital_utilization_ratio, Decimal::from_str("2").unwrap()),
             );
             (min(inventory_imbalance, Decimal::one()), position.is_long)
         }
