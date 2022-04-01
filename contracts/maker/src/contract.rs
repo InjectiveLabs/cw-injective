@@ -317,10 +317,7 @@ fn get_action(
     mid_price: Decimal,
 ) -> StdResult<Vec<CosmosMsg<InjectiveMsgWrapper>>> {
     // Load state
-    let mut state = config(deps.storage).load().unwrap();
-
-    // Update blocks seen since last clean
-    state.blocks_since_last_clean += 1;
+    let state = config_read(deps.storage).load().unwrap();
 
     // Calculate inventory imbalance parameter
     let (inventory_imbalance_ratio, imbalance_is_long) = inventory_imbalance_deriv(
@@ -393,8 +390,14 @@ fn get_action(
             &market,
         );
 
+        // Update state with the number of blocks since last wipe
+        let mut state_clone = state.clone();
         if state.blocks_since_last_clean > 5 {
-            state.blocks_since_last_clean = 0;
+            state_clone.blocks_since_last_clean = 0;
+            config(deps.storage).save(&state_clone)?;
+        } else {
+            state_clone.blocks_since_last_clean += 1;
+            config(deps.storage).save(&state_clone)?;
         }
 
         let batch_order = create_batch_update_orders_msg(
