@@ -886,7 +886,7 @@ mod tests {
             reservation_price_sensitivity_ratio: Decimal::zero(),
             reservation_spread_sensitivity_ratio: Decimal::zero(),
             fee_recipient: String::from(""),
-            blocks_since_last_clean: 0,
+            max_weighted_average_price_deviation: Decimal::from_str("1").unwrap(),
             lp_token_address: None,
         }
     }

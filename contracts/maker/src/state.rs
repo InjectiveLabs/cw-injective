@@ -20,7 +20,7 @@ pub struct State {
     pub head_change_tolerance_ratio: Decimal, // A constant between 0..1 that serves as a threshold for which we actually want to take action in the new block
     pub mid_price_tail_deviation_ratio: Decimal, // A constant between 0..1 that is used to determine how far we want to place our tails from the mid_price
     pub min_head_to_tail_deviation_ratio: Decimal, // A constant between 0..1 that ensures our tail is at least some distance from the head (risk management param)
-    pub blocks_since_last_clean: i64,
+    pub max_weighted_average_price_deviation: Decimal,
     pub lp_token_address: Option<Cw20Contract>,
 }
 

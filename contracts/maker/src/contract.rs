@@ -7,7 +7,7 @@ use crate::exchange::{
     PerpetualMarketInfo,
 };
 use crate::msg::{ExecuteMsg, InstantiateMsg, MarketIdResponse, QueryMsg, TotalSupplyResponse};
-use crate::risk_management::{check_tail_dist, only_owner, total_marginable_balance_for_new_orders};
+use crate::risk_management::{check_tail_dist, only_owner, total_marginable_balance_for_new_orders, should_cancel_all};
 use crate::state::{config, config_read, State};
 use crate::utils::{decode_bech32, div_dec, max, min, sub_abs, sub_no_overflow};
 use cosmwasm_std::{
@@ -39,7 +39,7 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: Messag
         head_change_tolerance_ratio: Decimal::from_str(&msg.head_change_tolerance_ratio).unwrap(),
         mid_price_tail_deviation_ratio: Decimal::from_str(&msg.mid_price_tail_deviation_ratio).unwrap(),
         min_head_to_tail_deviation_ratio: Decimal::from_str(&msg.min_head_to_tail_deviation_ratio).unwrap(),
-        blocks_since_last_clean: 0,
+        max_weighted_average_price_deviation: Decimal::from_str(&msg.max_weighted_average_price_deviation).unwrap(),
         lp_token_address: None,
     };
 
@@ -346,7 +346,6 @@ fn get_action(
     // Ensure that the heads have changed enough that we are willing to make an action
     if should_take_action(&open_buy_orders, new_buy_head, state.head_change_tolerance_ratio)
         || should_take_action(&open_sell_orders, new_sell_head, state.head_change_tolerance_ratio)
-        || state.blocks_since_last_clean > 5
     {
         // Get new tails
         let (new_buy_tail, new_sell_tail) = new_tail_prices(
@@ -358,26 +357,12 @@ fn get_action(
         );
 
         // Get information for buy order creation/cancellation
-        let (buy_orders_to_cancel, buy_orders_to_keep, buy_agg_margin_of_orders_kept, buy_vacancy_is_near_head) = orders_to_cancel(
-            open_buy_orders,
-            new_buy_head,
-            new_buy_tail,
-            true,
-            &state,
-            &market,
-            state.blocks_since_last_clean > 5,
-        );
+        let (buy_orders_to_cancel, buy_orders_to_keep, buy_agg_margin_of_orders_kept, buy_vacancy_is_near_head) =
+            orders_to_cancel(open_buy_orders, new_buy_head, new_buy_tail, true, &state, &market);
 
         // Get information for sell order creation/cancellation
-        let (sell_orders_to_cancel, sell_orders_to_keep, sell_agg_margin_of_orders_kept, sell_vacancy_is_near_head) = orders_to_cancel(
-            open_sell_orders,
-            new_sell_head,
-            new_sell_tail,
-            false,
-            &state,
-            &market,
-            state.blocks_since_last_clean > 5,
-        );
+        let (sell_orders_to_cancel, sell_orders_to_keep, sell_agg_margin_of_orders_kept, sell_vacancy_is_near_head) =
+            orders_to_cancel(open_sell_orders, new_sell_head, new_sell_tail, false, &state, &market);
 
         // Get new buy/sell orders
         let (buy_orders_to_open, additional_buys_to_cancel) = create_orders(
@@ -404,16 +389,6 @@ fn get_action(
             &state,
             &market,
         );
-
-        // Update state with the number of blocks since last wipe
-        let mut state_clone = state.clone();
-        if state.blocks_since_last_clean > 5 {
-            state_clone.blocks_since_last_clean = 0;
-            config(deps.storage).save(&state_clone)?;
-        } else {
-            state_clone.blocks_since_last_clean += 1;
-            config(deps.storage).save(&state_clone)?;
-        }
 
         let batch_order = create_batch_update_orders_msg(
             env.contract.address.to_string(),
@@ -466,25 +441,35 @@ pub fn orders_to_cancel(
     is_buy: bool,
     state: &State,
     market: &DerivativeMarket,
-    cancel_all: bool,
 ) -> (Vec<OrderData>, Vec<DerivativeLimitOrder>, Decimal, bool) {
     // If there are any open orders, we need to check them to see if we should cancel
     if open_orders.len() > 0 {
         let mut agg_margin_of_orders_kept = Decimal::zero();
         let mut orders_to_cancel: Vec<OrderData> = Vec::new();
         let mut orders_to_keep: Vec<DerivativeLimitOrder> = Vec::new();
+        let mut weighted_avg_price_orders_to_keep = Decimal::zero();
+        let mut summed_quantity_orders_to_keep = Decimal::zero();
         open_orders.into_iter().for_each(|o| {
             let keep_if_buy = o.order_info.price <= new_head && o.order_info.price >= new_tail;
             let keep_if_sell = o.order_info.price >= new_head && o.order_info.price <= new_tail;
             let keep = (keep_if_buy && is_buy) || (keep_if_sell && !is_buy);
-            if keep && !cancel_all {
+            if keep {
                 agg_margin_of_orders_kept = agg_margin_of_orders_kept + o.margin;
+                weighted_avg_price_orders_to_keep = weighted_avg_price_orders_to_keep + (o.order_info.price * o.order_info.quantity);
+                summed_quantity_orders_to_keep = summed_quantity_orders_to_keep + o.order_info.quantity;
                 orders_to_keep.push(o);
             } else {
                 orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
             }
         });
+        let obs_weighted_avg_price_orders_to_keep = div_dec(weighted_avg_price_orders_to_keep, summed_quantity_orders_to_keep);
         if orders_to_keep.len() == 0 {
+            (orders_to_cancel, Vec::new(), Decimal::zero(), true)
+        } else if should_cancel_all(state, obs_weighted_avg_price_orders_to_keep, &orders_to_keep) {
+            // If our order structure is messed up beyond our tolerance, we should cancel all orders
+            orders_to_keep.into_iter().for_each(|o| {
+                orders_to_cancel.push(OrderData::new(o.order_hash.clone(), state, market));
+            });
             (orders_to_cancel, Vec::new(), Decimal::zero(), true)
         } else {
             // Determine if we need to append to new orders to the new head or if we need to
@@ -758,7 +743,7 @@ mod tests {
         let new_head = Decimal::from_str("15").unwrap();
         let new_tail = Decimal::from_str("6").unwrap();
         let (orders_to_cancel, orders_to_keep, margined_val_from_orders_remaining, append_to_new_head) =
-            orders_to_cancel(open_buys, new_head, new_tail, true, &state, &market, false);
+            orders_to_cancel(open_buys, new_head, new_tail, true, &state, &market);
 
         let position = EffectivePosition {
             is_long: true,
@@ -964,7 +949,7 @@ mod tests {
             reservation_price_sensitivity_ratio: Decimal::zero(),
             reservation_spread_sensitivity_ratio: Decimal::zero(),
             fee_recipient: String::from(""),
-            blocks_since_last_clean: 0,
+            max_weighted_average_price_deviation: Decimal::from_str("1").unwrap(),
             lp_token_address: None,
         }
     }

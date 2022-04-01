@@ -1,5 +1,5 @@
 use crate::{
-    exchange::{DerivativeMarket, DerivativeOrder, EffectivePosition},
+    exchange::{DerivativeMarket, DerivativeOrder, EffectivePosition, DerivativeLimitOrder},
     state::State,
     utils::{div_dec, max, min, sub_abs, sub_no_overflow},
 };
@@ -90,6 +90,17 @@ pub fn final_check(orders_to_place: Vec<DerivativeOrder>, market: &DerivativeMar
         .into_iter()
         .filter(|order| order.order_info.quantity.gt(&market.min_quantity_tick_size) && order.order_info.price.gt(&market.min_price_tick_size))
         .collect()
+}
+
+pub fn should_cancel_all(state: &State, obs_weighted_avg_price_orders_to_keep: Decimal, orders_to_keep: &Vec<DerivativeLimitOrder>) -> bool {
+    let head = orders_to_keep.first().unwrap();
+    let tail = orders_to_keep.last().unwrap();
+    let exp_weighted_avg_price_orders_to_keep = div_dec(head.order_info.price + tail.order_info.price, Decimal::from_str("2").unwrap());
+    let deviation = div_dec(
+        sub_abs(exp_weighted_avg_price_orders_to_keep, obs_weighted_avg_price_orders_to_keep),
+        exp_weighted_avg_price_orders_to_keep,
+    );
+    return deviation > state.max_weighted_average_price_deviation;
 }
 
 #[cfg(test)]

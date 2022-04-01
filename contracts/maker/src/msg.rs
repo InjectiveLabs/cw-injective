@@ -30,6 +30,7 @@ pub struct InstantiateMsg {
     pub lp_symbol: String,
     // Label for the CW20 Token
     pub cw20_label: String,
+    pub max_weighted_average_price_deviation: String,
     // Custom marketing info for the CW20 Token
     pub cw20_marketing_info: Option<InstantiateMarketingInfo>,
 }
