@@ -1,7 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 
-use crate::migrate::migrate_config;
 use crate::querier::load_token_balance;
 use crate::staking::{
     deposit_reward, query_shares, query_staker, stake_voting_rewards, stake_voting_tokens,
@@ -22,7 +21,7 @@ use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
 
 use ninja_protocol::common::OrderBy;
 use ninja_protocol::gov::{
-    ConfigResponse, Cw20HookMsg, ExecuteMsg, InstantiateMsg, MigrateMsg, PollAdminAction,
+    ConfigResponse, Cw20HookMsg, ExecuteMsg, InstantiateMsg, PollAdminAction,
     PollConfig, PollExecuteMsg, PollResponse, PollStatus, PollsResponse, QueryMsg, StateResponse,
     VoteOption, VoterInfo, VotersResponse, VotersResponseItem,
 };
@@ -980,17 +979,4 @@ fn query_voters(
     Ok(VotersResponse {
         voters: voters_response?,
     })
-}
-
-#[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response> {
-    migrate_config(
-        deps,
-        msg.migration_poll_config,
-        msg.auth_admin_poll_config,
-        msg.admin_manager,
-        msg.poll_gas_limit,
-    )?;
-
-    Ok(Response::default())
 }
