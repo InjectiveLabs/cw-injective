@@ -70,6 +70,10 @@ pub enum InjectiveMsg {
         spot_orders_to_create: Vec<SpotOrder>,
         derivative_orders_to_create: Vec<DerivativeOrder>,
     },
+    CreateDerivativeMarketOrder {
+        sender: String,
+        order: DerivativeOrder,
+    },
 }
 
 pub fn create_subaccount_transfer_msg(
@@ -111,6 +115,17 @@ pub fn create_batch_update_orders_msg(
             derivative_orders_to_cancel,
             spot_orders_to_create,
             derivative_orders_to_create,
+        },
+    }
+    .into()
+}
+
+pub fn create_derivative_market_order_msg(sender: String, order: DerivativeOrder) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Exchange,
+        msg_data: InjectiveMsg::CreateDerivativeMarketOrder {
+            sender: sender.to_string(),
+            order,
         },
     }
     .into()

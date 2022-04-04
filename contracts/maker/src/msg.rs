@@ -22,6 +22,7 @@ pub struct InstantiateMsg {
     pub mid_price_tail_deviation_ratio: String,
     // A constant between 0..1 that ensures our tail is at least some distance from the head (risk management param)
     pub min_head_to_tail_deviation_ratio: String,
+    pub min_proximity_to_liquidation: String,
     // CW20 Wasm contract code id
     pub cw20_code_id: String,
     // LP Token Name

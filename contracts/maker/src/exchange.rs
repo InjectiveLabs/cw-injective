@@ -1,5 +1,7 @@
+use std::str::FromStr;
+
 use crate::state::State;
-use crate::utils::{div_dec, round_to_min_ticker};
+use crate::utils::{div_dec, round_to_min_ticker, sub_no_overflow};
 use cosmwasm_std::Decimal256 as Decimal;
 use injective_bindings::{
     Deposit as QueriedDeposit, DerivativeMarket as QueriedDerivativeMarket, EffectivePosition as EffectiveQueriedPosition,
@@ -168,6 +170,19 @@ impl EffectivePosition {
             entry_price: queried_position.entry_price,
         }
     }
+    pub fn liquidation_price(&self) -> Decimal {
+        if self.is_long {
+            div_dec(
+                sub_no_overflow(self.effective_margin, self.entry_price * self.quantity),
+                sub_no_overflow(Decimal::from_str("0.05").unwrap(), Decimal::from_str("1").unwrap()) * self.quantity,
+            )
+        } else {
+            div_dec(
+                self.effective_margin + self.entry_price * self.quantity,
+                (Decimal::from_str("0.05").unwrap() + Decimal::from_str("1").unwrap()) * self.quantity,
+            )
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -271,7 +286,7 @@ pub struct MsgCreateDerivativeMarketOrder {
 // TODO: fill in the rest
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub enum ExchangeMsg {
-    MsgCreateDerivativeMarketOrder,
+    CreateDerivativeMarketOrder(MsgCreateDerivativeMarketOrder),
     BatchUpdateOrders(MsgBatchUpdateOrders),
     // MsgBatchUpdateOrders {
     //     sender: String,

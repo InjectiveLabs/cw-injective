@@ -92,6 +92,29 @@ pub fn final_check(orders_to_place: Vec<DerivativeOrder>, market: &DerivativeMar
         .collect()
 }
 
+pub fn position_close_to_liquidation(state: &State, position: &Option<EffectivePosition>, mid_price: Decimal) -> bool {
+    match position {
+        None => false,
+        Some(p) => {
+            let liquidation_price = p.liquidation_price();
+            let proximity_to_liquidation = div_dec(sub_abs(mid_price, liquidation_price), liquidation_price);
+            proximity_to_liquidation <= state.min_proximity_to_liquidation
+        }
+    }
+}
+
+pub fn position_too_large(state: &State, position: &Option<EffectivePosition>, total_deposit_balance: Decimal) -> bool {
+    match position {
+        None => false,
+        Some(p) => {
+            let max_position_value = div_dec(total_deposit_balance, Decimal::from_str("2").unwrap());
+            let estimated_position_value = div_dec(p.quantity * p.entry_price, state.leverage);
+            let proximity_to_max = div_dec(sub_abs(estimated_position_value, max_position_value), estimated_position_value);
+            proximity_to_max <= Decimal::from_str("0.05").unwrap()
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::check_tail_dist;

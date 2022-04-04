@@ -885,6 +885,7 @@ mod tests {
             leverage: Decimal::from_str(&leverage).unwrap(),
             reservation_price_sensitivity_ratio: Decimal::zero(),
             reservation_spread_sensitivity_ratio: Decimal::zero(),
+            min_proximity_to_liquidation: Decimal::zero(),
             fee_recipient: String::from(""),
             lp_token_address: None,
         }
