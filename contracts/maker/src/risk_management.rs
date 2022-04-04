@@ -92,6 +92,14 @@ pub fn final_check(orders_to_place: Vec<DerivativeOrder>, market: &DerivativeMar
         .collect()
 }
 
+/// # Description
+/// Decides whether we need to cancel all orders and create new ones, based on how skewed they are to one side.
+/// # Arguments
+/// * `state` - State that the contract was initialized with
+/// * `obs_weighted_avg_price_orders_to_keep` - The quantity weighted average of all the orders that we would want to have kept
+/// * `orders_to_keep` - The orders that we would like to keep resting on the book
+/// # Returns
+/// * `filtered_orders_to_place` - The filtered orders
 pub fn should_cancel_all(state: &State, obs_weighted_avg_price_orders_to_keep: Decimal, orders_to_keep: &Vec<DerivativeLimitOrder>) -> bool {
     let head = orders_to_keep.first().unwrap();
     let tail = orders_to_keep.last().unwrap();
