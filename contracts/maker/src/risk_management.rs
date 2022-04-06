@@ -3,7 +3,8 @@ use crate::{
     state::State,
     utils::{div_dec, max, min, sub_abs, sub_no_overflow},
 };
-use cosmwasm_std::{Addr, Decimal256 as Decimal};
+use cosmwasm_std::{Addr, CosmosMsg, Decimal256 as Decimal};
+use injective_bindings::{create_derivative_market_order_msg, InjectiveMsgWrapper};
 use std::str::FromStr;
 
 pub fn only_owner(sender: &Addr, owner: &Addr) {
@@ -92,27 +93,105 @@ pub fn final_check(orders_to_place: Vec<DerivativeOrder>, market: &DerivativeMar
         .collect()
 }
 
-pub fn position_close_to_liquidation(state: &State, position: &Option<EffectivePosition>, mid_price: Decimal) -> bool {
+/// # Description
+/// Returns true if the position is too close to liquidation
+/// # Arguments
+/// * `state` - All the orders that we are trying to create
+/// * `position` - The position we have taken, if any
+/// * `oracle_price` - On chain oracle price
+/// * `market` - Derivative market information
+/// # Returns
+/// * `is_close_to_liquidation` - The position is about to be liquidated
+pub fn position_close_to_liquidation(state: &State, position: &Option<EffectivePosition>, oracle_price: Decimal, market: &DerivativeMarket) -> bool {
     match position {
         None => false,
         Some(p) => {
-            let liquidation_price = p.liquidation_price();
-            let proximity_to_liquidation = div_dec(sub_abs(mid_price, liquidation_price), liquidation_price);
+            let position_margin_ratio = div_dec(p.effective_margin, oracle_price * p.quantity);
+            let proximity_to_liquidation = div_dec(position_margin_ratio, market.maintenance_margin_ratio);
             proximity_to_liquidation <= state.min_proximity_to_liquidation
         }
     }
 }
 
-pub fn position_too_large(state: &State, position: &Option<EffectivePosition>, total_deposit_balance: Decimal) -> bool {
+/// # Description
+/// Returns true if the position is greater than the max position
+/// # Arguments
+/// * `position` - The position we have taken, if any
+/// * `total_deposit_balance` - The total quote balance LPed
+/// # Returns
+/// * `position_is_too_large` - The position needs to be reduced below the max position
+pub fn position_too_large(position: &Option<EffectivePosition>, total_deposit_balance: Decimal, market: &DerivativeMarket) -> bool {
     match position {
         None => false,
         Some(p) => {
             let max_position_value = div_dec(total_deposit_balance, Decimal::from_str("2").unwrap());
-            let estimated_position_value = div_dec(p.quantity * p.entry_price, state.leverage);
-            let proximity_to_max = div_dec(sub_abs(estimated_position_value, max_position_value), estimated_position_value);
-            proximity_to_max <= Decimal::from_str("0.05").unwrap()
+            p.effective_margin > max_position_value + market.min_price_tick_size
         }
     }
+}
+
+/// # Description
+/// Creates an exchange message intended to close the entire position
+/// # Arguments
+/// * `contract_address` - The maker contract's address
+/// * `market` - Derivative market information
+/// * `position` - The position we have taken, if any
+/// * `mid_price` - The current onchain mid price
+/// * `state` - All the orders that we are trying to create
+/// # Returns
+/// * `position_close_order` - The exchange message that will close our position
+pub fn close_position(
+    contract_address: String,
+    market: &DerivativeMarket,
+    position: &EffectivePosition,
+    mid_price: Decimal,
+    state: &State,
+) -> CosmosMsg<InjectiveMsgWrapper> {
+    let worst_price = if position.is_long {
+        mid_price * Decimal::from_str("4").unwrap()
+    } else {
+        Decimal::zero()
+    };
+    let position_close_order = DerivativeOrder::new(&state, worst_price, position.quantity, !position.is_long, true, market);
+    create_derivative_market_order_msg(
+        contract_address,
+        serde_json_wasm::from_str(&serde_json_wasm::to_string(&position_close_order).unwrap()).unwrap(),
+    )
+}
+
+/// # Description
+/// Creates an exchange message intended to reduce the position below 95% of our max position value
+/// # Arguments
+/// * `contract_address` - The maker contract's address
+/// * `market` - Derivative market information
+/// * `position` - The position we have taken, if any
+/// * `mid_price` - The current onchain mid price
+/// * `total_deposit_balance` - The total quote balance LPed
+/// * `state` - All the orders that we are trying to create
+/// # Returns
+/// * `position_reduce_order` - The exchange message that will reduce our position
+pub fn reduce_below_max_position(
+    contract_address: String,
+    market: &DerivativeMarket,
+    position: &EffectivePosition,
+    mid_price: Decimal,
+    total_deposit_balance: Decimal,
+    state: &State,
+) -> CosmosMsg<InjectiveMsgWrapper> {
+    let worst_price = if position.is_long {
+        mid_price * Decimal::from_str("4").unwrap()
+    } else {
+        Decimal::zero()
+    };
+    let max_position_value = div_dec(total_deposit_balance, Decimal::from_str("2").unwrap());
+    let target_position_value = max_position_value * Decimal::from_str("0.95").unwrap();
+    let excess_value = sub_no_overflow(position.effective_margin, target_position_value);
+    let quantity_to_reduce = div_dec(excess_value, mid_price);
+    let position_reduce_order = DerivativeOrder::new(&state, worst_price, quantity_to_reduce, !position.is_long, true, &market);
+    create_derivative_market_order_msg(
+        contract_address,
+        serde_json_wasm::from_str(&serde_json_wasm::to_string(&position_reduce_order).unwrap()).unwrap(),
+    )
 }
 
 #[cfg(test)]
