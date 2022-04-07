@@ -43,6 +43,7 @@ pub fn instantiate(deps: DepsMut<InjectiveQueryWrapper>, env: Env, _info: Messag
         mid_price_tail_deviation_ratio: Decimal::from_str(&msg.mid_price_tail_deviation_ratio).unwrap(),
         min_head_to_tail_deviation_ratio: Decimal::from_str(&msg.min_head_to_tail_deviation_ratio).unwrap(),
         min_proximity_to_liquidation: Decimal::from_str(&msg.min_proximity_to_liquidation).unwrap(),
+        post_reduction_perc_of_max_position: Decimal::from_str(&msg.post_reduction_perc_of_max_position).unwrap(),
         lp_token_address: None,
     };
 
@@ -323,7 +324,7 @@ fn get_action(
     let state = config_read(deps.storage).load().unwrap();
 
     // Ensure that we close the position if it is close to liquidation
-    if position_close_to_liquidation(&state, &position, oracle_price, &market) {
+    if position_close_to_liquidation(state.min_proximity_to_liquidation, &position, oracle_price, &market) {
         // Create position close order
         let position_close_order = close_position(env.contract.address.to_string(), &market, &position.unwrap(), mid_price, &state);
 
@@ -339,7 +340,7 @@ fn get_action(
             Vec::new(),
         );
 
-        return Ok(vec![position_close_order, batch_order])
+        return Ok(vec![position_close_order, batch_order]);
     }
 
     // Calculate inventory imbalance parameter
@@ -366,7 +367,7 @@ fn get_action(
     // Split open orders
     let (open_buy_orders, open_sell_orders) = split_open_orders(open_orders);
 
-    if position_too_large(&position, deposit.total_balance, &market) {
+    if position_too_large(state.max_active_capital_utilization_ratio, &position, deposit.total_balance, &market) {
         let position = position.unwrap();
 
         // Create position reduce order
@@ -387,7 +388,7 @@ fn get_action(
             let (sell_orders_to_cancel, _, _, _) = orders_to_cancel(open_sell_orders, Decimal::zero(), Decimal::zero(), false, true, &state, &market);
             sell_orders_to_cancel
         };
-        
+
         let batch_order = create_batch_update_orders_msg(
             env.contract.address.to_string(),
             String::from(""),
@@ -996,6 +997,7 @@ mod tests {
             reservation_price_sensitivity_ratio: Decimal::zero(),
             reservation_spread_sensitivity_ratio: Decimal::zero(),
             min_proximity_to_liquidation: Decimal::zero(),
+            post_reduction_perc_of_max_position: Decimal::zero(),
             fee_recipient: String::from(""),
             lp_token_address: None,
         }

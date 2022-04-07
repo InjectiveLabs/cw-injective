@@ -24,6 +24,8 @@ pub struct InstantiateMsg {
     pub min_head_to_tail_deviation_ratio: String,
     // A constant between 0..1 that represents the minimum proximity to liquidation we are willing to tolerate
     pub min_proximity_to_liquidation: String,
+    // A constant between 0..1. Our new position will be this percent under the max position value after market order reduction
+    pub post_reduction_perc_of_max_position: String,
     // CW20 Wasm contract code id
     pub cw20_code_id: String,
     // LP Token Name

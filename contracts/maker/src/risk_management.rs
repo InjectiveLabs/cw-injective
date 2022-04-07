@@ -96,19 +96,24 @@ pub fn final_check(orders_to_place: Vec<DerivativeOrder>, market: &DerivativeMar
 /// # Description
 /// Returns true if the position is too close to liquidation
 /// # Arguments
-/// * `state` - All the orders that we are trying to create
+/// * `min_proximity_to_liquidation` - A constant between 0..1 that represents the minimum proximity to liquidation we are willing to tolerate
 /// * `position` - The position we have taken, if any
 /// * `oracle_price` - On chain oracle price
 /// * `market` - Derivative market information
 /// # Returns
 /// * `is_close_to_liquidation` - The position is about to be liquidated
-pub fn position_close_to_liquidation(state: &State, position: &Option<EffectivePosition>, oracle_price: Decimal, market: &DerivativeMarket) -> bool {
+pub fn position_close_to_liquidation(
+    min_proximity_to_liquidation: Decimal,
+    position: &Option<EffectivePosition>,
+    oracle_price: Decimal,
+    market: &DerivativeMarket,
+) -> bool {
     match position {
         None => false,
         Some(p) => {
             let position_margin_ratio = div_dec(p.effective_margin, oracle_price * p.quantity);
             let proximity_to_liquidation = div_dec(position_margin_ratio, market.maintenance_margin_ratio);
-            proximity_to_liquidation <= state.min_proximity_to_liquidation
+            proximity_to_liquidation <= min_proximity_to_liquidation
         }
     }
 }
@@ -116,15 +121,25 @@ pub fn position_close_to_liquidation(state: &State, position: &Option<EffectiveP
 /// # Description
 /// Returns true if the position is greater than the max position
 /// # Arguments
+/// * `max_active_capital_utilization_ratio` - A constant between 0..1 that will be used to determine what percentage of how much of our total deposited balance we want margined on the book
 /// * `position` - The position we have taken, if any
 /// * `total_deposit_balance` - The total quote balance LPed
+/// * `market` - Derivative market information
 /// # Returns
 /// * `position_is_too_large` - The position needs to be reduced below the max position
-pub fn position_too_large(position: &Option<EffectivePosition>, total_deposit_balance: Decimal, market: &DerivativeMarket) -> bool {
+pub fn position_too_large(
+    max_active_capital_utilization_ratio: Decimal,
+    position: &Option<EffectivePosition>,
+    total_deposit_balance: Decimal,
+    market: &DerivativeMarket,
+) -> bool {
     match position {
         None => false,
         Some(p) => {
-            let max_position_value = div_dec(total_deposit_balance, Decimal::from_str("2").unwrap());
+            let max_position_value = div_dec(
+                total_deposit_balance * max_active_capital_utilization_ratio,
+                Decimal::from_str("2").unwrap(),
+            );
             p.effective_margin > max_position_value + market.min_price_tick_size
         }
     }
@@ -137,7 +152,7 @@ pub fn position_too_large(position: &Option<EffectivePosition>, total_deposit_ba
 /// * `market` - Derivative market information
 /// * `position` - The position we have taken, if any
 /// * `mid_price` - The current onchain mid price
-/// * `state` - All the orders that we are trying to create
+/// * `state` - Contract state
 /// # Returns
 /// * `position_close_order` - The exchange message that will close our position
 pub fn close_position(
@@ -167,7 +182,7 @@ pub fn close_position(
 /// * `position` - The position we have taken, if any
 /// * `mid_price` - The current onchain mid price
 /// * `total_deposit_balance` - The total quote balance LPed
-/// * `state` - All the orders that we are trying to create
+/// * `state` - Contract state
 /// # Returns
 /// * `position_reduce_order` - The exchange message that will reduce our position
 pub fn reduce_below_max_position(
@@ -183,7 +198,10 @@ pub fn reduce_below_max_position(
     } else {
         Decimal::zero()
     };
-    let max_position_value = div_dec(total_deposit_balance, Decimal::from_str("2").unwrap());
+    let max_position_value = div_dec(
+        total_deposit_balance * state.max_active_capital_utilization_ratio,
+        Decimal::from_str("2").unwrap(),
+    );
     let target_position_value = max_position_value * Decimal::from_str("0.95").unwrap();
     let excess_value = sub_no_overflow(position.effective_margin, target_position_value);
     let quantity_to_reduce = div_dec(excess_value, mid_price);
