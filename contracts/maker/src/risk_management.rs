@@ -202,7 +202,7 @@ pub fn reduce_below_max_position(
         total_deposit_balance * state.max_active_capital_utilization_ratio,
         Decimal::from_str("2").unwrap(),
     );
-    let target_position_value = max_position_value * Decimal::from_str("0.95").unwrap();
+    let target_position_value = max_position_value * state.post_reduction_perc_of_max_position;
     let excess_value = sub_no_overflow(position.effective_margin, target_position_value);
     let quantity_to_reduce = div_dec(excess_value, mid_price);
     let position_reduce_order = DerivativeOrder::new(&state, worst_price, quantity_to_reduce, !position.is_long, true, &market);
