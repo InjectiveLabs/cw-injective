@@ -1194,12 +1194,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "ninja-master"
+version = "1.0.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std 1.0.0-beta7",
+ "cosmwasm-storage 1.0.0-beta7",
+ "cw-storage-plus",
+ "cw20 0.13.1",
+ "cw20-base",
+ "ethereum-types",
+ "injective-cosmwasm",
+ "ninja-protocol",
+ "schemars",
+ "serde",
+ "subtle-encoding",
+ "thiserror",
+]
+
+[[package]]
 name = "ninja-protocol"
 version = "2.1.1"
 dependencies = [
  "cosmwasm-std 1.0.0-beta7",
  "cosmwasm-storage 1.0.0-beta7",
  "cw20 0.13.1",
+ "injective-cosmwasm",
  "schemars",
  "serde",
  "terraswap",

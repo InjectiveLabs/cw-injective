@@ -4,7 +4,7 @@ mod error;
 pub mod msg;
 pub mod risk_management;
 // pub mod spot;
-mod exchange;
+pub mod exchange;
 pub mod state;
 pub mod utils;
 

@@ -20,10 +20,9 @@ backtraces = ["cosmwasm-std/backtraces"]
 cw20 = "0.13.1"
 cosmwasm-std = { version = "1.0.0-beta7", features = ["iterator"] }
 cosmwasm-storage = { version = "1.0.0-beta7", features = ["iterator"] }
+injective-cosmwasm = { path = "../../packages/injective-cosmwasm", version = "0.1.0"}
 terraswap = { version = "2.4.0" }
 schemars = "0.8.8"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 uint = { version = "=0.9.1" }
 
-[profile.release]
-overflow-checks = true

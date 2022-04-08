@@ -43,6 +43,3 @@ injective-mocks = { path = "../../packages/mocks", version = "0.1.0" }
 cosmwasm-vm = { version = "1.0.0-beta7", default-features = false, features = ["iterator"] }
 cosmwasm-schema = { version = "1.0.0-beta7" }
 
-
-[profile.release]
-debug = true

@@ -53,6 +53,24 @@ pub struct EffectivePosition {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct OrderInfo {
+    pub subaccount_id: String,
+    pub fee_recipient: String,
+    pub price: Decimal,
+    pub quantity: Decimal,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct DerivativeLimitOrder {
+    pub order_info: OrderInfo,
+    pub order_type: i32,
+    pub margin: Decimal,
+    pub fillable: Decimal,
+    pub trigger_price: Option<Decimal>,
+    pub order_hash: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativePosition {
     pub subaccount_id: String,
     pub market_id: String,

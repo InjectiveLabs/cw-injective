@@ -1,9 +1,9 @@
 [package]
-name = "ninja-collector"
-version = "2.1.3"
-authors = ["Albert Chon <albert@injectiveprotocol.com>"]
+name = "ninja-master"
+version = "1.0.0"
+authors = ["Markus Waas <markus@injectiveprotocol.com>"]
 edition = "2018"
-description = "A Collector contract for Ninja Finance - collect all trading fees and send it to staking contract"
+description = "A Master contract for Ninja Finance - hold all funds and create orders with separate subaccounts for each sub-contract"
 license = "Apache-2.0"
 
 exclude = [
@@ -24,13 +24,17 @@ backtraces = ["cosmwasm-std/backtraces"]
 
 [dependencies]
 cw20 = { version = "0.13.1" }
+cw20-base = "0.13.1"
 cosmwasm-std = { version = "1.0.0-beta7", features = ["iterator"] }
 cosmwasm-storage = { version = "1.0.0-beta7", features = ["iterator"] }
+cw-storage-plus = { version = "0.13.1" }
 injective-cosmwasm = { path = "../../packages/injective-cosmwasm", version = "0.1.0" }
 ninja-protocol = { version = "2.1.1", path = "../../packages/ninja_protocol" }
 schemars = "0.8.8"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.20" }
+subtle-encoding = { version = "0.5.1", features = ["bech32-preview"] }
+ethereum-types = "0.5.2"
 
 [dev-dependencies]
 cosmwasm-schema = { version = "1.0.0-beta7" }
