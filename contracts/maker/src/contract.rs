@@ -11,10 +11,11 @@ use crate::risk_management::{check_tail_dist, only_owner, total_marginable_balan
 use crate::state::{config, config_read, State};
 use crate::utils::{decode_bech32, div_dec, max, min, sub_abs, sub_no_overflow};
 use cosmwasm_std::{
-    entry_point, to_binary, Addr, Binary, CosmosMsg, Decimal256 as Decimal, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Reply, Response,
-    StdError, StdResult, SubMsg, Uint128, Uint256, WasmMsg, WasmQuery,
+    entry_point, to_binary, Addr, Binary, CosmosMsg, Decimal256 as Decimal, Deps, DepsMut, Empty, Env, MessageInfo, Querier, QuerierWrapper, Reply,
+    Response, StdError, StdResult, Storage, SubMsg, Uint128, Uint256, WasmMsg, WasmQuery,
 };
 use cw20_base::msg::InstantiateMsg as cw20_instantiate_msg;
+use std::convert::TryInto;
 use std::ops::Deref;
 use std::str::FromStr;
 
@@ -109,8 +110,20 @@ pub fn execute(
     match msg {
         ExecuteMsg::MintToUser {
             subaccount_id_sender,
-            amount,
-        } => mint_to_user(deps, env, info.sender, subaccount_id_sender, amount),
+            total_funds_supplied,
+            pool_position_execution_margin,
+            pool_balance_contribution,
+            position_quantity_delta,
+        } => mint_to_user(
+            deps,
+            env,
+            info.sender,
+            subaccount_id_sender,
+            total_funds_supplied,
+            pool_position_execution_margin,
+            pool_balance_contribution,
+            position_quantity_delta,
+        ),
         ExecuteMsg::BurnFromUser {
             subaccount_id_sender,
             amount,
@@ -124,7 +137,10 @@ pub fn mint_to_user(
     env: Env,
     sender: Addr,
     subaccount_id_sender: String,
-    amount: Uint128,
+    total_funds_supplied: Decimal,
+    pool_position_execution_margin: Decimal,
+    pool_balance_contribution: Decimal,
+    position_quantity_delta: Decimal,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let state = config_read(deps.storage).load().unwrap();
     let lp_token_address = state.lp_token_address.unwrap().addr().to_string();
@@ -132,9 +148,39 @@ pub fn mint_to_user(
     // Ensure that only exchange module calls this method
     only_owner(&env.contract.address, &sender);
 
+    let total_supply_res = get_total_lp_supply(deps.storage, deps.querier.deref());
+    let total_supply: Uint128;
+
+    match total_supply_res {
+        Ok(total_supply_res) => total_supply = total_supply_res.total_supply,
+        Err(err) => {
+            return Err(ContractError::Std(cosmwasm_std::StdError::GenericErr {
+                msg: format!("Unknown total supply response: {}", err),
+            }))
+        }
+    }
+
+    let querier = InjectiveQuerier::new(&deps.querier);
+    let market_res = querier.query_derivative_market(state.market_id.clone())?;
+    let deposit_res = querier.query_subaccount_deposit(state.subaccount_id.clone(), market_res.market.market.unwrap().quote_denom.clone())?;
+    let positions_res = querier.query_subaccount_position(state.market_id.clone(), state.subaccount_id.clone())?;
+
+    let total_supply_decimal = Decimal::from_atomics(total_supply, 0).unwrap();
+    let new_tokens_to_mint: Decimal;
+
+    if total_supply.is_zero() {
+        new_tokens_to_mint = total_funds_supplied * Decimal::from_atomics(10u64.pow(6), 0).unwrap()
+    } else if pool_position_execution_margin.gt(&pool_balance_contribution) {
+        new_tokens_to_mint = div_dec(total_supply_decimal * position_quantity_delta, positions_res.state.unwrap().quantity)
+    } else {
+        new_tokens_to_mint = div_dec(total_supply_decimal * pool_balance_contribution, deposit_res.deposits.total_balance)
+    }
+
+    let tokens_to_mint_uint: Uint256 = new_tokens_to_mint * Uint256::from(1u64);
+    let tokens_to_mint: Uint128 = tokens_to_mint_uint.try_into().expect("convert into token supply overflow");
     let mint = Cw20ExecuteMsg::Mint {
         recipient: subaccount_id_sender,
-        amount: amount,
+        amount: tokens_to_mint,
     };
     let message = WasmMsg::Execute {
         contract_addr: lp_token_address.into(),
@@ -209,13 +255,14 @@ pub fn begin_blocker(deps: DepsMut<InjectiveQueryWrapper>, env: Env, sender: Add
 
     let querier = InjectiveQuerier::new(&deps.querier);
     let market_res = querier.query_derivative_market(state.market_id.clone())?;
-    let deposit_res = querier.query_subaccount_deposit(state.subaccount_id.clone(), market_res.market.market.quote_denom.clone())?;
+    let market = DerivativeMarket::from_query(market_res.market.market.unwrap());
+
+    let deposit_res = querier.query_subaccount_deposit(state.subaccount_id.clone(), market.quote_denom.clone())?;
     let positions_res = querier.query_subaccount_position(state.market_id.clone(), state.subaccount_id.clone())?;
     let open_orders_res = querier.query_trader_derivative_orders(state.market_id.clone(), state.subaccount_id.clone())?;
     let perpetual_market_info_res = querier.query_perpetual_market_info(state.market_id.clone())?;
     let perpetual_market_funding_res = querier.query_perpetual_market_funding(state.market_id.clone())?;
 
-    let market = DerivativeMarket::from_query(market_res.market.market);
     let open_orders_res_val = open_orders_res.orders.unwrap_or_default();
     let open_orders = open_orders_res_val
         .into_iter()
@@ -272,7 +319,7 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> Std
     match msg {
         QueryMsg::Config {} => to_binary(&config_read(deps.storage).load()?),
         QueryMsg::GetMarketId {} => to_binary(&get_market_id(deps)?),
-        QueryMsg::GetTotalLpSupply {} => to_binary(&get_total_lp_supply(deps)?),
+        QueryMsg::GetTotalLpSupply {} => to_binary(&get_total_lp_supply(deps.storage, deps.querier.deref())?),
     }
 }
 
@@ -283,8 +330,8 @@ fn get_market_id(deps: Deps<InjectiveQueryWrapper>) -> StdResult<MarketIdRespons
     })
 }
 
-fn get_total_lp_supply(deps: Deps<InjectiveQueryWrapper>) -> StdResult<TotalSupplyResponse> {
-    let state = config_read(deps.storage).load().unwrap();
+fn get_total_lp_supply(storage: &dyn Storage, querier_ref: &dyn Querier) -> StdResult<TotalSupplyResponse> {
+    let state = config_read(storage).load().unwrap();
     let lp_token_address = state.lp_token_address.unwrap().addr().to_string();
 
     let msg = Cw20QueryMsg::TokenInfo {};
@@ -294,7 +341,7 @@ fn get_total_lp_supply(deps: Deps<InjectiveQueryWrapper>) -> StdResult<TotalSupp
     }
     .into();
 
-    let querier = QuerierWrapper::<Empty>::new(deps.querier.deref());
+    let querier = QuerierWrapper::<Empty>::new(querier_ref);
     let res: TokenInfoResponse = querier.query(&query)?;
 
     Ok(TotalSupplyResponse {
