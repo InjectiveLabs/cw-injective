@@ -367,7 +367,7 @@ fn get_action(
     // Split open orders
     let (open_buy_orders, open_sell_orders) = split_open_orders(open_orders);
 
-    if position_too_large(state.max_active_capital_utilization_ratio, &position, deposit.total_balance, &market) {
+    if position_too_large(&position, deposit.total_balance, oracle_price, &market, &state) {
         let position = position.unwrap();
 
         // Create position reduce order
@@ -376,6 +376,7 @@ fn get_action(
             &market,
             &position,
             mid_price,
+            oracle_price,
             deposit.total_balance,
             &state,
         );

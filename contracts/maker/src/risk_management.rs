@@ -119,28 +119,31 @@ pub fn position_close_to_liquidation(
 }
 
 /// # Description
-/// Returns true if the position is greater than the max position
+/// Returns true if the position is greater than the max position exposure
 /// # Arguments
-/// * `max_active_capital_utilization_ratio` - A constant between 0..1 that will be used to determine what percentage of how much of our total deposited balance we want margined on the book
 /// * `position` - The position we have taken, if any
 /// * `total_deposit_balance` - The total quote balance LPed
+/// * `oracle_price` - On chain oracle price
 /// * `market` - Derivative market information
+/// * `state` - Contract state
 /// # Returns
 /// * `position_is_too_large` - The position needs to be reduced below the max position
 pub fn position_too_large(
-    max_active_capital_utilization_ratio: Decimal,
     position: &Option<EffectivePosition>,
     total_deposit_balance: Decimal,
+    oracle_price: Decimal,
     market: &DerivativeMarket,
+    state: &State,
 ) -> bool {
     match position {
         None => false,
         Some(p) => {
-            let max_position_value = div_dec(
-                total_deposit_balance * max_active_capital_utilization_ratio,
+            let max_position_exposure = div_dec(
+                total_deposit_balance * state.max_active_capital_utilization_ratio,
                 Decimal::from_str("2").unwrap(),
-            );
-            p.effective_margin > max_position_value + market.min_price_tick_size
+            ) * state.leverage;
+            let current_position_exposure = p.quantity * oracle_price;
+            current_position_exposure > max_position_exposure + market.min_quantity_tick_size * oracle_price
         }
     }
 }
@@ -175,7 +178,7 @@ pub fn close_position(
 }
 
 /// # Description
-/// Creates an exchange message intended to reduce the position below 95% of our max position value
+/// Creates an exchange message intended to reduce the position below post_reduction_perc_of_max_position % of our max position exposure
 /// # Arguments
 /// * `contract_address` - The maker contract's address
 /// * `market` - Derivative market information
@@ -190,6 +193,7 @@ pub fn reduce_below_max_position(
     market: &DerivativeMarket,
     position: &EffectivePosition,
     mid_price: Decimal,
+    oracle_price: Decimal,
     total_deposit_balance: Decimal,
     state: &State,
 ) -> CosmosMsg<InjectiveMsgWrapper> {
@@ -198,13 +202,14 @@ pub fn reduce_below_max_position(
     } else {
         Decimal::zero()
     };
-    let max_position_value = div_dec(
+    let max_position_exposure = div_dec(
         total_deposit_balance * state.max_active_capital_utilization_ratio,
         Decimal::from_str("2").unwrap(),
-    );
-    let target_position_value = max_position_value * state.post_reduction_perc_of_max_position;
-    let excess_value = sub_no_overflow(position.effective_margin, target_position_value);
-    let quantity_to_reduce = div_dec(excess_value, mid_price);
+    ) * state.leverage;
+    let target_position_value = max_position_exposure * state.post_reduction_perc_of_max_position;
+    let current_position_exposure = position.quantity * oracle_price;
+    let excess_value = sub_no_overflow(current_position_exposure, target_position_value);
+    let quantity_to_reduce = div_dec(excess_value, mid_price) + market.min_quantity_tick_size * oracle_price;
     let position_reduce_order = DerivativeOrder::new(&state, worst_price, quantity_to_reduce, !position.is_long, true, &market);
     create_derivative_market_order_msg(
         contract_address,
