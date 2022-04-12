@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::route::InjectiveRoute;
-use cosmwasm_std::{CosmosMsg, CustomMsg};
+use cosmwasm_std::{Addr, Coin, CosmosMsg, CustomMsg};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct InjectiveMsgWrapper {
@@ -54,12 +54,12 @@ pub struct DerivativeOrder {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum InjectiveMsg {
-    // SubaccountTransfer {
-    //     sender: Addr,
-    //     source_subaccount_id: String,
-    //     destination_subaccount_id: String,
-    //     amount: Coin,
-    // },
+    SubaccountTransfer {
+        sender: Addr,
+        source_subaccount_id: String,
+        destination_subaccount_id: String,
+        amount: Coin,
+    },
     BatchUpdateOrders {
         sender: String,
         subaccount_id: String,
@@ -70,25 +70,29 @@ pub enum InjectiveMsg {
         spot_orders_to_create: Vec<SpotOrder>,
         derivative_orders_to_create: Vec<DerivativeOrder>,
     },
+    CreateDerivativeMarketOrder {
+        sender: String,
+        order: DerivativeOrder,
+    },
 }
 
-// pub fn create_subaccount_transfer_msg(
-//     sender: Addr,
-//     source_subaccount_id: String,
-//     destination_subaccount_id: String,
-//     amount: Coin,
-// ) -> CosmosMsg<InjectiveMsgWrapper> {
-//     InjectiveMsgWrapper {
-//         route: InjectiveRoute::Exchange,
-//         msg_data: InjectiveMsg::SubaccountTransfer {
-//             sender,
-//             source_subaccount_id: source_subaccount_id.to_string(),
-//             destination_subaccount_id: destination_subaccount_id.to_string(),
-//             amount,
-//         },
-//     }
-//     .into()
-// }
+pub fn create_subaccount_transfer_msg(
+    sender: Addr,
+    source_subaccount_id: String,
+    destination_subaccount_id: String,
+    amount: Coin,
+) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Exchange,
+        msg_data: InjectiveMsg::SubaccountTransfer {
+            sender,
+            source_subaccount_id: source_subaccount_id.to_string(),
+            destination_subaccount_id: destination_subaccount_id.to_string(),
+            amount,
+        },
+    }
+    .into()
+}
 
 pub fn create_batch_update_orders_msg(
     sender: String,
@@ -111,6 +115,17 @@ pub fn create_batch_update_orders_msg(
             derivative_orders_to_cancel,
             spot_orders_to_create,
             derivative_orders_to_create,
+        },
+    }
+    .into()
+}
+
+pub fn create_derivative_market_order_msg(sender: String, order: DerivativeOrder) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Exchange,
+        msg_data: InjectiveMsg::CreateDerivativeMarketOrder {
+            sender: sender.to_string(),
+            order,
         },
     }
     .into()
