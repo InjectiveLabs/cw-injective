@@ -17,22 +17,21 @@ pub enum ExecuteMsg {
     Update {
         contract_address: Addr,
         gas_limit: u64,
-        gas_price: String,      
-    },    
+        gas_price: String,
+    },
     Activate {
-        contract_address: Addr,        
+        contract_address: Addr,
     },
     DeActivate {
-        contract_address: Addr,        
+        contract_address: Addr,
     },
-    
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     // GetContracts returns the registered contracts as a json-encoded number
-    GetContract {contract_address: Addr},
+    GetContract { contract_address: Addr },
     GetContracts {},
     GetActiveContracts {},
 }
@@ -51,7 +50,6 @@ pub struct ContractExecutionParams {
 pub struct ContractsResponse {
     pub contracts: Vec<ContractExecutionParams>,
 }
-
 
 // We define a custom struct for each query response
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

@@ -1,12 +1,12 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr};
+use cosmwasm_std::Addr;
 use cw_storage_plus::Map;
 
 // Contract struct defines begin blocker contract execution params.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct CONTRACT {    
+pub struct CONTRACT {
     pub gas_limit: u64,
     pub gas_price: String,
     pub is_executable: bool,
