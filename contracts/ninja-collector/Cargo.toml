@@ -23,14 +23,14 @@ crate-type = ["cdylib", "rlib"]
 backtraces = ["cosmwasm-std/backtraces"]
 
 [dependencies]
-cw20 = { version = "0.13.1" }
-cosmwasm-std = { version = "1.0.0-beta7", features = ["iterator"] }
-cosmwasm-storage = { version = "1.0.0-beta7", features = ["iterator"] }
+cw20 = { version = "0.13.2" }
+cosmwasm-std = { version = "1.0.0-beta10", features = ["iterator"] }
+cosmwasm-storage = { version = "1.0.0-beta10", features = ["iterator"] }
 injective-cosmwasm = { path = "../../packages/injective-cosmwasm", version = "0.1.0" }
 ninja-protocol = { version = "2.1.1", path = "../../packages/ninja_protocol" }
 schemars = "0.8.8"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
-thiserror = { version = "1.0.20" }
+thiserror = { version = "1.0.30" }
 
 [dev-dependencies]
-cosmwasm-schema = { version = "1.0.0-beta7" }
+cosmwasm-schema = { version = "1.0.0-beta10" }

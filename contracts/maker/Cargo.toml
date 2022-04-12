@@ -24,22 +24,22 @@ cranelift = ["cosmwasm-vm/cranelift"]
 
 [dependencies]
 cw0 = "0.10.3"
-cw20 = "0.13.1"
-cw20-base = "0.13.1"
+cw20 = "0.13.2"
+cw20-base = "0.13.2"
 injective-cosmwasm = { path = "../../packages/injective-cosmwasm", version = "0.1.0"}
-cosmwasm-std = { version = "1.0.0-beta7", features = ["iterator"] }
-cosmwasm-storage = { version = "1.0.0-beta7", features = ["iterator"] }
+cosmwasm-std = { version = "1.0.0-beta10", features = ["iterator"] }
+cosmwasm-storage = { version = "1.0.0-beta10", features = ["iterator"] }
 schemars = "0.8.8"
-serde = { version = "1.0.125", default-features = false, features = ["derive"] }
+serde = { version = "1.0.136", default-features = false, features = ["derive"] }
 snafu = { version = "0.6.3" }
-thiserror = { version = "1.0.23" }
+thiserror = { version = "1.0.30" }
 chrono = "0.4"
-serde-json-wasm = "0.3.2"
+serde-json-wasm = "0.4.0"
 subtle-encoding = { version = "0.5.1", features = ["bech32-preview"] }
 ethereum-types = "0.5.2"
 
 [dev-dependencies]
 injective-mocks = { path = "../../packages/mocks", version = "0.1.0" }
-cosmwasm-vm = { version = "1.0.0-beta7", default-features = false, features = ["iterator"] }
-cosmwasm-schema = { version = "1.0.0-beta7" }
+cosmwasm-vm = { version = "1.0.0-beta10", default-features = false, features = ["iterator"] }
+cosmwasm-schema = { version = "1.0.0-beta10" }
 

@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{Decimal, Uint128};
 use cw20::Cw20ReceiveMsg;
-use terraswap::asset::{Asset, AssetInfo};
 
 use crate::common::OrderBy;
 
@@ -62,33 +61,6 @@ pub enum ExecuteMsg {
     TriggerIPO {
         asset_token: String,
     },
-
-    //////////////////////
-    /// User Operations
-    //////////////////////
-    // Create position to meet collateral ratio
-    OpenPosition {
-        collateral: Asset,
-        asset_info: AssetInfo,
-        collateral_ratio: Decimal,
-        short_params: Option<ShortParams>,
-    },
-    /// Deposit more collateral
-    Deposit {
-        position_idx: Uint128,
-        collateral: Asset,
-    },
-    /// Withdraw collateral
-    Withdraw {
-        position_idx: Uint128,
-        collateral: Option<Asset>,
-    },
-    /// Convert all deposit collateral to asset
-    Mint {
-        position_idx: Uint128,
-        asset: Asset,
-        short_params: Option<ShortParams>,
-    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -107,12 +79,6 @@ pub struct IPOParams {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Cw20HookMsg {
-    // Create position to meet collateral ratio
-    OpenPosition {
-        asset_info: AssetInfo,
-        collateral_ratio: Decimal,
-        short_params: Option<ShortParams>,
-    },
     /// Deposit more collateral
     Deposit { position_idx: Uint128 },
     /// Convert specified asset amount and send back to user
@@ -165,21 +131,3 @@ pub struct AssetConfigResponse {
     pub ipo_params: Option<IPOParams>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct PositionResponse {
-    pub idx: Uint128,
-    pub owner: String,
-    pub collateral: Asset,
-    pub asset: Asset,
-    pub is_short: bool,
-}
-
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug, Default)]
-pub struct PositionsResponse {
-    pub positions: Vec<PositionResponse>,
-}
-
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug, Default)]
-pub struct NextPositionIdxResponse {
-    pub next_position_idx: Uint128,
-}
