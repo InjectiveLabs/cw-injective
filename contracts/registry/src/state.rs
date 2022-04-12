@@ -1,22 +1,15 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::Addr;
-use cw_storage_plus::Item;
+use cosmwasm_std::{Addr};
+use cw_storage_plus::Map;
 
 // Contract struct defines begin blocker contract execution params.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct CONTRACT {
-    pub address: Addr,
+pub struct CONTRACT {    
     pub gas_limit: u64,
     pub gas_price: String,
     pub is_executable: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct State {
-    pub contracts: Vec<CONTRACT>,
-    pub owner: Addr,
-}
-
-pub const STATE: Item<State> = Item::new("state");
+pub const CONTRACTS: Map<&Addr, CONTRACT> = Map::new("contracts");
