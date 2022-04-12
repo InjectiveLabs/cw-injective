@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::route::InjectiveRoute;
-use cosmwasm_std::{Addr, Coin, CosmosMsg, CustomMsg};
+use cosmwasm_std::{CosmosMsg, CustomMsg};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct InjectiveMsgWrapper {
@@ -54,12 +54,12 @@ pub struct DerivativeOrder {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum InjectiveMsg {
-    SubaccountTransfer {
-        sender: Addr,
-        source_subaccount_id: String,
-        destination_subaccount_id: String,
-        amount: Coin,
-    },
+    // SubaccountTransfer {
+    //     sender: Addr,
+    //     source_subaccount_id: String,
+    //     destination_subaccount_id: String,
+    //     amount: Coin,
+    // },
     BatchUpdateOrders {
         sender: String,
         subaccount_id: String,
@@ -72,23 +72,23 @@ pub enum InjectiveMsg {
     },
 }
 
-pub fn create_subaccount_transfer_msg(
-    sender: Addr,
-    source_subaccount_id: String,
-    destination_subaccount_id: String,
-    amount: Coin,
-) -> CosmosMsg<InjectiveMsgWrapper> {
-    InjectiveMsgWrapper {
-        route: InjectiveRoute::Exchange,
-        msg_data: InjectiveMsg::SubaccountTransfer {
-            sender,
-            source_subaccount_id: source_subaccount_id.to_string(),
-            destination_subaccount_id: destination_subaccount_id.to_string(),
-            amount,
-        },
-    }
-    .into()
-}
+// pub fn create_subaccount_transfer_msg(
+//     sender: Addr,
+//     source_subaccount_id: String,
+//     destination_subaccount_id: String,
+//     amount: Coin,
+// ) -> CosmosMsg<InjectiveMsgWrapper> {
+//     InjectiveMsgWrapper {
+//         route: InjectiveRoute::Exchange,
+//         msg_data: InjectiveMsg::SubaccountTransfer {
+//             sender,
+//             source_subaccount_id: source_subaccount_id.to_string(),
+//             destination_subaccount_id: destination_subaccount_id.to_string(),
+//             amount,
+//         },
+//     }
+//     .into()
+// }
 
 pub fn create_batch_update_orders_msg(
     sender: String,
