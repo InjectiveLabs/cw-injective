@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::route::InjectiveRoute;
+use crate::{msg::OrderInfo, route::InjectiveRoute};
 use cosmwasm_std::{CustomQuery, Decimal256 as Decimal};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -54,25 +54,6 @@ pub struct EffectivePosition {
     pub entry_price: Decimal,
     #[serde(default)]
     pub effective_margin: Decimal,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct OrderInfo {
-    pub subaccount_id: String,
-    pub fee_recipient: String,
-    pub price: Decimal,
-    pub quantity: Decimal,
-}
-
-impl OrderInfo {
-    pub fn new(subaccount_id: String, fee_recipient: String, price: Decimal, quantity: Decimal) -> OrderInfo {
-        OrderInfo {
-            subaccount_id,
-            fee_recipient,
-            price,
-            quantity,
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
