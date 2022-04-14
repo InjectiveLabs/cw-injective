@@ -4,7 +4,7 @@ use cosmwasm_std::{
     to_binary, Addr, Binary, ContractInfoResponse, Deps, DepsMut, Env, MessageInfo, Order,
     Response, StdResult, WasmQuery,
 };
-use cw2::{get_contract_version, set_contract_version, ContractVersion};
+use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{
@@ -70,9 +70,9 @@ pub fn execute(
 pub fn only_registry(env: Env, info: MessageInfo) -> Result<(), ContractError> {
     // Check if the sender is the registry contract address (only wasmx module can do this)
     if env.contract.address != info.sender {
-        return Err(ContractError::Unauthorized {});
+        Err(ContractError::Unauthorized {})
     } else {
-        return Ok(());
+        Ok(())
     }
 }
 
@@ -90,9 +90,9 @@ pub fn only_owner_or_registry(
 
     // Check if the sender is the owner of the contract or the registry (only wasmx module can do this)
     if res.creator != info.sender && env.contract.address != info.sender {
-        return Err(ContractError::Unauthorized {});
+        Err(ContractError::Unauthorized {})
     } else {
-        return Ok(());
+        Ok(())
     }
 }
 
@@ -107,15 +107,14 @@ pub fn try_register(
 ) -> Result<Response, ContractError> {
     // Validate Authorization
     let res = only_registry(env, info);
-    match res {
-        Err(error) => return Err(error),
-        _ => {}
+    if let Err(error) = res {
+        return Err(error);
     }
 
     let contract = CONTRACT {
-        gas_limit: gas_limit,
-        gas_price: gas_price,
-        is_executable: is_executable,
+        gas_limit,
+        gas_price,
+        is_executable,
     };
 
     // try to store it, fail if the address is already registered
@@ -144,16 +143,15 @@ pub fn try_update(
 
     // Validate Authorization
     let res = only_owner_or_registry(&contract_addr, &deps, env, info);
-    match res {
-        Err(error) => return Err(error),
-        _ => {}
+    if let Err(error) = res {
+        return Err(error);
     }
 
     // update the contract
     if gas_limit != 0 {
         contract.gas_limit = gas_limit;
     }
-    if gas_price != "" {
+    if !gas_price.is_empty() {
         contract.gas_price = gas_price;
     }
 
@@ -176,9 +174,8 @@ pub fn try_activate(
 
     // Validate Authorization
     let res = only_owner_or_registry(&contract_addr, &deps, env, info);
-    match res {
-        Err(error) => return Err(error),
-        _ => {}
+    if let Err(error) = res {
+        return Err(error);
     }
 
     // update the contract to be executable
@@ -205,9 +202,8 @@ pub fn try_deactivate(
 
     // Validate Authorization
     let res = only_owner_or_registry(&contract_addr, &deps, env, info);
-    match res {
-        Err(error) => return Err(error),
-        _ => {}
+    if let Err(error) = res {
+        return Err(error);
     }
 
     contract.is_executable = false;
@@ -294,6 +290,7 @@ mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies_with_balance, mock_env, mock_info};
     use cosmwasm_std::{coins, from_binary};
+    use cw2::{get_contract_version, ContractVersion};
 
     #[test]
     fn initialization() {
@@ -387,7 +384,7 @@ mod tests {
         .unwrap();
         let registered_contract: ContractResponse = from_binary(&res).unwrap();
         assert_eq!(market_maker, registered_contract.contract.address);
-        assert_eq!(true, registered_contract.contract.is_executable);
+        assert!(registered_contract.contract.is_executable);
 
         // Query all registered contracts
         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetContracts {}).unwrap();
@@ -417,7 +414,7 @@ mod tests {
         .unwrap();
         let registered_contract: ContractResponse = from_binary(&res).unwrap();
         assert_eq!(market_maker, registered_contract.contract.address);
-        assert_eq!(false, registered_contract.contract.is_executable);
+        assert!(!registered_contract.contract.is_executable);
 
         // Query all active contracts
         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetActiveContracts {}).unwrap();
@@ -442,7 +439,7 @@ mod tests {
         .unwrap();
         let registered_contract: ContractResponse = from_binary(&res).unwrap();
         assert_eq!(market_maker, registered_contract.contract.address);
-        assert_eq!(true, registered_contract.contract.is_executable);
+        assert!(registered_contract.contract.is_executable);
 
         // Query all active contracts
         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetActiveContracts {}).unwrap();
@@ -483,7 +480,7 @@ mod tests {
         .unwrap();
         let registered_contract: ContractResponse = from_binary(&res).unwrap();
         assert_eq!(market_maker, registered_contract.contract.address);
-        assert_eq!(true, registered_contract.contract.is_executable);
+        assert!(registered_contract.contract.is_executable);
 
         // Mock querier to use
         // Update contract
@@ -495,7 +492,7 @@ mod tests {
         let info = mock_info(&market_maker.to_string(), &coins(2, "token"));
         let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-        // Query contractinfo & validate
+        // Query contract info & validate
         let res = query(
             deps.as_ref(),
             mock_env(),

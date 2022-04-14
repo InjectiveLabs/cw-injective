@@ -10,9 +10,9 @@ pub struct InjectiveMsgWrapper {
     pub msg_data: InjectiveMsg,
 }
 
-impl Into<CosmosMsg<InjectiveMsgWrapper>> for InjectiveMsgWrapper {
-    fn into(self) -> CosmosMsg<InjectiveMsgWrapper> {
-        CosmosMsg::Custom(self)
+impl From<InjectiveMsgWrapper> for CosmosMsg<InjectiveMsgWrapper> {
+    fn from(s: InjectiveMsgWrapper) -> CosmosMsg<InjectiveMsgWrapper> {
+        CosmosMsg::Custom(s)
     }
 }
 
@@ -86,8 +86,8 @@ pub fn create_subaccount_transfer_msg(
         route: InjectiveRoute::Exchange,
         msg_data: InjectiveMsg::SubaccountTransfer {
             sender,
-            source_subaccount_id: source_subaccount_id.to_string(),
-            destination_subaccount_id: destination_subaccount_id.to_string(),
+            source_subaccount_id,
+            destination_subaccount_id,
             amount,
         },
     }
@@ -107,8 +107,8 @@ pub fn create_batch_update_orders_msg(
     InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,
         msg_data: InjectiveMsg::BatchUpdateOrders {
-            sender: sender.to_string(),
-            subaccount_id: subaccount_id.to_string(),
+            sender,
+            subaccount_id,
             spot_market_ids_to_cancel_all,
             derivative_market_ids_to_cancel_all,
             spot_orders_to_cancel,
@@ -123,10 +123,7 @@ pub fn create_batch_update_orders_msg(
 pub fn create_derivative_market_order_msg(sender: String, order: DerivativeOrder) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,
-        msg_data: InjectiveMsg::CreateDerivativeMarketOrder {
-            sender: sender.to_string(),
-            order,
-        },
+        msg_data: InjectiveMsg::CreateDerivativeMarketOrder { sender, order },
     }
     .into()
 }
