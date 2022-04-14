@@ -37,18 +37,22 @@ pub struct SubaccountDepositResponse {
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Position {
+    #[serde(default)]
     pub isLong: bool,
     pub quantity: Decimal,
     pub entry_price: Decimal,
+    #[serde(default)]
     pub margin: Decimal,
     pub cumulative_funding_entry: Decimal,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct EffectivePosition {
+    #[serde(default)]
     pub is_long: bool,
     pub quantity: Decimal,
     pub entry_price: Decimal,
+    #[serde(default)]
     pub effective_margin: Decimal,
 }
 
@@ -60,6 +64,17 @@ pub struct OrderInfo {
     pub quantity: Decimal,
 }
 
+impl OrderInfo {
+    pub fn new(subaccount_id: String, fee_recipient: String, price: Decimal, quantity: Decimal) -> OrderInfo {
+        OrderInfo {
+            subaccount_id,
+            fee_recipient,
+            price,
+            quantity,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativeLimitOrder {
     pub order_info: OrderInfo,
@@ -68,6 +83,29 @@ pub struct DerivativeLimitOrder {
     pub fillable: Decimal,
     pub trigger_price: Option<Decimal>,
     pub order_hash: String,
+}
+
+impl DerivativeLimitOrder {
+    pub fn new(
+        margin: Decimal,
+        fillable: Decimal,
+        order_hash: String,
+        trigger_price: Option<Decimal>,
+        order_type: i32,
+        order_info: OrderInfo,
+    ) -> DerivativeLimitOrder {
+        DerivativeLimitOrder {
+            margin,
+            fillable,
+            order_hash,
+            trigger_price,
+            order_type,
+            order_info,
+        }
+    }
+    pub fn is_reduce_only(&self) -> bool {
+        self.margin.is_zero()
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -115,23 +153,31 @@ pub struct DerivativeMarketResponse {
 /// Deposit is data format for the subaccount deposit
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Deposit {
+    #[serde(default)]
     pub available_balance: Decimal,
+    #[serde(default)]
     pub total_balance: Decimal,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct PerpetualMarketInfo {
     pub market_id: String,
+    #[serde(default)]
     pub hourly_funding_rate_cap: Decimal,
+    #[serde(default)]
     pub hourly_interest_rate: Decimal,
+    #[serde(default)]
     pub next_funding_timestamp: i64,
     pub funding_interval: i64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct PerpetualMarketFunding {
+    #[serde(default)]
     pub cumulative_funding: Decimal,
+    #[serde(default)]
     pub cumulative_price: Decimal,
+    #[serde(default)]
     pub last_timestamp: i64,
 }
 
@@ -159,7 +205,9 @@ pub struct DerivativeMarket {
     pub ticker: String,
     pub oracle_base: String,
     pub oracle_quote: String,
+    #[serde(default)]
     pub oracle_type: i32,
+    #[serde(default)]
     pub oracle_scale_factor: u32,
     pub quote_denom: String,
     pub market_id: String,
@@ -167,7 +215,9 @@ pub struct DerivativeMarket {
     pub maintenance_margin_ratio: Decimal,
     pub maker_fee_rate: Decimal,
     pub taker_fee_rate: Decimal,
+    #[serde(default)]
     pub isPerpetual: bool,
+    #[serde(default)]
     pub status: i32,
     pub min_price_tick_size: Decimal,
     pub min_quantity_tick_size: Decimal,
