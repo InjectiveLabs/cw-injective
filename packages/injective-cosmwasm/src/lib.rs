@@ -2,6 +2,7 @@ mod msg;
 mod querier;
 mod query;
 mod route;
+mod subaccount;
 
 pub use msg::{
     create_batch_update_orders_msg, create_derivative_market_order_msg, create_subaccount_transfer_msg, DerivativeOrder, InjectiveMsg,
@@ -14,6 +15,9 @@ pub use query::{
     PerpetualMarketInfo, SubaccountDepositResponse,
 };
 pub use route::InjectiveRoute;
+pub use subaccount::{
+    bech32_to_hex, address_to_subaccount_id, default_subaccount_id,
+};
 
 // This export is added to all contracts that import this package, signifying that they require
 // "injective" support on the chain they run on.
