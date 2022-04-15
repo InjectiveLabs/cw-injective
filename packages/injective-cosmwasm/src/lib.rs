@@ -15,9 +15,7 @@ pub use query::{
     PerpetualMarketInfo, SubaccountDepositResponse,
 };
 pub use route::InjectiveRoute;
-pub use subaccount::{
-    bech32_to_hex, address_to_subaccount_id, default_subaccount_id,
-};
+pub use subaccount::{address_to_subaccount_id, bech32_to_hex, default_subaccount_id};
 
 // This export is added to all contracts that import this package, signifying that they require
 // "injective" support on the chain they run on.

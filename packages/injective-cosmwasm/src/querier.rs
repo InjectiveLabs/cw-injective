@@ -1,8 +1,9 @@
 use cosmwasm_std::{QuerierWrapper, StdResult};
 
 use crate::query::{
-    DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse,
-    SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, TraderDerivativeOrdersResponse,
+    DerivativeMarketResponse, DerivativeMarketVolatilityResponse, InjectiveQuery, InjectiveQueryWrapper, PerpetualMarketFundingResponse,
+    PerpetualMarketInfoResponse, SpotMarketVolatilityResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse,
+    TraderDerivativeOrdersResponse,
 };
 
 use crate::route::InjectiveRoute;
@@ -86,6 +87,38 @@ impl<'a> InjectiveQuerier<'a> {
         };
 
         let res: PerpetualMarketFundingResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_derivative_market_volatility<T: Into<String>>(
+        &self,
+        market_id: T,
+        from: i64,
+        only_trade_history: bool,
+    ) -> StdResult<DerivativeMarketVolatilityResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::DerivativeMarketVolatility {
+                market_id: market_id.into(),
+                from,
+                only_trade_history,
+            },
+        };
+
+        let res: DerivativeMarketVolatilityResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_spot_market_volatility<T: Into<String>>(&self, market_id: T, from: i64) -> StdResult<SpotMarketVolatilityResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::SpotMarketVolatility {
+                market_id: market_id.into(),
+                from,
+            },
+        };
+
+        let res: SpotMarketVolatilityResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 }

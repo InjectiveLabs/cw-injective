@@ -16,14 +16,40 @@ pub struct InjectiveQueryWrapper {
 #[serde(rename_all = "snake_case")]
 pub enum InjectiveQuery {
     // SubaccountDeposit will return the subaccount deposits for a given subaccount_id and denom
-    SubaccountDeposit { subaccount_id: String, denom: String },
+    SubaccountDeposit {
+        subaccount_id: String,
+        denom: String,
+    },
     // DerivativeMarket will return the derivative market for a given id
-    DerivativeMarket { market_id: String },
-    SubaccountPositions { subaccount_id: String },
-    SubaccountEffectivePositionInMarket { market_id: String, subaccount_id: String },
-    TraderDerivativeOrders { market_id: String, subaccount_id: String },
-    PerpetualMarketInfo { market_id: String },
-    PerpetualMarketFunding { market_id: String },
+    DerivativeMarket {
+        market_id: String,
+    },
+    SubaccountPositions {
+        subaccount_id: String,
+    },
+    SubaccountEffectivePositionInMarket {
+        market_id: String,
+        subaccount_id: String,
+    },
+    TraderDerivativeOrders {
+        market_id: String,
+        subaccount_id: String,
+    },
+    PerpetualMarketInfo {
+        market_id: String,
+    },
+    PerpetualMarketFunding {
+        market_id: String,
+    },
+    DerivativeMarketVolatility {
+        market_id: String,
+        from: i64,
+        only_trade_history: bool,
+    },
+    SpotMarketVolatility {
+        market_id: String,
+        from: i64,
+    },
 }
 
 impl CustomQuery for InjectiveQueryWrapper {}
@@ -100,6 +126,7 @@ pub struct DerivativePosition {
 pub struct SubaccountEffectivePositionInMarketResponse {
     pub state: Option<EffectivePosition>,
 }
+
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct TrimmedDerivativeLimitOrder {
@@ -124,6 +151,16 @@ pub struct PerpetualMarketInfoResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct PerpetualMarketFundingResponse {
     pub state: Option<PerpetualMarketFunding>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct DerivativeMarketVolatilityResponse {
+    pub volatility: Decimal,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct SpotMarketVolatilityResponse {
+    pub volatility: Decimal,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

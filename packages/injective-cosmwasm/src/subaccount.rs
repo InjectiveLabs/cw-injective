@@ -1,7 +1,5 @@
+use cosmwasm_std::Addr;
 use subtle_encoding::bech32;
-use cosmwasm_std::{
-    Addr,
-};
 
 use ethereum_types::H160;
 
@@ -32,30 +30,23 @@ pub fn bech32_to_hex(addr: &Addr) -> String {
     decoded_string
 }
 
-
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{Addr};
-    use crate::subaccount::{bech32_to_hex, address_to_subaccount_id, default_subaccount_id};
+    use crate::subaccount::{address_to_subaccount_id, bech32_to_hex, default_subaccount_id};
+    use cosmwasm_std::Addr;
 
     #[test]
     fn bech32_to_hex_test() {
         let decoded_string = bech32_to_hex(&Addr::unchecked("inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv"));
         println!("{}", decoded_string);
-        assert_eq!(
-            decoded_string,
-            "0xB5e09b93aCEb70C1711aF078922fA256011D7e56".to_lowercase()
-        );
+        assert_eq!(decoded_string, "0xB5e09b93aCEb70C1711aF078922fA256011D7e56".to_lowercase());
     }
 
     #[test]
     fn address_to_subaccount_id_test() {
         let subaccount_id = address_to_subaccount_id(&Addr::unchecked("inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv"), 69);
         println!("{}", subaccount_id);
-        assert_eq!(
-            subaccount_id,
-            "0xb5e09b93aceb70c1711af078922fa256011d7e56000000000000000000000069"
-        );
+        assert_eq!(subaccount_id, "0xb5e09b93aceb70c1711af078922fa256011d7e56000000000000000000000069");
 
         println!("{}", subaccount_id);
         assert_eq!(
