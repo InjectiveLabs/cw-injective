@@ -155,12 +155,12 @@ pub struct PerpetualMarketFundingResponse {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativeMarketVolatilityResponse {
-    pub volatility: Decimal,
+    pub volatility: Option<Decimal>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct SpotMarketVolatilityResponse {
-    pub volatility: Decimal,
+    pub volatility: Option<Decimal>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
