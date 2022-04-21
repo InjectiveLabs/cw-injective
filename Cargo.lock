@@ -753,7 +753,7 @@ dependencies = [
 
 [[package]]
 name = "injective-cosmwasm"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std 1.0.0-beta8",
@@ -766,7 +766,7 @@ dependencies = [
 
 [[package]]
 name = "injective-math"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bigint",
  "cosmwasm-std 0.16.7",
