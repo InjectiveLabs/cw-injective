@@ -22,10 +22,7 @@ impl FPDecimal {
             sign = 1;
         }
 
-        FPDecimal {
-            num: y.num - x.num,
-            sign,
-        }
+        FPDecimal { num: y.num - x.num, sign }
     }
 
     pub fn add(&self, other: i128) -> FPDecimal {
@@ -97,10 +94,7 @@ impl FPDecimal {
     }
 
     pub fn abs(&self) -> FPDecimal {
-        FPDecimal {
-            num: self.num,
-            sign: 1i8,
-        }
+        FPDecimal { num: self.num, sign: 1i8 }
     }
 }
 

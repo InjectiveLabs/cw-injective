@@ -11,8 +11,7 @@ impl fmt::Display for FPDecimal {
             write!(f, "{}{}", sign, integer.num / FPDecimal::ONE.num)
         } else {
             let fraction_string = fraction.num.to_string(); //
-            let fraction_string =
-                "0".repeat(FPDecimal::DIGITS - fraction_string.len()) + &fraction_string;
+            let fraction_string = "0".repeat(FPDecimal::DIGITS - fraction_string.len()) + &fraction_string;
             let integer_num = integer.num / FPDecimal::ONE.num;
             f.write_str(sign)?;
             f.write_str(&integer_num.to_string())?;

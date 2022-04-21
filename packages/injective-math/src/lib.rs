@@ -47,9 +47,7 @@ pub fn imbalance(i: &[FPDecimal], p: &[FPDecimal], w: &[FPDecimal]) -> FPDecimal
 /// ## Params
 /// - **arr** is a reference to an array containing objects of type [`u32`].
 pub fn int32_vec_to_fpdec(arr: &[u32]) -> Vec<FPDecimal> {
-    arr.iter()
-        .map(|val| FPDecimal::from(*val as u128))
-        .collect()
+    arr.iter().map(|val| FPDecimal::from(*val as u128)).collect()
 }
 
 /// ## Description
@@ -67,7 +65,5 @@ pub fn int_vec_to_fpdec(arr: &[Uint128]) -> Vec<FPDecimal> {
 /// ## Params
 /// - **arr** is a reference to an array containing objects of type [`String`].
 pub fn str_vec_to_fpdec(arr: &[String]) -> StdResult<Vec<FPDecimal>> {
-    arr.iter()
-        .map(|val| FPDecimal::from_str(val))
-        .collect::<StdResult<Vec<FPDecimal>>>()
+    arr.iter().map(|val| FPDecimal::from_str(val)).collect::<StdResult<Vec<FPDecimal>>>()
 }
