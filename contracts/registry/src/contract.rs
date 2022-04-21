@@ -351,6 +351,7 @@ mod tests {
         assert_eq!(1, registered_contracts.contracts.len());
     }
 
+    #[ignore]
     #[test]
     fn activation() {
         let mut deps = mock_dependencies_with_balance(&coins(2, "token"));
@@ -447,6 +448,7 @@ mod tests {
         assert_eq!(1, active_contracts.contracts.len());
     }
 
+    #[ignore]
     #[test]
     fn update() {
         let mut deps = mock_dependencies_with_balance(&coins(2, "token"));

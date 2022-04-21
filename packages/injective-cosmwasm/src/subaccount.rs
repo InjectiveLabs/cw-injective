@@ -12,7 +12,7 @@ pub fn address_to_subaccount_id(addr: &Addr, nonce: u32) -> String {
     let address_str = bech32_to_hex(addr);
     let nonce_str = left_pad_with_zeroes(nonce, 24);
 
-    format!("{}{}", address_str.to_string(), nonce_str)
+    format!("{}{}", address_str, nonce_str)
 }
 
 fn left_pad_with_zeroes(input: u32, length: usize) -> String {
