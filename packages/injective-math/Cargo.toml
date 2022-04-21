@@ -1,8 +1,12 @@
 [package]
-name = "cluster-math"
+name = "injective-math"
 version = "0.1.0"
-authors = ["Nebula Protocol <engineering@neb.finance>"]
+authors = ["Markus Waas <markus@injectivelabs.org>"]
 edition = "2018"
+description = "Math library for CosmWasm contracts in Injective Protocol"
+repository = "https://github.com/InjectiveLabs/cw-injective/tree/master/packages/injective-math"
+license = "Apache-2.0"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

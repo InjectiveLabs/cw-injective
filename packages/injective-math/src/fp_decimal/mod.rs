@@ -58,14 +58,8 @@ impl From<FPDecimal> for u128 {
 // }
 
 impl FPDecimal {
-    pub const MAX: FPDecimal = FPDecimal {
-        num: U256::MAX,
-        sign: 1,
-    };
-    pub const MIN: FPDecimal = FPDecimal {
-        num: U256::MAX,
-        sign: 0,
-    };
+    pub const MAX: FPDecimal = FPDecimal { num: U256::MAX, sign: 1 };
+    pub const MIN: FPDecimal = FPDecimal { num: U256::MAX, sign: 0 };
     pub const DIGITS: usize = 18;
     pub const ONE: FPDecimal = FPDecimal {
         num: U256([1_000_000_000_000_000_000, 0, 0, 0]),
@@ -103,6 +97,10 @@ impl FPDecimal {
         }
     }
 
+    pub fn is_zero(&self) -> bool {
+        self.num.is_zero()
+    }
+
     pub const fn max() -> FPDecimal {
         FPDecimal::MAX
     }
@@ -119,10 +117,7 @@ impl FPDecimal {
         let x1 = x.num;
         let x1_1 = x1 / FPDecimal::ONE.num;
         let x_final = x1_1 * FPDecimal::ONE.num;
-        FPDecimal {
-            num: x_final,
-            sign: x.sign,
-        }
+        FPDecimal { num: x_final, sign: x.sign }
     }
 
     pub fn int(&self) -> FPDecimal {

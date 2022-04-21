@@ -98,19 +98,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cluster-math"
-version = "0.1.0"
-dependencies = [
- "bigint",
- "cosmwasm-std 0.16.7",
- "cosmwasm-storage 0.16.7",
- "plotters",
- "schemars",
- "serde",
- "terra-cosmwasm",
-]
-
-[[package]]
 name = "cmake"
 version = "0.1.48"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -766,14 +753,28 @@ dependencies = [
 
 [[package]]
 name = "injective-cosmwasm"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std 1.0.0-beta8",
  "ethereum-types",
+ "injective-math",
  "schemars",
  "serde",
  "subtle-encoding",
+]
+
+[[package]]
+name = "injective-math"
+version = "0.1.0"
+dependencies = [
+ "bigint",
+ "cosmwasm-std 0.16.7",
+ "cosmwasm-storage 0.16.7",
+ "plotters",
+ "schemars",
+ "serde",
+ "terra-cosmwasm",
 ]
 
 [[package]]

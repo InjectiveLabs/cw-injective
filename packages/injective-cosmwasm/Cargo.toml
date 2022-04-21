@@ -1,6 +1,6 @@
 [package]
 name = "injective-cosmwasm"
-version = "0.1.6"
+version = "0.1.7"
 authors = ["Albert Chon <albert@injectivelabs.org>"]
 edition = "2018"
 description = "Bindings for CosmWasm contracts to call into custom modules of Injective Core"
@@ -16,6 +16,7 @@ schemars = "0.8.8"
 serde = { version = "1.0.136", default-features = false, features = ["derive"] }
 ethereum-types = "0.5.2"
 subtle-encoding = { version = "0.5.1", features = ["bech32-preview"] }
+injective-math = { path = "../injective-math", version = "0.1.0" }
 
 [dev-dependencies]
 cosmwasm-schema = { version = "1.0.0-beta10" }

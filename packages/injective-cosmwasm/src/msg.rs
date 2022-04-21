@@ -1,8 +1,9 @@
+use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::route::InjectiveRoute;
-use cosmwasm_std::{Addr, Coin, CosmosMsg, CustomMsg, Decimal256 as Decimal};
+use cosmwasm_std::{Addr, Coin, CosmosMsg, CustomMsg};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -30,8 +31,8 @@ pub struct OrderData {
 pub struct OrderInfo {
     pub subaccount_id: String,
     pub fee_recipient: String,
-    pub price: Decimal,
-    pub quantity: Decimal,
+    pub price: FPDecimal,
+    pub quantity: FPDecimal,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -47,15 +48,15 @@ pub struct DerivativeOrder {
     pub market_id: String,
     pub order_info: OrderInfo,
     pub order_type: i32,
-    pub margin: Decimal,
+    pub margin: FPDecimal,
     pub trigger_price: Option<String>,
 }
 
 impl DerivativeOrder {
     pub fn new(
-        price: Decimal,
-        quantity: Decimal,
-        margin: Decimal,
+        price: FPDecimal,
+        quantity: FPDecimal,
+        margin: FPDecimal,
         is_buy: bool,
         market_id: &str,
         subaccount_id: &str,
@@ -77,16 +78,16 @@ impl DerivativeOrder {
     pub fn is_reduce_only(&self) -> bool {
         self.margin.is_zero()
     }
-    pub fn get_price(&self) -> Decimal {
+    pub fn get_price(&self) -> FPDecimal {
         self.order_info.price
     }
-    pub fn get_qty(&self) -> Decimal {
+    pub fn get_qty(&self) -> FPDecimal {
         self.order_info.quantity
     }
-    pub fn get_val(&self) -> Decimal {
+    pub fn get_val(&self) -> FPDecimal {
         self.get_price() * self.get_qty()
     }
-    pub fn get_margin(&self) -> Decimal {
+    pub fn get_margin(&self) -> FPDecimal {
         self.margin
     }
     pub fn non_reduce_only_is_invalid(&self) -> bool {
