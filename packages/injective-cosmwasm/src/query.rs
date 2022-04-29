@@ -1,8 +1,9 @@
+use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{msg::OrderInfo, route::InjectiveRoute};
-use cosmwasm_std::{CustomQuery, Decimal256 as Decimal};
+use cosmwasm_std::CustomQuery;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -65,39 +66,39 @@ pub struct SubaccountDepositResponse {
 pub struct Position {
     #[serde(default)]
     pub isLong: bool,
-    pub quantity: Decimal,
-    pub entry_price: Decimal,
+    pub quantity: FPDecimal,
+    pub entry_price: FPDecimal,
     #[serde(default)]
-    pub margin: Decimal,
-    pub cumulative_funding_entry: Decimal,
+    pub margin: FPDecimal,
+    pub cumulative_funding_entry: FPDecimal,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct EffectivePosition {
     #[serde(default)]
     pub is_long: bool,
-    pub quantity: Decimal,
-    pub entry_price: Decimal,
+    pub quantity: FPDecimal,
+    pub entry_price: FPDecimal,
     #[serde(default)]
-    pub effective_margin: Decimal,
+    pub effective_margin: FPDecimal,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativeLimitOrder {
     pub order_info: OrderInfo,
     pub order_type: i32,
-    pub margin: Decimal,
-    pub fillable: Decimal,
-    pub trigger_price: Option<Decimal>,
+    pub margin: FPDecimal,
+    pub fillable: FPDecimal,
+    pub trigger_price: Option<FPDecimal>,
     pub order_hash: String,
 }
 
 impl DerivativeLimitOrder {
     pub fn new(
-        margin: Decimal,
-        fillable: Decimal,
+        margin: FPDecimal,
+        fillable: FPDecimal,
         order_hash: String,
-        trigger_price: Option<Decimal>,
+        trigger_price: Option<FPDecimal>,
         order_type: i32,
         order_info: OrderInfo,
     ) -> DerivativeLimitOrder {
@@ -130,10 +131,10 @@ pub struct SubaccountEffectivePositionInMarketResponse {
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct TrimmedDerivativeLimitOrder {
-    pub price: Decimal,
-    pub quantity: Decimal,
-    pub margin: Decimal,
-    pub fillable: Decimal,
+    pub price: FPDecimal,
+    pub quantity: FPDecimal,
+    pub margin: FPDecimal,
+    pub fillable: FPDecimal,
     pub isBuy: bool,
     pub order_hash: String,
 }
@@ -155,12 +156,12 @@ pub struct PerpetualMarketFundingResponse {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativeMarketVolatilityResponse {
-    pub volatility: Option<Decimal>,
+    pub volatility: Option<FPDecimal>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct SpotMarketVolatilityResponse {
-    pub volatility: Option<Decimal>,
+    pub volatility: Option<FPDecimal>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -172,18 +173,18 @@ pub struct DerivativeMarketResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Deposit {
     #[serde(default)]
-    pub available_balance: Decimal,
+    pub available_balance: FPDecimal,
     #[serde(default)]
-    pub total_balance: Decimal,
+    pub total_balance: FPDecimal,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct PerpetualMarketInfo {
     pub market_id: String,
     #[serde(default)]
-    pub hourly_funding_rate_cap: Decimal,
+    pub hourly_funding_rate_cap: FPDecimal,
     #[serde(default)]
-    pub hourly_interest_rate: Decimal,
+    pub hourly_interest_rate: FPDecimal,
     #[serde(default)]
     pub next_funding_timestamp: i64,
     pub funding_interval: i64,
@@ -192,9 +193,9 @@ pub struct PerpetualMarketInfo {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct PerpetualMarketFunding {
     #[serde(default)]
-    pub cumulative_funding: Decimal,
+    pub cumulative_funding: FPDecimal,
     #[serde(default)]
-    pub cumulative_price: Decimal,
+    pub cumulative_price: FPDecimal,
     #[serde(default)]
     pub last_timestamp: i64,
 }
@@ -214,7 +215,7 @@ pub struct FullDerivativeMarketPerpetualInfo {
 pub struct FullDerivativeMarket {
     pub market: Option<DerivativeMarket>,
     pub info: Option<FullDerivativeMarketPerpetualInfo>,
-    pub mark_price: Decimal,
+    pub mark_price: FPDecimal,
 }
 
 #[allow(non_snake_case)]
@@ -229,14 +230,14 @@ pub struct DerivativeMarket {
     pub oracle_scale_factor: u32,
     pub quote_denom: String,
     pub market_id: String,
-    pub initial_margin_ratio: Decimal,
-    pub maintenance_margin_ratio: Decimal,
-    pub maker_fee_rate: Decimal,
-    pub taker_fee_rate: Decimal,
+    pub initial_margin_ratio: FPDecimal,
+    pub maintenance_margin_ratio: FPDecimal,
+    pub maker_fee_rate: FPDecimal,
+    pub taker_fee_rate: FPDecimal,
     #[serde(default)]
     pub isPerpetual: bool,
     #[serde(default)]
     pub status: i32,
-    pub min_price_tick_size: Decimal,
-    pub min_quantity_tick_size: Decimal,
+    pub min_price_tick_size: FPDecimal,
+    pub min_quantity_tick_size: FPDecimal,
 }
