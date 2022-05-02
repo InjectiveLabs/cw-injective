@@ -125,6 +125,11 @@ pub enum InjectiveMsg {
         sender: String,
         order: DerivativeOrder,
     },
+    Deposit {
+        sender: String,
+        subaccount_id: String,
+        amount: Coin,
+    },
 }
 
 pub fn create_subaccount_transfer_msg(
@@ -175,6 +180,18 @@ pub fn create_derivative_market_order_msg(sender: String, order: DerivativeOrder
     InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,
         msg_data: InjectiveMsg::CreateDerivativeMarketOrder { sender, order },
+    }
+    .into()
+}
+
+pub fn create_deposit_msg(sender: String, subaccount_id: String, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Exchange,
+        msg_data: InjectiveMsg::Deposit {
+            sender,
+            subaccount_id,
+            amount,
+        },
     }
     .into()
 }

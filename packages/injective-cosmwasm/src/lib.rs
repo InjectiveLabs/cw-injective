@@ -5,8 +5,8 @@ mod route;
 mod subaccount;
 
 pub use msg::{
-    create_batch_update_orders_msg, create_derivative_market_order_msg, create_subaccount_transfer_msg, DerivativeOrder, InjectiveMsg,
-    InjectiveMsgWrapper, OrderData, OrderInfo, SpotOrder,
+    create_batch_update_orders_msg, create_deposit_msg, create_derivative_market_order_msg, create_subaccount_transfer_msg, DerivativeOrder,
+    InjectiveMsg, InjectiveMsgWrapper, OrderData, OrderInfo, SpotOrder,
 };
 
 pub use querier::InjectiveQuerier;
