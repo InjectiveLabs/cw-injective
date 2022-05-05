@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use cosmwasm_std::Addr;
 use subtle_encoding::bech32;
 
@@ -30,9 +32,26 @@ pub fn bech32_to_hex(addr: &Addr) -> String {
     decoded_string
 }
 
+pub fn addr_to_bech32(addr: String) -> String {
+    let encoded_bytes = H160::from_str(&addr[2..addr.len()]).unwrap();
+    bech32::encode("inj", encoded_bytes)
+}
+
+pub fn subaccount_id_to_ethereum_address(subaccount_id: String) -> String {
+    subaccount_id[0..subaccount_id.len() - 24].to_string()
+}
+
+pub fn subaccount_id_to_injective_address(subaccount_id: String) -> String {
+    let ethereum_address = subaccount_id_to_ethereum_address(subaccount_id);
+    addr_to_bech32(ethereum_address)
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::subaccount::{address_to_subaccount_id, bech32_to_hex, default_subaccount_id};
+    use crate::{
+        subaccount::{address_to_subaccount_id, bech32_to_hex, default_subaccount_id},
+        subaccount_id_to_injective_address,
+    };
     use cosmwasm_std::Addr;
 
     #[test]
@@ -53,5 +72,14 @@ mod tests {
             default_subaccount_id(&Addr::unchecked("inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv")),
             "0xb5e09b93aceb70c1711af078922fa256011d7e56000000000000000000000000"
         );
+    }
+
+    #[test]
+    fn subaccount_id_to_address_test() {
+        let subaccount_id = "0xb5e09b93aceb70c1711af078922fa256011d7e56000000000000000000000000";
+        let address = subaccount_id_to_injective_address(subaccount_id.to_string());
+
+        println!("{}", address);
+        assert_eq!(address, "inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv");
     }
 }
