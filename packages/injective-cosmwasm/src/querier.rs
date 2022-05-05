@@ -2,8 +2,8 @@ use cosmwasm_std::{QuerierWrapper, StdResult};
 
 use crate::query::{
     DerivativeMarketResponse, DerivativeMarketVolatilityResponse, InjectiveQuery, InjectiveQueryWrapper, PerpetualMarketFundingResponse,
-    PerpetualMarketInfoResponse, SpotMarketVolatilityResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse,
-    TraderDerivativeOrdersResponse,
+    PerpetualMarketInfoResponse, SpotMarketResponse, SpotMarketVolatilityResponse, SubaccountDepositResponse,
+    SubaccountEffectivePositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
 };
 
 use crate::route::InjectiveRoute;
@@ -40,6 +40,16 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
+    pub fn query_spot_market<T: Into<String>>(&self, market_id: T) -> StdResult<SpotMarketResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::SpotMarket { market_id: market_id.into() },
+        };
+
+        let res: SpotMarketResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
     pub fn query_subaccount_position<T: Into<String>>(
         &self,
         market_id: T,
@@ -67,6 +77,19 @@ impl<'a> InjectiveQuerier<'a> {
         };
 
         let res: TraderDerivativeOrdersResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_trader_spot_orders<T: Into<String>>(&self, market_id: T, subaccount_id: T) -> StdResult<TraderSpotOrdersResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::TraderSpotOrders {
+                market_id: market_id.into(),
+                subaccount_id: subaccount_id.into(),
+            },
+        };
+
+        let res: TraderSpotOrdersResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 

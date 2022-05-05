@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     derivative::EffectivePosition, derivative::TrimmedDerivativeLimitOrder, derivative_market::FullDerivativeMarket,
     derivative_market::PerpetualMarketFunding, derivative_market::PerpetualMarketInfo, exchange::Deposit, route::InjectiveRoute,
+    spot::TrimmedSpotLimitOrder, spot_market::FullSpotMarket,
 };
 use cosmwasm_std::CustomQuery;
 
@@ -77,11 +78,6 @@ pub struct SubaccountEffectivePositionInMarketResponse {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct TraderDerivativeOrdersResponse {
-    pub orders: Option<Vec<TrimmedDerivativeLimitOrder>>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct PerpetualMarketInfoResponse {
     pub info: Option<PerpetualMarketInfo>,
 }
@@ -89,6 +85,16 @@ pub struct PerpetualMarketInfoResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct PerpetualMarketFundingResponse {
     pub state: Option<PerpetualMarketFunding>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct TraderDerivativeOrdersResponse {
+    pub orders: Option<Vec<TrimmedDerivativeLimitOrder>>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct TraderSpotOrdersResponse {
+    pub orders: Option<Vec<TrimmedSpotLimitOrder>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -104,4 +110,9 @@ pub struct SpotMarketVolatilityResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativeMarketResponse {
     pub market: FullDerivativeMarket,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct SpotMarketResponse {
+    pub market: FullSpotMarket,
 }

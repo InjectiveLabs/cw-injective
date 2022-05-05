@@ -88,8 +88,3 @@ pub struct TrimmedSpotLimitOrder {
     pub isBuy: bool,
     pub order_hash: String,
 }
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct TraderSpotOrdersResponse {
-    pub orders: Option<Vec<TrimmedSpotLimitOrder>>,
-}

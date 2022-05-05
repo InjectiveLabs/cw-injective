@@ -123,17 +123,6 @@ impl DerivativeLimitOrder {
     }
 }
 
-#[allow(non_snake_case)]
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct TrimmedDerivativeLimitOrder {
-    pub price: FPDecimal,
-    pub quantity: FPDecimal,
-    pub margin: FPDecimal,
-    pub fillable: FPDecimal,
-    pub isBuy: bool,
-    pub order_hash: String,
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativeMarketOrder {
     pub order_info: OrderInfo,
@@ -165,4 +154,15 @@ impl DerivativeMarketOrder {
     pub fn is_reduce_only(&self) -> bool {
         self.margin.is_zero()
     }
+}
+
+#[allow(non_snake_case)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct TrimmedDerivativeLimitOrder {
+    pub price: FPDecimal,
+    pub quantity: FPDecimal,
+    pub margin: FPDecimal,
+    pub fillable: FPDecimal,
+    pub isBuy: bool,
+    pub order_hash: String,
 }
