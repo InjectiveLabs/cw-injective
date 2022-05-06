@@ -11,19 +11,19 @@ impl FPDecimal {
         let mut r = FPDecimal::zero();
         while v <= FPDecimal::ONE.num / U256([10, 0, 0, 0]) {
             v = v * U256([10, 0, 0, 0]);
-            r = r - FPDecimal::LN_10;
+            r -= FPDecimal::LN_10;
         }
         while v >= U256([10, 0, 0, 0]) * FPDecimal::ONE.num {
             v = v / U256([10, 0, 0, 0]);
-            r = r + FPDecimal::LN_10;
+            r += FPDecimal::LN_10;
         }
         while v < FPDecimal::ONE.num {
             v = FPDecimal::_mul(FPDecimal { num: v, sign: 1 }, FPDecimal::E).num;
-            r = r - FPDecimal::ONE;
+            r -= FPDecimal::ONE;
         }
         while v > FPDecimal::E.num {
             v = FPDecimal::_div(FPDecimal { num: v, sign: 1 }, FPDecimal::E).num;
-            r = r + FPDecimal::ONE;
+            r += FPDecimal::ONE;
         }
         if v == FPDecimal::ONE.num {
             return r;
@@ -43,7 +43,7 @@ impl FPDecimal {
         };
         let v = FPDecimal { num: v, sign: 1 } - frac_1_5_fpdec;
 
-        r = r + FPDecimal::LN_1_5;
+        r += FPDecimal::LN_1_5;
 
         let mut m = FPDecimal::ONE * v
             / (v + FPDecimal {
@@ -51,7 +51,7 @@ impl FPDecimal {
                 sign: 1,
             });
 
-        r = r + FPDecimal {
+        r += FPDecimal {
             num: U256([2, 0, 0, 0]) * FPDecimal::ONE.num,
             sign: 1,
         } * m;
@@ -65,7 +65,7 @@ impl FPDecimal {
                 num: U256([i, 0, 0, 0]) * FPDecimal::ONE.num,
                 sign: 1,
             };
-            r = r + FPDecimal {
+            r += FPDecimal {
                 num: U256([2, 0, 0, 0]) * FPDecimal::ONE.num,
                 sign: 1,
             } * m
