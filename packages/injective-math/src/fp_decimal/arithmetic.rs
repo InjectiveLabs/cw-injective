@@ -106,6 +106,12 @@ impl ops::Add for FPDecimal {
     }
 }
 
+impl ops::AddAssign for FPDecimal {
+    fn add_assign(&mut self, rhs: Self) {
+        *self = FPDecimal::_add(*self, rhs);
+    }
+}
+
 impl ops::Sub for FPDecimal {
     type Output = Self;
 
@@ -114,11 +120,23 @@ impl ops::Sub for FPDecimal {
     }
 }
 
+impl ops::SubAssign for FPDecimal {
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = FPDecimal::_sub(*self, rhs);
+    }
+}
+
 impl ops::Mul for FPDecimal {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self {
         FPDecimal::_mul(self, rhs)
+    }
+}
+
+impl ops::MulAssign for FPDecimal {
+    fn mul_assign(&mut self, rhs: Self) {
+        *self = FPDecimal::_mul(*self, rhs);
     }
 }
 
@@ -346,5 +364,100 @@ mod tests {
 
             assert_eq!(a / a, FPDecimal::ONE);
         }
+    }
+
+    #[test]
+    fn test_add_assign() {
+        let mut five = FPDecimal {
+            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
+            sign: 1,
+        };
+        let four = FPDecimal {
+            num: U256([4, 0, 0, 0]) * FPDecimal::ONE.num,
+            sign: 1,
+        };
+        let nine = FPDecimal {
+            num: U256([9, 0, 0, 0]) * FPDecimal::ONE.num,
+            sign: 1,
+        };
+        five += four;
+        let nine_2 = five;
+        assert_eq!(nine_2, nine);
+
+        let mut nine = nine_2;
+        let five = FPDecimal {
+            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
+            sign: 1,
+        };
+        let neg_four = FPDecimal {
+            num: U256([4, 0, 0, 0]) * FPDecimal::ONE.num,
+            sign: 0,
+        };
+        nine += neg_four;
+        let five_2 = nine;
+        assert_eq!(five, five_2);
+    }
+
+    #[test]
+    fn test_sub_assign() {
+        let mut five = FPDecimal {
+            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
+            sign: 1,
+        };
+        let four = FPDecimal {
+            num: U256([4, 0, 0, 0]) * FPDecimal::ONE.num,
+            sign: 1,
+        };
+        five -= four;
+        let one = five;
+        assert_eq!(one, FPDecimal::one());
+
+        let mut one = one;
+        let five = FPDecimal {
+            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
+            sign: 1,
+        };
+        let neg_four = FPDecimal {
+            num: U256([4, 0, 0, 0]) * FPDecimal::ONE.num,
+            sign: 0,
+        };
+        one -= neg_four;
+        let five_2 = one;
+        assert_eq!(five, five_2);
+    }
+
+    #[test]
+    fn test_mul_assign() {
+        let mut five = FPDecimal {
+            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
+            sign: 1,
+        };
+        let two = FPDecimal {
+            num: U256([2, 0, 0, 0]) * FPDecimal::ONE.num,
+            sign: 1,
+        };
+        let ten = FPDecimal {
+            num: U256([10, 0, 0, 0]) * FPDecimal::ONE.num,
+            sign: 1,
+        };
+        five *= two;
+        let ten_2 = five;
+        assert_eq!(ten, ten_2);
+
+        let mut five = FPDecimal {
+            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
+            sign: 1,
+        };
+        let two = FPDecimal {
+            num: U256([2, 0, 0, 0]) * FPDecimal::ONE.num,
+            sign: 0,
+        };
+        let neg_ten = FPDecimal {
+            num: U256([10, 0, 0, 0]) * FPDecimal::ONE.num,
+            sign: 0,
+        };
+        five *= two;
+        let neg_ten_2 = five;
+        assert_eq!(neg_ten, neg_ten_2);
     }
 }

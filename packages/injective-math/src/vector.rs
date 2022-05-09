@@ -8,7 +8,7 @@ pub fn dot(vec: &[FPDecimal], other: &[FPDecimal]) -> FPDecimal {
     let mut sum = FPDecimal::zero();
     let mul_result: Vec<FPDecimal> = mul(vec, other);
     for item in mul_result {
-        sum = sum + item;
+        sum += item;
     }
     sum
 }
