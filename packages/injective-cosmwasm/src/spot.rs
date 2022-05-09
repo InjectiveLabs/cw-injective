@@ -13,14 +13,6 @@ pub struct SpotLimitOrder {
     pub order_hash: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct SpotOrder {
-    pub market_id: String,
-    pub order_info: OrderInfo,
-    pub order_type: i32,
-    pub trigger_price: Option<String>,
-}
-
 impl SpotLimitOrder {
     pub fn new(order_info: OrderInfo, order_type: i32, fillable: FPDecimal, trigger_price: Option<FPDecimal>, order_hash: String) -> Self {
         SpotLimitOrder {
@@ -30,6 +22,39 @@ impl SpotLimitOrder {
             trigger_price,
             order_hash,
         }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct SpotOrder {
+    pub market_id: String,
+    pub order_info: OrderInfo,
+    pub order_type: i32,
+    pub trigger_price: Option<String>,
+}
+impl SpotOrder {
+    pub fn new(price: FPDecimal, quantity: FPDecimal, is_buy: bool, market_id: &str, subaccount_id: &str, fee_recipient: &str) -> Self {
+        SpotOrder {
+            market_id: market_id.to_string(),
+            order_info: OrderInfo {
+                subaccount_id: subaccount_id.to_string(),
+                fee_recipient: fee_recipient.to_string(),
+                price,
+                quantity,
+            },
+            order_type: if is_buy { 1 } else { 2 },
+            trigger_price: None,
+        }
+    }
+
+    pub fn get_price(&self) -> FPDecimal {
+        self.order_info.price
+    }
+    pub fn get_qty(&self) -> FPDecimal {
+        self.order_info.quantity
+    }
+    pub fn get_val(&self) -> FPDecimal {
+        self.get_price() * self.get_qty()
     }
 }
 
@@ -62,9 +87,4 @@ pub struct TrimmedSpotLimitOrder {
     pub fillable: FPDecimal,
     pub isBuy: bool,
     pub order_hash: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct TraderSpotOrdersResponse {
-    pub orders: Option<Vec<TrimmedSpotLimitOrder>>,
 }
