@@ -161,8 +161,10 @@ impl DerivativeMarketOrder {
 pub struct TrimmedDerivativeLimitOrder {
     pub price: FPDecimal,
     pub quantity: FPDecimal,
+    #[serde(default)]
     pub margin: FPDecimal,
     pub fillable: FPDecimal,
+    #[serde(default)]
     pub isBuy: bool,
     pub order_hash: String,
 }
