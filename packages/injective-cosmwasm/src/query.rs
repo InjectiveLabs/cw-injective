@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     derivative::EffectivePosition, derivative::TrimmedDerivativeLimitOrder, derivative_market::FullDerivativeMarket,
     derivative_market::PerpetualMarketFunding, derivative_market::PerpetualMarketInfo, exchange::Deposit, route::InjectiveRoute,
-    spot::TrimmedSpotLimitOrder, spot_market::FullSpotMarket,
+    spot::TrimmedSpotLimitOrder, spot_market::FullSpotMarket, Position,
 };
 use cosmwasm_std::CustomQuery;
 
@@ -37,6 +37,10 @@ pub enum InjectiveQuery {
         market_id: String,
     },
     SubaccountPositions {
+        subaccount_id: String,
+    },
+    SubaccountPositionInMarket {
+        market_id: String,
         subaccount_id: String,
     },
     SubaccountEffectivePositionInMarket {
@@ -75,6 +79,11 @@ pub struct SubaccountDepositResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct SubaccountEffectivePositionInMarketResponse {
     pub state: Option<EffectivePosition>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct SubaccountPositionInMarketResponse {
+    pub state: Option<Position>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
