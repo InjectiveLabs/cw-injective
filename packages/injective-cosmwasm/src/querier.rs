@@ -97,6 +97,23 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
+    pub fn query_trader_transient_derivative_orders<T: Into<String>>(
+        &self,
+        market_id: T,
+        subaccount_id: T,
+    ) -> StdResult<TraderDerivativeOrdersResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::TraderTransientDerivativeOrders {
+                market_id: market_id.into(),
+                subaccount_id: subaccount_id.into(),
+            },
+        };
+
+        let res: TraderDerivativeOrdersResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
     pub fn query_trader_spot_orders<T: Into<String>>(&self, market_id: T, subaccount_id: T) -> StdResult<TraderSpotOrdersResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
