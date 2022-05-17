@@ -1,9 +1,10 @@
 use cosmwasm_std::{QuerierWrapper, StdResult};
 
 use crate::query::{
-    DerivativeMarketResponse, DerivativeMarketVolatilityResponse, InjectiveQuery, InjectiveQueryWrapper, PerpetualMarketFundingResponse,
-    PerpetualMarketInfoResponse, SpotMarketResponse, SpotMarketVolatilityResponse, SubaccountDepositResponse,
-    SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+    DerivativeMarketMidPriceResponse, DerivativeMarketResponse, DerivativeMarketVolatilityResponse, InjectiveQuery, InjectiveQueryWrapper,
+    PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, SpotMarketMidPriceResponse, SpotMarketResponse, SpotMarketVolatilityResponse,
+    SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse,
+    TraderSpotOrdersResponse,
 };
 
 use crate::route::InjectiveRoute;
@@ -159,6 +160,26 @@ impl<'a> InjectiveQuerier<'a> {
         };
 
         let res: SpotMarketVolatilityResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_derivative_market_mid_price<T: Into<String>>(&self, market_id: T) -> StdResult<DerivativeMarketMidPriceResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::DerivativeMarketMidPrice { market_id: market_id.into() },
+        };
+
+        let res: DerivativeMarketMidPriceResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_spot_market_mid_price<T: Into<String>>(&self, market_id: T) -> StdResult<SpotMarketMidPriceResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::SpotMarketMidPrice { market_id: market_id.into() },
+        };
+
+        let res: SpotMarketMidPriceResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 }

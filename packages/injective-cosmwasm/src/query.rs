@@ -66,6 +66,12 @@ pub enum InjectiveQuery {
         market_id: String,
         from: i64,
     },
+    SpotMarketMidPrice {
+        market_id: String,
+    },
+    DerivativeMarketMidPrice {
+        market_id: String,
+    },
 }
 
 impl CustomQuery for InjectiveQueryWrapper {}
@@ -124,4 +130,14 @@ pub struct DerivativeMarketResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct SpotMarketResponse {
     pub market: FullSpotMarket,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct SpotMarketMidPriceResponse {
+    pub price: Option<FPDecimal>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct DerivativeMarketMidPriceResponse {
+    pub price: Option<FPDecimal>,
 }
