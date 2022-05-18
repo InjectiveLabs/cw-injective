@@ -51,6 +51,10 @@ pub enum InjectiveQuery {
         market_id: String,
         subaccount_id: String,
     },
+    TraderTransientDerivativeOrders {
+        market_id: String,
+        subaccount_id: String,
+    },
     PerpetualMarketInfo {
         market_id: String,
     },
