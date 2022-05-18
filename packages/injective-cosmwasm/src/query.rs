@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     derivative::EffectivePosition, derivative::TrimmedDerivativeLimitOrder, derivative_market::FullDerivativeMarket,
     derivative_market::PerpetualMarketFunding, derivative_market::PerpetualMarketInfo, exchange::Deposit, route::InjectiveRoute,
-    spot::TrimmedSpotLimitOrder, spot_market::FullSpotMarket, Position,
+    spot::TrimmedSpotLimitOrder, Position, SpotMarket,
 };
 use cosmwasm_std::CustomQuery;
 
@@ -133,7 +133,7 @@ pub struct DerivativeMarketResponse {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct SpotMarketResponse {
-    pub market: FullSpotMarket,
+    pub market: Option<SpotMarket>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
