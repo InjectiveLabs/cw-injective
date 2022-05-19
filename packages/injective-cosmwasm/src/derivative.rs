@@ -179,40 +179,40 @@ pub struct DerivativeMetadataStatistics {
     pub last_timestamp: i64,
     pub min_price: FPDecimal,
     pub max_price: FPDecimal,
-    pub median_price: FPDecimal
+    pub median_price: FPDecimal,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativeTradeRecord {
-	timestamp: i64,                                  
-	price: FPDecimal, 
-	quantity: FPDecimal 
+    timestamp: i64,
+    price: FPDecimal,
+    quantity: FPDecimal,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativePriceRecord {
-	timestamp: i64,                                  
-	price: FPDecimal, 
+    timestamp: i64,
+    price: FPDecimal,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativeOracleInfo {
     pub symbol: String,
     // TODO: OracleType
-    pub scale_factor: u32
+    pub scale_factor: u32,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativeOracleHistoryOptions {
     pub max_age: u64,
     pub include_raw_history: bool,
-    pub include_metadata: bool
+    pub include_metadata: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativeTradeHistoryOptions {
-    pub trade_grouping_sec: u64, 
+    pub trade_grouping_sec: u64,
     pub max_age: u64,
     pub include_raw_history: bool,
-    pub include_metadata: bool
+    pub include_metadata: bool,
 }

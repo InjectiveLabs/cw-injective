@@ -3,9 +3,18 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    derivative::{EffectivePosition, DerivativeTradeHistoryOptions, DerivativeMetadataStatistics, DerivativeTradeRecord, DerivativeOracleInfo, DerivativeOracleHistoryOptions}, derivative::TrimmedDerivativeLimitOrder, derivative_market::FullDerivativeMarket,
-    derivative_market::PerpetualMarketFunding, derivative_market::PerpetualMarketInfo, exchange::Deposit, route::InjectiveRoute,
-    spot::TrimmedSpotLimitOrder, Position, SpotMarket,
+    derivative::TrimmedDerivativeLimitOrder,
+    derivative::{
+        DerivativeMetadataStatistics, DerivativeOracleHistoryOptions, DerivativeOracleInfo, DerivativeTradeHistoryOptions, DerivativeTradeRecord,
+        EffectivePosition,
+    },
+    derivative_market::FullDerivativeMarket,
+    derivative_market::PerpetualMarketFunding,
+    derivative_market::PerpetualMarketInfo,
+    exchange::Deposit,
+    route::InjectiveRoute,
+    spot::TrimmedSpotLimitOrder,
+    Position, SpotMarket,
 };
 use cosmwasm_std::CustomQuery;
 
@@ -63,12 +72,12 @@ pub enum InjectiveQuery {
     },
     MarketVolatility {
         market_id: String,
-        trade_history_options: DerivativeTradeHistoryOptions
+        trade_history_options: DerivativeTradeHistoryOptions,
     },
     OracleVolatility {
         base_info: Option<DerivativeOracleInfo>,
         quote_info: Option<DerivativeOracleInfo>,
-        oracle_history_options: DerivativeOracleHistoryOptions
+        oracle_history_options: DerivativeOracleHistoryOptions,
     },
     SpotMarketVolatility {
         market_id: String,
@@ -124,14 +133,14 @@ pub struct TraderSpotOrdersResponse {
 pub struct DerivativeMarketVolatilityResponse {
     pub volatility: Option<FPDecimal>,
     pub history_metadata: Option<DerivativeMetadataStatistics>,
-    pub raw_history: Vec<DerivativeTradeRecord>
+    pub raw_history: Vec<DerivativeTradeRecord>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativeOracleVolatilityResponse {
     pub volatility: Option<FPDecimal>,
     pub history_metadata: Option<DerivativeMetadataStatistics>,
-    pub raw_history: Vec<DerivativeTradeRecord>
+    pub raw_history: Vec<DerivativeTradeRecord>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

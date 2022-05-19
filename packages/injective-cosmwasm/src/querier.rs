@@ -1,11 +1,11 @@
 use cosmwasm_std::{QuerierWrapper, StdResult};
 
-use crate::derivative::{DerivativeTradeHistoryOptions, DerivativeOracleInfo, DerivativeOracleHistoryOptions};
+use crate::derivative::{DerivativeOracleHistoryOptions, DerivativeOracleInfo, DerivativeTradeHistoryOptions};
 use crate::query::{
-    DerivativeMarketMidPriceResponse, DerivativeMarketResponse, DerivativeMarketVolatilityResponse, InjectiveQuery, InjectiveQueryWrapper,
-    PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, SpotMarketMidPriceResponse, SpotMarketResponse, SpotMarketVolatilityResponse,
-    SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse,
-    TraderSpotOrdersResponse, DerivativeOracleVolatilityResponse,
+    DerivativeMarketMidPriceResponse, DerivativeMarketResponse, DerivativeMarketVolatilityResponse, DerivativeOracleVolatilityResponse,
+    InjectiveQuery, InjectiveQueryWrapper, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, SpotMarketMidPriceResponse,
+    SpotMarketResponse, SpotMarketVolatilityResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse,
+    SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
 };
 
 use crate::route::InjectiveRoute;
@@ -155,7 +155,7 @@ impl<'a> InjectiveQuerier<'a> {
         trade_grouping_sec: u64,
         max_age: u64,
         include_raw_history: bool,
-        include_metadata: bool
+        include_metadata: bool,
     ) -> StdResult<DerivativeMarketVolatilityResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
@@ -165,8 +165,8 @@ impl<'a> InjectiveQuerier<'a> {
                     trade_grouping_sec,
                     max_age,
                     include_raw_history,
-                    include_metadata
-                }
+                    include_metadata,
+                },
             },
         };
 
@@ -180,7 +180,7 @@ impl<'a> InjectiveQuerier<'a> {
         scale_factor: u32,
         max_age: u64,
         include_raw_history: bool,
-        include_metadata: bool
+        include_metadata: bool,
     ) -> StdResult<DerivativeOracleVolatilityResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
@@ -193,8 +193,8 @@ impl<'a> InjectiveQuerier<'a> {
                 oracle_history_options: DerivativeOracleHistoryOptions {
                     max_age,
                     include_raw_history,
-                    include_metadata
-                }
+                    include_metadata,
+                },
             },
         };
 
