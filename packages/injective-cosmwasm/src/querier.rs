@@ -159,7 +159,7 @@ impl<'a> InjectiveQuerier<'a> {
     ) -> StdResult<DerivativeMarketVolatilityResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
-            query_data: InjectiveQuery::MarketVolatility {
+            query_data: InjectiveQuery::DerivativeMarketVolatility {
                 market_id: market_id.into(),
                 trade_history_options: DerivativeTradeHistoryOptions {
                     trade_grouping_sec,
@@ -184,7 +184,7 @@ impl<'a> InjectiveQuerier<'a> {
     ) -> StdResult<DerivativeOracleVolatilityResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
-            query_data: InjectiveQuery::OracleVolatility {
+            query_data: InjectiveQuery::DerivativeOracleVolatility {
                 base_info: Some(DerivativeOracleInfo {
                     symbol: symbol.into(),
                     scale_factor,

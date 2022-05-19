@@ -70,11 +70,12 @@ pub enum InjectiveQuery {
     PerpetualMarketFunding {
         market_id: String,
     },
-    MarketVolatility {
+    DerivativeMarketVolatility {
         market_id: String,
         trade_history_options: DerivativeTradeHistoryOptions,
     },
-    OracleVolatility {
+    
+    DerivativeOracleVolatility {
         base_info: Option<DerivativeOracleInfo>,
         quote_info: Option<DerivativeOracleInfo>,
         oracle_history_options: DerivativeOracleHistoryOptions,
