@@ -1,10 +1,11 @@
 use cosmwasm_std::{QuerierWrapper, StdResult};
 
+use crate::derivative::{DerivativeTradeHistoryOptions, DerivativeOracleInfo, DerivativeOracleHistoryOptions};
 use crate::query::{
     DerivativeMarketMidPriceResponse, DerivativeMarketResponse, DerivativeMarketVolatilityResponse, InjectiveQuery, InjectiveQueryWrapper,
     PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, SpotMarketMidPriceResponse, SpotMarketResponse, SpotMarketVolatilityResponse,
     SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse,
-    TraderSpotOrdersResponse,
+    TraderSpotOrdersResponse, DerivativeOracleVolatilityResponse,
 };
 
 use crate::route::InjectiveRoute;
@@ -151,19 +152,53 @@ impl<'a> InjectiveQuerier<'a> {
     pub fn query_derivative_market_volatility<T: Into<String>>(
         &self,
         market_id: T,
-        from: i64,
-        only_trade_history: bool,
+        trade_grouping_sec: u64,
+        max_age: u64,
+        include_raw_history: bool,
+        include_metadata: bool
     ) -> StdResult<DerivativeMarketVolatilityResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
-            query_data: InjectiveQuery::DerivativeMarketVolatility {
+            query_data: InjectiveQuery::MarketVolatility {
                 market_id: market_id.into(),
-                from,
-                only_trade_history,
+                trade_history_options: DerivativeTradeHistoryOptions {
+                    trade_grouping_sec,
+                    max_age,
+                    include_raw_history,
+                    include_metadata
+                }
             },
         };
 
         let res: DerivativeMarketVolatilityResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_derivative_oracle_volatility<T: Into<String>>(
+        &self,
+        symbol: T,
+        scale_factor: u32,
+        max_age: u64,
+        include_raw_history: bool,
+        include_metadata: bool
+    ) -> StdResult<DerivativeOracleVolatilityResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::OracleVolatility {
+                base_info: Some(DerivativeOracleInfo {
+                    symbol: symbol.into(),
+                    scale_factor,
+                }),
+                quote_info: None,
+                oracle_history_options: DerivativeOracleHistoryOptions {
+                    max_age,
+                    include_raw_history,
+                    include_metadata
+                }
+            },
+        };
+
+        let res: DerivativeOracleVolatilityResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 
