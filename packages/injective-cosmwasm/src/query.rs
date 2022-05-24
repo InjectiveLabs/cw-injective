@@ -74,7 +74,7 @@ pub enum InjectiveQuery {
         market_id: String,
         trade_history_options: DerivativeTradeHistoryOptions,
     },
-    
+
     DerivativeOracleVolatility {
         base_info: Option<DerivativeOracleInfo>,
         quote_info: Option<DerivativeOracleInfo>,

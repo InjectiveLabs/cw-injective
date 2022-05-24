@@ -177,6 +177,7 @@ impl<'a> InjectiveQuerier<'a> {
     pub fn query_derivative_oracle_volatility<T: Into<String>>(
         &self,
         symbol: T,
+        oracle_type: i32,
         scale_factor: u32,
         max_age: u64,
         include_raw_history: bool,
@@ -187,6 +188,7 @@ impl<'a> InjectiveQuerier<'a> {
             query_data: InjectiveQuery::DerivativeOracleVolatility {
                 base_info: Some(DerivativeOracleInfo {
                     symbol: symbol.into(),
+                    oracle_type,
                     scale_factor,
                 }),
                 quote_info: None,
