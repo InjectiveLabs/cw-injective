@@ -3,9 +3,18 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    derivative::EffectivePosition, derivative::TrimmedDerivativeLimitOrder, derivative_market::FullDerivativeMarket,
-    derivative_market::PerpetualMarketFunding, derivative_market::PerpetualMarketInfo, exchange::Deposit, route::InjectiveRoute,
-    spot::TrimmedSpotLimitOrder, Position, SpotMarket,
+    derivative::TrimmedDerivativeLimitOrder,
+    derivative::{
+        DerivativeMetadataStatistics, DerivativeOracleHistoryOptions, DerivativeOracleInfo, DerivativeTradeHistoryOptions, DerivativeTradeRecord,
+        EffectivePosition,
+    },
+    derivative_market::FullDerivativeMarket,
+    derivative_market::PerpetualMarketFunding,
+    derivative_market::PerpetualMarketInfo,
+    exchange::Deposit,
+    route::InjectiveRoute,
+    spot::TrimmedSpotLimitOrder,
+    Position, SpotMarket,
 };
 use cosmwasm_std::CustomQuery;
 
@@ -63,8 +72,13 @@ pub enum InjectiveQuery {
     },
     DerivativeMarketVolatility {
         market_id: String,
-        from: i64,
-        only_trade_history: bool,
+        trade_history_options: DerivativeTradeHistoryOptions,
+    },
+
+    DerivativeOracleVolatility {
+        base_info: Option<DerivativeOracleInfo>,
+        quote_info: Option<DerivativeOracleInfo>,
+        oracle_history_options: DerivativeOracleHistoryOptions,
     },
     SpotMarketVolatility {
         market_id: String,
@@ -119,6 +133,15 @@ pub struct TraderSpotOrdersResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativeMarketVolatilityResponse {
     pub volatility: Option<FPDecimal>,
+    pub history_metadata: Option<DerivativeMetadataStatistics>,
+    pub raw_history: Vec<DerivativeTradeRecord>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct DerivativeOracleVolatilityResponse {
+    pub volatility: Option<FPDecimal>,
+    pub history_metadata: Option<DerivativeMetadataStatistics>,
+    pub raw_history: Vec<DerivativeTradeRecord>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
