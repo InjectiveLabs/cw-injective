@@ -198,7 +198,7 @@ pub struct DerivativePriceRecord {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativeOracleInfo {
     pub symbol: String,
-    // TODO: OracleType
+    pub oracle_type: i32,
     pub scale_factor: u32,
 }
 
