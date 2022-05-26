@@ -18,7 +18,8 @@ pub use msg::{
 
 pub use querier::InjectiveQuerier;
 pub use query::{
-    DerivativeMarketVolatilityResponse, DerivativeOracleVolatilityResponse, InjectiveQuery, InjectiveQueryWrapper, SubaccountDepositResponse,
+    DerivativeMarketVolatilityResponse, DerivativeOracleVolatilityResponse, InjectiveQuery, InjectiveQueryWrapper, SpotMarketVolatilityResponse,
+    SubaccountDepositResponse,
 };
 pub use route::InjectiveRoute;
 pub use subaccount::{

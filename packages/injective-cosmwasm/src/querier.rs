@@ -7,6 +7,7 @@ use crate::query::{
     SpotMarketResponse, SpotMarketVolatilityResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse,
     SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
 };
+use crate::spot::SpotTradeHistoryOptions;
 
 use crate::route::InjectiveRoute;
 
@@ -204,12 +205,24 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_spot_market_volatility<T: Into<String>>(&self, market_id: T, from: i64) -> StdResult<SpotMarketVolatilityResponse> {
+    pub fn query_spot_market_volatility<T: Into<String>>(
+        &self,
+        market_id: T,
+        trade_grouping_sec: u64,
+        max_age: u64,
+        include_raw_history: bool,
+        include_metadata: bool,
+    ) -> StdResult<SpotMarketVolatilityResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::SpotMarketVolatility {
                 market_id: market_id.into(),
-                from,
+                trade_history_options: SpotTradeHistoryOptions {
+                    trade_grouping_sec,
+                    max_age,
+                    include_raw_history,
+                    include_metadata,
+                },
             },
         };
 

@@ -14,6 +14,7 @@ use crate::{
     exchange::Deposit,
     route::InjectiveRoute,
     spot::TrimmedSpotLimitOrder,
+    spot::{SpotMetadataStatistics, SpotTradeHistoryOptions, SpotTradeRecord},
     Position, SpotMarket,
 };
 use cosmwasm_std::CustomQuery;
@@ -74,7 +75,6 @@ pub enum InjectiveQuery {
         market_id: String,
         trade_history_options: DerivativeTradeHistoryOptions,
     },
-
     DerivativeOracleVolatility {
         base_info: Option<DerivativeOracleInfo>,
         quote_info: Option<DerivativeOracleInfo>,
@@ -82,7 +82,7 @@ pub enum InjectiveQuery {
     },
     SpotMarketVolatility {
         market_id: String,
-        from: i64,
+        trade_history_options: SpotTradeHistoryOptions,
     },
     SpotMarketMidPrice {
         market_id: String,
@@ -147,6 +147,8 @@ pub struct DerivativeOracleVolatilityResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct SpotMarketVolatilityResponse {
     pub volatility: Option<FPDecimal>,
+    pub history_metadata: Option<SpotMetadataStatistics>,
+    pub raw_history: Vec<SpotTradeRecord>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
