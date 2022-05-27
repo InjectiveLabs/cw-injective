@@ -3,17 +3,15 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    derivative::EffectivePosition,
     derivative::TrimmedDerivativeLimitOrder,
-    derivative::{
-        EffectivePosition,
-    },
     derivative_market::{FullDerivativeMarket, PerpetualMarketFunding, PerpetualMarketInfo},
     exchange::Deposit,
+    oracle::{OracleHistoryOptions, OracleInfo},
     route::InjectiveRoute,
     spot::TrimmedSpotLimitOrder,
-    Position, SpotMarket,
     volatility::{MetadataStatistics, TradeHistoryOptions, TradeRecord},
-    oracle::{OracleInfo, OracleHistoryOptions},
+    Position, SpotMarket,
 };
 use cosmwasm_std::CustomQuery;
 

@@ -2,7 +2,6 @@ use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct MetadataStatistics {
     pub group_count: u32,
@@ -24,7 +23,6 @@ pub struct TradeHistoryOptions {
     pub include_metadata: bool,
 }
 
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct PriceRecord {
     timestamp: i64,
@@ -37,4 +35,3 @@ pub struct TradeRecord {
     price: FPDecimal,
     quantity: FPDecimal,
 }
-

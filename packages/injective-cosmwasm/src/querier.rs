@@ -1,13 +1,13 @@
 use cosmwasm_std::{QuerierWrapper, StdResult};
 
 use crate::oracle::{OracleHistoryOptions, OracleInfo};
-use crate::volatility::{TradeHistoryOptions};
 use crate::query::{
-    DerivativeMarketMidPriceResponse, DerivativeMarketResponse, MarketVolatilityResponse, OracleVolatilityResponse,
-    InjectiveQuery, InjectiveQueryWrapper, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, SpotMarketMidPriceResponse,
-    SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse,
-    SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+    DerivativeMarketMidPriceResponse, DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse,
+    OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, SpotMarketMidPriceResponse, SpotMarketResponse,
+    SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse,
+    TraderSpotOrdersResponse,
 };
+use crate::volatility::TradeHistoryOptions;
 
 use crate::route::InjectiveRoute;
 

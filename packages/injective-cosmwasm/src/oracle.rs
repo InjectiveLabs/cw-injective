@@ -1,7 +1,7 @@
+use crate::volatility::{MetadataStatistics, TradeRecord};
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::volatility::{MetadataStatistics, TradeRecord};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
