@@ -88,37 +88,3 @@ pub struct TrimmedSpotLimitOrder {
     pub isBuy: bool,
     pub order_hash: String,
 }
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct SpotMetadataStatistics {
-    pub group_count: u32,
-    pub records_sample_size: u32,
-    pub mean: FPDecimal,
-    pub twap: FPDecimal,
-    pub first_timestamp: i64,
-    pub last_timestamp: i64,
-    pub min_price: FPDecimal,
-    pub max_price: FPDecimal,
-    pub median_price: FPDecimal,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct SpotTradeRecord {
-    timestamp: i64,
-    price: FPDecimal,
-    quantity: FPDecimal,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct SpotPriceRecord {
-    timestamp: i64,
-    price: FPDecimal,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct SpotTradeHistoryOptions {
-    pub trade_grouping_sec: u64,
-    pub max_age: u64,
-    pub include_raw_history: bool,
-    pub include_metadata: bool,
-}

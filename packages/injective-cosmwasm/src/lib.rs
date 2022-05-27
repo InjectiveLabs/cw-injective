@@ -9,6 +9,8 @@ mod route;
 mod spot;
 mod spot_market;
 mod subaccount;
+mod oracle;
+mod volatility;
 
 pub use msg::{
     create_batch_update_orders_msg, create_deposit_msg, create_derivative_market_order_msg, create_external_transfer_msg,
@@ -18,7 +20,7 @@ pub use msg::{
 
 pub use querier::InjectiveQuerier;
 pub use query::{
-    DerivativeMarketVolatilityResponse, DerivativeOracleVolatilityResponse, InjectiveQuery, InjectiveQueryWrapper, SpotMarketVolatilityResponse,
+    MarketVolatilityResponse, OracleVolatilityResponse, InjectiveQuery, InjectiveQueryWrapper,
     SubaccountDepositResponse,
 };
 pub use route::InjectiveRoute;
