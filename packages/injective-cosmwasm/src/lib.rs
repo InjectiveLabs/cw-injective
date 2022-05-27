@@ -2,6 +2,7 @@ mod derivative;
 mod derivative_market;
 mod exchange;
 mod msg;
+mod oracle;
 mod order;
 mod querier;
 mod query;
@@ -9,6 +10,7 @@ mod route;
 mod spot;
 mod spot_market;
 mod subaccount;
+mod volatility;
 
 pub use msg::{
     create_batch_update_orders_msg, create_deposit_msg, create_derivative_market_order_msg, create_external_transfer_msg,
@@ -17,10 +19,7 @@ pub use msg::{
 };
 
 pub use querier::InjectiveQuerier;
-pub use query::{
-    DerivativeMarketVolatilityResponse, DerivativeOracleVolatilityResponse, InjectiveQuery, InjectiveQueryWrapper, SpotMarketVolatilityResponse,
-    SubaccountDepositResponse,
-};
+pub use query::{InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse, OracleVolatilityResponse, SubaccountDepositResponse};
 pub use route::InjectiveRoute;
 pub use subaccount::{
     addr_to_bech32, address_to_subaccount_id, bech32_to_hex, default_subaccount_id, subaccount_id_to_ethereum_address,
