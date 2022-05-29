@@ -47,6 +47,7 @@ impl DerivativeOrder {
         quantity: FPDecimal,
         margin: FPDecimal,
         is_buy: bool,
+        is_po: bool,
         market_id: &str,
         subaccount_id: &str,
         fee_recipient: &str,
@@ -59,7 +60,15 @@ impl DerivativeOrder {
                 price,
                 quantity,
             },
-            order_type: if is_buy { 1 } else { 2 }, // TODO PO-orders
+            order_type: if is_buy && !is_po {
+                1
+            } else if !is_buy && !is_po {
+                2
+            } else if is_buy && is_po {
+                7
+            } else {
+                8
+            },
             margin,
             trigger_price: None,
         }
