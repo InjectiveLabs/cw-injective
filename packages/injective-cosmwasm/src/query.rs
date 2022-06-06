@@ -126,14 +126,14 @@ pub struct TraderSpotOrdersResponse {
 pub struct MarketVolatilityResponse {
     pub volatility: Option<FPDecimal>,
     pub history_metadata: Option<MetadataStatistics>,
-    pub raw_history: Vec<TradeRecord>,
+    pub raw_history: Option<Vec<TradeRecord>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct OracleVolatilityResponse {
     pub volatility: Option<FPDecimal>,
     pub history_metadata: Option<MetadataStatistics>,
-    pub raw_history: Vec<TradeRecord>,
+    pub raw_history: Option<Vec<TradeRecord>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
