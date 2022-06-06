@@ -33,7 +33,7 @@ pub struct SpotOrder {
     pub trigger_price: Option<String>,
 }
 impl SpotOrder {
-    pub fn new(price: FPDecimal, quantity: FPDecimal, is_buy: bool, market_id: &str, subaccount_id: &str, fee_recipient: &str) -> Self {
+    pub fn new(price: FPDecimal, quantity: FPDecimal, is_buy: bool, is_po: bool, market_id: &str, subaccount_id: &str, fee_recipient: &str) -> Self {
         SpotOrder {
             market_id: market_id.to_string(),
             order_info: OrderInfo {
@@ -42,7 +42,15 @@ impl SpotOrder {
                 price,
                 quantity,
             },
-            order_type: if is_buy { 1 } else { 2 },
+            order_type: if is_buy && !is_po {
+                1
+            } else if !is_buy && !is_po {
+                2
+            } else if is_buy && is_po {
+                7
+            } else {
+                8
+            },
             trigger_price: None,
         }
     }
