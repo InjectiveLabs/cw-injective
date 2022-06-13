@@ -71,10 +71,10 @@ pub enum InjectiveQuery {
         market_id: String,
         trade_history_options: TradeHistoryOptions,
     },
-    SpotMarketMidPriceAndTOB {
+    SpotMarketMidPriceAndTob {
         market_id: String,
     },
-    DerivativeMarketMidPriceAndTOB {
+    DerivativeMarketMidPriceAndTob {
         market_id: String,
     },
     OracleVolatility {
