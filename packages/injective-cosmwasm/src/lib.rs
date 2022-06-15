@@ -19,7 +19,10 @@ pub use msg::{
 };
 
 pub use querier::InjectiveQuerier;
-pub use query::{InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse, OracleVolatilityResponse, SubaccountDepositResponse, DerivativeMarketMidPriceAndTOBResponse, SpotMarketMidPriceAndTOBResponse};
+pub use query::{
+    DerivativeMarketMidPriceAndTOBResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse, OracleVolatilityResponse,
+    SpotMarketMidPriceAndTOBResponse, SubaccountDepositResponse,
+};
 pub use route::InjectiveRoute;
 pub use subaccount::{
     addr_to_bech32, address_to_subaccount_id, bech32_to_hex, default_subaccount_id, subaccount_id_to_ethereum_address,

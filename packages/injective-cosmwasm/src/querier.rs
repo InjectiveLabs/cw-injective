@@ -201,7 +201,7 @@ impl<'a> InjectiveQuerier<'a> {
         quote_info: Option<OracleInfo>,
         max_age: u64,
         include_raw_history: bool,
-        include_metadata: bool
+        include_metadata: bool,
     ) -> StdResult<OracleVolatilityResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Oracle,
