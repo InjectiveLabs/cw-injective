@@ -195,7 +195,7 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_oracle_volatility<T: Into<String>>(
+    pub fn query_oracle_volatility(
         &self,
         base_info: Option<OracleInfo>,
         quote_info: Option<OracleInfo>,
