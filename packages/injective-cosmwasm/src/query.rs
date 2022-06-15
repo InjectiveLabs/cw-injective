@@ -149,13 +149,13 @@ pub struct SpotMarketResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct SpotMarketMidPriceAndTOBResponse {
     pub mid_price: Option<FPDecimal>,
-    pub best_buy_price: Option<FPDecimal>,
-    pub best_sell_price: Option<FPDecimal>,
+    pub best_bid: Option<FPDecimal>,
+    pub best_ask: Option<FPDecimal>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativeMarketMidPriceAndTOBResponse {
     pub mid_price: Option<FPDecimal>,
-    pub best_buy_price: Option<FPDecimal>,
-    pub best_sell_price: Option<FPDecimal>,
+    pub best_bid: Option<FPDecimal>,
+    pub best_ask: Option<FPDecimal>,
 }
