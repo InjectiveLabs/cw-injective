@@ -247,7 +247,7 @@ pub fn create_batch_update_orders_msg(
 pub fn create_mint_tokens_msg(sender: String, amount: Coin, mint_to: String) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Tokenfactory,
-        msg_data: InjectiveMsg::Burn { sender, amount },
+        msg_data: InjectiveMsg::Mint { sender, amount, mint_to },
     }
     .into()
 }
