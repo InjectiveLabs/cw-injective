@@ -8,7 +8,7 @@ pub enum InjectiveRoute {
     // Auction,
     Exchange,
     // Insurance,
-    TokenFactory,
+    Tokenfactory,
     Oracle,
     // Peggy,
 }
