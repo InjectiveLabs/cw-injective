@@ -96,7 +96,6 @@ pub enum InjectiveMsg {
     },
 }
 
-
 pub fn create_deposit_msg(sender: String, subaccount_id: String, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,
@@ -245,31 +244,18 @@ pub fn create_batch_update_orders_msg(
     .into()
 }
 
-
-pub fn create_mint_tokens_msg(sender: String, amount: Coin, mint_to:String) -> CosmosMsg<InjectiveMsgWrapper> {
+pub fn create_mint_tokens_msg(sender: String, amount: Coin, mint_to: String) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Tokenfactory,
-        msg_data: InjectiveMsg::Mint {
-            sender,
-            amount,
-            mint_to,
-        },
+        msg_data: InjectiveMsg::Burn { sender, amount },
     }
     .into()
 }
 
-pub fn create_burn_tokens_msg(
-    sender: String,
-    amount: Coin,
-    _burn_from_address: String,
-) -> CosmosMsg<InjectiveMsgWrapper> {
-
+pub fn create_burn_tokens_msg(sender: String, amount: Coin, _burn_from_address: String) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Tokenfactory,
-        msg_data: InjectiveMsg::Burn {
-            sender,     
-            amount,
-        },
+        msg_data: InjectiveMsg::Burn { sender, amount },
     }
     .into()
 }
