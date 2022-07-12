@@ -3,6 +3,14 @@ use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+pub enum OrderType {
+    Undefined = 0,
+    Buy = 1,
+    Sell = 2,
+    BuyPo = 7,
+    SellPo = 8,
+}
+
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Position {
@@ -46,8 +54,7 @@ impl DerivativeOrder {
         price: FPDecimal,
         quantity: FPDecimal,
         margin: FPDecimal,
-        is_buy: bool,
-        is_po: bool,
+        order_type: OrderType,
         market_id: &str,
         subaccount_id: &str,
         fee_recipient: &str,
@@ -60,15 +67,7 @@ impl DerivativeOrder {
                 price,
                 quantity,
             },
-            order_type: if is_buy && !is_po {
-                1
-            } else if !is_buy && !is_po {
-                2
-            } else if is_buy && is_po {
-                7
-            } else {
-                8
-            },
+            order_type: order_type as i32,
             margin,
             trigger_price: None,
         }
@@ -85,17 +84,21 @@ impl DerivativeOrder {
     pub fn get_val(&self) -> FPDecimal {
         self.get_price() * self.get_qty()
     }
-    pub fn get_margin(&self) -> FPDecimal {
-        self.margin
+    pub fn is_invalid(&self, is_reduce_only: bool) -> bool {
+        if is_reduce_only {
+            self.margin.is_zero() || self.get_price().is_zero() || self.get_qty().is_zero()
+        } else {
+            self.get_price().is_zero() || self.get_qty().is_zero()
+        }
     }
-    pub fn non_reduce_only_is_invalid(&self) -> bool {
-        self.get_margin().is_zero() || self.get_price().is_zero() || self.get_qty().is_zero()
-    }
-    pub fn reduce_only_price_is_invalid(&self) -> bool {
-        self.get_price().is_zero()
-    }
-    pub fn reduce_only_qty_is_invalid(&self) -> bool {
-        self.get_qty().is_zero()
+    pub fn get_order_type(&self) -> OrderType {
+        match self.order_type {
+            1 => OrderType::Buy,
+            2 => OrderType::Sell,
+            7 => OrderType::BuyPo,
+            8 => OrderType::SellPo,
+            _ => OrderType::Undefined,
+        }
     }
 }
 
@@ -115,7 +118,7 @@ impl DerivativeLimitOrder {
         fillable: FPDecimal,
         order_hash: String,
         trigger_price: Option<FPDecimal>,
-        order_type: i32,
+        order_type: OrderType,
         order_info: OrderInfo,
     ) -> Self {
         DerivativeLimitOrder {
@@ -123,12 +126,21 @@ impl DerivativeLimitOrder {
             fillable,
             order_hash,
             trigger_price,
-            order_type,
+            order_type: order_type as i32,
             order_info,
         }
     }
     pub fn is_reduce_only(&self) -> bool {
         self.margin.is_zero()
+    }
+    pub fn get_order_type(&self) -> OrderType {
+        match self.order_type {
+            1 => OrderType::Buy,
+            2 => OrderType::Sell,
+            7 => OrderType::BuyPo,
+            8 => OrderType::SellPo,
+            _ => OrderType::Undefined,
+        }
     }
 }
 

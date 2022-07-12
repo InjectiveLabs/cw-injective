@@ -35,7 +35,8 @@ pub use spot::{SpotLimitOrder, SpotMarketOrder, SpotOrder, TrimmedSpotLimitOrder
 pub use spot_market::SpotMarket;
 
 pub use derivative::{
-    DerivativeLimitOrder, DerivativeMarketOrder, DerivativeOrder, DerivativePosition, EffectivePosition, Position, TrimmedDerivativeLimitOrder,
+    DerivativeLimitOrder, DerivativeMarketOrder, DerivativeOrder, DerivativePosition, EffectivePosition, OrderType, Position,
+    TrimmedDerivativeLimitOrder,
 };
 
 pub use derivative_market::{
