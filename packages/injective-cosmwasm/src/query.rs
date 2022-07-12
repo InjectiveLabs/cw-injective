@@ -71,10 +71,10 @@ pub enum InjectiveQuery {
         market_id: String,
         trade_history_options: TradeHistoryOptions,
     },
-    SpotMarketMidPrice {
+    SpotMarketMidPriceAndTob {
         market_id: String,
     },
-    DerivativeMarketMidPrice {
+    DerivativeMarketMidPriceAndTob {
         market_id: String,
     },
     OracleVolatility {
@@ -147,11 +147,15 @@ pub struct SpotMarketResponse {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct SpotMarketMidPriceResponse {
-    pub price: Option<FPDecimal>,
+pub struct SpotMarketMidPriceAndTOBResponse {
+    pub mid_price: Option<FPDecimal>,
+    pub best_bid: Option<FPDecimal>,
+    pub best_ask: Option<FPDecimal>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct DerivativeMarketMidPriceResponse {
-    pub price: Option<FPDecimal>,
+pub struct DerivativeMarketMidPriceAndTOBResponse {
+    pub mid_price: Option<FPDecimal>,
+    pub best_bid: Option<FPDecimal>,
+    pub best_ask: Option<FPDecimal>,
 }

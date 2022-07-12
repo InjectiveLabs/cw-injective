@@ -2,8 +2,8 @@ use cosmwasm_std::{QuerierWrapper, StdResult};
 
 use crate::oracle::{OracleHistoryOptions, OracleInfo};
 use crate::query::{
-    DerivativeMarketMidPriceResponse, DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse,
-    OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, SpotMarketMidPriceResponse, SpotMarketResponse,
+    DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse,
+    OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse,
     SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse,
     TraderSpotOrdersResponse,
 };
@@ -175,38 +175,44 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_derivative_market_mid_price<T: Into<String>>(&self, market_id: T) -> StdResult<DerivativeMarketMidPriceResponse> {
+    pub fn query_derivative_market_mid_price_and_tob<T: Into<String>>(&self, market_id: T) -> StdResult<DerivativeMarketMidPriceAndTOBResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
-            query_data: InjectiveQuery::DerivativeMarketMidPrice { market_id: market_id.into() },
+            query_data: InjectiveQuery::DerivativeMarketMidPriceAndTob { market_id: market_id.into() },
         };
 
-        let res: DerivativeMarketMidPriceResponse = self.querier.query(&request.into())?;
+        let res: DerivativeMarketMidPriceAndTOBResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 
-    pub fn query_spot_market_mid_price<T: Into<String>>(&self, market_id: T) -> StdResult<SpotMarketMidPriceResponse> {
+    pub fn query_spot_market_mid_price_and_tob<T: Into<String>>(&self, market_id: T) -> StdResult<SpotMarketMidPriceAndTOBResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
-            query_data: InjectiveQuery::SpotMarketMidPrice { market_id: market_id.into() },
+            query_data: InjectiveQuery::SpotMarketMidPriceAndTob { market_id: market_id.into() },
         };
 
-        let res: SpotMarketMidPriceResponse = self.querier.query(&request.into())?;
+        let res: SpotMarketMidPriceAndTOBResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 
-    pub fn query_oracle_volatility<T: Into<String>>(
+    pub fn query_oracle_volatility(
         &self,
         base_info: Option<OracleInfo>,
         quote_info: Option<OracleInfo>,
-        oracle_history_options: Option<OracleHistoryOptions>,
+        max_age: u64,
+        include_raw_history: bool,
+        include_metadata: bool,
     ) -> StdResult<OracleVolatilityResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Oracle,
             query_data: InjectiveQuery::OracleVolatility {
                 base_info,
                 quote_info,
-                oracle_history_options,
+                oracle_history_options: Some(OracleHistoryOptions {
+                    max_age,
+                    include_raw_history,
+                    include_metadata,
+                }),
             },
         };
 
