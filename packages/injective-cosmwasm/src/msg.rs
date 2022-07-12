@@ -80,6 +80,20 @@ pub enum InjectiveMsg {
         spot_orders_to_create: Vec<SpotOrder>,
         derivative_orders_to_create: Vec<DerivativeOrder>,
     },
+    /// Contracts can mint native tokens for an existing factory denom
+    /// that they are the admin of.
+    Mint {
+        sender: String,
+        amount: Coin,
+        mint_to: String,
+    },
+    /// Contracts can burn native tokens for an existing factory denom
+    /// that they are the admin of.
+    /// Currently, the burn from address must be the admin contract.
+    Burn {
+        sender: String,
+        amount: Coin,
+    },
 }
 
 pub fn create_deposit_msg(sender: String, subaccount_id: String, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
@@ -226,6 +240,22 @@ pub fn create_batch_update_orders_msg(
             spot_orders_to_create,
             derivative_orders_to_create,
         },
+    }
+    .into()
+}
+
+pub fn create_mint_tokens_msg(sender: String, amount: Coin, mint_to: String) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Tokenfactory,
+        msg_data: InjectiveMsg::Mint { sender, amount, mint_to },
+    }
+    .into()
+}
+
+pub fn create_burn_tokens_msg(sender: String, amount: Coin, _burn_from_address: String) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Tokenfactory,
+        msg_data: InjectiveMsg::Burn { sender, amount },
     }
     .into()
 }
