@@ -57,6 +57,10 @@ pub enum InjectiveQuery {
         market_id: String,
         subaccount_id: String,
     },
+    TraderTransientSpotOrders {
+        market_id: String,
+        subaccount_id: String,
+    },
     TraderTransientDerivativeOrders {
         market_id: String,
         subaccount_id: String,
