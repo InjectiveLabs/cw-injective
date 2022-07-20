@@ -38,7 +38,8 @@ pub use spot::{SpotLimitOrder, SpotMarketOrder, SpotOrder, TrimmedSpotLimitOrder
 pub use spot_market::SpotMarket;
 
 pub use derivative::{
-    DerivativeLimitOrder, DerivativeMarketOrder, DerivativeOrder, DerivativePosition, EffectivePosition, Position, TrimmedDerivativeLimitOrder, OrderType
+    DerivativeLimitOrder, DerivativeMarketOrder, DerivativeOrder, DerivativePosition, EffectivePosition, OrderType, Position,
+    TrimmedDerivativeLimitOrder,
 };
 pub use oracle::OracleInfo;
 
