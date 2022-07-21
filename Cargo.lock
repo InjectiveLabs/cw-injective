@@ -690,7 +690,7 @@ dependencies = [
 
 [[package]]
 name = "injective-cosmwasm"
-version = "0.1.32"
+version = "0.1.33"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
