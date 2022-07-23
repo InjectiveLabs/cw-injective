@@ -61,7 +61,7 @@ pub fn execute(
         ExecuteMsg::Activate { contract_address } => {
             try_activate(deps, env, info, contract_address)
         }
-        ExecuteMsg::DeActivate { contract_address } => {
+        ExecuteMsg::Deactivate { contract_address } => {
             try_deactivate(deps, env, info, contract_address)
         }
     }
@@ -398,7 +398,7 @@ mod tests {
         assert_eq!(1, active_contracts.contracts.len());
 
         // Deactivate contract
-        let msg = ExecuteMsg::DeActivate {
+        let msg = ExecuteMsg::Deactivate {
             contract_address: market_maker.clone(),
         };
         let info = mock_info(&market_maker.to_string(), &coins(2, "token"));

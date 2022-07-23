@@ -22,7 +22,7 @@ pub enum ExecuteMsg {
     Activate {
         contract_address: Addr,
     },
-    DeActivate {
+    Deactivate {
         contract_address: Addr,
     },
 }
