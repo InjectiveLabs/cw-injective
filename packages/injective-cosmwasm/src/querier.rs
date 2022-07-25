@@ -1,4 +1,5 @@
 use cosmwasm_std::{QuerierWrapper, StdResult};
+use injective_math::FPDecimal;
 
 use crate::oracle::{OracleHistoryOptions, OracleInfo};
 use crate::query::{
@@ -147,20 +148,20 @@ impl<'a> InjectiveQuerier<'a> {
         &self,
         market_id: T,
         subaccount_id: T,
-        base_amount: T,
-        quote_amount: T,
+        base_amount: FPDecimal,
+        quote_amount: FPDecimal,
         strategy: i32,
-        reference_price: T,
+        reference_price: FPDecimal,
     ) -> StdResult<TraderSpotOrdersResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::TraderSpotOrdersToCancelUpToAmount {
                 market_id: market_id.into(),
                 subaccount_id: subaccount_id.into(),
-                base_amount: base_amount.into(),
-                quote_amount: quote_amount.into(),
+                base_amount,
+                quote_amount,
                 strategy,
-                reference_price: reference_price.into(),
+                reference_price,
             },
         };
 
@@ -172,18 +173,18 @@ impl<'a> InjectiveQuerier<'a> {
         &self,
         market_id: T,
         subaccount_id: T,
-        quote_amount: T,
+        quote_amount: FPDecimal,
         strategy: i32,
-        reference_price: T,
+        reference_price: FPDecimal,
     ) -> StdResult<TraderDerivativeOrdersResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::TraderDerivativeOrdersToCancelUpToAmount {
                 market_id: market_id.into(),
                 subaccount_id: subaccount_id.into(),
-                quote_amount: quote_amount.into(),
+                quote_amount,
                 strategy,
-                reference_price: reference_price.into(),
+                reference_price,
             },
         };
 
