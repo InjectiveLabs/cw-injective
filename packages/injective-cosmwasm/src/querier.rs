@@ -151,7 +151,7 @@ impl<'a> InjectiveQuerier<'a> {
         base_amount: FPDecimal,
         quote_amount: FPDecimal,
         strategy: i32,
-        reference_price: FPDecimal,
+        reference_price: Option<FPDecimal>,
     ) -> StdResult<TraderSpotOrdersResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
@@ -175,7 +175,7 @@ impl<'a> InjectiveQuerier<'a> {
         subaccount_id: T,
         quote_amount: FPDecimal,
         strategy: i32,
-        reference_price: FPDecimal,
+        reference_price: Option<FPDecimal>,
     ) -> StdResult<TraderDerivativeOrdersResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
