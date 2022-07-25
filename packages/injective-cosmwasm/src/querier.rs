@@ -143,6 +143,54 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
+    pub fn query_spot_orders_to_cancel_up_to_amount<T: Into<String>>(
+        &self,
+        market_id: T,
+        subaccount_id: T,
+        base_amount: T,
+        quote_amount: T,
+        strategy: i32,
+        reference_price: T,
+    ) -> StdResult<TraderSpotOrdersResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::TraderSpotOrdersToCancelUpToAmount {
+                market_id: market_id.into(),
+                subaccount_id: subaccount_id.into(),
+                base_amount: base_amount.into(),
+                quote_amount: quote_amount.into(),
+                strategy,
+                reference_price: reference_price.into(),
+            },
+        };
+
+        let res: TraderSpotOrdersResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_derivative_orders_to_cancel_up_to_amount<T: Into<String>>(
+        &self,
+        market_id: T,
+        subaccount_id: T,
+        quote_amount: T,
+        strategy: i32,
+        reference_price: T,
+    ) -> StdResult<TraderDerivativeOrdersResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::TraderDerivativeOrdersToCancelUpToAmount {
+                market_id: market_id.into(),
+                subaccount_id: subaccount_id.into(),
+                quote_amount: quote_amount.into(),
+                strategy,
+                reference_price: reference_price.into(),
+            },
+        };
+
+        let res: TraderDerivativeOrdersResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
     pub fn query_perpetual_market_info<T: Into<String>>(&self, market_id: T) -> StdResult<PerpetualMarketInfoResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,

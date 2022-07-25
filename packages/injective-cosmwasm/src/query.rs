@@ -38,6 +38,21 @@ pub enum InjectiveQuery {
         market_id: String,
         subaccount_id: String,
     },
+    TraderSpotOrdersToCancelUpToAmount {
+        market_id: String,
+        subaccount_id: String,
+        base_amount: String,
+        quote_amount: String,
+        strategy: i32,
+        reference_price: String,
+    },
+    TraderDerivativeOrdersToCancelUpToAmount {
+        market_id: String,
+        subaccount_id: String,
+        quote_amount: String,
+        strategy: i32,
+        reference_price: String,
+    },
     // DerivativeMarket will return the derivative market for a given id
     DerivativeMarket {
         market_id: String,
