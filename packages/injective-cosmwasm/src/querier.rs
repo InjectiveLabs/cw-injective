@@ -1,4 +1,5 @@
 use cosmwasm_std::{QuerierWrapper, StdResult};
+use injective_math::FPDecimal;
 
 use crate::oracle::{OracleHistoryOptions, OracleInfo};
 use crate::query::{
@@ -140,6 +141,54 @@ impl<'a> InjectiveQuerier<'a> {
         };
 
         let res: TraderSpotOrdersResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_spot_orders_to_cancel_up_to_amount<T: Into<String>>(
+        &self,
+        market_id: T,
+        subaccount_id: T,
+        base_amount: FPDecimal,
+        quote_amount: FPDecimal,
+        strategy: i32,
+        reference_price: Option<FPDecimal>,
+    ) -> StdResult<TraderSpotOrdersResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::TraderSpotOrdersToCancelUpToAmount {
+                market_id: market_id.into(),
+                subaccount_id: subaccount_id.into(),
+                base_amount,
+                quote_amount,
+                strategy,
+                reference_price,
+            },
+        };
+
+        let res: TraderSpotOrdersResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_derivative_orders_to_cancel_up_to_amount<T: Into<String>>(
+        &self,
+        market_id: T,
+        subaccount_id: T,
+        quote_amount: FPDecimal,
+        strategy: i32,
+        reference_price: Option<FPDecimal>,
+    ) -> StdResult<TraderDerivativeOrdersResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::TraderDerivativeOrdersToCancelUpToAmount {
+                market_id: market_id.into(),
+                subaccount_id: subaccount_id.into(),
+                quote_amount,
+                strategy,
+                reference_price,
+            },
+        };
+
+        let res: TraderDerivativeOrdersResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 
