@@ -93,6 +93,7 @@ pub struct TrimmedSpotLimitOrder {
     pub price: FPDecimal,
     pub quantity: FPDecimal,
     pub fillable: FPDecimal,
+    #[serde(default)]
     pub isBuy: bool,
     pub order_hash: String,
 }
