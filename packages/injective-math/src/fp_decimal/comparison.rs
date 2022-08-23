@@ -35,7 +35,7 @@ impl PartialOrd for FPDecimal {
             return self.num >= other.num;
         }
 
-        self.num <= other.num
+        self.num < other.num
     }
 
     fn le(&self, other: &Self) -> bool {
@@ -126,6 +126,9 @@ mod tests {
 
         is_greater = FPDecimal::from_str("1.0").unwrap() > FPDecimal::from_str("4.0").unwrap();
         assert!(!is_greater);
+
+        is_greater = FPDecimal::from_str("1.0").unwrap() > FPDecimal::from_str("1.0").unwrap();
+        assert!(!is_greater);
     }
 
     #[test]
@@ -194,6 +197,9 @@ mod tests {
         assert!(!is_lesser);
 
         is_lesser = FPDecimal::from_str("4.0").unwrap() < FPDecimal::from_str("1.0").unwrap();
+        assert!(!is_lesser);
+
+        is_lesser = FPDecimal::from_str("1.0").unwrap() < FPDecimal::from_str("1.0").unwrap();
         assert!(!is_lesser);
     }
 
