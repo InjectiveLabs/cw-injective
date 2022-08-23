@@ -4,7 +4,13 @@ use std::cmp::Ordering;
 impl Ord for FPDecimal {
     fn cmp(&self, other: &FPDecimal) -> Ordering {
         if self.sign == other.sign {
-            return self.num.cmp(&other.num);
+            let mut ordering = self.num.cmp(&other.num);
+
+            if self.sign == 0 {
+                ordering = ordering.reverse()
+            }
+
+            return ordering;
         }
 
         if self.sign == 1 {
