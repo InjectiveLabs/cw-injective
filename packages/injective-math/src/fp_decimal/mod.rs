@@ -3,7 +3,7 @@ use schemars::JsonSchema;
 // pub struct FPDecimal(#[schemars(with = "String")] pub i128);
 
 #[allow(clippy::upper_case_acronyms)]
-#[derive(Copy, Clone, Default, Debug, PartialEq, Eq, PartialOrd, Ord, JsonSchema)]
+#[derive(Copy, Clone, Default, Debug, Eq, JsonSchema)]
 pub struct FPDecimal {
     #[schemars(with = "String")]
     pub num: U256,
@@ -142,6 +142,7 @@ impl FPDecimal {
 }
 
 mod arithmetic;
+mod comparison;
 mod display;
 mod exp;
 mod from_str;
