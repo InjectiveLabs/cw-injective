@@ -96,6 +96,24 @@ mod tests {
     }
 
     #[test]
+    fn test_is_equal() {
+        let mut is_equal = FPDecimal::from_str("1.0").unwrap() == FPDecimal::from_str("1.0").unwrap();
+        assert!(is_equal);
+
+        is_equal = FPDecimal::from_str("1.0").unwrap() == FPDecimal::from_str("-1.0").unwrap();
+        assert!(!is_equal);
+    }
+
+    #[test]
+    fn test_is_not_equal() {
+        let mut is_not_equal = FPDecimal::from_str("1.0").unwrap() != FPDecimal::from_str("1.0").unwrap();
+        assert!(!is_not_equal);
+
+        is_not_equal = FPDecimal::from_str("1.0").unwrap() != FPDecimal::from_str("-1.0").unwrap();
+        assert!(is_not_equal);
+    }
+
+    #[test]
     fn test_is_not_greater() {
         let mut is_greater = FPDecimal::from_str("-5.0").unwrap() > FPDecimal::from_str("1.0").unwrap();
         assert!(!is_greater);
