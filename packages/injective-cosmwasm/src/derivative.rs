@@ -84,11 +84,15 @@ impl DerivativeOrder {
         self.get_price() * self.get_qty()
     }
     pub fn is_invalid(&self, is_reduce_only: bool) -> bool {
-        if is_reduce_only {
-            self.margin.is_zero() || self.get_price().is_zero() || self.get_qty().is_zero()
-        } else {
-            self.get_price().is_zero() || self.get_qty().is_zero()
+        if is_reduce_only && !self.margin.is_zero() {
+            return true;
         }
+
+        if !is_reduce_only && self.margin.is_zero() {
+            return true;
+        }
+
+        self.get_price().is_zero() || self.get_qty().is_zero()
     }
     pub fn get_order_type(&self) -> OrderType {
         match self.order_type {
