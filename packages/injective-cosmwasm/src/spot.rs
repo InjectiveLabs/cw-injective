@@ -1,8 +1,10 @@
-use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use injective_math::FPDecimal;
+
 use crate::order::OrderInfo;
+use crate::OrderType;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct SpotLimitOrder {
@@ -32,8 +34,9 @@ pub struct SpotOrder {
     pub order_type: i32,
     pub trigger_price: Option<String>,
 }
+
 impl SpotOrder {
-    pub fn new(price: FPDecimal, quantity: FPDecimal, is_buy: bool, is_po: bool, market_id: &str, subaccount_id: &str, fee_recipient: &str) -> Self {
+    pub fn new(price: FPDecimal, quantity: FPDecimal, is_buy: bool, is_po: bool, is_atomic: bool, market_id: &str, subaccount_id: &str, fee_recipient: &str) -> Self {
         SpotOrder {
             market_id: market_id.to_string(),
             order_info: OrderInfo {
@@ -42,14 +45,13 @@ impl SpotOrder {
                 price,
                 quantity,
             },
-            order_type: if is_buy && !is_po {
-                1
-            } else if !is_buy && !is_po {
-                2
-            } else if is_buy && is_po {
-                7
-            } else {
-                8
+            order_type: match (is_buy, is_po, is_atomic) {
+                (true, false, false) => OrderType::Buy as i32,
+                (true, true, _) => OrderType::BuyPo as i32,
+                (true, _, true) => OrderType::BuyAtomic as i32,
+                (false, false, false) => OrderType::Sell as i32,
+                (false, true, _) => OrderType::SellPo as i32,
+                (false, _, true) => OrderType::SellAtomic as i32,
             },
             trigger_price: None,
         }

@@ -1,7 +1,9 @@
-use crate::order::OrderInfo;
-use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+use injective_math::FPDecimal;
+
+use crate::order::OrderInfo;
 
 pub enum OrderType {
     Undefined = 0,
@@ -9,6 +11,8 @@ pub enum OrderType {
     Sell = 2,
     BuyPo = 7,
     SellPo = 8,
+    BuyAtomic = 9,
+    SellAtomic = 10,
 }
 
 #[allow(non_snake_case)]
@@ -39,6 +43,7 @@ pub struct DerivativePosition {
     pub market_id: String,
     pub position: Position,
 }
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DerivativeOrder {
     pub market_id: String,
