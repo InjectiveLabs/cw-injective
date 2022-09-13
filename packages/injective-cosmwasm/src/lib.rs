@@ -21,7 +21,7 @@ pub use msg::{
 pub use querier::InjectiveQuerier;
 pub use query::{
     DerivativeMarketMidPriceAndTOBResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse, OracleVolatilityResponse,
-    SpotMarketMidPriceAndTOBResponse, SubaccountDepositResponse,
+    SpotMarketMidPriceAndTOBResponse, SubaccountDepositResponse, SpotMarketResponse, TraderSpotOrdersResponse
 };
 pub use route::InjectiveRoute;
 pub use subaccount::{
