@@ -1,6 +1,6 @@
 use cosmwasm_std::testing::{MockApi, MockStorage};
 use cosmwasm_std::{
-    from_slice, to_binary, Binary, ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest, SystemError, SystemResult, WasmQuery,
+    from_slice, to_binary, BankQuery, Binary, ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest, SystemError, SystemResult, WasmQuery,
 };
 
 use injective_math::FPDecimal;
@@ -189,6 +189,7 @@ type OracleVolatilityResponseHandler =
 
 pub struct WasmMockQuerier {
     smart_query_handler: Option<fn(contract_addr: &str, msg: &Binary) -> QuerierResult>,
+    bank_query_handler: Option<fn(query: &BankQuery) -> QuerierResult>,
     subaccount_deposit_response_handler: Option<fn(subaccount_id: String, denom: String) -> QuerierResult>,
     spot_market_response_handler: Option<fn(market_id: String) -> QuerierResult>,
     trader_spot_orders_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
@@ -232,121 +233,114 @@ impl WasmMockQuerier {
 
     pub fn handle_query(&self, request: &QueryRequest<InjectiveQueryWrapper>) -> QuerierResult {
         match &request {
-            QueryRequest::Wasm(WasmQuery::Smart { contract_addr, msg }) => {
-                println!("MockQuerier: Smart query for {}:{}", contract_addr, msg);
-
-                match self.smart_query_handler {
-                    Some(handler) => handler(contract_addr, msg),
-                    None => panic!("Unknown smart query"),
-                }
-            }
-            QueryRequest::Custom(query) => {
-                println!("MockQuerier: Custom query");
-
-                match query.query_data.clone() {
-                    InjectiveQuery::SubaccountDeposit { subaccount_id, denom } => match self.subaccount_deposit_response_handler {
-                        Some(handler) => handler(subaccount_id, denom),
-                        None => default_subaccount_deposit_response_handler(),
-                    },
-                    InjectiveQuery::SpotMarket { market_id } => match self.spot_market_response_handler {
-                        Some(handler) => handler(market_id),
-                        None => default_spot_market_response_handler(market_id),
-                    },
-                    InjectiveQuery::TraderSpotOrders { market_id, subaccount_id } => match self.trader_spot_orders_response_handler {
+            QueryRequest::Wasm(WasmQuery::Smart { contract_addr, msg }) => match self.smart_query_handler {
+                Some(handler) => handler(contract_addr, msg),
+                None => panic!("Unknown smart query"),
+            },
+            QueryRequest::Custom(query) => match query.query_data.clone() {
+                InjectiveQuery::SubaccountDeposit { subaccount_id, denom } => match self.subaccount_deposit_response_handler {
+                    Some(handler) => handler(subaccount_id, denom),
+                    None => default_subaccount_deposit_response_handler(),
+                },
+                InjectiveQuery::SpotMarket { market_id } => match self.spot_market_response_handler {
+                    Some(handler) => handler(market_id),
+                    None => default_spot_market_response_handler(market_id),
+                },
+                InjectiveQuery::TraderSpotOrders { market_id, subaccount_id } => match self.trader_spot_orders_response_handler {
+                    Some(handler) => handler(market_id, subaccount_id),
+                    None => default_trader_spot_orders_response_handler(),
+                },
+                InjectiveQuery::TraderSpotOrdersToCancelUpToAmount {
+                    market_id,
+                    subaccount_id,
+                    base_amount,
+                    quote_amount,
+                    strategy,
+                    reference_price,
+                } => match self.trader_spot_orders_to_cancel_up_to_amount_response_handler {
+                    Some(handler) => handler(market_id, subaccount_id, base_amount, quote_amount, strategy, reference_price),
+                    None => default_trader_spot_orders_to_cancel_up_to_amount_response_handler(),
+                },
+                InjectiveQuery::TraderDerivativeOrdersToCancelUpToAmount {
+                    market_id,
+                    subaccount_id,
+                    quote_amount,
+                    strategy,
+                    reference_price,
+                } => match self.trader_derivative_orders_to_cancel_up_to_amount_response_handler {
+                    Some(handler) => handler(market_id, subaccount_id, quote_amount, strategy, reference_price),
+                    None => default_trader_derivative_orders_to_cancel_up_to_amount_response_handler(),
+                },
+                InjectiveQuery::DerivativeMarket { market_id } => match self.derivative_market_response_handler {
+                    Some(handler) => handler(market_id),
+                    None => default_derivative_market_response_handler(market_id),
+                },
+                InjectiveQuery::SubaccountPositions { subaccount_id } => match self.subaccount_positions_response_handler {
+                    Some(handler) => handler(subaccount_id),
+                    None => default_subaccount_positions_response_handler(),
+                },
+                InjectiveQuery::SubaccountPositionInMarket { market_id, subaccount_id } => {
+                    match self.subaccount_position_in_market_response_handler {
                         Some(handler) => handler(market_id, subaccount_id),
-                        None => default_trader_spot_orders_response_handler(),
-                    },
-                    InjectiveQuery::TraderSpotOrdersToCancelUpToAmount {
-                        market_id,
-                        subaccount_id,
-                        base_amount,
-                        quote_amount,
-                        strategy,
-                        reference_price,
-                    } => match self.trader_spot_orders_to_cancel_up_to_amount_response_handler {
-                        Some(handler) => handler(market_id, subaccount_id, base_amount, quote_amount, strategy, reference_price),
-                        None => default_trader_spot_orders_to_cancel_up_to_amount_response_handler(),
-                    },
-                    InjectiveQuery::TraderDerivativeOrdersToCancelUpToAmount {
-                        market_id,
-                        subaccount_id,
-                        quote_amount,
-                        strategy,
-                        reference_price,
-                    } => match self.trader_derivative_orders_to_cancel_up_to_amount_response_handler {
-                        Some(handler) => handler(market_id, subaccount_id, quote_amount, strategy, reference_price),
-                        None => default_trader_derivative_orders_to_cancel_up_to_amount_response_handler(),
-                    },
-                    InjectiveQuery::DerivativeMarket { market_id } => match self.derivative_market_response_handler {
-                        Some(handler) => handler(market_id),
-                        None => default_derivative_market_response_handler(market_id),
-                    },
-                    InjectiveQuery::SubaccountPositions { subaccount_id } => match self.subaccount_positions_response_handler {
-                        Some(handler) => handler(subaccount_id),
-                        None => default_subaccount_positions_response_handler(),
-                    },
-                    InjectiveQuery::SubaccountPositionInMarket { market_id, subaccount_id } => {
-                        match self.subaccount_position_in_market_response_handler {
-                            Some(handler) => handler(market_id, subaccount_id),
-                            None => default_subaccount_position_in_market_response_handler(),
-                        }
+                        None => default_subaccount_position_in_market_response_handler(),
                     }
-                    InjectiveQuery::SubaccountEffectivePositionInMarket { market_id, subaccount_id } => {
-                        match self.subaccount_effective_position_in_market_response_handler {
-                            Some(handler) => handler(market_id, subaccount_id),
-                            None => default_subaccount_effective_position_in_market_response_handler(),
-                        }
-                    }
-                    InjectiveQuery::TraderDerivativeOrders { market_id, subaccount_id } => match self.trader_derivative_orders_response_handler {
-                        Some(handler) => handler(market_id, subaccount_id),
-                        None => default_trader_derivative_orders_response_handler(),
-                    },
-                    InjectiveQuery::TraderTransientSpotOrders { market_id, subaccount_id } => {
-                        match self.trader_transient_spot_orders_response_handler {
-                            Some(handler) => handler(market_id, subaccount_id),
-                            None => default_trader_transient_spot_orders_response_handler(),
-                        }
-                    }
-                    InjectiveQuery::TraderTransientDerivativeOrders { market_id, subaccount_id } => {
-                        match self.trader_transient_derivative_orders_response_handler {
-                            Some(handler) => handler(market_id, subaccount_id),
-                            None => default_trader_transient_derivative_orders_response_handler(),
-                        }
-                    }
-                    InjectiveQuery::PerpetualMarketInfo { market_id } => match self.perpetual_market_info_response_handler {
-                        Some(handler) => handler(market_id),
-                        None => default_perpetual_market_info_response_handler(),
-                    },
-                    InjectiveQuery::PerpetualMarketFunding { market_id } => match self.perpetual_market_funding_response_handler {
-                        Some(handler) => handler(market_id),
-                        None => default_perpetual_market_funding_response_handler(),
-                    },
-                    InjectiveQuery::MarketVolatility {
-                        market_id,
-                        trade_history_options,
-                    } => match self.market_volatility_response_handler {
-                        Some(handler) => handler(market_id, trade_history_options),
-                        None => default_market_volatility_response_handler(),
-                    },
-                    InjectiveQuery::SpotMarketMidPriceAndTob { market_id } => match self.spot_market_mid_price_and_tob_response_handler {
-                        Some(handler) => handler(market_id),
-                        None => default_spot_market_mid_price_and_tob_response_handler(),
-                    },
-                    InjectiveQuery::DerivativeMarketMidPriceAndTob { market_id } => match self.derivative_market_mid_price_and_tob_response_handler {
-                        Some(handler) => handler(market_id),
-                        None => default_derivative_market_mid_price_and_tob_response_handler(),
-                    },
-                    InjectiveQuery::OracleVolatility {
-                        base_info,
-                        quote_info,
-                        oracle_history_options,
-                    } => match self.oracle_volatility_response_handler {
-                        Some(handler) => handler(base_info, quote_info, oracle_history_options),
-                        None => default_oracle_volatility_response_handler(),
-                    },
                 }
-            }
-            QueryRequest::Bank(_) => panic!("Unknown bank query"),
+                InjectiveQuery::SubaccountEffectivePositionInMarket { market_id, subaccount_id } => {
+                    match self.subaccount_effective_position_in_market_response_handler {
+                        Some(handler) => handler(market_id, subaccount_id),
+                        None => default_subaccount_effective_position_in_market_response_handler(),
+                    }
+                }
+                InjectiveQuery::TraderDerivativeOrders { market_id, subaccount_id } => match self.trader_derivative_orders_response_handler {
+                    Some(handler) => handler(market_id, subaccount_id),
+                    None => default_trader_derivative_orders_response_handler(),
+                },
+                InjectiveQuery::TraderTransientSpotOrders { market_id, subaccount_id } => match self.trader_transient_spot_orders_response_handler {
+                    Some(handler) => handler(market_id, subaccount_id),
+                    None => default_trader_transient_spot_orders_response_handler(),
+                },
+                InjectiveQuery::TraderTransientDerivativeOrders { market_id, subaccount_id } => {
+                    match self.trader_transient_derivative_orders_response_handler {
+                        Some(handler) => handler(market_id, subaccount_id),
+                        None => default_trader_transient_derivative_orders_response_handler(),
+                    }
+                }
+                InjectiveQuery::PerpetualMarketInfo { market_id } => match self.perpetual_market_info_response_handler {
+                    Some(handler) => handler(market_id),
+                    None => default_perpetual_market_info_response_handler(),
+                },
+                InjectiveQuery::PerpetualMarketFunding { market_id } => match self.perpetual_market_funding_response_handler {
+                    Some(handler) => handler(market_id),
+                    None => default_perpetual_market_funding_response_handler(),
+                },
+                InjectiveQuery::MarketVolatility {
+                    market_id,
+                    trade_history_options,
+                } => match self.market_volatility_response_handler {
+                    Some(handler) => handler(market_id, trade_history_options),
+                    None => default_market_volatility_response_handler(),
+                },
+                InjectiveQuery::SpotMarketMidPriceAndTob { market_id } => match self.spot_market_mid_price_and_tob_response_handler {
+                    Some(handler) => handler(market_id),
+                    None => default_spot_market_mid_price_and_tob_response_handler(),
+                },
+                InjectiveQuery::DerivativeMarketMidPriceAndTob { market_id } => match self.derivative_market_mid_price_and_tob_response_handler {
+                    Some(handler) => handler(market_id),
+                    None => default_derivative_market_mid_price_and_tob_response_handler(),
+                },
+                InjectiveQuery::OracleVolatility {
+                    base_info,
+                    quote_info,
+                    oracle_history_options,
+                } => match self.oracle_volatility_response_handler {
+                    Some(handler) => handler(base_info, quote_info, oracle_history_options),
+                    None => default_oracle_volatility_response_handler(),
+                },
+            },
+            QueryRequest::Bank(query) => match self.bank_query_handler {
+                Some(handler) => handler(query),
+                None => panic!("Unknown bank query"),
+            },
             _ => panic!("Unknown query"),
         }
     }
@@ -362,6 +356,7 @@ impl WasmMockQuerier {
     pub fn new() -> Self {
         WasmMockQuerier {
             smart_query_handler: None,
+            bank_query_handler: None,
             subaccount_deposit_response_handler: None,
             spot_market_response_handler: None,
             trader_spot_orders_response_handler: None,
