@@ -1,6 +1,7 @@
 mod derivative;
 mod derivative_market;
 mod exchange;
+mod exchange_mock_querier;
 mod msg;
 mod oracle;
 mod order;
@@ -18,11 +19,13 @@ pub use msg::{
     create_spot_market_order_msg, create_subaccount_transfer_msg, create_withdraw_msg, InjectiveMsg, InjectiveMsgWrapper,
 };
 
+pub use exchange_mock_querier::{mock_dependencies, WasmMockQuerier};
 pub use querier::InjectiveQuerier;
 pub use query::{
-    DerivativeMarketMidPriceAndTOBResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse, OracleVolatilityResponse,
-    PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse, SubaccountDepositResponse,
-    SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+    DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse,
+    OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse,
+    SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse,
+    TraderSpotOrdersResponse,
 };
 pub use route::InjectiveRoute;
 pub use subaccount::{
