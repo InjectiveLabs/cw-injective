@@ -51,7 +51,7 @@ pub use derivative_market::{
     DerivativeMarket, FullDerivativeMarket, FullDerivativeMarketPerpetualInfo, PerpetualMarketFunding, PerpetualMarketInfo, PerpetualMarketState,
 };
 
-pub use volatility:: {MetadataStatistics, TradeHistoryOptions, TradeRecord, PriceRecord};
+pub use volatility::{MetadataStatistics, TradeHistoryOptions, TradeRecord, PriceRecord};
 
 // This export is added to all contracts that import this package, signifying that they require
 // "injective" support on the chain they run on.
