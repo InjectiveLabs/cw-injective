@@ -2,6 +2,8 @@ use cosmwasm_std::Reply;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use injective_math::FPDecimal;
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
     // Market Id
@@ -12,8 +14,8 @@ pub struct InstantiateMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    Swap { quantity: String, price: String },
-    Reset { count: i32 },
+    SwapSpot { quantity: FPDecimal, price: FPDecimal },
+    // Reset { count: i32 },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

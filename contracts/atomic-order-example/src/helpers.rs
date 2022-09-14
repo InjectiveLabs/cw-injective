@@ -1,9 +1,11 @@
+use std::borrow::BorrowMut;
+
+use cosmwasm_std::{Addr, BlockInfo, ContractInfo, CosmosMsg, CustomQuery, Env, Querier, QuerierWrapper, StdResult, SubMsg, Timestamp, to_binary, TransactionInfo, WasmMsg, WasmQuery};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-
-use cosmwasm_std::{
-    to_binary, Addr, CosmosMsg, CustomQuery, Querier, QuerierWrapper, StdResult, WasmMsg, WasmQuery,
-};
+use injective_cosmwasm::InjectiveMsgWrapper;
+use injective_math::FPDecimal;
+use crate::contract::TEST_CONTRACT_ADDR;
 
 use crate::msg::{ExecuteMsg, GetCountResponse, QueryMsg};
 
@@ -24,23 +26,53 @@ impl CwTemplateContract {
             msg,
             funds: vec![],
         }
-        .into())
+            .into())
     }
 
     /// Get Count
     pub fn count<Q, T, CQ>(&self, querier: &Q) -> StdResult<GetCountResponse>
-    where
-        Q: Querier,
-        T: Into<String>,
-        CQ: CustomQuery,
+        where
+            Q: Querier,
+            T: Into<String>,
+            CQ: CustomQuery,
     {
         let msg = QueryMsg::GetCount {};
         let query = WasmQuery::Smart {
             contract_addr: self.addr().into(),
             msg: to_binary(&msg)?,
         }
-        .into();
+            .into();
         let res: GetCountResponse = QuerierWrapper::<CQ>::new(querier).query(&query)?;
         Ok(res)
     }
+}
+
+
+pub fn i32_to_dec(source: i32) -> FPDecimal {
+    FPDecimal::from(i128::from(source))
+}
+
+pub fn inj_mock_env() -> Env {
+    // let mut mock_env: Env = mock_env();
+    // mock_env.contract.address = Addr::unchecked(TEST_CONTRACT_ADDR);
+    // return mock_env;
+    Env {
+        block: BlockInfo {
+            height: 12_345,
+            time: Timestamp::from_nanos(1_571_797_419_879_305_533),
+            chain_id: "cosmos-testnet-14002".to_string(),
+        },
+        transaction: Some(TransactionInfo { index: 3 }),
+        contract: ContractInfo {
+            address: Addr::unchecked(TEST_CONTRACT_ADDR),
+        },
+    }
+}
+
+pub fn get_message_data(response: &Vec<SubMsg<InjectiveMsgWrapper>>, position: usize) -> &InjectiveMsgWrapper {
+    let sth = match &response.get(position).unwrap().msg {
+        CosmosMsg::Custom(msg) => msg,
+        _ => panic!("No wrapped message found"),
+    };
+    sth
 }

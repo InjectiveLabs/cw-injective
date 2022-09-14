@@ -99,3 +99,19 @@ pub struct TrimmedSpotLimitOrder {
     pub isBuy: bool,
     pub order_hash: String,
 }
+
+
+#[allow(non_snake_case)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct SpotMarketOrderResults {
+    pub quantity: FPDecimal,
+    pub price: FPDecimal,
+    pub fee: FPDecimal,
+}
+
+#[allow(non_snake_case)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct MsgCreateSpotMarketOrderResponse {
+    pub order_hash: String,
+    pub results : SpotMarketOrderResults,
+}
