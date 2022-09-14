@@ -188,26 +188,26 @@ type OracleVolatilityResponseHandler =
     Option<fn(base_info: Option<OracleInfo>, quote_info: Option<OracleInfo>, oracle_history_options: Option<OracleHistoryOptions>) -> QuerierResult>;
 
 pub struct WasmMockQuerier {
-    smart_query_handler: Option<fn(contract_addr: &str, msg: &Binary) -> QuerierResult>,
-    bank_query_handler: Option<fn(query: &BankQuery) -> QuerierResult>,
-    subaccount_deposit_response_handler: Option<fn(subaccount_id: String, denom: String) -> QuerierResult>,
-    spot_market_response_handler: Option<fn(market_id: String) -> QuerierResult>,
-    trader_spot_orders_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
-    trader_spot_orders_to_cancel_up_to_amount_response_handler: TraderSpotOrdersToCancelUpToAmountResponseHandler,
-    trader_derivative_orders_to_cancel_up_to_amount_response_handler: TraderDerivativeOrdersToCancelUpToAmountResponseHandler,
-    derivative_market_response_handler: Option<fn(market_id: String) -> QuerierResult>,
-    subaccount_positions_response_handler: Option<fn(subaccount_id: String) -> QuerierResult>,
-    subaccount_position_in_market_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
-    subaccount_effective_position_in_market_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
-    trader_derivative_orders_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
-    trader_transient_spot_orders_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
-    trader_transient_derivative_orders_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
-    perpetual_market_info_response_handler: Option<fn(market_id: String) -> QuerierResult>,
-    perpetual_market_funding_response_handler: Option<fn(market_id: String) -> QuerierResult>,
-    market_volatility_response_handler: Option<fn(market_id: String, trade_history_options: TradeHistoryOptions) -> QuerierResult>,
-    spot_market_mid_price_and_tob_response_handler: Option<fn(market_id: String) -> QuerierResult>,
-    derivative_market_mid_price_and_tob_response_handler: Option<fn(market_id: String) -> QuerierResult>,
-    oracle_volatility_response_handler: OracleVolatilityResponseHandler,
+    pub smart_query_handler: Option<fn(contract_addr: &str, msg: &Binary) -> QuerierResult>,
+    pub bank_query_handler: Option<fn(query: &BankQuery) -> QuerierResult>,
+    pub subaccount_deposit_response_handler: Option<fn(subaccount_id: String, denom: String) -> QuerierResult>,
+    pub spot_market_response_handler: Option<fn(market_id: String) -> QuerierResult>,
+    pub trader_spot_orders_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
+    pub trader_spot_orders_to_cancel_up_to_amount_response_handler: TraderSpotOrdersToCancelUpToAmountResponseHandler,
+    pub trader_derivative_orders_to_cancel_up_to_amount_response_handler: TraderDerivativeOrdersToCancelUpToAmountResponseHandler,
+    pub derivative_market_response_handler: Option<fn(market_id: String) -> QuerierResult>,
+    pub subaccount_positions_response_handler: Option<fn(subaccount_id: String) -> QuerierResult>,
+    pub subaccount_position_in_market_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
+    pub subaccount_effective_position_in_market_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
+    pub trader_derivative_orders_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
+    pub trader_transient_spot_orders_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
+    pub trader_transient_derivative_orders_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
+    pub perpetual_market_info_response_handler: Option<fn(market_id: String) -> QuerierResult>,
+    pub perpetual_market_funding_response_handler: Option<fn(market_id: String) -> QuerierResult>,
+    pub market_volatility_response_handler: Option<fn(market_id: String, trade_history_options: TradeHistoryOptions) -> QuerierResult>,
+    pub spot_market_mid_price_and_tob_response_handler: Option<fn(market_id: String) -> QuerierResult>,
+    pub derivative_market_mid_price_and_tob_response_handler: Option<fn(market_id: String) -> QuerierResult>,
+    pub oracle_volatility_response_handler: OracleVolatilityResponseHandler,
 }
 
 impl Querier for WasmMockQuerier {
@@ -227,10 +227,6 @@ impl Querier for WasmMockQuerier {
 }
 
 impl WasmMockQuerier {
-    pub fn set_smart_query_handler(&mut self, handler: fn(contract_addr: &str, msg: &Binary) -> QuerierResult) {
-        self.smart_query_handler = Some(handler)
-    }
-
     pub fn handle_query(&self, request: &QueryRequest<InjectiveQueryWrapper>) -> QuerierResult {
         match &request {
             QueryRequest::Wasm(WasmQuery::Smart { contract_addr, msg }) => match self.smart_query_handler {
