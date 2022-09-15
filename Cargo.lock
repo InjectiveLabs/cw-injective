@@ -23,6 +23,7 @@ dependencies = [
  "cosmwasm-storage",
  "cw-multi-test",
  "cw-storage-plus 0.14.0",
+ "cw-utils",
  "cw2 0.14.0",
  "injective-cosmwasm",
  "injective-math",

@@ -1,13 +1,14 @@
 use std::cmp::min;
 use std::str::FromStr;
 
-use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdError, StdResult, SubMsg, to_binary, WasmMsg};
+use cosmwasm_std::{Binary, Deps, DepsMut, Env, from_binary, MessageInfo, Reply, Response, StdError, StdResult, SubMsg, to_binary, WasmMsg};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cw2::set_contract_version;
 use cw_storage_plus::Item;
+use cw_utils::parse_reply_execute_data;
 
-use injective_cosmwasm::{address_to_subaccount_id, create_batch_update_orders_msg, create_deposit_msg, create_external_transfer_msg, create_spot_market_order_msg, default_subaccount_id, DerivativeOrder, InjectiveMsg, InjectiveMsgWrapper, OrderData, OrderInfo, SpotMarketOrder, SpotOrder};
+use injective_cosmwasm::{address_to_subaccount_id, create_batch_update_orders_msg, create_deposit_msg, create_external_transfer_msg, create_spot_market_order_msg, default_subaccount_id, DerivativeOrder, InjectiveMsg, InjectiveMsgWrapper, OrderData, OrderInfo, SpotMarketOrder, SpotOrder, MsgCreateSpotMarketOrderResponse};
 use injective_math::FPDecimal;
 
 use crate::error::ContractError;
@@ -98,6 +99,9 @@ pub fn try_swap(deps: DepsMut, env: Env, info: MessageInfo, quantity: FPDecimal,
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> StdResult<Response> {
+    deps.api.debug(format!("SC ----> Received reply (data): {}", msg.clone().result.unwrap().data.unwrap()).as_str());
+    let events = msg.clone().result.unwrap().events;
+    deps.api.debug(format!("SC ----> Received reply (events count): {}", events.len()).as_str());
     match msg.id {
         ATOMIC_ORDER_REPLY_ID => handle_atomic_order_reply(deps, msg),
         id => Err(StdError::generic_err(format!("Unknown reply id: {}", id))),
@@ -106,7 +110,17 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> StdResult<Response> {
 
 fn handle_atomic_order_reply(deps: DepsMut, msg: Reply) -> StdResult<Response> {
     // let binary_response = msg.result.into_result().data;
+    let res = parse_reply_execute_data(msg).unwrap();
+    let data = res.data.unwrap();
+    let rep = msg.result.into_result().map_err(StdError::generic_err)
+    unwrap_reply()
+
+    let des = from_binary::<MsgCreateSpotMarketOrderResponse>(&data);
+    // MsgCreateSpotMarketOrderResponse::
+    // parse_protobuf_string(data.0.as_mut(), 1);
+
     Ok(Response::new())
+
     // TODO: parse response
     // TODO: find a way to obtain original message data (deposit, sender addr )
     // TODO: return response with transfer messages to transfer back newly obtained coins + leftover deposit
@@ -128,10 +142,11 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{coins, from_binary};
+    use cosmwasm_std::{coins, from_binary, SubMsgResponse, SubMsgResult};
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+
+    use injective_cosmwasm::{Deposit, InjectiveRoute};
     use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
-    use injective_cosmwasm::InjectiveRoute;
 
     use crate::helpers::{get_message_data, i32_to_dec, inj_mock_env};
 
@@ -159,13 +174,15 @@ mod tests {
     fn test_swap() {
         let mut deps = mock_dependencies();
 
+        let contract_addr = "inj14hj2tavq8fpesdwxxcu44rty3hh90vhujaxlnz";
         let market_id = "0x78c2d3af98c517b164070a739681d4bd4d293101e7ffc3a30968945329b47ec6".to_string();
         let env = inj_mock_env();
         let msg = InstantiateMsg { market_id: market_id.clone() };
-        let info = mock_info("creator", &coins(1, "usdt"));
-        let _res = instantiate(deps.as_mut(), env.clone(), info, msg).unwrap();
+        let inst_info = mock_info("creator", &coins(1, "usdt"));
+        let _res = instantiate(deps.as_mut(), env.clone(), inst_info, msg).unwrap();
 
-        let info = mock_info("anyone", &coins(1000, "usdt"));
+        let swap_sender = "anyone";
+        let info = mock_info(swap_sender, &coins(1000, "usdt"));
         let msg = ExecuteMsg::SwapSpot { quantity: i32_to_dec(2), price: i32_to_dec(490) };
         let res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
@@ -175,21 +192,30 @@ mod tests {
                 market_id,
                 order_info: OrderInfo {
                     subaccount_id: "0xade4a5f5803a439835c636395a8d648dee57b2fc000000000000000000000000".to_string(),
-                    fee_recipient: "inj14hj2tavq8fpesdwxxcu44rty3hh90vhujaxlnz".to_string(),
+                    fee_recipient: contract_addr.to_string(),
                     price: i32_to_dec(490),
-                    quantity:  i32_to_dec(2)
+                    quantity: i32_to_dec(2),
                 },
                 order_type: 9,
-                trigger_price: None
-            }
+                trigger_price: None,
+            },
         };
 
-        let unwrapped = get_message_data(&res.messages, 0);
-        assert_eq!(InjectiveRoute::Exchange, unwrapped.route, "route was incorrect");
-        assert_eq!(expected_atomic_order_message, unwrapped.msg_data, "spot create order had incorrect content");
+        match &get_message_data(&res.messages, 0).msg_data {
+            InjectiveMsg::Deposit { sender, subaccount_id, amount } => {
+                assert_eq!(sender, contract_addr, "sender not correct")
+            }
+            _ => {}
+        }
+        let order_message = get_message_data(&res.messages, 1);
+        assert_eq!(InjectiveRoute::Exchange, order_message.route, "route was incorrect");
+        assert_eq!(expected_atomic_order_message, order_message.msg_data, "spot create order had incorrect content");
 
+        let binary_response = Binary::from_base64("CkIweGRkNzI5MmY2ODcwMzIwOTc2YTUxYTUwODBiMGQ2NDU5M2NhZjE3OWViM2YxOTNjZWVlZGFiNGVhNWUxNDljZWISQwoTODAwMDAwMDAwMDAwMDAwMDAwMBIWMTAwMDAwMDAwMDAwMDAwMDAwMDAwMBoUMzYwMDAwMDAwMDAwMDAwMDAwMDA=").unwrap();
+        let reply_msg = Reply { id: ATOMIC_ORDER_REPLY_ID, result: SubMsgResult::Ok(SubMsgResponse { events: vec![], data: Some(binary_response) } ) };
 
-        // reply(deps.as_mut(), inj_mock_env(), Reply {})
+        let transfers_response = reply(deps.as_mut(), inj_mock_env(), reply_msg);
+
     }
 
     // #[test]
