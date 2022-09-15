@@ -33,7 +33,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: wasm
-          args: --locked
+          args: --locked --package registry
         env:
           RUSTFLAGS: "-C link-arg=-s"
 
