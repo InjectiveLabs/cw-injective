@@ -9,6 +9,8 @@ pub struct InstantiateMsg {
     // Market Id
     // MARKET_ID="0xfbd55f13641acbb6e69d7b59eb335dabe2ecbfea136082ce2eedaba8a0c917a3"
     pub market_id: String,
+    pub base_denom: String,
+    pub quote_denom : String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

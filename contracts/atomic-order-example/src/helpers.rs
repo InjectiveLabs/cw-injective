@@ -5,7 +5,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use injective_cosmwasm::InjectiveMsgWrapper;
 use injective_math::FPDecimal;
-use crate::contract::TEST_CONTRACT_ADDR;
+// use crate::contract::TEST_CONTRACT_ADDR;
 use cw_utils::parse_reply_instantiate_data;
 
 
@@ -54,22 +54,7 @@ pub fn i32_to_dec(source: i32) -> FPDecimal {
     FPDecimal::from(i128::from(source))
 }
 
-pub fn inj_mock_env() -> Env {
-    // let mut mock_env: Env = mock_env();
-    // mock_env.contract.address = Addr::unchecked(TEST_CONTRACT_ADDR);
-    // return mock_env;
-    Env {
-        block: BlockInfo {
-            height: 12_345,
-            time: Timestamp::from_nanos(1_571_797_419_879_305_533),
-            chain_id: "cosmos-testnet-14002".to_string(),
-        },
-        transaction: Some(TransactionInfo { index: 3 }),
-        contract: ContractInfo {
-            address: Addr::unchecked(TEST_CONTRACT_ADDR),
-        },
-    }
-}
+
 
 pub fn get_message_data(response: &Vec<SubMsg<InjectiveMsgWrapper>>, position: usize) -> &InjectiveMsgWrapper {
     let sth = match &response.get(position).unwrap().msg {
