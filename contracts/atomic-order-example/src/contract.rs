@@ -13,6 +13,7 @@ use injective_math::FPDecimal;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg};
+use crate::proto_parser::parse_protobuf_string;
 use crate::state::{State, STATE};
 
 // version info for migration info
@@ -109,13 +110,19 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> StdResult<Response> {
 }
 
 fn handle_atomic_order_reply(deps: DepsMut, msg: Reply) -> StdResult<Response> {
-    // let binary_response = msg.result.into_result().data;
-    let res = parse_reply_execute_data(msg).unwrap();
-    let data = res.data.unwrap();
-    let rep = msg.result.into_result().map_err(StdError::generic_err)
-    unwrap_reply()
+    // let res = parse_reply_execute_data(msg).unwrap();
+    // let mut data = res.data.unwrap().to_vec();
+    // let rep = msg.result.into_result().map_err(StdError::generic_err);
+    // let mut data = res.unwrap().to_vec();
 
-    let des = from_binary::<MsgCreateSpotMarketOrderResponse>(&data);
+    let mut data = msg.clone().result.into_result().unwrap().data.unwrap().to_vec();
+    let field1 = parse_protobuf_string(&mut data,1);
+
+    let field2 = parse_protobuf_string(&mut data,2);
+    let field3 = parse_protobuf_string(&mut data,3);
+    let field4 = parse_protobuf_string(&mut data,4);
+
+    // let des = from_binary::<MsgCreateSpotMarketOrderResponse>(&data);
     // MsgCreateSpotMarketOrderResponse::
     // parse_protobuf_string(data.0.as_mut(), 1);
 
