@@ -41,6 +41,7 @@ pub fn inj_mock_env() -> Env {
     }
 }
 
+
 pub trait OwnedDepsExt<S, A, Q, C> where C: CustomQuery {
     fn as_mut_deps(&mut self) -> DepsMut<C>;
 }
@@ -127,8 +128,8 @@ fn test_swap() {
     match &get_message_data(&res.messages, 0).msg_data {
         InjectiveMsg::Deposit {
             sender,
-            subaccount_id,
-            amount,
+            subaccount_id: _subaccount_id,
+            amount: _amount,
         } => {
             assert_eq!(sender, contract_addr, "sender not correct")
         }
@@ -162,8 +163,8 @@ fn test_swap() {
         // base
         InjectiveMsg::ExternalTransfer {
             sender,
-            source_subaccount_id,
-            destination_subaccount_id,
+            source_subaccount_id: _source_subaccount_id,
+            destination_subaccount_id: _destination_subaccount_id,
             amount,
         } => {
             assert_eq!(sender, contract_addr, "sender not correct");
@@ -175,8 +176,8 @@ fn test_swap() {
         // leftover quote
         InjectiveMsg::ExternalTransfer {
             sender,
-            source_subaccount_id,
-            destination_subaccount_id,
+            source_subaccount_id: _source_subaccount_id,
+            destination_subaccount_id: _destination_subaccount_id,
             amount,
         } => {
             assert_eq!(sender, contract_addr, "sender not correct");
@@ -195,8 +196,7 @@ fn handle_spot_market_response(market_id: String) -> QuerierResult {
             maker_fee_rate: FPDecimal::from_str("0.01").unwrap(),
             taker_fee_rate: FPDecimal::from_str("0.1").unwrap(),
             relayer_fee_share_rate: FPDecimal::from_str("0.4").unwrap(),
-            market_id: "0xa508cb32923323679f29a032c70342c147c17d0145625922b0ef22e955c844c0"
-                .to_string(),
+            market_id,
             status: 0,
             min_price_tick_size: FPDecimal::from_str("0.000000000000001").unwrap(),
             min_quantity_tick_size: FPDecimal::from_str("1000000000000000").unwrap(),

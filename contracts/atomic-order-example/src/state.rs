@@ -15,7 +15,7 @@ pub struct ContractConfigState {
     pub quote_denom : String,
 }
 
-pub const CACHE : Item<SwapCacheState> = Item::new("cache");
+pub const SWAP_OPERATION_STATE: Item<SwapCacheState> = Item::new("cache");
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct SwapCacheState {

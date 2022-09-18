@@ -21,8 +21,8 @@ use injective_math::FPDecimal;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg};
-use crate::proto_parser::{parse_protobuf_bytes, parse_protobuf_string};
-use crate::state::{ContractConfigState, SwapCacheState, CACHE, STATE};
+use crate::proto_parser::{parse_protobuf_bytes, parse_protobuf_string, ResultToStdErrExt};
+use crate::state::{ContractConfigState, SwapCacheState, SWAP_OPERATION_STATE, STATE};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:atomic-order-example";
@@ -61,12 +61,12 @@ pub fn instantiate(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut<InjectiveQueryWrapper>,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     match msg {
-        ExecuteMsg::SwapSpot { quantity, price } => try_swap(deps, _env, info, quantity, price),
+        ExecuteMsg::SwapSpot { quantity, price } => try_swap(deps, env, info, quantity, price),
     }
 }
 
@@ -77,12 +77,15 @@ pub fn try_swap(
     quantity: FPDecimal,
     price: FPDecimal,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
-    deps.api
-        .debug(format!("SC ----> Funds info: {}", info.funds[0]).as_str());
     let config = STATE.load(deps.storage)?;
     let contract = env.contract.address;
     let subaccount_id = default_subaccount_id(&contract);
     let min_deposit = price * quantity;
+    if info.funds.len() < 1 {
+        return Err(ContractError::CustomError {
+            val: "No funds deposited!".to_string(),
+        });
+    }
     let message_deposit = FPDecimal::from(info.funds[0].amount.u128());
     if message_deposit < min_deposit {
         return Err(ContractError::CustomError {
@@ -121,7 +124,7 @@ pub fn try_swap(
         sender_address: info.sender.to_string(),
         deposited_amount: coins.clone(),
     };
-    CACHE.save(deps.storage, &cache)?;
+    SWAP_OPERATION_STATE.save(deps.storage, &cache)?;
 
     return Ok(response);
 }
@@ -132,9 +135,6 @@ pub fn reply(
     _env: Env,
     msg: Reply,
 ) -> Result<Response<InjectiveMsgWrapper>, StdError> {
-    // deps.api.debug(format!("SC ----> Received reply (data): {}", msg.clone().result.unwrap().data.unwrap()).as_str(), );
-    // let events = msg.clone().result.unwrap().events;
-    // deps.api.debug(format!("SC ----> Received reply (events count): {}", events.len()).as_str());
     match msg.id {
         ATOMIC_ORDER_REPLY_ID => handle_atomic_order_reply(deps, msg),
         id => Err(StdError::generic_err(format!("Unknown reply id: {}", id))),
@@ -147,19 +147,19 @@ fn handle_atomic_order_reply(
 ) -> Result<Response<InjectiveMsgWrapper>, StdError> {
     let dec_scale_factor: FPDecimal = FPDecimal::from(1000000000000000000 as i128);
     let mut data = msg.result.unwrap().data.unwrap().to_vec();
-    let _ = parse_protobuf_string(&mut data, 1); // order hash - we need to read to advance pointer
+    let _ = parse_protobuf_string(&mut data, 1); // order hash - we need to read to advance reader
 
-    let trade_result = parse_protobuf_bytes(&mut data, 2).unwrap();
+    let trade_result = parse_protobuf_bytes(&mut data, 2).with_stderr()?;
     let mut trade_data = trade_result.unwrap().to_vec();
-    let field1 = parse_protobuf_string(&mut trade_data, 1).unwrap();
-    let field2 = parse_protobuf_string(&mut trade_data, 2).unwrap();
-    let field3 = parse_protobuf_string(&mut trade_data, 3).unwrap();
+    let field1 = parse_protobuf_string(&mut trade_data, 1).with_stderr()?;
+    let field2 = parse_protobuf_string(&mut trade_data, 2).with_stderr()?;
+    let field3 = parse_protobuf_string(&mut trade_data, 3).with_stderr()?;
     let quantity = FPDecimal::from_str(&field1)? / dec_scale_factor;
     let price = FPDecimal::from_str(&field2)? / dec_scale_factor;
     let fee = FPDecimal::from_str(&field3)? / dec_scale_factor;
 
     let config = STATE.load(deps.storage)?;
-    let cache = CACHE.load(deps.storage)?;
+    let cache = SWAP_OPERATION_STATE.load(deps.storage)?;
 
     let recipient_subaccount_id = default_subaccount_id(&Addr::unchecked(&cache.sender_address));
 
@@ -184,14 +184,6 @@ fn handle_atomic_order_reply(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
     return Err(StdError::not_found("No queries defined"));
-    // match msg {
-    //     // QueryMsg::GetCount {} => to_binary(&query_count(deps)?),
-    // }
 }
-//
-// fn query_count(deps: Deps) -> StdResult<GetCountResponse> {
-//     let state = STATE.load(deps.storage)?;
-//     Ok(GetCountResponse { count: state.count })
-// }

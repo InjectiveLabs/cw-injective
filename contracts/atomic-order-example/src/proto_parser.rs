@@ -1,6 +1,7 @@
-use cosmwasm_std::Binary;
-use cw_utils::ParseReplyError;
+use std::fmt::Debug;
 
+use cosmwasm_std::{Binary, StdError} ;
+use cw_utils::ParseReplyError;
 
 // Protobuf wire types (https://developers.google.com/protocol-buffers/docs/encoding)
 const WIRE_TYPE_LENGTH_DELIMITED: u8 = 2;
@@ -90,3 +91,29 @@ pub fn parse_protobuf_bytes(
         Ok(Some(Binary(bytes_field)))
     }
 }
+
+pub trait ResultToStdErrExt<T, E>  {
+    fn with_stderr(self) -> Result<T, StdError>;
+}
+
+impl <T> ResultToStdErrExt<T, ParseReplyError> for Result<T, ParseReplyError> {
+    fn with_stderr(self) -> Result<T, StdError> {
+        match self {
+            Ok(v) => Ok(v),
+            Err(e) => {
+                let err_msg = match e {
+                    ParseReplyError::SubMsgFailure(m) => m,
+                    ParseReplyError::ParseFailure(m) => m,
+                    ParseReplyError::BrokenUtf8(utf_err) => utf_err.to_string()
+                };
+                Err(StdError::generic_err(err_msg))
+            }
+        }
+    }
+}
+
+
+// impl ResultToStdErrExt<String, ParseReplyError> for Result<String, ParseReplyError> {
+//     fn with_stderr(self) -> Result<String, StdError> { self.with_stderr() }
+//
+// }

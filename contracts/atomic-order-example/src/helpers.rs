@@ -5,7 +5,6 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use injective_cosmwasm::InjectiveMsgWrapper;
 use injective_math::FPDecimal;
-// use crate::contract::TEST_CONTRACT_ADDR;
 use cw_utils::parse_reply_instantiate_data;
 
 

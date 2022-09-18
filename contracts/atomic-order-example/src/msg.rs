@@ -7,8 +7,6 @@ use injective_math::FPDecimal;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
     pub market_id: String,
-    pub base_denom: String,
-    pub quote_denom : String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
