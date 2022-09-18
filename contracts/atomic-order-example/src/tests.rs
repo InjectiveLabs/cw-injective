@@ -1,10 +1,22 @@
-use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-use cosmwasm_std::{coins, from_binary, Addr, Binary, BlockInfo, ContractInfo, Env, Reply, SubMsgResponse, SubMsgResult, Timestamp, TransactionInfo, Uint128};
+use std::marker::PhantomData;
+use std::str::FromStr;
 
+use cosmwasm_std::{
+    Addr, Api, Binary, BlockInfo, coins, ContractInfo, ContractResult, CustomQuery, Deps,
+    DepsMut, Env, from_binary, MemoryStorage, OwnedDeps, Querier, QuerierResult, QuerierWrapper,
+    Reply, Storage, SubMsgResponse, SubMsgResult, SystemResult, Timestamp, to_binary,
+    TransactionInfo, Uint128,
+};
+use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MockApi, MockStorage};
+
+use injective_cosmwasm::{
+    Deposit, InjectiveMsg, InjectiveQueryWrapper, InjectiveRoute, OrderInfo, SpotMarket,
+    SpotMarketResponse, SpotOrder, WasmMockQuerier,
+};
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
-use injective_cosmwasm::{Deposit, InjectiveMsg, InjectiveRoute, OrderInfo, SpotOrder};
+use injective_math::FPDecimal;
 
-use crate::contract::{execute, instantiate, reply, ATOMIC_ORDER_REPLY_ID};
+use crate::contract::{ATOMIC_ORDER_REPLY_ID, execute, instantiate, reply};
 use crate::helpers::{get_message_data, i32_to_dec};
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 
@@ -29,43 +41,63 @@ pub fn inj_mock_env() -> Env {
     }
 }
 
+pub trait OwnedDepsExt<S, A, Q, C> where C: CustomQuery {
+    fn as_mut_deps(&mut self) -> DepsMut<C>;
+}
+
+impl<S, A, Q, C> OwnedDepsExt<S, A, Q, C> for OwnedDeps<S, A, Q, C>
+    where
+        S: Storage,
+        A: Api,
+        Q: Querier,
+        C: CustomQuery,
+{
+    fn as_mut_deps(&mut self) -> DepsMut<C> {
+        return DepsMut {
+            storage: &mut self.storage,
+            api: &self.api,
+            querier: QuerierWrapper::new(&self.querier),
+        };
+    }
+}
+
+pub fn inj_mock_deps() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQueryWrapper> {
+    let mut custom_querier: WasmMockQuerier = WasmMockQuerier::new();
+    custom_querier.spot_market_response_handler = Some(handle_spot_market_response);
+    OwnedDeps {
+        api: MockApi::default(),
+        storage: MockStorage::default(),
+        querier: custom_querier,
+        custom_query_type: PhantomData::default(),
+    }
+}
+
 #[test]
 fn proper_initialization() {
-    let mut deps = mock_dependencies();
-
     let msg = InstantiateMsg {
         market_id: "0x78c2d3af98c517b164070a739681d4bd4d293101e7ffc3a30968945329b47ec6".to_string(),
-        base_denom: "inj".to_string(),
-        quote_denom: "usdc".to_string(),
     };
     let info = mock_info("creator", &coins(1000, "earth"));
 
     // we can just call .unwrap() to assert this was a success
-    let res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+    let res = instantiate(inj_mock_deps().as_mut_deps(), mock_env(), info, msg).unwrap();
     assert_eq!(0, res.messages.len());
-
-    // reply(deps, )
-    // // it worked, let's query the state
-    // let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
-    // let value: GetCountResponse = from_binary(&res).unwrap();
-    // assert_eq!(17, value.count);
 }
 
 #[test]
 fn test_swap() {
-    let mut deps = mock_dependencies();
     let contract_addr = "inj14hj2tavq8fpesdwxxcu44rty3hh90vhujaxlnz";
     let sender_addr = "inj1x2ck0ql2ngyxqtw8jteyc0tchwnwxv7npaungt";
     let market_id = "0x78c2d3af98c517b164070a739681d4bd4d293101e7ffc3a30968945329b47ec6";
 
     let msg = InstantiateMsg {
         market_id: market_id.to_string(),
-        base_denom: "inj".to_string(),
-        quote_denom: "usdc".to_string(),
+        // base_denom: "inj".to_string(),
+        // quote_denom: "usdc".to_string(),
     };
     let info = mock_info(contract_addr, &coins(1000, "earth"));
-
-    let _ = instantiate(deps.as_mut(), mock_env(), info, msg);
+    let mut deps = inj_mock_deps();
+    let _ = instantiate(deps.as_mut_deps(), mock_env(), info, msg);
 
     let env = inj_mock_env();
 
@@ -74,7 +106,7 @@ fn test_swap() {
         quantity: i32_to_dec(8),
         price: i32_to_dec(1000),
     };
-    let res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
+    let res = execute(deps.as_mut_deps(), env.clone(), info, msg).unwrap();
 
     let expected_atomic_order_message = CreateSpotMarketOrder {
         sender: env.contract.address.into_string(),
@@ -122,27 +154,53 @@ fn test_swap() {
         }),
     };
 
-    let transfers_response = reply(deps.as_mut(), inj_mock_env(), reply_msg);
+    let transfers_response = reply(deps.as_mut_deps(), inj_mock_env(), reply_msg);
     let transfers = transfers_response.unwrap().messages;
     assert_eq!(transfers.len(), 2);
     let msg1 = &get_message_data(&transfers, 0).msg_data;
-    match msg1 { // base
+    match msg1 {
+        // base
         InjectiveMsg::ExternalTransfer {
-            sender, source_subaccount_id, destination_subaccount_id, amount
+            sender,
+            source_subaccount_id,
+            destination_subaccount_id,
+            amount,
         } => {
             assert_eq!(sender, contract_addr, "sender not correct");
             assert_eq!(amount.amount, Uint128::from(8u128));
         }
-        _ => panic!("Wrong message type!")
+        _ => panic!("Wrong message type!"),
     }
-    match &get_message_data(&transfers, 1).msg_data { // leftover quote
+    match &get_message_data(&transfers, 1).msg_data {
+        // leftover quote
         InjectiveMsg::ExternalTransfer {
-            sender, source_subaccount_id, destination_subaccount_id, amount
+            sender,
+            source_subaccount_id,
+            destination_subaccount_id,
+            amount,
         } => {
             assert_eq!(sender, contract_addr, "sender not correct");
-            assert_eq!(amount.amount, Uint128::from((9000u128-8036u128)));
+            assert_eq!(amount.amount, Uint128::from((9000u128 - 8036u128)));
         }
-        _ => panic!("Wrong message type!")
+        _ => panic!("Wrong message type!"),
     }
 }
 
+fn handle_spot_market_response(market_id: String) -> QuerierResult {
+    let response = SpotMarketResponse {
+        market: Some(SpotMarket {
+            ticker: "INJ/USDT".to_string(),
+            base_denom: "INJ".to_string(),
+            quote_denom: "USDT".to_string(),
+            maker_fee_rate: FPDecimal::from_str("0.01").unwrap(),
+            taker_fee_rate: FPDecimal::from_str("0.1").unwrap(),
+            relayer_fee_share_rate: FPDecimal::from_str("0.4").unwrap(),
+            market_id: "0xa508cb32923323679f29a032c70342c147c17d0145625922b0ef22e955c844c0"
+                .to_string(),
+            status: 0,
+            min_price_tick_size: FPDecimal::from_str("0.000000000000001").unwrap(),
+            min_quantity_tick_size: FPDecimal::from_str("1000000000000000").unwrap(),
+        }),
+    };
+    SystemResult::Ok(ContractResult::from(to_binary(&response)))
+}

@@ -14,8 +14,8 @@ use cw_utils::parse_reply_execute_data;
 use injective_cosmwasm::{
     address_to_subaccount_id, create_batch_update_orders_msg, create_deposit_msg,
     create_external_transfer_msg, create_spot_market_order_msg, default_subaccount_id,
-    DerivativeOrder, InjectiveMsg, InjectiveMsgWrapper, MsgCreateSpotMarketOrderResponse,
-    OrderData, OrderInfo, SpotMarketOrder, SpotOrder,
+    DerivativeOrder, InjectiveMsg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper,
+    MsgCreateSpotMarketOrderResponse, OrderData, OrderInfo, SpotMarketOrder, SpotOrder,
 };
 use injective_math::FPDecimal;
 
@@ -32,29 +32,35 @@ pub const DEPOSIT_REPLY_ID: u64 = 2u64;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
-    deps: DepsMut,
+    deps: DepsMut<InjectiveQueryWrapper>,
     _env: Env,
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
-    // TODO: add validation using market query
-    let state = ContractConfigState {
-        market_id: msg.market_id,
-        base_denom: msg.base_denom,
-        quote_denom: msg.quote_denom,
-        owner: info.sender.clone(),
-    };
-    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-    STATE.save(deps.storage, &state)?;
+    let querier = InjectiveQuerier::new(&deps.querier);
+    if let Some(market) = querier.query_spot_market(&msg.market_id)?.market {
+        let state = ContractConfigState {
+            market_id: msg.market_id,
+            base_denom: market.base_denom,
+            quote_denom: market.quote_denom,
+            owner: info.sender.clone(),
+        };
+        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+        STATE.save(deps.storage, &state)?;
 
-    Ok(Response::new()
-        .add_attribute("method", "instantiate")
-        .add_attribute("owner", info.sender))
+        Ok(Response::new()
+            .add_attribute("method", "instantiate")
+            .add_attribute("owner", info.sender))
+    } else {
+        Err(ContractError::CustomError {
+            val: format!("Market with id: {} not found", msg.market_id),
+        })
+    }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
-    deps: DepsMut,
+    deps: DepsMut<InjectiveQueryWrapper>,
     _env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
@@ -65,7 +71,7 @@ pub fn execute(
 }
 
 pub fn try_swap(
-    deps: DepsMut,
+    deps: DepsMut<InjectiveQueryWrapper>,
     env: Env,
     info: MessageInfo,
     quantity: FPDecimal,
@@ -111,7 +117,10 @@ pub fn try_swap(
         .add_submessage(deposit_message)
         .add_submessage(order_message);
 
-    let cache = SwapCacheState { sender_address: info.sender.to_string(), deposited_amount: coins.clone() };
+    let cache = SwapCacheState {
+        sender_address: info.sender.to_string(),
+        deposited_amount: coins.clone(),
+    };
     CACHE.save(deps.storage, &cache)?;
 
     return Ok(response);
@@ -119,7 +128,7 @@ pub fn try_swap(
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(
-    deps: DepsMut,
+    deps: DepsMut<InjectiveQueryWrapper>,
     _env: Env,
     msg: Reply,
 ) -> Result<Response<InjectiveMsgWrapper>, StdError> {
@@ -133,7 +142,7 @@ pub fn reply(
 }
 
 fn handle_atomic_order_reply(
-    deps: DepsMut,
+    deps: DepsMut<InjectiveQueryWrapper>,
     msg: Reply,
 ) -> Result<Response<InjectiveMsgWrapper>, StdError> {
     let dec_scale_factor: FPDecimal = FPDecimal::from(1000000000000000000 as i128);
