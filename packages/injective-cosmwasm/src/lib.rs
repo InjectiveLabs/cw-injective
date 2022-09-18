@@ -1,7 +1,6 @@
 mod derivative;
 mod derivative_market;
 mod exchange;
-mod exchange_mock_querier;
 mod msg;
 mod oracle;
 mod order;
@@ -19,7 +18,12 @@ pub use msg::{
     create_spot_market_order_msg, create_subaccount_transfer_msg, create_withdraw_msg, InjectiveMsg, InjectiveMsgWrapper,
 };
 
+#[cfg(not(target_arch = "wasm32"))]
+mod exchange_mock_querier;
+
+#[cfg(not(target_arch = "wasm32"))]
 pub use exchange_mock_querier::{mock_dependencies, WasmMockQuerier};
+
 pub use querier::InjectiveQuerier;
 pub use query::{
     DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse,
