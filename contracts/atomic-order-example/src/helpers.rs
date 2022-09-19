@@ -1,12 +1,10 @@
-use cosmwasm_std::{
-    to_binary, Addr, CosmosMsg, StdResult, SubMsg, WasmMsg,
-};
+use cosmwasm_std::{to_binary, Addr, CosmosMsg, StdResult, SubMsg, WasmMsg};
 use injective_cosmwasm::InjectiveMsgWrapper;
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::msg::{ExecuteMsg};
+use crate::msg::ExecuteMsg;
 
 /// CwTemplateContract is a wrapper around Addr that provides a lot of helpers
 /// for working with this.
@@ -27,7 +25,6 @@ impl CwTemplateContract {
         }
         .into())
     }
-
 }
 
 pub fn i32_to_dec(source: i32) -> FPDecimal {
