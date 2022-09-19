@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use cosmwasm_std::{Binary, StdError} ;
+use cosmwasm_std::{Binary, StdError};
 use cw_utils::ParseReplyError;
 
 // Protobuf wire types (https://developers.google.com/protocol-buffers/docs/encoding)
@@ -9,7 +9,10 @@ const WIRE_TYPE_LENGTH_DELIMITED: u8 = 2;
 const VARINT_MAX_BYTES: usize = 9;
 /// Base128 varint decoding.
 /// The remaining of the data is kept in the data parameter.
-pub fn parse_protobuf_varint(data: &mut Vec<u8>, field_number: u8) -> Result<usize, ParseReplyError> {
+pub fn parse_protobuf_varint(
+    data: &mut Vec<u8>,
+    field_number: u8,
+) -> Result<usize, ParseReplyError> {
     let data_len = data.len();
     let mut len: u64 = 0;
     let mut i = 0;
@@ -75,7 +78,10 @@ fn parse_protobuf_length_prefixed(
     Ok(rest_1)
 }
 
-pub fn parse_protobuf_string(data: &mut Vec<u8>, field_number: u8) -> Result<String, ParseReplyError> {
+pub fn parse_protobuf_string(
+    data: &mut Vec<u8>,
+    field_number: u8,
+) -> Result<String, ParseReplyError> {
     let str_field = parse_protobuf_length_prefixed(data, field_number)?;
     Ok(String::from_utf8(str_field)?)
 }
@@ -92,11 +98,11 @@ pub fn parse_protobuf_bytes(
     }
 }
 
-pub trait ResultToStdErrExt<T, E>  {
+pub trait ResultToStdErrExt<T, E> {
     fn with_stderr(self) -> Result<T, StdError>;
 }
 
-impl <T> ResultToStdErrExt<T, ParseReplyError> for Result<T, ParseReplyError> {
+impl<T> ResultToStdErrExt<T, ParseReplyError> for Result<T, ParseReplyError> {
     fn with_stderr(self) -> Result<T, StdError> {
         match self {
             Ok(v) => Ok(v),
@@ -104,16 +110,10 @@ impl <T> ResultToStdErrExt<T, ParseReplyError> for Result<T, ParseReplyError> {
                 let err_msg = match e {
                     ParseReplyError::SubMsgFailure(m) => m,
                     ParseReplyError::ParseFailure(m) => m,
-                    ParseReplyError::BrokenUtf8(utf_err) => utf_err.to_string()
+                    ParseReplyError::BrokenUtf8(utf_err) => utf_err.to_string(),
                 };
                 Err(StdError::generic_err(err_msg))
             }
         }
     }
 }
-
-
-// impl ResultToStdErrExt<String, ParseReplyError> for Result<String, ParseReplyError> {
-//     fn with_stderr(self) -> Result<String, StdError> { self.with_stderr() }
-//
-// }

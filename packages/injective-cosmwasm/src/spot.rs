@@ -36,7 +36,16 @@ pub struct SpotOrder {
 }
 
 impl SpotOrder {
-    pub fn new(price: FPDecimal, quantity: FPDecimal, is_buy: bool, is_po: bool, is_atomic: bool, market_id: &str, subaccount_id: &str, fee_recipient: &str) -> Self {
+    pub fn new(
+        price: FPDecimal,
+        quantity: FPDecimal,
+        is_buy: bool,
+        is_po: bool,
+        is_atomic: bool,
+        market_id: &str,
+        subaccount_id: &str,
+        fee_recipient: &str,
+    ) -> Self {
         SpotOrder {
             market_id: market_id.to_string(),
             order_info: OrderInfo {
@@ -100,7 +109,6 @@ pub struct TrimmedSpotLimitOrder {
     pub order_hash: String,
 }
 
-
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct SpotMarketOrderResults {
@@ -113,5 +121,5 @@ pub struct SpotMarketOrderResults {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct MsgCreateSpotMarketOrderResponse {
     pub order_hash: String,
-    pub results : SpotMarketOrderResults,
+    pub results: SpotMarketOrderResults,
 }

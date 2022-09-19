@@ -2,10 +2,18 @@ use std::marker::PhantomData;
 use std::str::FromStr;
 
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MockApi, MockStorage};
-use cosmwasm_std::{coins, from_binary, to_binary, Addr, Api, Binary, BlockInfo, ContractInfo, ContractResult, CustomQuery, Deps, DepsMut, Env, MemoryStorage, OwnedDeps, Querier, QuerierResult, QuerierWrapper, Reply, Storage, SubMsgResponse, SubMsgResult, SystemResult, Timestamp, TransactionInfo, Uint128, CosmosMsg, BankMsg};
+use cosmwasm_std::{
+    coins, from_binary, to_binary, Addr, Api, BankMsg, Binary, BlockInfo, ContractInfo,
+    ContractResult, CosmosMsg, CustomQuery, Deps, DepsMut, Env, MemoryStorage, OwnedDeps, Querier,
+    QuerierResult, QuerierWrapper, Reply, Storage, SubMsgResponse, SubMsgResult, SystemResult,
+    Timestamp, TransactionInfo, Uint128,
+};
 
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
-use injective_cosmwasm::{Deposit, InjectiveMsg, InjectiveMsgWrapper, InjectiveQueryWrapper, InjectiveRoute, OrderInfo, SpotMarket, SpotMarketResponse, SpotOrder, WasmMockQuerier};
+use injective_cosmwasm::{
+    Deposit, InjectiveMsg, InjectiveMsgWrapper, InjectiveQueryWrapper, InjectiveRoute, OrderInfo,
+    SpotMarket, SpotMarketResponse, SpotOrder, WasmMockQuerier,
+};
 use injective_math::FPDecimal;
 
 use crate::contract::{execute, instantiate, reply, ATOMIC_ORDER_REPLY_ID};
@@ -154,7 +162,9 @@ fn test_swap() {
     match &get_message_data(&messages, 0).msg_data {
         // base
         InjectiveMsg::Withdraw {
-            sender, subaccount_id: _subaccount_id, amount
+            sender,
+            subaccount_id: _subaccount_id,
+            amount,
         } => {
             assert_eq!(sender, contract_addr, "sender not correct");
             assert_eq!(amount.amount, Uint128::from(8u128));
@@ -164,7 +174,9 @@ fn test_swap() {
     match &get_message_data(&messages, 1).msg_data {
         // leftover quote
         InjectiveMsg::Withdraw {
-            sender, subaccount_id: _subaccount_id, amount
+            sender,
+            subaccount_id: _subaccount_id,
+            amount,
         } => {
             assert_eq!(sender, contract_addr, "sender not correct");
             assert_eq!(amount.amount, Uint128::from((9000u128 - 8036u128)));
@@ -172,20 +184,18 @@ fn test_swap() {
         _ => panic!("Wrong message type!"),
     }
     match &messages[2].msg {
-        CosmosMsg::Bank(bank_msg) => {
-            match bank_msg {
-                BankMsg::Send { to_address, amount } => {
-                    assert_eq!(to_address, sender_addr);
-                    assert_eq!(2, amount.len());
-                    assert_eq!(amount[0].denom, "INJ");
-                    assert_eq!(amount[0].amount, Uint128::from(8u128));
-                    assert_eq!(amount[1].denom, "USDT");
-                    assert_eq!(amount[1].amount, Uint128::from(9000u128 - 8036u128));
-                }
-                _ => panic!("Wrong message type!")
+        CosmosMsg::Bank(bank_msg) => match bank_msg {
+            BankMsg::Send { to_address, amount } => {
+                assert_eq!(to_address, sender_addr);
+                assert_eq!(2, amount.len());
+                assert_eq!(amount[0].denom, "INJ");
+                assert_eq!(amount[0].amount, Uint128::from(8u128));
+                assert_eq!(amount[1].denom, "USDT");
+                assert_eq!(amount[1].amount, Uint128::from(9000u128 - 8036u128));
             }
-        }
-        _ => panic!("Wrong message type!")
+            _ => panic!("Wrong message type!"),
+        },
+        _ => panic!("Wrong message type!"),
     }
 }
 

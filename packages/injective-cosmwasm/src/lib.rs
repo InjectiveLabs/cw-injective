@@ -41,7 +41,7 @@ pub use order::{OrderData, OrderInfo};
 
 pub use exchange::Deposit;
 
-pub use spot::{SpotLimitOrder, SpotMarketOrder, SpotOrder, TrimmedSpotLimitOrder, MsgCreateSpotMarketOrderResponse};
+pub use spot::{MsgCreateSpotMarketOrderResponse, SpotLimitOrder, SpotMarketOrder, SpotOrder, TrimmedSpotLimitOrder};
 
 pub use spot_market::SpotMarket;
 
