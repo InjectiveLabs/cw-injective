@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 use cosmwasm_std::{Binary, StdError};
 use cw_utils::ParseReplyError;
 

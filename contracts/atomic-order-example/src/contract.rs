@@ -1,27 +1,20 @@
-use std::cmp::min;
 use std::str::FromStr;
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Env,
-    MessageInfo, Reply, Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
+    BankMsg, Coin, DepsMut, Env, MessageInfo, Reply, Response, StdError, SubMsg, Uint128,
 };
 use cw2::set_contract_version;
-use cw_storage_plus::Item;
-use cw_utils::parse_reply_execute_data;
 
 use injective_cosmwasm::{
-    address_to_subaccount_id, create_batch_update_orders_msg, create_deposit_msg,
-    create_external_transfer_msg, create_spot_market_order_msg, create_withdraw_msg,
-    default_subaccount_id, DerivativeOrder, InjectiveMsg, InjectiveMsgWrapper, InjectiveQuerier,
-    InjectiveQueryWrapper, MsgCreateSpotMarketOrderResponse, OrderData, OrderInfo, SpotMarketOrder,
-    SpotOrder,
+    create_deposit_msg, create_spot_market_order_msg, create_withdraw_msg, default_subaccount_id,
+    InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, SpotOrder,
 };
 use injective_math::FPDecimal;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::proto_parser::{parse_protobuf_bytes, parse_protobuf_string, ResultToStdErrExt};
 use crate::state::{ContractConfigState, SwapCacheState, STATE, SWAP_OPERATION_STATE};
 
@@ -193,9 +186,4 @@ fn handle_atomic_order_reply(
         .add_message(withdraw_leftover_message)
         .add_message(send_message);
     Ok(response)
-}
-
-#[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
-    return Err(StdError::not_found("No queries defined"));
 }

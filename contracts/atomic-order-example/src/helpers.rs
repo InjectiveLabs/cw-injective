@@ -1,16 +1,12 @@
-use std::borrow::BorrowMut;
-
 use cosmwasm_std::{
-    to_binary, Addr, Binary, BlockInfo, ContractInfo, CosmosMsg, CustomQuery, Env, Querier,
-    QuerierWrapper, Reply, StdResult, SubMsg, Timestamp, TransactionInfo, WasmMsg, WasmQuery,
+    to_binary, Addr, CosmosMsg, StdResult, SubMsg, WasmMsg,
 };
-use cw_utils::parse_reply_instantiate_data;
 use injective_cosmwasm::InjectiveMsgWrapper;
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::msg::{ExecuteMsg, GetCountResponse, QueryMsg};
+use crate::msg::{ExecuteMsg};
 
 /// CwTemplateContract is a wrapper around Addr that provides a lot of helpers
 /// for working with this.
@@ -32,22 +28,6 @@ impl CwTemplateContract {
         .into())
     }
 
-    /// Get Count
-    pub fn count<Q, T, CQ>(&self, querier: &Q) -> StdResult<GetCountResponse>
-    where
-        Q: Querier,
-        T: Into<String>,
-        CQ: CustomQuery,
-    {
-        let msg = QueryMsg::GetCount {};
-        let query = WasmQuery::Smart {
-            contract_addr: self.addr().into(),
-            msg: to_binary(&msg)?,
-        }
-        .into();
-        let res: GetCountResponse = QuerierWrapper::<CQ>::new(querier).query(&query)?;
-        Ok(res)
-    }
 }
 
 pub fn i32_to_dec(source: i32) -> FPDecimal {

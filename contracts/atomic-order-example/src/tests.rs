@@ -1,18 +1,17 @@
 use std::marker::PhantomData;
 use std::str::FromStr;
 
-use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MockApi, MockStorage};
+use cosmwasm_std::testing::{mock_info, MockApi, MockStorage};
 use cosmwasm_std::{
-    coins, from_binary, to_binary, Addr, Api, BankMsg, Binary, BlockInfo, ContractInfo,
-    ContractResult, CosmosMsg, CustomQuery, Deps, DepsMut, Env, MemoryStorage, OwnedDeps, Querier,
-    QuerierResult, QuerierWrapper, Reply, Storage, SubMsgResponse, SubMsgResult, SystemResult,
-    Timestamp, TransactionInfo, Uint128,
+    coins, to_binary, Addr, Api, BankMsg, Binary, BlockInfo, ContractInfo, ContractResult,
+    CosmosMsg, CustomQuery, DepsMut, Env, OwnedDeps, Querier, QuerierResult, QuerierWrapper, Reply,
+    Storage, SubMsgResponse, SubMsgResult, SystemResult, Timestamp, TransactionInfo, Uint128,
 };
 
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
 use injective_cosmwasm::{
-    Deposit, InjectiveMsg, InjectiveMsgWrapper, InjectiveQueryWrapper, InjectiveRoute, OrderInfo,
-    SpotMarket, SpotMarketResponse, SpotOrder, WasmMockQuerier,
+    InjectiveMsg, InjectiveQueryWrapper, InjectiveRoute, OrderInfo, SpotMarket, SpotMarketResponse,
+    SpotOrder, WasmMockQuerier,
 };
 use injective_math::FPDecimal;
 
@@ -20,14 +19,9 @@ use crate::contract::{execute, instantiate, reply, ATOMIC_ORDER_REPLY_ID};
 use crate::helpers::{get_message_data, i32_to_dec};
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 
-use super::*;
-
 pub const TEST_CONTRACT_ADDR: &str = "inj14hj2tavq8fpesdwxxcu44rty3hh90vhujaxlnz";
 
 pub fn inj_mock_env() -> Env {
-    // let mut mock_env: Env = mock_env();
-    // mock_env.contract.address = Addr::unchecked(TEST_CONTRACT_ADDR);
-    // return mock_env;
     Env {
         block: BlockInfo {
             height: 12_345,
@@ -77,13 +71,14 @@ pub fn inj_mock_deps() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, Injec
 
 #[test]
 fn proper_initialization() {
+    let sender_addr = "inj1x2ck0ql2ngyxqtw8jteyc0tchwnwxv7npaungt";
     let msg = InstantiateMsg {
         market_id: "0x78c2d3af98c517b164070a739681d4bd4d293101e7ffc3a30968945329b47ec6".to_string(),
     };
-    let info = mock_info("creator", &coins(1000, "earth"));
+    let info = mock_info(sender_addr, &coins(1000, "earth"));
 
     // we can just call .unwrap() to assert this was a success
-    let res = instantiate(inj_mock_deps().as_mut_deps(), mock_env(), info, msg).unwrap();
+    let res = instantiate(inj_mock_deps().as_mut_deps(), inj_mock_env(), info, msg).unwrap();
     assert_eq!(0, res.messages.len());
 }
 
@@ -95,8 +90,6 @@ fn test_swap() {
 
     let msg = InstantiateMsg {
         market_id: market_id.to_string(),
-        // base_denom: "inj".to_string(),
-        // quote_denom: "usdc".to_string(),
     };
     let info = mock_info(contract_addr, &coins(1000, "earth"));
     let mut deps = inj_mock_deps();
@@ -179,7 +172,7 @@ fn test_swap() {
             amount,
         } => {
             assert_eq!(sender, contract_addr, "sender not correct");
-            assert_eq!(amount.amount, Uint128::from((9000u128 - 8036u128)));
+            assert_eq!(amount.amount, Uint128::from(9000u128 - 8036u128));
         }
         _ => panic!("Wrong message type!"),
     }
