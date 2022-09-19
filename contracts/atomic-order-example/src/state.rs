@@ -11,6 +11,7 @@ pub const STATE: Item<ContractConfigState> = Item::new("state");
 pub struct ContractConfigState {
     pub market_id: String,
     pub owner: Addr,
+    pub contract_subaccount_id: String,
     pub base_denom: String,
     pub quote_denom : String,
 }

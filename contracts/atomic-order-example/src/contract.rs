@@ -4,8 +4,8 @@ use std::str::FromStr;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Reply, Response,
-    StdError, StdResult, SubMsg, Uint128, WasmMsg,
+    from_binary, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Env,
+    MessageInfo, Reply, Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw_storage_plus::Item;
@@ -13,16 +13,17 @@ use cw_utils::parse_reply_execute_data;
 
 use injective_cosmwasm::{
     address_to_subaccount_id, create_batch_update_orders_msg, create_deposit_msg,
-    create_external_transfer_msg, create_spot_market_order_msg, default_subaccount_id,
-    DerivativeOrder, InjectiveMsg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper,
-    MsgCreateSpotMarketOrderResponse, OrderData, OrderInfo, SpotMarketOrder, SpotOrder,
+    create_external_transfer_msg, create_spot_market_order_msg, create_withdraw_msg,
+    default_subaccount_id, DerivativeOrder, InjectiveMsg, InjectiveMsgWrapper, InjectiveQuerier,
+    InjectiveQueryWrapper, MsgCreateSpotMarketOrderResponse, OrderData, OrderInfo, SpotMarketOrder,
+    SpotOrder,
 };
 use injective_math::FPDecimal;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg};
 use crate::proto_parser::{parse_protobuf_bytes, parse_protobuf_string, ResultToStdErrExt};
-use crate::state::{ContractConfigState, SwapCacheState, SWAP_OPERATION_STATE, STATE};
+use crate::state::{ContractConfigState, SwapCacheState, STATE, SWAP_OPERATION_STATE};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:atomic-order-example";
@@ -33,7 +34,7 @@ pub const DEPOSIT_REPLY_ID: u64 = 2u64;
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut<InjectiveQueryWrapper>,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
@@ -44,6 +45,7 @@ pub fn instantiate(
             base_denom: market.base_denom,
             quote_denom: market.quote_denom,
             owner: info.sender.clone(),
+            contract_subaccount_id: default_subaccount_id(&env.contract.address),
         };
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
         STATE.save(deps.storage, &state)?;
@@ -79,7 +81,7 @@ pub fn try_swap(
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let config = STATE.load(deps.storage)?;
     let contract = env.contract.address;
-    let subaccount_id = default_subaccount_id(&contract);
+    let subaccount_id = config.contract_subaccount_id;
     let min_deposit = price * quantity;
     if info.funds.len() < 1 {
         return Err(ContractError::CustomError {
@@ -132,17 +134,18 @@ pub fn try_swap(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(
     deps: DepsMut<InjectiveQueryWrapper>,
-    _env: Env,
+    env: Env,
     msg: Reply,
 ) -> Result<Response<InjectiveMsgWrapper>, StdError> {
     match msg.id {
-        ATOMIC_ORDER_REPLY_ID => handle_atomic_order_reply(deps, msg),
+        ATOMIC_ORDER_REPLY_ID => handle_atomic_order_reply(deps, env, msg),
         id => Err(StdError::generic_err(format!("Unknown reply id: {}", id))),
     }
 }
 
 fn handle_atomic_order_reply(
     deps: DepsMut<InjectiveQueryWrapper>,
+    env: Env,
     msg: Reply,
 ) -> Result<Response<InjectiveMsgWrapper>, StdError> {
     let dec_scale_factor: FPDecimal = FPDecimal::from(1000000000000000000 as i128);
@@ -159,27 +162,36 @@ fn handle_atomic_order_reply(
     let fee = FPDecimal::from_str(&field3)? / dec_scale_factor;
 
     let config = STATE.load(deps.storage)?;
+    let contract_address = env.contract.address;
+    let subaccount_id = config.contract_subaccount_id;
+
     let cache = SWAP_OPERATION_STATE.load(deps.storage)?;
 
-    let recipient_subaccount_id = default_subaccount_id(&Addr::unchecked(&cache.sender_address));
-
-    let msg1 = create_external_transfer_msg(
-        config.owner.clone().into_string(),
-        default_subaccount_id(&config.owner),
-        recipient_subaccount_id.clone(),
-        Coin::new(u128::from(quantity), config.base_denom.clone()),
-    );
-
+    let purchased_coins = Coin::new(u128::from(quantity), config.base_denom.clone());
     let paid = quantity * price + fee;
-    let to_send = cache.deposited_amount.amount - Uint128::from(u128::from(paid));
-    let msg2 = create_external_transfer_msg(
-        config.owner.clone().into_string(),
-        default_subaccount_id(&config.owner),
-        recipient_subaccount_id,
-        Coin::new(u128::from(to_send), config.quote_denom),
+    let leftover = cache.deposited_amount.amount - Uint128::from(u128::from(paid));
+    let leftover_coins = Coin::new(u128::from(leftover), config.quote_denom);
+    // we need to withdraw coins from subaccount to main account so we can transfer them back to a user
+    let withdraw_purchased_message = create_withdraw_msg(
+        contract_address.to_string(),
+        subaccount_id.clone(),
+        purchased_coins.clone(),
+    );
+    let withdraw_leftover_message = create_withdraw_msg(
+        contract_address.to_string(),
+        subaccount_id,
+        leftover_coins.clone(),
     );
 
-    let response = Response::new().add_message(msg1).add_message(msg2);
+    let send_message = BankMsg::Send {
+        to_address: cache.sender_address,
+        amount: vec![purchased_coins, leftover_coins],
+    };
+
+    let response = Response::new()
+        .add_message(withdraw_purchased_message)
+        .add_message(withdraw_leftover_message)
+        .add_message(send_message);
     Ok(response)
 }
 

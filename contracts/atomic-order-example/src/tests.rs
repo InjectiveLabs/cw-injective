@@ -1,22 +1,14 @@
 use std::marker::PhantomData;
 use std::str::FromStr;
 
-use cosmwasm_std::{
-    Addr, Api, Binary, BlockInfo, coins, ContractInfo, ContractResult, CustomQuery, Deps,
-    DepsMut, Env, from_binary, MemoryStorage, OwnedDeps, Querier, QuerierResult, QuerierWrapper,
-    Reply, Storage, SubMsgResponse, SubMsgResult, SystemResult, Timestamp, to_binary,
-    TransactionInfo, Uint128,
-};
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MockApi, MockStorage};
+use cosmwasm_std::{coins, from_binary, to_binary, Addr, Api, Binary, BlockInfo, ContractInfo, ContractResult, CustomQuery, Deps, DepsMut, Env, MemoryStorage, OwnedDeps, Querier, QuerierResult, QuerierWrapper, Reply, Storage, SubMsgResponse, SubMsgResult, SystemResult, Timestamp, TransactionInfo, Uint128, CosmosMsg, BankMsg};
 
-use injective_cosmwasm::{
-    Deposit, InjectiveMsg, InjectiveQueryWrapper, InjectiveRoute, OrderInfo, SpotMarket,
-    SpotMarketResponse, SpotOrder, WasmMockQuerier,
-};
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
+use injective_cosmwasm::{Deposit, InjectiveMsg, InjectiveMsgWrapper, InjectiveQueryWrapper, InjectiveRoute, OrderInfo, SpotMarket, SpotMarketResponse, SpotOrder, WasmMockQuerier};
 use injective_math::FPDecimal;
 
-use crate::contract::{ATOMIC_ORDER_REPLY_ID, execute, instantiate, reply};
+use crate::contract::{execute, instantiate, reply, ATOMIC_ORDER_REPLY_ID};
 use crate::helpers::{get_message_data, i32_to_dec};
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 
@@ -41,17 +33,19 @@ pub fn inj_mock_env() -> Env {
     }
 }
 
-
-pub trait OwnedDepsExt<S, A, Q, C> where C: CustomQuery {
+pub trait OwnedDepsExt<S, A, Q, C>
+where
+    C: CustomQuery,
+{
     fn as_mut_deps(&mut self) -> DepsMut<C>;
 }
 
 impl<S, A, Q, C> OwnedDepsExt<S, A, Q, C> for OwnedDeps<S, A, Q, C>
-    where
-        S: Storage,
-        A: Api,
-        Q: Querier,
-        C: CustomQuery,
+where
+    S: Storage,
+    A: Api,
+    Q: Querier,
+    C: CustomQuery,
 {
     fn as_mut_deps(&mut self) -> DepsMut<C> {
         return DepsMut {
@@ -98,9 +92,8 @@ fn test_swap() {
     };
     let info = mock_info(contract_addr, &coins(1000, "earth"));
     let mut deps = inj_mock_deps();
-    let _ = instantiate(deps.as_mut_deps(), mock_env(), info, msg);
-
     let env = inj_mock_env();
+    let _ = instantiate(deps.as_mut_deps(), env.clone(), info, msg);
 
     let info = mock_info(sender_addr, &coins(9000, "usdt"));
     let msg = ExecuteMsg::SwapSpot {
@@ -156,34 +149,43 @@ fn test_swap() {
     };
 
     let transfers_response = reply(deps.as_mut_deps(), inj_mock_env(), reply_msg);
-    let transfers = transfers_response.unwrap().messages;
-    assert_eq!(transfers.len(), 2);
-    let msg1 = &get_message_data(&transfers, 0).msg_data;
-    match msg1 {
+    let messages = transfers_response.unwrap().messages;
+    assert_eq!(messages.len(), 3);
+    match &get_message_data(&messages, 0).msg_data {
         // base
-        InjectiveMsg::ExternalTransfer {
-            sender,
-            source_subaccount_id: _source_subaccount_id,
-            destination_subaccount_id: _destination_subaccount_id,
-            amount,
+        InjectiveMsg::Withdraw {
+            sender, subaccount_id: _subaccount_id, amount
         } => {
             assert_eq!(sender, contract_addr, "sender not correct");
             assert_eq!(amount.amount, Uint128::from(8u128));
         }
         _ => panic!("Wrong message type!"),
     }
-    match &get_message_data(&transfers, 1).msg_data {
+    match &get_message_data(&messages, 1).msg_data {
         // leftover quote
-        InjectiveMsg::ExternalTransfer {
-            sender,
-            source_subaccount_id: _source_subaccount_id,
-            destination_subaccount_id: _destination_subaccount_id,
-            amount,
+        InjectiveMsg::Withdraw {
+            sender, subaccount_id: _subaccount_id, amount
         } => {
             assert_eq!(sender, contract_addr, "sender not correct");
             assert_eq!(amount.amount, Uint128::from((9000u128 - 8036u128)));
         }
         _ => panic!("Wrong message type!"),
+    }
+    match &messages[2].msg {
+        CosmosMsg::Bank(bank_msg) => {
+            match bank_msg {
+                BankMsg::Send { to_address, amount } => {
+                    assert_eq!(to_address, sender_addr);
+                    assert_eq!(2, amount.len());
+                    assert_eq!(amount[0].denom, "INJ");
+                    assert_eq!(amount[0].amount, Uint128::from(8u128));
+                    assert_eq!(amount[1].denom, "USDT");
+                    assert_eq!(amount[1].amount, Uint128::from(9000u128 - 8036u128));
+                }
+                _ => panic!("Wrong message type!")
+            }
+        }
+        _ => panic!("Wrong message type!")
     }
 }
 
