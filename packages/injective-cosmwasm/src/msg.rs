@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::{derivative::DerivativeOrder, order::OrderData, route::InjectiveRoute, spot::SpotOrder};
 use cosmwasm_std::{Addr, Coin, CosmosMsg, CustomMsg};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct InjectiveMsgWrapper {
     pub route: InjectiveRoute,
@@ -20,7 +20,7 @@ impl From<InjectiveMsgWrapper> for CosmosMsg<InjectiveMsgWrapper> {
 impl CustomMsg for InjectiveMsgWrapper {}
 
 /// InjectiveMsg is an override of CosmosMsg::Custom to add support for Injective's custom message types
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum InjectiveMsg {
     Deposit {

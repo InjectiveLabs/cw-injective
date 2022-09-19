@@ -6,7 +6,7 @@ use injective_math::FPDecimal;
 use crate::order::OrderInfo;
 use crate::OrderType;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SpotLimitOrder {
     pub order_info: OrderInfo,
     pub order_type: i32,
@@ -27,7 +27,7 @@ impl SpotLimitOrder {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SpotOrder {
     pub market_id: String,
     pub order_info: OrderInfo,
@@ -77,7 +77,7 @@ impl SpotOrder {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SpotMarketOrder {
     pub order_info: OrderInfo,
     pub order_type: i32,
@@ -99,7 +99,7 @@ impl SpotMarketOrder {
 }
 
 #[allow(non_snake_case)]
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct TrimmedSpotLimitOrder {
     pub price: FPDecimal,
     pub quantity: FPDecimal,
@@ -110,7 +110,7 @@ pub struct TrimmedSpotLimitOrder {
 }
 
 #[allow(non_snake_case)]
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SpotMarketOrderResults {
     pub quantity: FPDecimal,
     pub price: FPDecimal,
@@ -118,7 +118,7 @@ pub struct SpotMarketOrderResults {
 }
 
 #[allow(non_snake_case)]
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct MsgCreateSpotMarketOrderResponse {
     pub order_hash: String,
     pub results: SpotMarketOrderResults,

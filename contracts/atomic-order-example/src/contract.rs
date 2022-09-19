@@ -76,7 +76,7 @@ pub fn try_swap(
     let contract = env.contract.address;
     let subaccount_id = config.contract_subaccount_id;
     let min_deposit = price * quantity;
-    if info.funds.len() < 1 {
+    if info.funds.is_empty() {
         return Err(ContractError::CustomError {
             val: "No funds deposited!".to_string(),
         });
@@ -121,7 +121,7 @@ pub fn try_swap(
     };
     SWAP_OPERATION_STATE.save(deps.storage, &cache)?;
 
-    return Ok(response);
+    Ok(response)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -141,7 +141,7 @@ fn handle_atomic_order_reply(
     env: Env,
     msg: Reply,
 ) -> Result<Response<InjectiveMsgWrapper>, StdError> {
-    let dec_scale_factor: FPDecimal = FPDecimal::from(1000000000000000000 as i128);
+    let dec_scale_factor: FPDecimal = FPDecimal::from(1000000000000000000_i128);
     let mut data = msg.result.unwrap().data.unwrap().to_vec();
     let _ = parse_protobuf_string(&mut data, 1); // order hash - we need to read to advance reader
 

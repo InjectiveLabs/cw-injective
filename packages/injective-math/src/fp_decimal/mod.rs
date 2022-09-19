@@ -26,7 +26,7 @@ impl From<i128> for FPDecimal {
             sign = 0;
         }
 
-        let abs_x: u128 = x.abs() as u128;
+        let abs_x: u128 = x.unsigned_abs();
         FPDecimal {
             num: U256::from_little_endian(&abs_x.to_le_bytes()) * FPDecimal::ONE.num,
             sign,

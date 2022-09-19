@@ -2,7 +2,7 @@ use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PerpetualMarketInfo {
     pub market_id: String,
     #[serde(default)]
@@ -14,7 +14,7 @@ pub struct PerpetualMarketInfo {
     pub funding_interval: i64,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PerpetualMarketFunding {
     #[serde(default)]
     pub cumulative_funding: FPDecimal,
@@ -24,18 +24,18 @@ pub struct PerpetualMarketFunding {
     pub last_timestamp: i64,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PerpetualMarketState {
     pub market_info: PerpetualMarketInfo,
     pub funding_info: PerpetualMarketFunding,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct FullDerivativeMarketPerpetualInfo {
     pub perpetual_info: PerpetualMarketState,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct FullDerivativeMarket {
     pub market: Option<DerivativeMarket>,
     pub info: Option<FullDerivativeMarketPerpetualInfo>,
@@ -43,7 +43,7 @@ pub struct FullDerivativeMarket {
 }
 
 #[allow(non_snake_case)]
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct DerivativeMarket {
     pub ticker: String,
     pub oracle_base: String,

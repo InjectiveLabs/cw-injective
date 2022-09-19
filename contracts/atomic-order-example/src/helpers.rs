@@ -8,7 +8,7 @@ use crate::msg::ExecuteMsg;
 
 /// CwTemplateContract is a wrapper around Addr that provides a lot of helpers
 /// for working with this.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct CwTemplateContract(pub Addr);
 
 impl CwTemplateContract {
@@ -32,7 +32,7 @@ pub fn i32_to_dec(source: i32) -> FPDecimal {
 }
 
 pub fn get_message_data(
-    response: &Vec<SubMsg<InjectiveMsgWrapper>>,
+    response: &[SubMsg<InjectiveMsgWrapper>],
     position: usize,
 ) -> &InjectiveMsgWrapper {
     let sth = match &response.get(position).unwrap().msg {

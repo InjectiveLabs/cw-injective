@@ -2,7 +2,7 @@ use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct MetadataStatistics {
     pub group_count: u32,
     pub records_sample_size: u32,
@@ -15,7 +15,7 @@ pub struct MetadataStatistics {
     pub median_price: FPDecimal,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct TradeHistoryOptions {
     pub trade_grouping_sec: u64,
     pub max_age: u64,
@@ -23,13 +23,13 @@ pub struct TradeHistoryOptions {
     pub include_metadata: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PriceRecord {
     timestamp: i64,
     price: FPDecimal,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct TradeRecord {
     timestamp: i64,
     price: FPDecimal,

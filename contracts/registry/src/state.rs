@@ -5,7 +5,7 @@ use cosmwasm_std::Addr;
 use cw_storage_plus::Map;
 
 // Contract struct defines begin blocker contract execution params.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct CONTRACT {
     pub gas_limit: u64,
     pub gas_price: String,

@@ -16,7 +16,7 @@ pub enum OrderType {
 }
 
 #[allow(non_snake_case)]
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Position {
     #[serde(default)]
     pub isLong: bool,
@@ -27,7 +27,7 @@ pub struct Position {
     pub cumulative_funding_entry: FPDecimal,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct EffectivePosition {
     #[serde(default)]
     pub is_long: bool,
@@ -37,14 +37,14 @@ pub struct EffectivePosition {
     pub effective_margin: FPDecimal,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct DerivativePosition {
     pub subaccount_id: String,
     pub market_id: String,
     pub position: Position,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct DerivativeOrder {
     pub market_id: String,
     pub order_info: OrderInfo,
@@ -110,7 +110,7 @@ impl DerivativeOrder {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct DerivativeLimitOrder {
     pub order_info: OrderInfo,
     pub order_type: i32,
@@ -153,7 +153,7 @@ impl DerivativeLimitOrder {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct DerivativeMarketOrder {
     pub order_info: OrderInfo,
     pub order_type: i32,
@@ -197,7 +197,7 @@ impl DerivativeMarketOrder {
 }
 
 #[allow(non_snake_case)]
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct TrimmedDerivativeLimitOrder {
     pub price: FPDecimal,
     pub quantity: FPDecimal,
