@@ -322,7 +322,7 @@ mod tests {
 
         // Only Registry contract can register other contracts
         let registry_addr = mock_env().contract.address;
-        let info = mock_info(&registry_addr.to_string(), &coins(2, "token"));
+        let info = mock_info(registry_addr.as_ref(), &coins(2, "token"));
         let market_maker1: Addr = Addr::unchecked("market_maker1".to_string());
         let msg = ExecuteMsg::Register {
             contract_address: market_maker1.clone(),
@@ -363,7 +363,7 @@ mod tests {
 
         // Only Registry contract can register other contracts
         let registry_addr = mock_env().contract.address;
-        let info = mock_info(&registry_addr.to_string(), &coins(2, "token"));
+        let info = mock_info(registry_addr.as_ref(), &coins(2, "token"));
         let market_maker: Addr = Addr::unchecked("market_maker1".to_string());
         let msg = ExecuteMsg::Register {
             contract_address: market_maker.clone(),
@@ -401,7 +401,7 @@ mod tests {
         let msg = ExecuteMsg::Deactivate {
             contract_address: market_maker.clone(),
         };
-        let info = mock_info(&market_maker.to_string(), &coins(2, "token"));
+        let info = mock_info(market_maker.as_ref(), &coins(2, "token"));
         let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Query by contract address
@@ -426,7 +426,7 @@ mod tests {
         let msg = ExecuteMsg::Activate {
             contract_address: market_maker.clone(),
         };
-        let info = mock_info(&market_maker.to_string(), &coins(2, "token"));
+        let info = mock_info(market_maker.as_ref(), &coins(2, "token"));
         let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Query by contract address
@@ -460,7 +460,7 @@ mod tests {
 
         // Only Registry contract can register other contracts
         let registry_addr = mock_env().contract.address;
-        let info = mock_info(&registry_addr.to_string(), &coins(2, "token"));
+        let info = mock_info(registry_addr.as_ref(), &coins(2, "token"));
         let market_maker: Addr = Addr::unchecked("market_maker1".to_string());
         let msg = ExecuteMsg::Register {
             contract_address: market_maker.clone(),
@@ -491,7 +491,7 @@ mod tests {
             gas_limit: 200,
             gas_price: "15000000".to_string(),
         };
-        let info = mock_info(&market_maker.to_string(), &coins(2, "token"));
+        let info = mock_info(market_maker.as_ref(), &coins(2, "token"));
         let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Query contract info & validate
