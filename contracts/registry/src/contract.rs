@@ -106,10 +106,7 @@ pub fn try_register(
     is_executable: bool,
 ) -> Result<Response, ContractError> {
     // Validate Authorization
-    let res = only_registry(env, info);
-    if let Err(error) = res {
-        return Err(error);
-    }
+    only_registry(env, info)?;
 
     let contract = CONTRACT {
         gas_limit,
@@ -142,10 +139,7 @@ pub fn try_update(
     let mut contract = CONTRACTS.load(deps.storage, &contract_addr)?;
 
     // Validate Authorization
-    let res = only_owner_or_registry(&contract_addr, &deps, env, info);
-    if let Err(error) = res {
-        return Err(error);
-    }
+    only_owner_or_registry(&contract_addr, &deps, env, info)?;
 
     // update the contract
     if gas_limit != 0 {
@@ -173,10 +167,7 @@ pub fn try_activate(
     let mut contract = CONTRACTS.load(deps.storage, &contract_addr)?;
 
     // Validate Authorization
-    let res = only_owner_or_registry(&contract_addr, &deps, env, info);
-    if let Err(error) = res {
-        return Err(error);
-    }
+    only_owner_or_registry(&contract_addr, &deps, env, info)?;
 
     // update the contract to be executable
     contract.is_executable = true;
@@ -201,10 +192,7 @@ pub fn try_deactivate(
     let mut contract = CONTRACTS.load(deps.storage, &contract_addr)?;
 
     // Validate Authorization
-    let res = only_owner_or_registry(&contract_addr, &deps, env, info);
-    if let Err(error) = res {
-        return Err(error);
-    }
+    only_owner_or_registry(&contract_addr, &deps, env, info)?;
 
     contract.is_executable = false;
 
