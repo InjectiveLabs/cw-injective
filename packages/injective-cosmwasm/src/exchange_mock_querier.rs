@@ -16,7 +16,7 @@ use crate::{
     SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
 };
 
-pub fn mock_dependencies() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier> {
+pub fn mock_dependencies() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQueryWrapper> {
     let custom_querier: WasmMockQuerier = WasmMockQuerier::new();
 
     OwnedDeps {
@@ -216,7 +216,7 @@ impl Querier for WasmMockQuerier {
             Ok(v) => v,
             Err(e) => {
                 return SystemResult::Err(SystemError::InvalidRequest {
-                    error: format!("Parsing query request: {}", e),
+                    error: format!("Parsing query request: {:?}", e),
                     request: bin_request.into(),
                 })
             }
