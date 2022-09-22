@@ -119,8 +119,13 @@ fn test_swap() {
         },
     };
 
-    if let InjectiveMsg::Deposit {sender,subaccount_id: _subaccount_id, amount: _amount } = &get_message_data(&res.messages, 0).msg_data {
-            assert_eq!(sender, contract_addr, "sender not correct")
+    if let InjectiveMsg::Deposit {
+        sender,
+        subaccount_id: _subaccount_id,
+        amount: _amount,
+    } = &get_message_data(&res.messages, 0).msg_data
+    {
+        assert_eq!(sender, contract_addr, "sender not correct")
     }
     let order_message = get_message_data(&res.messages, 1);
     assert_eq!(
@@ -146,17 +151,27 @@ fn test_swap() {
     let messages = transfers_response.unwrap().messages;
     assert_eq!(messages.len(), 3);
 
-    if let InjectiveMsg::Withdraw {sender, subaccount_id: _subaccount_id, amount} = &get_message_data(&messages, 0).msg_data {
+    if let InjectiveMsg::Withdraw {
+        sender,
+        subaccount_id: _subaccount_id,
+        amount,
+    } = &get_message_data(&messages, 0).msg_data
+    {
         assert_eq!(sender, contract_addr, "sender not correct");
         assert_eq!(amount.amount, Uint128::from(8u128));
     } else {
         panic!("Wrong message type!");
     }
 
-    if let  InjectiveMsg::Withdraw {sender, subaccount_id: _subaccount_id, amount, } = &get_message_data(&messages, 1).msg_data {
-            assert_eq!(sender, contract_addr, "sender not correct");
-            assert_eq!(amount.amount, Uint128::from(9000u128 - 8036u128));
-        } else {
+    if let InjectiveMsg::Withdraw {
+        sender,
+        subaccount_id: _subaccount_id,
+        amount,
+    } = &get_message_data(&messages, 1).msg_data
+    {
+        assert_eq!(sender, contract_addr, "sender not correct");
+        assert_eq!(amount.amount, Uint128::from(9000u128 - 8036u128));
+    } else {
         panic!("Wrong message type!");
     }
 
