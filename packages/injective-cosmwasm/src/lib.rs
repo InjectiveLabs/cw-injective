@@ -4,6 +4,7 @@ mod exchange;
 mod msg;
 mod oracle;
 mod order;
+pub mod privileged_action;
 mod querier;
 mod query;
 mod route;
@@ -29,7 +30,7 @@ pub use query::{
     DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse,
     OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse,
     SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse,
-    TraderSpotOrdersResponse,
+    TraderSpotOrdersResponse, FROM_WORST_TO_BEST_CANCELLATION_STRATEGY, UNSORTED_CANCELLATION_STRATEGY,
 };
 pub use route::InjectiveRoute;
 pub use subaccount::{

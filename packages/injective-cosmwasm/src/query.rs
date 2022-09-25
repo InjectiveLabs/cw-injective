@@ -105,6 +105,10 @@ pub enum InjectiveQuery {
 
 impl CustomQuery for InjectiveQueryWrapper {}
 
+pub const UNSORTED_CANCELLATION_STRATEGY: i32 = 0;
+
+pub const FROM_WORST_TO_BEST_CANCELLATION_STRATEGY: i32 = 1;
+
 /// SubaccountDepositResponse is data format returned from ExchangeQuery::SubaccountDeposit query
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SubaccountDepositResponse {
