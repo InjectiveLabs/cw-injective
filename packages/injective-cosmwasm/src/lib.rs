@@ -50,7 +50,7 @@ pub use derivative::{
     DerivativeLimitOrder, DerivativeMarketOrder, DerivativeOrder, DerivativePosition, EffectivePosition, OrderType, Position,
     TrimmedDerivativeLimitOrder,
 };
-pub use oracle::OracleInfo;
+pub use oracle::{OracleInfo, OracleType};
 
 pub use derivative_market::{
     DerivativeMarket, FullDerivativeMarket, FullDerivativeMarketPerpetualInfo, PerpetualMarketFunding, PerpetualMarketInfo, PerpetualMarketState,

@@ -1,3 +1,4 @@
+use crate::oracle::OracleType;
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -48,8 +49,7 @@ pub struct DerivativeMarket {
     pub ticker: String,
     pub oracle_base: String,
     pub oracle_quote: String,
-    #[serde(default)]
-    pub oracle_type: i32,
+    pub oracle_type: OracleType,
     #[serde(default)]
     pub oracle_scale_factor: u32,
     pub quote_denom: String,
