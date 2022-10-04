@@ -45,3 +45,9 @@ pub enum OracleType {
     BandIBC = 10,
     Provider = 11,
 }
+
+impl Default for OracleType {
+    fn default() -> Self {
+        OracleType::Unspecified
+    }
+}
