@@ -7,7 +7,7 @@ use injective_math::FPDecimal;
 use std::marker::PhantomData;
 use std::str::FromStr;
 
-use crate::oracle::OracleHistoryOptions;
+use crate::oracle::{OracleHistoryOptions, OracleType};
 use crate::volatility::TradeHistoryOptions;
 use crate::{
     Deposit, DerivativeMarket, DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery,
@@ -77,7 +77,7 @@ fn default_derivative_market_response_handler(market_id: String) -> QuerierResul
                 ticker: "ticker".to_string(),
                 oracle_base: "oracle_base".to_string(),
                 oracle_quote: "oracle_quote".to_string(),
-                oracle_type: 1,
+                oracle_type: OracleType::Band,
                 oracle_scale_factor: 1,
                 quote_denom: "inj".to_string(),
                 market_id,
