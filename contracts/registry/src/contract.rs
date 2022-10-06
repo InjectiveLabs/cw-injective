@@ -32,11 +32,7 @@ pub fn instantiate(
 }
 
 #[entry_point]
-pub fn sudo(
-    deps: DepsMut,
-    _env: Env,
-    msg: ExecuteMsg,
-) -> Result<Response, ContractError> {
+pub fn sudo(deps: DepsMut, _env: Env, msg: ExecuteMsg) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Register {
             contract_address,
