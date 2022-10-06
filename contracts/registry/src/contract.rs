@@ -31,11 +31,10 @@ pub fn instantiate(
         .add_attribute("owner", info.sender))
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
-pub fn execute(
+#[entry_point]
+pub fn sudo(
     deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
+    _env: Env,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
@@ -44,26 +43,34 @@ pub fn execute(
             gas_limit,
             gas_price,
             is_executable,
-        } => try_register(
-            deps,
-            env,
-            info,
-            contract_address,
-            gas_limit,
-            gas_price,
-            is_executable,
-        ),
+        } => try_register(deps, contract_address, gas_limit, gas_price, is_executable),
         ExecuteMsg::Update {
             contract_address,
             gas_limit,
             gas_price,
-        } => try_update(deps, env, info, contract_address, gas_limit, gas_price),
-        ExecuteMsg::Activate { contract_address } => {
-            try_activate(deps, env, info, contract_address)
-        }
-        ExecuteMsg::Deactivate { contract_address } => {
-            try_deactivate(deps, env, info, contract_address)
-        }
+        } => try_update(deps, contract_address, gas_limit, gas_price),
+        ExecuteMsg::Activate { contract_address } => try_activate(deps, contract_address),
+        ExecuteMsg::Deactivate { contract_address } => try_deactivate(deps, contract_address),
+    }
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn execute(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
+) -> Result<Response, ContractError> {
+    only_owner(&env.contract.address, &deps, info)?; // we keep a path for contract owner to update it
+    match msg {
+        ExecuteMsg::Register { .. } => Err(ContractError::Unauthorized {}),
+        ExecuteMsg::Update {
+            contract_address,
+            gas_limit,
+            gas_price,
+        } => try_update(deps, contract_address, gas_limit, gas_price),
+        ExecuteMsg::Activate { contract_address } => try_activate(deps, contract_address),
+        ExecuteMsg::Deactivate { contract_address } => try_deactivate(deps, contract_address),
     }
 }
 
@@ -76,10 +83,9 @@ pub fn only_registry(env: Env, info: MessageInfo) -> Result<(), ContractError> {
     }
 }
 
-pub fn only_owner_or_registry(
+pub fn only_owner(
     contract_address: &Addr,
     deps: &DepsMut,
-    env: Env,
     info: MessageInfo,
 ) -> Result<(), ContractError> {
     // Query contract info
@@ -88,8 +94,8 @@ pub fn only_owner_or_registry(
     };
     let res: ContractInfoResponse = deps.querier.query(&query.into())?;
 
-    // Check if the sender is the owner of the contract or the registry (only wasmx module can do this)
-    if res.creator != info.sender && env.contract.address != info.sender {
+    // Check if the sender is the owner of the contract
+    if res.creator != info.sender {
         Err(ContractError::Unauthorized {})
     } else {
         Ok(())
@@ -98,16 +104,11 @@ pub fn only_owner_or_registry(
 
 pub fn try_register(
     deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
     contract_addr: Addr,
     gas_limit: u64,
     gas_price: String,
     is_executable: bool,
 ) -> Result<Response, ContractError> {
-    // Validate Authorization
-    only_registry(env, info)?;
-
     let contract = CONTRACT {
         gas_limit,
         gas_price,
@@ -129,17 +130,12 @@ pub fn try_register(
 
 pub fn try_update(
     deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
     contract_addr: Addr,
     gas_limit: u64,
     gas_price: String,
 ) -> Result<Response, ContractError> {
     // this fails if contract is not available
     let mut contract = CONTRACTS.load(deps.storage, &contract_addr)?;
-
-    // Validate Authorization
-    only_owner_or_registry(&contract_addr, &deps, env, info)?;
 
     // update the contract
     if gas_limit != 0 {
@@ -157,17 +153,9 @@ pub fn try_update(
     Ok(res)
 }
 
-pub fn try_activate(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    contract_addr: Addr,
-) -> Result<Response, ContractError> {
+pub fn try_activate(deps: DepsMut, contract_addr: Addr) -> Result<Response, ContractError> {
     // this fails if contract is not available
     let mut contract = CONTRACTS.load(deps.storage, &contract_addr)?;
-
-    // Validate Authorization
-    only_owner_or_registry(&contract_addr, &deps, env, info)?;
 
     // update the contract to be executable
     contract.is_executable = true;
@@ -182,17 +170,9 @@ pub fn try_activate(
     Ok(res)
 }
 
-pub fn try_deactivate(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    contract_addr: Addr,
-) -> Result<Response, ContractError> {
+pub fn try_deactivate(deps: DepsMut, contract_addr: Addr) -> Result<Response, ContractError> {
     // this fails if contract is not available
     let mut contract = CONTRACTS.load(deps.storage, &contract_addr)?;
-
-    // Validate Authorization
-    only_owner_or_registry(&contract_addr, &deps, env, info)?;
 
     contract.is_executable = false;
 
@@ -275,10 +255,11 @@ fn query_active_contracts(deps: Deps) -> StdResult<ContractsResponse> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use cosmwasm_std::testing::{mock_dependencies_with_balance, mock_env, mock_info};
     use cosmwasm_std::{coins, from_binary};
     use cw2::{get_contract_version, ContractVersion};
+
+    use super::*;
 
     #[test]
     fn initialization() {
@@ -310,7 +291,7 @@ mod tests {
 
         // Only Registry contract can register other contracts
         let registry_addr = mock_env().contract.address;
-        let info = mock_info(registry_addr.as_ref(), &coins(2, "token"));
+        let _info = mock_info(registry_addr.as_ref(), &coins(2, "token"));
         let market_maker1: Addr = Addr::unchecked("market_maker1".to_string());
         let msg = ExecuteMsg::Register {
             contract_address: market_maker1.clone(),
@@ -319,7 +300,7 @@ mod tests {
             is_executable: true,
         };
 
-        let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+        let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
 
         // Query by contract address
         let res = query(
@@ -351,7 +332,7 @@ mod tests {
 
         // Only Registry contract can register other contracts
         let registry_addr = mock_env().contract.address;
-        let info = mock_info(registry_addr.as_ref(), &coins(2, "token"));
+        let _info = mock_info(registry_addr.as_ref(), &coins(2, "token"));
         let market_maker: Addr = Addr::unchecked("market_maker1".to_string());
         let msg = ExecuteMsg::Register {
             contract_address: market_maker.clone(),
@@ -360,7 +341,7 @@ mod tests {
             is_executable: true,
         };
 
-        let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+        let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
 
         // Query by contract address
         let res = query(
