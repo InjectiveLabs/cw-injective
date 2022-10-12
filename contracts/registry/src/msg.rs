@@ -38,7 +38,10 @@ pub enum QueryMsg {
         start_after: Option<String>,
         limit: Option<u32>,
     },
-    GetActiveContracts {},
+    GetActiveContracts {
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
 }
 
 // Contract struct defines begin blocker contract execution params.

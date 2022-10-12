@@ -193,7 +193,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetContracts { start_after, limit } => {
             to_binary(&query_contracts(deps, start_after, limit)?)
         }
-        QueryMsg::GetActiveContracts {} => to_binary(&query_active_contracts(deps)?),
+        QueryMsg::GetActiveContracts { start_after, limit } => {
+            to_binary(&query_active_contracts(deps, start_after, limit)?)
+        }
     }
 }
 
@@ -242,10 +244,17 @@ fn query_contracts(
     Ok(ContractsResponse { contracts })
 }
 
-fn query_active_contracts(deps: Deps) -> StdResult<ContractsResponse> {
+fn query_active_contracts(
+    deps: Deps,
+    start_after: Option<String>,
+    limit: Option<u32>,
+) -> StdResult<ContractsResponse> {
+    let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
+    let addr = maybe_addr(deps.api, start_after)?;
+    let start = addr.as_ref().map(Bound::exclusive);
     // iterate over all and return only executable contracts
     let contracts = CONTRACTS
-        .range(deps.storage, None, None, Order::Ascending)
+        .range(deps.storage, start, None, Order::Ascending)
         .filter(|item| {
             if let Ok((_, contract)) = item {
                 contract.is_executable
@@ -253,6 +262,7 @@ fn query_active_contracts(deps: Deps) -> StdResult<ContractsResponse> {
                 false
             }
         })
+        .take(limit)
         .map(|item| {
             item.map(|(addr, contract)| ContractExecutionParams {
                 address: addr,
@@ -390,7 +400,15 @@ mod tests {
         assert_eq!(1, registered_contracts.contracts.len());
 
         // Query all active contracts
-        let res = query(deps.as_ref(), mock_env(), QueryMsg::GetActiveContracts {}).unwrap();
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetActiveContracts {
+                start_after: None,
+                limit: None,
+            },
+        )
+        .unwrap();
         let active_contracts: ContractsResponse = from_binary(&res).unwrap();
         assert_eq!(1, active_contracts.contracts.len());
 
@@ -415,7 +433,15 @@ mod tests {
         assert!(!registered_contract.contract.is_executable);
 
         // Query all active contracts
-        let res = query(deps.as_ref(), mock_env(), QueryMsg::GetActiveContracts {}).unwrap();
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetActiveContracts {
+                start_after: None,
+                limit: None,
+            },
+        )
+        .unwrap();
         let active_contracts: ContractsResponse = from_binary(&res).unwrap();
         assert_eq!(0, active_contracts.contracts.len());
 
@@ -440,7 +466,15 @@ mod tests {
         assert!(registered_contract.contract.is_executable);
 
         // Query all active contracts
-        let res = query(deps.as_ref(), mock_env(), QueryMsg::GetActiveContracts {}).unwrap();
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetActiveContracts {
+                start_after: None,
+                limit: None,
+            },
+        )
+        .unwrap();
         let active_contracts: ContractsResponse = from_binary(&res).unwrap();
         assert_eq!(1, active_contracts.contracts.len());
     }
