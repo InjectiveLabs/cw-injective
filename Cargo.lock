@@ -17,7 +17,7 @@ dependencies = [
  "cosmwasm-storage",
  "cw-multi-test",
  "cw-storage-plus 0.14.0",
- "cw-utils",
+ "cw-utils 0.14.0",
  "cw2 0.14.0",
  "injective-cosmwasm",
  "injective-math",
@@ -252,7 +252,7 @@ dependencies = [
  "cosmwasm-std",
  "cosmwasm-storage",
  "cw-storage-plus 0.14.0",
- "cw-utils",
+ "cw-utils 0.14.0",
  "derivative",
  "itertools",
  "prost",
@@ -291,6 +291,21 @@ checksum = "414b91f3d7a619bb26c835119d7095804596a1382ddc1d184c33c1d2c17f6c5e"
 dependencies = [
  "cosmwasm-std",
  "cw2 0.14.0",
+ "schemars",
+ "semver",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "cw-utils"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a67007ff056f4cd034f361c8ed69780c0180959b9c8037c84f3caa78120faf5"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw2 0.15.1",
  "schemars",
  "semver",
  "serde",
@@ -759,6 +774,7 @@ dependencies = [
  "cosmwasm-std",
  "cosmwasm-storage",
  "cw-storage-plus 0.15.1",
+ "cw-utils 0.15.0",
  "cw2 0.15.1",
  "schemars",
  "serde",
