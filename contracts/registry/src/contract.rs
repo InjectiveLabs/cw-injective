@@ -472,7 +472,7 @@ mod tests {
         assert_eq!(market_maker, registered_contract.contract.address);
         assert_eq!(200, registered_contract.contract.gas_limit);
         assert_eq!(
-            "15000000".to_string(),
+            15000000,
             registered_contract.contract.gas_price
         );
     }
