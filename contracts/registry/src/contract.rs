@@ -102,7 +102,7 @@ pub fn try_register(
     deps: DepsMut,
     contract_addr: Addr,
     gas_limit: u64,
-    gas_price: String,
+    gas_price: u64,
     is_executable: bool,
 ) -> Result<Response, ContractError> {
     let contract = CONTRACT {
@@ -128,7 +128,7 @@ pub fn try_update(
     deps: DepsMut,
     contract_addr: Addr,
     gas_limit: u64,
-    gas_price: String,
+    gas_price: u64,
 ) -> Result<Response, ContractError> {
     // this fails if contract is not available
     let mut contract = CONTRACTS.load(deps.storage, &contract_addr)?;
@@ -137,7 +137,7 @@ pub fn try_update(
     if gas_limit != 0 {
         contract.gas_limit = gas_limit;
     }
-    if !gas_price.is_empty() {
+    if gas_price != 0 {
         contract.gas_price = gas_price;
     }
 
@@ -292,7 +292,7 @@ mod tests {
         let msg = ExecuteMsg::Register {
             contract_address: market_maker1.clone(),
             gas_limit: 100,
-            gas_price: "10000000".to_string(),
+            gas_price: 10000000,
             is_executable: true,
         };
 
@@ -333,7 +333,7 @@ mod tests {
         let msg = ExecuteMsg::Register {
             contract_address: market_maker.clone(),
             gas_limit: 100,
-            gas_price: "10000000".to_string(),
+            gas_price: 10000000,
             is_executable: true,
         };
 
@@ -430,7 +430,7 @@ mod tests {
         let msg = ExecuteMsg::Register {
             contract_address: market_maker.clone(),
             gas_limit: 100,
-            gas_price: "10000000".to_string(),
+            gas_price: 10000000,
             is_executable: true,
         };
 
@@ -454,7 +454,7 @@ mod tests {
         let msg = ExecuteMsg::Update {
             contract_address: market_maker.clone(),
             gas_limit: 200,
-            gas_price: "15000000".to_string(),
+            gas_price: 15000000,
         };
         let info = mock_info(market_maker.as_ref(), &coins(2, "token"));
         let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
@@ -471,9 +471,6 @@ mod tests {
         let registered_contract: ContractResponse = from_binary(&res).unwrap();
         assert_eq!(market_maker, registered_contract.contract.address);
         assert_eq!(200, registered_contract.contract.gas_limit);
-        assert_eq!(
-            "15000000".to_string(),
-            registered_contract.contract.gas_price
-        );
+        assert_eq!(15000000, registered_contract.contract.gas_price);
     }
 }
