@@ -102,7 +102,7 @@ pub fn try_register(
     deps: DepsMut,
     contract_addr: Addr,
     gas_limit: u64,
-    gas_price: u128,
+    gas_price: u64,
     is_executable: bool,
 ) -> Result<Response, ContractError> {
     let contract = CONTRACT {
@@ -128,7 +128,7 @@ pub fn try_update(
     deps: DepsMut,
     contract_addr: Addr,
     gas_limit: u64,
-    gas_price: u128,
+    gas_price: u64,
 ) -> Result<Response, ContractError> {
     // this fails if contract is not available
     let mut contract = CONTRACTS.load(deps.storage, &contract_addr)?;
@@ -137,7 +137,7 @@ pub fn try_update(
     if gas_limit != 0 {
         contract.gas_limit = gas_limit;
     }
-    if !gas_price.is_empty() {
+    if gas_price != 0 {
         contract.gas_price = gas_price;
     }
 

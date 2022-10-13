@@ -11,13 +11,13 @@ pub enum ExecuteMsg {
     Register {
         contract_address: Addr,
         gas_limit: u64,
-        gas_price: u128,
+        gas_price: u64,
         is_executable: bool,
     },
     Update {
         contract_address: Addr,
         gas_limit: u64,
-        gas_price: u128,
+        gas_price: u64,
     },
     Activate {
         contract_address: Addr,
@@ -41,7 +41,7 @@ pub enum QueryMsg {
 pub struct ContractExecutionParams {
     pub address: Addr,
     pub gas_limit: u64,
-    pub gas_price: u128,
+    pub gas_price: u64,
     pub is_executable: bool,
 }
 
