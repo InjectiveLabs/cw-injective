@@ -471,9 +471,6 @@ mod tests {
         let registered_contract: ContractResponse = from_binary(&res).unwrap();
         assert_eq!(market_maker, registered_contract.contract.address);
         assert_eq!(200, registered_contract.contract.gas_limit);
-        assert_eq!(
-            15000000,
-            registered_contract.contract.gas_price
-        );
+        assert_eq!(15000000, registered_contract.contract.gas_price);
     }
 }
