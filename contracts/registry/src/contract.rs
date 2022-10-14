@@ -231,6 +231,7 @@ fn query_contracts(
     // iterate over them all
     let contracts = CONTRACTS
         .range(deps.storage, start, None, Order::Ascending)
+        .take(limit)
         .map(|item| {
             item.map(|(addr, contract)| ContractExecutionParams {
                 address: addr,
@@ -239,7 +240,6 @@ fn query_contracts(
                 is_executable: contract.is_executable,
             })
         })
-        .take(limit)
         .collect::<StdResult<_>>()?;
     Ok(ContractsResponse { contracts })
 }
@@ -255,6 +255,7 @@ fn query_active_contracts(
     // iterate over all and return only executable contracts
     let contracts = CONTRACTS
         .range(deps.storage, start, None, Order::Ascending)
+        .take(limit)
         .filter(|item| {
             if let Ok((_, contract)) = item {
                 contract.is_executable
@@ -262,7 +263,6 @@ fn query_active_contracts(
                 false
             }
         })
-        .take(limit)
         .map(|item| {
             item.map(|(addr, contract)| ContractExecutionParams {
                 address: addr,
