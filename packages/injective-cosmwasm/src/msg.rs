@@ -1,8 +1,8 @@
+use cosmwasm_std::{Addr, Coin, CosmosMsg, CustomMsg};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{derivative::DerivativeOrder, order::OrderData, route::InjectiveRoute, spot::SpotOrder};
-use cosmwasm_std::{Addr, Coin, CosmosMsg, CustomMsg};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -79,6 +79,10 @@ pub enum InjectiveMsg {
         derivative_orders_to_cancel: Vec<OrderData>,
         spot_orders_to_create: Vec<SpotOrder>,
         derivative_orders_to_create: Vec<DerivativeOrder>,
+    },
+    CreateDenom {
+        sender: String,
+        subdenom: String,
     },
     /// Contracts can mint native tokens for an existing factory denom
     /// that they are the admin of.

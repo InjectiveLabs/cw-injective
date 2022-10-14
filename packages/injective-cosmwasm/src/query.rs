@@ -1,6 +1,8 @@
-use injective_math::FPDecimal;
+use cosmwasm_std::{CustomQuery, Uint128};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+use injective_math::FPDecimal;
 
 use crate::{
     derivative::EffectivePosition,
@@ -13,7 +15,6 @@ use crate::{
     volatility::{MetadataStatistics, TradeHistoryOptions, TradeRecord},
     Position, SpotMarket,
 };
-use cosmwasm_std::CustomQuery;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -101,6 +102,9 @@ pub enum InjectiveQuery {
         quote_info: Option<OracleInfo>,
         oracle_history_options: Option<OracleHistoryOptions>,
     },
+    TokenFactoryDenomTotalSupply {
+        denom: String,
+    },
 }
 
 impl CustomQuery for InjectiveQueryWrapper {}
@@ -181,4 +185,9 @@ pub struct DerivativeMarketMidPriceAndTOBResponse {
     pub mid_price: Option<FPDecimal>,
     pub best_bid: Option<FPDecimal>,
     pub best_ask: Option<FPDecimal>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct TokenFactoryDenomSupplyResponse {
+    pub total_supply: Uint128,
 }

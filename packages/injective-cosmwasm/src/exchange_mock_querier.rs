@@ -1,13 +1,16 @@
-use cosmwasm_std::testing::{MockApi, MockStorage};
-use cosmwasm_std::{
-    from_slice, to_binary, BankQuery, Binary, ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest, SystemError, SystemResult, WasmQuery,
-};
-
-use injective_math::FPDecimal;
 use std::marker::PhantomData;
 use std::str::FromStr;
 
+use cosmwasm_std::testing::{MockApi, MockStorage};
+use cosmwasm_std::{
+    from_slice, to_binary, BankQuery, Binary, ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest, SystemError, SystemResult,
+    Uint128, WasmQuery,
+};
+
+use injective_math::FPDecimal;
+
 use crate::oracle::{OracleHistoryOptions, OracleType};
+use crate::query::{TokenFactoryDenomSupplyResponse};
 use crate::volatility::TradeHistoryOptions;
 use crate::{
     Deposit, DerivativeMarket, DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery,
@@ -172,6 +175,13 @@ fn default_oracle_volatility_response_handler() -> QuerierResult {
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
 
+fn default_token_factory_denom_total_supply_handler() -> QuerierResult {
+    let response = TokenFactoryDenomSupplyResponse {
+        total_supply: Uint128::from(1000u128),
+    };
+    SystemResult::Ok(ContractResult::from(to_binary(&response)))
+}
+
 type TraderSpotOrdersToCancelUpToAmountResponseHandler = Option<
     fn(
         market_id: String,
@@ -208,6 +218,7 @@ pub struct WasmMockQuerier {
     pub spot_market_mid_price_and_tob_response_handler: Option<fn(market_id: String) -> QuerierResult>,
     pub derivative_market_mid_price_and_tob_response_handler: Option<fn(market_id: String) -> QuerierResult>,
     pub oracle_volatility_response_handler: OracleVolatilityResponseHandler,
+    pub token_factory_denom_total_supply_handler: Option<fn(denom: String) -> QuerierResult>,
 }
 
 impl Querier for WasmMockQuerier {
@@ -332,6 +343,10 @@ impl WasmMockQuerier {
                     Some(handler) => handler(base_info, quote_info, oracle_history_options),
                     None => default_oracle_volatility_response_handler(),
                 },
+                InjectiveQuery::TokenFactoryDenomTotalSupply { denom } => match self.token_factory_denom_total_supply_handler {
+                    Some(handler) => handler(denom),
+                    None => default_token_factory_denom_total_supply_handler(),
+                },
             },
             QueryRequest::Bank(query) => match self.bank_query_handler {
                 Some(handler) => handler(query),
@@ -371,6 +386,7 @@ impl WasmMockQuerier {
             spot_market_mid_price_and_tob_response_handler: None,
             derivative_market_mid_price_and_tob_response_handler: None,
             oracle_volatility_response_handler: None,
+            token_factory_denom_total_supply_handler: None,
         }
     }
 }
