@@ -5,6 +5,8 @@ use cosmwasm_std::{
     Response, StdResult, WasmQuery,
 };
 use cw2::set_contract_version;
+use cw_storage_plus::Bound;
+use cw_utils::maybe_addr;
 
 use crate::error::ContractError;
 use crate::msg::{
@@ -188,8 +190,12 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetContract { contract_address } => {
             to_binary(&query_contract(deps, contract_address)?)
         }
-        QueryMsg::GetContracts {} => to_binary(&query_contracts(deps)?),
-        QueryMsg::GetActiveContracts {} => to_binary(&query_active_contracts(deps)?),
+        QueryMsg::GetContracts { start_after, limit } => {
+            to_binary(&query_contracts(deps, start_after, limit)?)
+        }
+        QueryMsg::GetActiveContracts { start_after, limit } => {
+            to_binary(&query_active_contracts(deps, start_after, limit)?)
+        }
     }
 }
 
@@ -210,10 +216,22 @@ pub fn query_contract(deps: Deps, contract_address: Addr) -> StdResult<ContractR
     })
 }
 
-fn query_contracts(deps: Deps) -> StdResult<ContractsResponse> {
+// settings for pagination
+const MAX_LIMIT: u32 = 30;
+const DEFAULT_LIMIT: u32 = 10;
+
+fn query_contracts(
+    deps: Deps,
+    start_after: Option<String>,
+    limit: Option<u32>,
+) -> StdResult<ContractsResponse> {
+    let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
+    let addr = maybe_addr(deps.api, start_after)?;
+    let start = addr.as_ref().map(Bound::exclusive);
     // iterate over them all
     let contracts = CONTRACTS
-        .range(deps.storage, None, None, Order::Ascending)
+        .range(deps.storage, start, None, Order::Ascending)
+        .take(limit)
         .map(|item| {
             item.map(|(addr, contract)| ContractExecutionParams {
                 address: addr,
@@ -226,10 +244,18 @@ fn query_contracts(deps: Deps) -> StdResult<ContractsResponse> {
     Ok(ContractsResponse { contracts })
 }
 
-fn query_active_contracts(deps: Deps) -> StdResult<ContractsResponse> {
+fn query_active_contracts(
+    deps: Deps,
+    start_after: Option<String>,
+    limit: Option<u32>,
+) -> StdResult<ContractsResponse> {
+    let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
+    let addr = maybe_addr(deps.api, start_after)?;
+    let start = addr.as_ref().map(Bound::exclusive);
     // iterate over all and return only executable contracts
     let contracts = CONTRACTS
-        .range(deps.storage, None, None, Order::Ascending)
+        .range(deps.storage, start, None, Order::Ascending)
+        .take(limit)
         .filter(|item| {
             if let Ok((_, contract)) = item {
                 contract.is_executable
@@ -311,7 +337,15 @@ mod tests {
         assert_eq!(market_maker1, registered_contract.contract.address);
 
         // Query all registered contracts
-        let res = query(deps.as_ref(), mock_env(), QueryMsg::GetContracts {}).unwrap();
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetContracts {
+                start_after: None,
+                limit: None,
+            },
+        )
+        .unwrap();
         let registered_contracts: ContractsResponse = from_binary(&res).unwrap();
         assert_eq!(1, registered_contracts.contracts.len());
     }
@@ -353,12 +387,28 @@ mod tests {
         assert!(registered_contract.contract.is_executable);
 
         // Query all registered contracts
-        let res = query(deps.as_ref(), mock_env(), QueryMsg::GetContracts {}).unwrap();
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetContracts {
+                start_after: None,
+                limit: None,
+            },
+        )
+        .unwrap();
         let registered_contracts: ContractsResponse = from_binary(&res).unwrap();
         assert_eq!(1, registered_contracts.contracts.len());
 
         // Query all active contracts
-        let res = query(deps.as_ref(), mock_env(), QueryMsg::GetActiveContracts {}).unwrap();
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetActiveContracts {
+                start_after: None,
+                limit: None,
+            },
+        )
+        .unwrap();
         let active_contracts: ContractsResponse = from_binary(&res).unwrap();
         assert_eq!(1, active_contracts.contracts.len());
 
@@ -383,7 +433,15 @@ mod tests {
         assert!(!registered_contract.contract.is_executable);
 
         // Query all active contracts
-        let res = query(deps.as_ref(), mock_env(), QueryMsg::GetActiveContracts {}).unwrap();
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetActiveContracts {
+                start_after: None,
+                limit: None,
+            },
+        )
+        .unwrap();
         let active_contracts: ContractsResponse = from_binary(&res).unwrap();
         assert_eq!(0, active_contracts.contracts.len());
 
@@ -408,7 +466,15 @@ mod tests {
         assert!(registered_contract.contract.is_executable);
 
         // Query all active contracts
-        let res = query(deps.as_ref(), mock_env(), QueryMsg::GetActiveContracts {}).unwrap();
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetActiveContracts {
+                start_after: None,
+                limit: None,
+            },
+        )
+        .unwrap();
         let active_contracts: ContractsResponse = from_binary(&res).unwrap();
         assert_eq!(1, active_contracts.contracts.len());
     }

@@ -31,9 +31,17 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     // GetContracts returns the registered contracts as a json-encoded number
-    GetContract { contract_address: Addr },
-    GetContracts {},
-    GetActiveContracts {},
+    GetContract {
+        contract_address: Addr,
+    },
+    GetContracts {
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
+    GetActiveContracts {
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
 }
 
 // Contract struct defines begin blocker contract execution params.
