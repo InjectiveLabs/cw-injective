@@ -75,8 +75,14 @@ impl FPDecimal {
         }
 
         assert_ne!(y.num, U256::zero());
+
+        let num = FPDecimal::ONE.num * x.num / y.num;
+        if num.is_zero() {
+            return FPDecimal::zero();
+        }
+
         FPDecimal {
-            num: FPDecimal::ONE.num * x.num / y.num,
+            num,
             sign: 1 ^ x.sign ^ y.sign,
         }
     }
