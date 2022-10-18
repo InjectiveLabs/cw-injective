@@ -10,8 +10,8 @@ use cosmwasm_std::{
 
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
 use injective_cosmwasm::{
-    InjectiveMsg, InjectiveQueryWrapper, InjectiveRoute, OrderInfo, SpotMarket, SpotMarketResponse,
-    SpotOrder, WasmMockQuerier,
+    HandlesMarketIdQuery, InjectiveMsg, InjectiveQueryWrapper, InjectiveRoute, OrderInfo,
+    SpotMarket, SpotMarketResponse, SpotOrder, WasmMockQuerier,
 };
 use injective_math::FPDecimal;
 
@@ -60,7 +60,7 @@ where
 
 pub fn inj_mock_deps() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQueryWrapper> {
     let mut custom_querier: WasmMockQuerier = WasmMockQuerier::new();
-    custom_querier.spot_market_response_handler = Some(handle_spot_market_response);
+    custom_querier.spot_market_response_handler = Some(Box::new(create_spot_market_handler()));
     OwnedDeps {
         api: MockApi::default(),
         storage: MockStorage::default(),
@@ -187,20 +187,26 @@ fn test_swap() {
     }
 }
 
-fn handle_spot_market_response(market_id: String) -> QuerierResult {
-    let response = SpotMarketResponse {
-        market: Some(SpotMarket {
-            ticker: "INJ/USDT".to_string(),
-            base_denom: "INJ".to_string(),
-            quote_denom: "USDT".to_string(),
-            maker_fee_rate: FPDecimal::from_str("0.01").unwrap(),
-            taker_fee_rate: FPDecimal::from_str("0.1").unwrap(),
-            relayer_fee_share_rate: FPDecimal::from_str("0.4").unwrap(),
-            market_id,
-            status: 0,
-            min_price_tick_size: FPDecimal::from_str("0.000000000000001").unwrap(),
-            min_quantity_tick_size: FPDecimal::from_str("1000000000000000").unwrap(),
-        }),
-    };
-    SystemResult::Ok(ContractResult::from(to_binary(&response)))
+fn create_spot_market_handler() -> impl HandlesMarketIdQuery {
+    struct Temp();
+    impl HandlesMarketIdQuery for Temp {
+        fn handle(&self, market_id: String) -> QuerierResult {
+            let response = SpotMarketResponse {
+                market: Some(SpotMarket {
+                    ticker: "INJ/USDT".to_string(),
+                    base_denom: "INJ".to_string(),
+                    quote_denom: "USDT".to_string(),
+                    maker_fee_rate: FPDecimal::from_str("0.01").unwrap(),
+                    taker_fee_rate: FPDecimal::from_str("0.1").unwrap(),
+                    relayer_fee_share_rate: FPDecimal::from_str("0.4").unwrap(),
+                    market_id,
+                    status: 0,
+                    min_price_tick_size: FPDecimal::from_str("0.000000000000001").unwrap(),
+                    min_quantity_tick_size: FPDecimal::from_str("1000000000000000").unwrap(),
+                }),
+            };
+            SystemResult::Ok(ContractResult::from(to_binary(&response)))
+        }
+    }
+    Temp()
 }
