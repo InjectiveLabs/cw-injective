@@ -42,9 +42,7 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: ExecuteMsg) -> Result<Response, Contr
             gas_price,
             is_executable,
         } => try_register(deps, contract_address, gas_limit, gas_price, is_executable),
-        ExecuteMsg::Deregister {
-            contract_address,
-        } => try_deregister(deps, contract_address),
+        ExecuteMsg::Deregister { contract_address } => try_deregister(deps, contract_address),
         ExecuteMsg::Update {
             contract_address,
             gas_limit,
@@ -130,10 +128,7 @@ pub fn try_register(
     Ok(res)
 }
 
-pub fn try_deregister(
-    deps: DepsMut,
-    contract_addr: Addr,
-) -> Result<Response, ContractError> {
+pub fn try_deregister(deps: DepsMut, contract_addr: Addr) -> Result<Response, ContractError> {
     CONTRACTS.remove(deps.storage, &contract_addr);
 
     let res = Response::new().add_attributes(vec![
