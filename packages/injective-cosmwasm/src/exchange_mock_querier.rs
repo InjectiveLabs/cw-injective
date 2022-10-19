@@ -228,6 +228,10 @@ pub trait HandlesOracleVolatilityQuery {
     ) -> QuerierResult;
 }
 
+pub trait HandlesOraclePriceQuery {
+    fn handle(&self, oracle_type: OracleType, base: String, quote: String) -> QuerierResult;
+}
+
 pub trait HandlesMarketVolatilityQuery {
     fn handle(&self, market_id: String, trade_history_options: TradeHistoryOptions) -> QuerierResult;
 }
@@ -253,6 +257,7 @@ pub struct WasmMockQuerier {
     pub spot_market_mid_price_and_tob_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
     pub derivative_market_mid_price_and_tob_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
     pub oracle_volatility_response_handler: Option<Box<dyn HandlesOracleVolatilityQuery>>,
+    pub oracle_price_response_handler: Option<Box<dyn HandlesOraclePriceQuery>>,
 }
 
 impl Querier for WasmMockQuerier {
@@ -377,6 +382,10 @@ impl WasmMockQuerier {
                     Some(handler) => handler.handle(base_info, quote_info, oracle_history_options),
                     None => default_oracle_volatility_response_handler(),
                 },
+                InjectiveQuery::OraclePrice { oracle_type, base, quote } => match &self.oracle_price_response_handler {
+                    Some(handler) => handler.handle(oracle_type, base, quote),
+                    None => default_oracle_volatility_response_handler(),
+                },
             },
             QueryRequest::Bank(query) => match &self.bank_query_handler {
                 Some(handler) => handler.handle(query),
@@ -416,6 +425,7 @@ impl WasmMockQuerier {
             spot_market_mid_price_and_tob_response_handler: None,
             derivative_market_mid_price_and_tob_response_handler: None,
             oracle_volatility_response_handler: None,
+            oracle_price_response_handler: None,
         }
     }
 }
