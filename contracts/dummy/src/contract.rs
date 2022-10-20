@@ -1,11 +1,11 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, StdError};
+use cosmwasm_std::{
+    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
+};
 
 use crate::error::ContractError;
-use crate::msg::{
-    ExecuteMsg, InstantiateMsg, QueryMsg,
-};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use cw2::set_contract_version;
 
 // version info for migration info
@@ -34,24 +34,19 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Ping {..} => {
+        ExecuteMsg::Ping { .. } => {
             let mut response = Response::new();
             response.data = Some(to_binary("pong")?);
             Ok(response)
-        },
-        ExecuteMsg::Error {..} => Err(ContractError::Std(StdError::generic_err("oh no!")))
+        }
+        ExecuteMsg::Error { .. } => Err(ContractError::Std(StdError::generic_err("oh no!"))),
     }
 }
-
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(_: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::Ping { .. } => {
-            to_binary("pong")
-        }
-        QueryMsg::Error { ..} => {
-            Err(StdError::generic_err("oh no!"))
-        }
+        QueryMsg::Ping { .. } => to_binary("pong"),
+        QueryMsg::Error { .. } => Err(StdError::generic_err("oh no!")),
     }
 }
