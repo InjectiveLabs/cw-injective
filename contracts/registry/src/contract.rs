@@ -42,6 +42,7 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: ExecuteMsg) -> Result<Response, Contr
             gas_price,
             is_executable,
         } => try_register(deps, contract_address, gas_limit, gas_price, is_executable),
+        ExecuteMsg::Deregister { contract_address } => try_deregister(deps, contract_address),
         ExecuteMsg::Update {
             contract_address,
             gas_limit,
@@ -62,6 +63,7 @@ pub fn execute(
     only_owner(&env.contract.address, &deps, info)?; // we keep a path for contract owner to update it
     match msg {
         ExecuteMsg::Register { .. } => Err(ContractError::Unauthorized {}),
+        ExecuteMsg::Deregister { .. } => Err(ContractError::Unauthorized {}),
         ExecuteMsg::Update {
             contract_address,
             gas_limit,
@@ -121,6 +123,16 @@ pub fn try_register(
 
     let res = Response::new().add_attributes(vec![
         ("action", "register"),
+        ("addr", contract_addr.as_str()),
+    ]);
+    Ok(res)
+}
+
+pub fn try_deregister(deps: DepsMut, contract_addr: Addr) -> Result<Response, ContractError> {
+    CONTRACTS.remove(deps.storage, &contract_addr);
+
+    let res = Response::new().add_attributes(vec![
+        ("action", "deregister"),
         ("addr", contract_addr.as_str()),
     ]);
     Ok(res)
