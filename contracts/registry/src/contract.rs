@@ -560,4 +560,115 @@ mod tests {
         assert_eq!(200, registered_contract.contract.gas_limit);
         assert_eq!(15000000, registered_contract.contract.gas_price);
     }
+
+    #[test]
+    fn query_active_contracts_pagination() {
+        let mut deps = mock_dependencies_with_balance(&coins(2, "token"));
+        let msg = InstantiateMsg {};
+        let info = mock_info("creator", &coins(1000, "earth"));
+
+        // we can just call .unwrap() to assert this was a success
+        instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        // Only Registry contract can register other contracts
+        let registry_addr = mock_env().contract.address;
+        let _info = mock_info(registry_addr.as_ref(), &coins(2, "token"));
+        let market_maker1: Addr = Addr::unchecked("market_maker1".to_string());
+        let msg = ExecuteMsg::Register {
+            contract_address: market_maker1.clone(),
+            gas_limit: 100,
+            gas_price: 10000000,
+            is_executable: true,
+        };
+
+        let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
+
+        let market_maker2: Addr = Addr::unchecked("market_maker2".to_string());
+        let msg = ExecuteMsg::Register {
+            contract_address: market_maker2.clone(),
+            gas_limit: 1000,
+            gas_price: 100000000,
+            is_executable: true,
+        };
+
+        let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
+
+        // Register an inactive contract
+        let market_maker3: Addr = Addr::unchecked("market_maker3".to_string());
+        let msg = ExecuteMsg::Register {
+            contract_address: market_maker3,
+            gas_limit: 10,
+            gas_price: 100000,
+            is_executable: false,
+        };
+
+        let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
+
+        // Query all registered contracts
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetContracts {
+                start_after: None,
+                limit: None,
+            },
+        )
+        .unwrap();
+        let registered_contracts: ContractsResponse = from_binary(&res).unwrap();
+        assert_eq!(3, registered_contracts.contracts.len());
+
+        // Query all active contracts
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetActiveContracts {
+                start_after: None,
+                limit: None,
+            },
+        )
+        .unwrap();
+        let active_contracts: ContractsResponse = from_binary(&res).unwrap();
+        assert_eq!(2, active_contracts.contracts.len());
+
+        // Query all active contracts with pagination
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetActiveContracts {
+                start_after: None,
+                limit: Some(1),
+            },
+        )
+        .unwrap();
+        let active_contracts: ContractsResponse = from_binary(&res).unwrap();
+        assert_eq!(1, active_contracts.contracts.len());
+        assert_eq!(active_contracts.contracts[0].address, market_maker1);
+
+        // Continuation
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetActiveContracts {
+                start_after: Some(active_contracts.contracts[0].address.to_string()),
+                limit: None,
+            },
+        )
+        .unwrap();
+        let active_contracts: ContractsResponse = from_binary(&res).unwrap();
+        assert_eq!(1, active_contracts.contracts.len());
+        assert_eq!(active_contracts.contracts[0].address, market_maker2);
+
+        // There's no more
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetActiveContracts {
+                start_after: Some(active_contracts.contracts[0].address.to_string()),
+                limit: None,
+            },
+        )
+            .unwrap();
+        let active_contracts: ContractsResponse = from_binary(&res).unwrap();
+        assert_eq!(0, active_contracts.contracts.len());
+    }
 }
