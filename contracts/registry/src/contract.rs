@@ -356,6 +356,19 @@ mod tests {
         .unwrap();
         let registered_contracts: ContractsResponse = from_binary(&res).unwrap();
         assert_eq!(1, registered_contracts.contracts.len());
+
+        // Query all active contracts
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetActiveContracts {
+                start_after: None,
+                limit: None,
+            },
+        )
+        .unwrap();
+        let active_contracts: ContractsResponse = from_binary(&res).unwrap();
+        assert_eq!(1, active_contracts.contracts.len());
     }
 
     #[ignore]
