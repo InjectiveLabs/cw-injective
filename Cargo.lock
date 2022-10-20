@@ -379,6 +379,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "dummy"
+version = "1.0.0"
+dependencies = [
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw2 0.14.0",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "dyn-clone"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
