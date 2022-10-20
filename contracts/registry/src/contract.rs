@@ -642,7 +642,7 @@ mod tests {
         .unwrap();
         let active_contracts: ContractsResponse = from_binary(&res).unwrap();
         assert_eq!(1, active_contracts.contracts.len());
-        assert_eq!(active_contracts.contracts[0].address, market_maker1);
+        assert_eq!(active_contracts.contracts[0].address, market_maker1); // Notice this is lexicographically sorted by address
 
         // Continuation
         let res = query(
@@ -667,7 +667,7 @@ mod tests {
                 limit: None,
             },
         )
-            .unwrap();
+        .unwrap();
         let active_contracts: ContractsResponse = from_binary(&res).unwrap();
         assert_eq!(0, active_contracts.contracts.len());
     }
