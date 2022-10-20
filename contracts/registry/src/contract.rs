@@ -13,7 +13,7 @@ use crate::msg::{
     ContractExecutionParams, ContractResponse, ContractsResponse, ExecuteMsg, InstantiateMsg,
     QueryMsg,
 };
-use crate::state::{CONTRACT, CONTRACTS};
+use crate::state::{contracts, CONTRACT};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:registry";
@@ -116,7 +116,7 @@ pub fn try_register(
     };
 
     // try to store it, fail if the address is already registered
-    CONTRACTS.update(deps.storage, &contract_addr, |existing| match existing {
+    contracts().update(deps.storage, &contract_addr, |existing| match existing {
         None => Ok(contract),
         Some(_) => Err(ContractError::AlreadyRegistered {}),
     })?;
@@ -145,7 +145,7 @@ pub fn try_update(
     gas_price: u64,
 ) -> Result<Response, ContractError> {
     // this fails if contract is not available
-    let mut contract = CONTRACTS.load(deps.storage, &contract_addr)?;
+    let mut contract = contracts().load(deps.storage, &contract_addr)?;
 
     // update the contract
     if gas_limit != 0 {
@@ -156,7 +156,7 @@ pub fn try_update(
     }
 
     // and save
-    CONTRACTS.save(deps.storage, &contract_addr, &contract)?;
+    contracts().save(deps.storage, &contract_addr, &contract)?;
 
     let res = Response::new()
         .add_attributes(vec![("action", "update"), ("addr", contract_addr.as_str())]);
@@ -165,13 +165,13 @@ pub fn try_update(
 
 pub fn try_activate(deps: DepsMut, contract_addr: Addr) -> Result<Response, ContractError> {
     // this fails if contract is not available
-    let mut contract = CONTRACTS.load(deps.storage, &contract_addr)?;
+    let mut contract = contracts().load(deps.storage, &contract_addr)?;
 
     // update the contract to be executable
     contract.is_executable = true;
 
     // and save
-    CONTRACTS.save(deps.storage, &contract_addr, &contract)?;
+    contracts().save(deps.storage, &contract_addr, &contract)?;
 
     let res = Response::new().add_attributes(vec![
         ("action", "activate"),
@@ -182,12 +182,12 @@ pub fn try_activate(deps: DepsMut, contract_addr: Addr) -> Result<Response, Cont
 
 pub fn try_deactivate(deps: DepsMut, contract_addr: Addr) -> Result<Response, ContractError> {
     // this fails if contract is not available
-    let mut contract = CONTRACTS.load(deps.storage, &contract_addr)?;
+    let mut contract = contracts().load(deps.storage, &contract_addr)?;
 
     contract.is_executable = false;
 
     // and save
-    CONTRACTS.save(deps.storage, &contract_addr, &contract)?;
+    contracts().save(deps.storage, &contract_addr, &contract)?;
 
     let res = Response::new().add_attributes(vec![
         ("action", "deactivate"),
@@ -212,7 +212,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 pub fn query_contract(deps: Deps, contract_address: Addr) -> StdResult<ContractResponse> {
-    let contract = CONTRACTS
+    let contract = contracts()
         .may_load(deps.storage, &contract_address)?
         .unwrap();
 
@@ -241,7 +241,7 @@ fn query_contracts(
     let addr = maybe_addr(deps.api, start_after)?;
     let start = addr.as_ref().map(Bound::exclusive);
     // iterate over them all
-    let contracts = CONTRACTS
+    let contracts = contracts()
         .range(deps.storage, start, None, Order::Ascending)
         .take(limit)
         .map(|item| {
@@ -265,7 +265,7 @@ fn query_active_contracts(
     let addr = maybe_addr(deps.api, start_after)?;
     let start = addr.as_ref().map(Bound::exclusive);
     // iterate over all and return only executable contracts
-    let contracts = CONTRACTS
+    let contracts = contracts()
         .range(deps.storage, start, None, Order::Ascending)
         .take(limit)
         .filter(|item| {
