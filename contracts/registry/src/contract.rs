@@ -263,18 +263,14 @@ fn query_active_contracts(
 ) -> StdResult<ContractsResponse> {
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
     let addr = maybe_addr(deps.api, start_after)?;
-    let start = addr.as_ref().map(Bound::exclusive);
+    let start = addr.map(Bound::exclusive);
     // iterate over all and return only executable contracts
     let contracts = contracts()
+        .idx
+        .active
+        .prefix(1u8)
         .range(deps.storage, start, None, Order::Ascending)
         .take(limit)
-        .filter(|item| {
-            if let Ok((_, contract)) = item {
-                contract.is_executable
-            } else {
-                false
-            }
-        })
         .map(|item| {
             item.map(|(addr, contract)| ContractExecutionParams {
                 address: addr,
