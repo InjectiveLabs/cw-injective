@@ -129,7 +129,7 @@ pub fn try_register(
 }
 
 pub fn try_deregister(deps: DepsMut, contract_addr: Addr) -> Result<Response, ContractError> {
-    CONTRACTS.remove(deps.storage, &contract_addr);
+    contracts().remove(deps.storage, &contract_addr)?;
 
     let res = Response::new().add_attributes(vec![
         ("action", "deregister"),
