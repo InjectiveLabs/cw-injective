@@ -13,7 +13,7 @@ use crate::msg::{
     ContractExecutionParams, ContractResponse, ContractsResponse, ExecuteMsg, InstantiateMsg,
     QueryMsg,
 };
-use crate::state::{contracts, CONTRACT, ACTIVE_CONTRACT};
+use crate::state::{contracts, Contract, ACTIVE_CONTRACT};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:registry";
@@ -109,7 +109,7 @@ pub fn try_register(
     gas_price: u64,
     is_executable: bool,
 ) -> Result<Response, ContractError> {
-    let contract = CONTRACT {
+    let contract = Contract {
         gas_limit,
         gas_price,
         is_executable,
