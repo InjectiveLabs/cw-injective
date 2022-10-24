@@ -12,7 +12,8 @@ pub struct CONTRACT {
     pub is_executable: bool,
 }
 
-// pub const CONTRACTS: Map<&Addr, CONTRACT> = Map::new("contracts");
+pub(crate) const INACTIVE_CONTRACT: u8 = 0;
+pub(crate) const ACTIVE_CONTRACT: u8 = 1;
 
 pub struct ContractIndexes<'a> {
     pub active: MultiIndex<'a, u8, CONTRACT, Addr>,
@@ -30,9 +31,9 @@ pub fn contracts<'a>() -> IndexedMap<'a, &'a Addr, CONTRACT, ContractIndexes<'a>
         active: MultiIndex::new(
             |_, c: &CONTRACT| {
                 if c.is_executable {
-                    1u8
+                    ACTIVE_CONTRACT
                 } else {
-                    0u8
+                    INACTIVE_CONTRACT
                 }
             },
             "contracts",

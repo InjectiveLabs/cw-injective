@@ -13,7 +13,7 @@ use crate::msg::{
     ContractExecutionParams, ContractResponse, ContractsResponse, ExecuteMsg, InstantiateMsg,
     QueryMsg,
 };
-use crate::state::{contracts, CONTRACT};
+use crate::state::{contracts, CONTRACT, ACTIVE_CONTRACT};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:registry";
@@ -268,7 +268,7 @@ fn query_active_contracts(
     let contracts = contracts()
         .idx
         .active
-        .prefix(1u8)
+        .prefix(ACTIVE_CONTRACT)
         .range(deps.storage, start, None, Order::Ascending)
         .take(limit)
         .map(|item| {
