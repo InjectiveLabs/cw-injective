@@ -1,3 +1,4 @@
+use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -62,13 +63,13 @@ impl DerivativeOrder {
         order_type: OrderType,
         market_id: MarketId,
         subaccount_id: SubaccountId,
-        fee_recipient: &str,
+        fee_recipient: &Addr,
     ) -> Self {
         DerivativeOrder {
             market_id,
             order_info: OrderInfo {
                 subaccount_id,
-                fee_recipient: fee_recipient.to_string(),
+                fee_recipient: fee_recipient.to_owned(),
                 price,
                 quantity,
             },

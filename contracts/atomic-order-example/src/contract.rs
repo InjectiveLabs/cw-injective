@@ -101,7 +101,7 @@ pub fn try_swap(
         true,
         &config.market_id,
         &subaccount_id,
-        contract.as_str(),
+        &contract,
     );
 
     let coins = &info.funds[0];

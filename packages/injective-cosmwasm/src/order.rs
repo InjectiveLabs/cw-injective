@@ -1,3 +1,4 @@
+use cosmwasm_std::Addr;
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -14,7 +15,7 @@ pub struct OrderData {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct OrderInfo {
     pub subaccount_id: SubaccountId,
-    pub fee_recipient: String,
+    pub fee_recipient: Addr,
     pub price: FPDecimal,
     pub quantity: FPDecimal,
 }

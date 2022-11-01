@@ -110,7 +110,7 @@ fn test_swap() {
     let res = execute(deps.as_mut_deps(), env.clone(), info, msg).unwrap();
 
     let expected_atomic_order_message = CreateSpotMarketOrder {
-        sender: env.contract.address,
+        sender: env.contract.address.to_owned(),
         order: SpotOrder {
             market_id,
             order_info: OrderInfo {
@@ -119,7 +119,7 @@ fn test_swap() {
                         .to_string(),
                 )
                 .unwrap(),
-                fee_recipient: contract_addr.to_string(),
+                fee_recipient: env.contract.address,
                 price: i32_to_dec(1000),
                 quantity: i32_to_dec(8),
             },

@@ -1,3 +1,4 @@
+use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -45,13 +46,13 @@ impl SpotOrder {
         is_atomic: bool,
         market_id: &MarketId,
         subaccount_id: &SubaccountId,
-        fee_recipient: &str,
+        fee_recipient: &Addr,
     ) -> Self {
         SpotOrder {
             market_id: market_id.clone(),
             order_info: OrderInfo {
-                subaccount_id: subaccount_id.clone(),
-                fee_recipient: fee_recipient.to_string(),
+                subaccount_id: subaccount_id.to_owned(),
+                fee_recipient: fee_recipient.to_owned(),
                 price,
                 quantity,
             },
