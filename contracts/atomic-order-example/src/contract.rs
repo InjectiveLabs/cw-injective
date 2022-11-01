@@ -106,12 +106,12 @@ pub fn try_swap(
 
     let coins = &info.funds[0];
     let deposit_message = SubMsg::new(create_deposit_msg(
-        contract.to_string(),
+        contract.clone(),
         subaccount_id,
         coins.clone(),
     ));
     let order_message = SubMsg::reply_on_success(
-        create_spot_market_order_msg(contract.into_string(), order),
+        create_spot_market_order_msg(contract, order),
         ATOMIC_ORDER_REPLY_ID,
     );
     let response = Response::new()
@@ -169,15 +169,12 @@ fn handle_atomic_order_reply(
     let leftover_coins = Coin::new(u128::from(leftover), config.quote_denom);
     // we need to withdraw coins from subaccount to main account so we can transfer them back to a user
     let withdraw_purchased_message = create_withdraw_msg(
-        contract_address.to_string(),
+        contract_address.clone(),
         subaccount_id.clone(),
         purchased_coins.clone(),
     );
-    let withdraw_leftover_message = create_withdraw_msg(
-        contract_address.to_string(),
-        subaccount_id,
-        leftover_coins.clone(),
-    );
+    let withdraw_leftover_message =
+        create_withdraw_msg(contract_address, subaccount_id, leftover_coins.clone());
 
     let send_message = BankMsg::Send {
         to_address: cache.sender_address,

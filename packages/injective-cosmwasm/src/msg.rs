@@ -25,12 +25,12 @@ impl CustomMsg for InjectiveMsgWrapper {}
 #[serde(rename_all = "snake_case")]
 pub enum InjectiveMsg {
     Deposit {
-        sender: String,
+        sender: Addr,
         subaccount_id: SubaccountId,
         amount: Coin,
     },
     Withdraw {
-        sender: String,
+        sender: Addr,
         subaccount_id: SubaccountId,
         amount: Coin,
     },
@@ -41,39 +41,39 @@ pub enum InjectiveMsg {
         amount: Coin,
     },
     ExternalTransfer {
-        sender: String,
+        sender: Addr,
         source_subaccount_id: SubaccountId,
         destination_subaccount_id: SubaccountId,
         amount: Coin,
     },
     CreateSpotMarketOrder {
-        sender: String,
+        sender: Addr,
         order: SpotOrder,
     },
     CreateDerivativeMarketOrder {
-        sender: String,
+        sender: Addr,
         order: DerivativeOrder,
     },
     IncreasePositionMargin {
-        sender: String,
+        sender: Addr,
         source_subaccount_id: SubaccountId,
         destination_subaccount_id: SubaccountId,
         market_id: MarketId,
         amount: Coin,
     },
     LiquidatePosition {
-        sender: String,
+        sender: Addr,
         subaccount_id: SubaccountId,
         market_id: MarketId,
         order: Option<DerivativeOrder>,
     },
     RegisterAsDMM {
-        sender: String,
+        sender: Addr,
         dmm_account: String,
     },
     BatchUpdateOrders {
-        sender: String,
-        subaccount_id: SubaccountId,
+        sender: Addr,
+        subaccount_id: Option<SubaccountId>,
         spot_market_ids_to_cancel_all: Vec<MarketId>,
         derivative_market_ids_to_cancel_all: Vec<MarketId>,
         spot_orders_to_cancel: Vec<OrderData>,
@@ -84,7 +84,7 @@ pub enum InjectiveMsg {
     /// Contracts can mint native tokens for an existing factory denom
     /// that they are the admin of.
     Mint {
-        sender: String,
+        sender: Addr,
         amount: Coin,
         mint_to: String,
     },
@@ -92,12 +92,12 @@ pub enum InjectiveMsg {
     /// that they are the admin of.
     /// Currently, the burn from address must be the admin contract.
     Burn {
-        sender: String,
+        sender: Addr,
         amount: Coin,
     },
 }
 
-pub fn create_deposit_msg(sender: String, subaccount_id: SubaccountId, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
+pub fn create_deposit_msg(sender: Addr, subaccount_id: SubaccountId, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,
         msg_data: InjectiveMsg::Deposit {
@@ -109,7 +109,7 @@ pub fn create_deposit_msg(sender: String, subaccount_id: SubaccountId, amount: C
     .into()
 }
 
-pub fn create_withdraw_msg(sender: String, subaccount_id: SubaccountId, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
+pub fn create_withdraw_msg(sender: Addr, subaccount_id: SubaccountId, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,
         msg_data: InjectiveMsg::Withdraw {
@@ -140,7 +140,7 @@ pub fn create_subaccount_transfer_msg(
 }
 
 pub fn create_external_transfer_msg(
-    sender: String,
+    sender: Addr,
     source_subaccount_id: SubaccountId,
     destination_subaccount_id: SubaccountId,
     amount: Coin,
@@ -157,7 +157,7 @@ pub fn create_external_transfer_msg(
     .into()
 }
 
-pub fn create_spot_market_order_msg(sender: String, order: SpotOrder) -> CosmosMsg<InjectiveMsgWrapper> {
+pub fn create_spot_market_order_msg(sender: Addr, order: SpotOrder) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,
         msg_data: InjectiveMsg::CreateSpotMarketOrder { sender, order },
@@ -165,7 +165,7 @@ pub fn create_spot_market_order_msg(sender: String, order: SpotOrder) -> CosmosM
     .into()
 }
 
-pub fn create_derivative_market_order_msg(sender: String, order: DerivativeOrder) -> CosmosMsg<InjectiveMsgWrapper> {
+pub fn create_derivative_market_order_msg(sender: Addr, order: DerivativeOrder) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,
         msg_data: InjectiveMsg::CreateDerivativeMarketOrder { sender, order },
@@ -174,7 +174,7 @@ pub fn create_derivative_market_order_msg(sender: String, order: DerivativeOrder
 }
 
 pub fn create_increase_position_margin_msg(
-    sender: String,
+    sender: Addr,
     source_subaccount_id: SubaccountId,
     destination_subaccount_id: SubaccountId,
     market_id: MarketId,
@@ -194,7 +194,7 @@ pub fn create_increase_position_margin_msg(
 }
 
 pub fn create_liquidate_position_msg(
-    sender: String,
+    sender: Addr,
     subaccount_id: SubaccountId,
     market_id: MarketId,
     order: Option<DerivativeOrder>,
@@ -211,7 +211,7 @@ pub fn create_liquidate_position_msg(
     .into()
 }
 
-pub fn create_register_as_dmm_msg(sender: String, dmm_account: String) -> CosmosMsg<InjectiveMsgWrapper> {
+pub fn create_register_as_dmm_msg(sender: Addr, dmm_account: String) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,
         msg_data: InjectiveMsg::RegisterAsDMM { sender, dmm_account },
@@ -220,8 +220,8 @@ pub fn create_register_as_dmm_msg(sender: String, dmm_account: String) -> Cosmos
 }
 
 pub fn create_batch_update_orders_msg(
-    sender: String,
-    subaccount_id: SubaccountId,
+    sender: Addr,
+    subaccount_id: Option<SubaccountId>,
     spot_market_ids_to_cancel_all: Vec<MarketId>,
     derivative_market_ids_to_cancel_all: Vec<MarketId>,
     spot_orders_to_cancel: Vec<OrderData>,
@@ -245,7 +245,7 @@ pub fn create_batch_update_orders_msg(
     .into()
 }
 
-pub fn create_mint_tokens_msg(sender: String, amount: Coin, mint_to: String) -> CosmosMsg<InjectiveMsgWrapper> {
+pub fn create_mint_tokens_msg(sender: Addr, amount: Coin, mint_to: String) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Tokenfactory,
         msg_data: InjectiveMsg::Mint { sender, amount, mint_to },
@@ -253,7 +253,7 @@ pub fn create_mint_tokens_msg(sender: String, amount: Coin, mint_to: String) -> 
     .into()
 }
 
-pub fn create_burn_tokens_msg(sender: String, amount: Coin, _burn_from_address: String) -> CosmosMsg<InjectiveMsgWrapper> {
+pub fn create_burn_tokens_msg(sender: Addr, amount: Coin, _burn_from_address: String) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Tokenfactory,
         msg_data: InjectiveMsg::Burn { sender, amount },
