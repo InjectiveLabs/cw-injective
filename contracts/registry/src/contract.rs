@@ -13,7 +13,7 @@ use crate::msg::{
     ContractExecutionParams, ContractResponse, ContractsResponse, ExecuteMsg, InstantiateMsg,
     QueryMsg,
 };
-use crate::state::{CONTRACT, CONTRACTS};
+use crate::state::{contracts, Contract, ACTIVE_CONTRACT};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:registry";
@@ -42,6 +42,7 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: ExecuteMsg) -> Result<Response, Contr
             gas_price,
             is_executable,
         } => try_register(deps, contract_address, gas_limit, gas_price, is_executable),
+        ExecuteMsg::Deregister { contract_address } => try_deregister(deps, contract_address),
         ExecuteMsg::Update {
             contract_address,
             gas_limit,
@@ -62,6 +63,7 @@ pub fn execute(
     only_owner(&env.contract.address, &deps, info)?; // we keep a path for contract owner to update it
     match msg {
         ExecuteMsg::Register { .. } => Err(ContractError::Unauthorized {}),
+        ExecuteMsg::Deregister { .. } => Err(ContractError::Unauthorized {}),
         ExecuteMsg::Update {
             contract_address,
             gas_limit,
@@ -107,20 +109,30 @@ pub fn try_register(
     gas_price: u64,
     is_executable: bool,
 ) -> Result<Response, ContractError> {
-    let contract = CONTRACT {
+    let contract = Contract {
         gas_limit,
         gas_price,
         is_executable,
     };
 
     // try to store it, fail if the address is already registered
-    CONTRACTS.update(deps.storage, &contract_addr, |existing| match existing {
+    contracts().update(deps.storage, &contract_addr, |existing| match existing {
         None => Ok(contract),
         Some(_) => Err(ContractError::AlreadyRegistered {}),
     })?;
 
     let res = Response::new().add_attributes(vec![
         ("action", "register"),
+        ("addr", contract_addr.as_str()),
+    ]);
+    Ok(res)
+}
+
+pub fn try_deregister(deps: DepsMut, contract_addr: Addr) -> Result<Response, ContractError> {
+    contracts().remove(deps.storage, &contract_addr)?;
+
+    let res = Response::new().add_attributes(vec![
+        ("action", "deregister"),
         ("addr", contract_addr.as_str()),
     ]);
     Ok(res)
@@ -133,7 +145,7 @@ pub fn try_update(
     gas_price: u64,
 ) -> Result<Response, ContractError> {
     // this fails if contract is not available
-    let mut contract = CONTRACTS.load(deps.storage, &contract_addr)?;
+    let mut contract = contracts().load(deps.storage, &contract_addr)?;
 
     // update the contract
     if gas_limit != 0 {
@@ -144,7 +156,7 @@ pub fn try_update(
     }
 
     // and save
-    CONTRACTS.save(deps.storage, &contract_addr, &contract)?;
+    contracts().save(deps.storage, &contract_addr, &contract)?;
 
     let res = Response::new()
         .add_attributes(vec![("action", "update"), ("addr", contract_addr.as_str())]);
@@ -153,13 +165,13 @@ pub fn try_update(
 
 pub fn try_activate(deps: DepsMut, contract_addr: Addr) -> Result<Response, ContractError> {
     // this fails if contract is not available
-    let mut contract = CONTRACTS.load(deps.storage, &contract_addr)?;
+    let mut contract = contracts().load(deps.storage, &contract_addr)?;
 
     // update the contract to be executable
     contract.is_executable = true;
 
     // and save
-    CONTRACTS.save(deps.storage, &contract_addr, &contract)?;
+    contracts().save(deps.storage, &contract_addr, &contract)?;
 
     let res = Response::new().add_attributes(vec![
         ("action", "activate"),
@@ -170,12 +182,12 @@ pub fn try_activate(deps: DepsMut, contract_addr: Addr) -> Result<Response, Cont
 
 pub fn try_deactivate(deps: DepsMut, contract_addr: Addr) -> Result<Response, ContractError> {
     // this fails if contract is not available
-    let mut contract = CONTRACTS.load(deps.storage, &contract_addr)?;
+    let mut contract = contracts().load(deps.storage, &contract_addr)?;
 
     contract.is_executable = false;
 
     // and save
-    CONTRACTS.save(deps.storage, &contract_addr, &contract)?;
+    contracts().save(deps.storage, &contract_addr, &contract)?;
 
     let res = Response::new().add_attributes(vec![
         ("action", "deactivate"),
@@ -200,7 +212,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 pub fn query_contract(deps: Deps, contract_address: Addr) -> StdResult<ContractResponse> {
-    let contract = CONTRACTS
+    let contract = contracts()
         .may_load(deps.storage, &contract_address)?
         .unwrap();
 
@@ -229,7 +241,7 @@ fn query_contracts(
     let addr = maybe_addr(deps.api, start_after)?;
     let start = addr.as_ref().map(Bound::exclusive);
     // iterate over them all
-    let contracts = CONTRACTS
+    let contracts = contracts()
         .range(deps.storage, start, None, Order::Ascending)
         .take(limit)
         .map(|item| {
@@ -251,18 +263,14 @@ fn query_active_contracts(
 ) -> StdResult<ContractsResponse> {
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
     let addr = maybe_addr(deps.api, start_after)?;
-    let start = addr.as_ref().map(Bound::exclusive);
+    let start = addr.map(Bound::exclusive);
     // iterate over all and return only executable contracts
-    let contracts = CONTRACTS
+    let contracts = contracts()
+        .idx
+        .active
+        .prefix(ACTIVE_CONTRACT)
         .range(deps.storage, start, None, Order::Ascending)
         .take(limit)
-        .filter(|item| {
-            if let Ok((_, contract)) = item {
-                contract.is_executable
-            } else {
-                false
-            }
-        })
         .map(|item| {
             item.map(|(addr, contract)| ContractExecutionParams {
                 address: addr,
@@ -348,6 +356,19 @@ mod tests {
         .unwrap();
         let registered_contracts: ContractsResponse = from_binary(&res).unwrap();
         assert_eq!(1, registered_contracts.contracts.len());
+
+        // Query all active contracts
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetActiveContracts {
+                start_after: None,
+                limit: None,
+            },
+        )
+        .unwrap();
+        let active_contracts: ContractsResponse = from_binary(&res).unwrap();
+        assert_eq!(1, active_contracts.contracts.len());
     }
 
     #[ignore]
@@ -538,5 +559,116 @@ mod tests {
         assert_eq!(market_maker, registered_contract.contract.address);
         assert_eq!(200, registered_contract.contract.gas_limit);
         assert_eq!(15000000, registered_contract.contract.gas_price);
+    }
+
+    #[test]
+    fn query_active_contracts_pagination() {
+        let mut deps = mock_dependencies_with_balance(&coins(2, "token"));
+        let msg = InstantiateMsg {};
+        let info = mock_info("creator", &coins(1000, "earth"));
+
+        // we can just call .unwrap() to assert this was a success
+        instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        // Only Registry contract can register other contracts
+        let registry_addr = mock_env().contract.address;
+        let _info = mock_info(registry_addr.as_ref(), &coins(2, "token"));
+        let market_maker1: Addr = Addr::unchecked("market_maker1".to_string());
+        let msg = ExecuteMsg::Register {
+            contract_address: market_maker1.clone(),
+            gas_limit: 100,
+            gas_price: 10000000,
+            is_executable: true,
+        };
+
+        let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
+
+        let market_maker2: Addr = Addr::unchecked("market_maker2".to_string());
+        let msg = ExecuteMsg::Register {
+            contract_address: market_maker2.clone(),
+            gas_limit: 1000,
+            gas_price: 100000000,
+            is_executable: true,
+        };
+
+        let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
+
+        // Register an inactive contract
+        let market_maker3: Addr = Addr::unchecked("market_maker3".to_string());
+        let msg = ExecuteMsg::Register {
+            contract_address: market_maker3,
+            gas_limit: 10,
+            gas_price: 100000,
+            is_executable: false,
+        };
+
+        let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
+
+        // Query all registered contracts
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetContracts {
+                start_after: None,
+                limit: None,
+            },
+        )
+        .unwrap();
+        let registered_contracts: ContractsResponse = from_binary(&res).unwrap();
+        assert_eq!(3, registered_contracts.contracts.len());
+
+        // Query all active contracts
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetActiveContracts {
+                start_after: None,
+                limit: None,
+            },
+        )
+        .unwrap();
+        let active_contracts: ContractsResponse = from_binary(&res).unwrap();
+        assert_eq!(2, active_contracts.contracts.len());
+
+        // Query all active contracts with pagination
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetActiveContracts {
+                start_after: None,
+                limit: Some(1),
+            },
+        )
+        .unwrap();
+        let active_contracts: ContractsResponse = from_binary(&res).unwrap();
+        assert_eq!(1, active_contracts.contracts.len());
+        assert_eq!(active_contracts.contracts[0].address, market_maker1); // Notice this is lexicographically sorted by address
+
+        // Continuation
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetActiveContracts {
+                start_after: Some(active_contracts.contracts[0].address.to_string()),
+                limit: None,
+            },
+        )
+        .unwrap();
+        let active_contracts: ContractsResponse = from_binary(&res).unwrap();
+        assert_eq!(1, active_contracts.contracts.len());
+        assert_eq!(active_contracts.contracts[0].address, market_maker2);
+
+        // There's no more
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetActiveContracts {
+                start_after: Some(active_contracts.contracts[0].address.to_string()),
+                limit: None,
+            },
+        )
+        .unwrap();
+        let active_contracts: ContractsResponse = from_binary(&res).unwrap();
+        assert_eq!(0, active_contracts.contracts.len());
     }
 }

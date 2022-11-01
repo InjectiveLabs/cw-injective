@@ -14,6 +14,9 @@ pub enum ExecuteMsg {
         gas_price: u64,
         is_executable: bool,
     },
+    Deregister {
+        contract_address: Addr,
+    },
     Update {
         contract_address: Addr,
         gas_limit: u64,

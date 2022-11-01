@@ -182,43 +182,89 @@ fn default_token_factory_denom_total_supply_handler() -> QuerierResult {
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
 
-type TraderSpotOrdersToCancelUpToAmountResponseHandler = Option<
-    fn(
+pub trait HandlesSmartQuery {
+    fn handle(&self, contract_addr: &str, msg: &Binary) -> QuerierResult;
+}
+
+pub trait HandlesBankQuery {
+    fn handle(&self, query: &BankQuery) -> QuerierResult;
+}
+
+pub trait HandlesTraderSpotOrdersToCancelUpToAmountQuery {
+    fn handle(
+        &self,
         market_id: String,
         subaccount_id: String,
         base_amount: FPDecimal,
         quote_amount: FPDecimal,
         strategy: i32,
         reference_price: Option<FPDecimal>,
-    ) -> QuerierResult,
->;
-type TraderDerivativeOrdersToCancelUpToAmountResponseHandler =
-    Option<fn(market_id: String, subaccount_id: String, quote_amount: FPDecimal, strategy: i32, reference_price: Option<FPDecimal>) -> QuerierResult>;
-type OracleVolatilityResponseHandler =
-    Option<fn(base_info: Option<OracleInfo>, quote_info: Option<OracleInfo>, oracle_history_options: Option<OracleHistoryOptions>) -> QuerierResult>;
+    ) -> QuerierResult;
+}
+
+pub trait HandlesTraderDerivativeOrdersToCancelUpToAmountQuery {
+    fn handle(
+        &self,
+        market_id: String,
+        subaccount_id: String,
+        quote_amount: FPDecimal,
+        strategy: i32,
+        reference_price: Option<FPDecimal>,
+    ) -> QuerierResult;
+}
+
+pub trait HandlesMarketIdQuery {
+    fn handle(&self, market_id: String) -> QuerierResult;
+}
+
+pub trait HandlesSubaccountIdQuery {
+    fn handle(&self, subaccount_id: String) -> QuerierResult;
+}
+
+pub trait HandlesMarketAndSubaccountQuery {
+    fn handle(&self, market_id: String, subaccount_id: String) -> QuerierResult;
+}
+
+pub trait HandlesSubaccountAndDenomQuery {
+    fn handle(&self, subaccount_id: String, denom: String) -> QuerierResult;
+}
+
+pub trait HandlesOracleVolatilityQuery {
+    fn handle(
+        &self,
+        base_info: Option<OracleInfo>,
+        quote_info: Option<OracleInfo>,
+        oracle_history_options: Option<OracleHistoryOptions>,
+    ) -> QuerierResult;
+}
+
+pub trait HandlesMarketVolatilityQuery {
+    fn handle(&self, market_id: String, trade_history_options: TradeHistoryOptions) -> QuerierResult;
+}
 
 pub struct WasmMockQuerier {
-    pub smart_query_handler: Option<fn(contract_addr: &str, msg: &Binary) -> QuerierResult>,
-    pub bank_query_handler: Option<fn(query: &BankQuery) -> QuerierResult>,
-    pub subaccount_deposit_response_handler: Option<fn(subaccount_id: String, denom: String) -> QuerierResult>,
-    pub spot_market_response_handler: Option<fn(market_id: String) -> QuerierResult>,
-    pub trader_spot_orders_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
-    pub trader_spot_orders_to_cancel_up_to_amount_response_handler: TraderSpotOrdersToCancelUpToAmountResponseHandler,
-    pub trader_derivative_orders_to_cancel_up_to_amount_response_handler: TraderDerivativeOrdersToCancelUpToAmountResponseHandler,
-    pub derivative_market_response_handler: Option<fn(market_id: String) -> QuerierResult>,
-    pub subaccount_positions_response_handler: Option<fn(subaccount_id: String) -> QuerierResult>,
-    pub subaccount_position_in_market_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
-    pub subaccount_effective_position_in_market_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
-    pub trader_derivative_orders_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
-    pub trader_transient_spot_orders_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
-    pub trader_transient_derivative_orders_response_handler: Option<fn(market_id: String, subaccount_id: String) -> QuerierResult>,
-    pub perpetual_market_info_response_handler: Option<fn(market_id: String) -> QuerierResult>,
-    pub perpetual_market_funding_response_handler: Option<fn(market_id: String) -> QuerierResult>,
-    pub market_volatility_response_handler: Option<fn(market_id: String, trade_history_options: TradeHistoryOptions) -> QuerierResult>,
-    pub spot_market_mid_price_and_tob_response_handler: Option<fn(market_id: String) -> QuerierResult>,
-    pub derivative_market_mid_price_and_tob_response_handler: Option<fn(market_id: String) -> QuerierResult>,
-    pub oracle_volatility_response_handler: OracleVolatilityResponseHandler,
+    pub smart_query_handler: Option<Box<dyn HandlesSmartQuery>>,
+    pub bank_query_handler: Option<Box<dyn HandlesBankQuery>>,
+    pub subaccount_deposit_response_handler: Option<Box<dyn HandlesSubaccountAndDenomQuery>>,
+    pub spot_market_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
+    pub trader_spot_orders_response_handler: Option<Box<dyn HandlesMarketAndSubaccountQuery>>,
+    pub trader_spot_orders_to_cancel_up_to_amount_response_handler: Option<Box<dyn HandlesTraderSpotOrdersToCancelUpToAmountQuery>>,
+    pub trader_derivative_orders_to_cancel_up_to_amount_response_handler: Option<Box<dyn HandlesTraderDerivativeOrdersToCancelUpToAmountQuery>>,
+    pub derivative_market_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
+    pub subaccount_positions_response_handler: Option<Box<dyn HandlesSubaccountIdQuery>>,
+    pub subaccount_position_in_market_response_handler: Option<Box<dyn HandlesMarketAndSubaccountQuery>>,
+    pub subaccount_effective_position_in_market_response_handler: Option<Box<dyn HandlesMarketAndSubaccountQuery>>,
+    pub trader_derivative_orders_response_handler: Option<Box<dyn HandlesMarketAndSubaccountQuery>>,
+    pub trader_transient_spot_orders_response_handler: Option<Box<dyn HandlesMarketAndSubaccountQuery>>,
+    pub trader_transient_derivative_orders_response_handler: Option<Box<dyn HandlesMarketAndSubaccountQuery>>,
+    pub perpetual_market_info_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
+    pub perpetual_market_funding_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
+    pub market_volatility_response_handler: Option<Box<dyn HandlesMarketVolatilityQuery>>,
+    pub spot_market_mid_price_and_tob_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
+    pub derivative_market_mid_price_and_tob_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
+    pub oracle_volatility_response_handler: Option<Box<dyn HandlesOracleVolatilityQuery>>,
     pub token_factory_denom_total_supply_handler: Option<fn(denom: String) -> QuerierResult>,
+
 }
 
 impl Querier for WasmMockQuerier {
@@ -240,21 +286,21 @@ impl Querier for WasmMockQuerier {
 impl WasmMockQuerier {
     pub fn handle_query(&self, request: &QueryRequest<InjectiveQueryWrapper>) -> QuerierResult {
         match &request {
-            QueryRequest::Wasm(WasmQuery::Smart { contract_addr, msg }) => match self.smart_query_handler {
-                Some(handler) => handler(contract_addr, msg),
+            QueryRequest::Wasm(WasmQuery::Smart { contract_addr, msg }) => match &self.smart_query_handler {
+                Some(handler) => handler.handle(contract_addr, msg),
                 None => panic!("Unknown smart query"),
             },
             QueryRequest::Custom(query) => match query.query_data.clone() {
-                InjectiveQuery::SubaccountDeposit { subaccount_id, denom } => match self.subaccount_deposit_response_handler {
-                    Some(handler) => handler(subaccount_id, denom),
+                InjectiveQuery::SubaccountDeposit { subaccount_id, denom } => match &self.subaccount_deposit_response_handler {
+                    Some(handler) => handler.handle(subaccount_id, denom),
                     None => default_subaccount_deposit_response_handler(),
                 },
-                InjectiveQuery::SpotMarket { market_id } => match self.spot_market_response_handler {
-                    Some(handler) => handler(market_id),
+                InjectiveQuery::SpotMarket { market_id } => match &self.spot_market_response_handler {
+                    Some(handler) => handler.handle(market_id),
                     None => default_spot_market_response_handler(market_id),
                 },
-                InjectiveQuery::TraderSpotOrders { market_id, subaccount_id } => match self.trader_spot_orders_response_handler {
-                    Some(handler) => handler(market_id, subaccount_id),
+                InjectiveQuery::TraderSpotOrders { market_id, subaccount_id } => match &self.trader_spot_orders_response_handler {
+                    Some(handler) => handler.handle(market_id, subaccount_id),
                     None => default_trader_spot_orders_response_handler(),
                 },
                 InjectiveQuery::TraderSpotOrdersToCancelUpToAmount {
@@ -264,8 +310,8 @@ impl WasmMockQuerier {
                     quote_amount,
                     strategy,
                     reference_price,
-                } => match self.trader_spot_orders_to_cancel_up_to_amount_response_handler {
-                    Some(handler) => handler(market_id, subaccount_id, base_amount, quote_amount, strategy, reference_price),
+                } => match &self.trader_spot_orders_to_cancel_up_to_amount_response_handler {
+                    Some(handler) => handler.handle(market_id, subaccount_id, base_amount, quote_amount, strategy, reference_price),
                     None => default_trader_spot_orders_to_cancel_up_to_amount_response_handler(),
                 },
                 InjectiveQuery::TraderDerivativeOrdersToCancelUpToAmount {
@@ -274,73 +320,73 @@ impl WasmMockQuerier {
                     quote_amount,
                     strategy,
                     reference_price,
-                } => match self.trader_derivative_orders_to_cancel_up_to_amount_response_handler {
-                    Some(handler) => handler(market_id, subaccount_id, quote_amount, strategy, reference_price),
+                } => match &self.trader_derivative_orders_to_cancel_up_to_amount_response_handler {
+                    Some(handler) => handler.handle(market_id, subaccount_id, quote_amount, strategy, reference_price),
                     None => default_trader_derivative_orders_to_cancel_up_to_amount_response_handler(),
                 },
-                InjectiveQuery::DerivativeMarket { market_id } => match self.derivative_market_response_handler {
-                    Some(handler) => handler(market_id),
+                InjectiveQuery::DerivativeMarket { market_id } => match &self.derivative_market_response_handler {
+                    Some(handler) => handler.handle(market_id),
                     None => default_derivative_market_response_handler(market_id),
                 },
-                InjectiveQuery::SubaccountPositions { subaccount_id } => match self.subaccount_positions_response_handler {
-                    Some(handler) => handler(subaccount_id),
+                InjectiveQuery::SubaccountPositions { subaccount_id } => match &self.subaccount_positions_response_handler {
+                    Some(handler) => handler.handle(subaccount_id),
                     None => default_subaccount_positions_response_handler(),
                 },
                 InjectiveQuery::SubaccountPositionInMarket { market_id, subaccount_id } => {
-                    match self.subaccount_position_in_market_response_handler {
-                        Some(handler) => handler(market_id, subaccount_id),
+                    match &self.subaccount_position_in_market_response_handler {
+                        Some(handler) => handler.handle(market_id, subaccount_id),
                         None => default_subaccount_position_in_market_response_handler(),
                     }
                 }
                 InjectiveQuery::SubaccountEffectivePositionInMarket { market_id, subaccount_id } => {
-                    match self.subaccount_effective_position_in_market_response_handler {
-                        Some(handler) => handler(market_id, subaccount_id),
+                    match &self.subaccount_effective_position_in_market_response_handler {
+                        Some(handler) => handler.handle(market_id, subaccount_id),
                         None => default_subaccount_effective_position_in_market_response_handler(),
                     }
                 }
-                InjectiveQuery::TraderDerivativeOrders { market_id, subaccount_id } => match self.trader_derivative_orders_response_handler {
-                    Some(handler) => handler(market_id, subaccount_id),
+                InjectiveQuery::TraderDerivativeOrders { market_id, subaccount_id } => match &self.trader_derivative_orders_response_handler {
+                    Some(handler) => handler.handle(market_id, subaccount_id),
                     None => default_trader_derivative_orders_response_handler(),
                 },
-                InjectiveQuery::TraderTransientSpotOrders { market_id, subaccount_id } => match self.trader_transient_spot_orders_response_handler {
-                    Some(handler) => handler(market_id, subaccount_id),
+                InjectiveQuery::TraderTransientSpotOrders { market_id, subaccount_id } => match &self.trader_transient_spot_orders_response_handler {
+                    Some(handler) => handler.handle(market_id, subaccount_id),
                     None => default_trader_transient_spot_orders_response_handler(),
                 },
                 InjectiveQuery::TraderTransientDerivativeOrders { market_id, subaccount_id } => {
-                    match self.trader_transient_derivative_orders_response_handler {
-                        Some(handler) => handler(market_id, subaccount_id),
+                    match &self.trader_transient_derivative_orders_response_handler {
+                        Some(handler) => handler.handle(market_id, subaccount_id),
                         None => default_trader_transient_derivative_orders_response_handler(),
                     }
                 }
-                InjectiveQuery::PerpetualMarketInfo { market_id } => match self.perpetual_market_info_response_handler {
-                    Some(handler) => handler(market_id),
+                InjectiveQuery::PerpetualMarketInfo { market_id } => match &self.perpetual_market_info_response_handler {
+                    Some(handler) => handler.handle(market_id),
                     None => default_perpetual_market_info_response_handler(),
                 },
-                InjectiveQuery::PerpetualMarketFunding { market_id } => match self.perpetual_market_funding_response_handler {
-                    Some(handler) => handler(market_id),
+                InjectiveQuery::PerpetualMarketFunding { market_id } => match &self.perpetual_market_funding_response_handler {
+                    Some(handler) => handler.handle(market_id),
                     None => default_perpetual_market_funding_response_handler(),
                 },
                 InjectiveQuery::MarketVolatility {
                     market_id,
                     trade_history_options,
-                } => match self.market_volatility_response_handler {
-                    Some(handler) => handler(market_id, trade_history_options),
+                } => match &self.market_volatility_response_handler {
+                    Some(handler) => handler.handle(market_id, trade_history_options),
                     None => default_market_volatility_response_handler(),
                 },
-                InjectiveQuery::SpotMarketMidPriceAndTob { market_id } => match self.spot_market_mid_price_and_tob_response_handler {
-                    Some(handler) => handler(market_id),
+                InjectiveQuery::SpotMarketMidPriceAndTob { market_id } => match &self.spot_market_mid_price_and_tob_response_handler {
+                    Some(handler) => handler.handle(market_id),
                     None => default_spot_market_mid_price_and_tob_response_handler(),
                 },
-                InjectiveQuery::DerivativeMarketMidPriceAndTob { market_id } => match self.derivative_market_mid_price_and_tob_response_handler {
-                    Some(handler) => handler(market_id),
+                InjectiveQuery::DerivativeMarketMidPriceAndTob { market_id } => match &self.derivative_market_mid_price_and_tob_response_handler {
+                    Some(handler) => handler.handle(market_id),
                     None => default_derivative_market_mid_price_and_tob_response_handler(),
                 },
                 InjectiveQuery::OracleVolatility {
                     base_info,
                     quote_info,
                     oracle_history_options,
-                } => match self.oracle_volatility_response_handler {
-                    Some(handler) => handler(base_info, quote_info, oracle_history_options),
+                } => match &self.oracle_volatility_response_handler {
+                    Some(handler) => handler.handle(base_info, quote_info, oracle_history_options),
                     None => default_oracle_volatility_response_handler(),
                 },
                 InjectiveQuery::TokenFactoryDenomTotalSupply { denom } => match self.token_factory_denom_total_supply_handler {
@@ -348,8 +394,8 @@ impl WasmMockQuerier {
                     None => default_token_factory_denom_total_supply_handler(),
                 },
             },
-            QueryRequest::Bank(query) => match self.bank_query_handler {
-                Some(handler) => handler(query),
+            QueryRequest::Bank(query) => match &self.bank_query_handler {
+                Some(handler) => handler.handle(query),
                 None => panic!("Unknown bank query"),
             },
             _ => panic!("Unknown query"),
@@ -388,5 +434,291 @@ impl WasmMockQuerier {
             oracle_volatility_response_handler: None,
             token_factory_denom_total_supply_handler: None,
         }
+    }
+}
+
+pub struct TestCoin {
+    pub amount: FPDecimal,
+    pub denom: String,
+}
+
+impl TestCoin {
+    pub fn new(amount: FPDecimal, denom: String) -> TestCoin {
+        TestCoin { amount, denom }
+    }
+}
+
+pub struct TestDeposit {
+    pub deposit: Deposit,
+    pub denom: String,
+}
+
+impl TestDeposit {
+    pub fn new(deposit: Deposit, denom: String) -> TestDeposit {
+        TestDeposit { deposit, denom }
+    }
+}
+
+pub mod handlers {
+    use cosmwasm_std::{to_binary, ContractResult, QuerierResult, SystemError, SystemResult};
+    use injective_math::FPDecimal;
+
+    use crate::{
+        exchange_mock_querier::TestCoin, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition, FullDerivativeMarket,
+        FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery,
+        HandlesSubaccountAndDenomQuery, HandlesTraderSpotOrdersToCancelUpToAmountQuery, MetadataStatistics, OracleVolatilityResponse, Position,
+        SpotMarket, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse,
+        SubaccountPositionInMarketResponse, TradeRecord, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder,
+        TrimmedSpotLimitOrder,
+    };
+
+    use super::TestDeposit;
+
+    pub fn create_subaccount_deposit_handler(coins: Vec<TestCoin>) -> Option<Box<dyn HandlesSubaccountAndDenomQuery>> {
+        struct Temp {
+            coins: Vec<TestCoin>,
+        }
+        impl HandlesSubaccountAndDenomQuery for Temp {
+            fn handle(&self, _: String, denom: String) -> QuerierResult {
+                let iter = IntoIterator::into_iter(&self.coins);
+                let matching_coins: Vec<&TestCoin> = iter.filter(|c| c.denom == denom).collect();
+                if matching_coins.is_empty() || matching_coins.len() > 1 {
+                    panic!("Expected to find one coin with denom '{}', but found {}", denom, matching_coins.len())
+                }
+
+                let response = SubaccountDepositResponse {
+                    deposits: Deposit {
+                        available_balance: matching_coins.first().unwrap().amount,
+                        total_balance: matching_coins.first().unwrap().amount,
+                    },
+                };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+        Some(Box::new(Temp { coins }))
+    }
+
+    pub fn create_subaccount_deposit_complex_handler(deposits: Vec<TestDeposit>) -> Option<Box<dyn HandlesSubaccountAndDenomQuery>> {
+        struct Temp {
+            deposits: Vec<TestDeposit>,
+        }
+        impl HandlesSubaccountAndDenomQuery for Temp {
+            fn handle(&self, _: String, denom: String) -> QuerierResult {
+                let iter = IntoIterator::into_iter(&self.deposits);
+                let matching_deposits: Vec<&TestDeposit> = iter.filter(|c| c.denom == denom).collect();
+                if matching_deposits.is_empty() || matching_deposits.len() > 1 {
+                    panic!(
+                        "Expected to find one deposit with denom '{}', but found {}",
+                        denom,
+                        matching_deposits.len()
+                    )
+                }
+
+                let response = SubaccountDepositResponse {
+                    deposits: matching_deposits.first().unwrap().deposit.to_owned(),
+                };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+        Some(Box::new(Temp { deposits }))
+    }
+
+    pub fn create_subaccount_deposit_err_returning_handler() -> Option<Box<dyn HandlesSubaccountAndDenomQuery>> {
+        struct A();
+        impl HandlesSubaccountAndDenomQuery for A {
+            fn handle(&self, _: String, _: String) -> QuerierResult {
+                SystemResult::Err(SystemError::Unknown {})
+            }
+        }
+        Some(Box::new(A()))
+    }
+
+    pub fn create_spot_market_handler(market: Option<SpotMarket>) -> Option<Box<dyn HandlesMarketIdQuery>> {
+        struct Temp {
+            market: Option<SpotMarket>,
+        }
+        impl HandlesMarketIdQuery for Temp {
+            fn handle(&self, _: String) -> QuerierResult {
+                let response = SpotMarketResponse {
+                    market: self.market.to_owned(),
+                };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+        Some(Box::new(Temp { market }))
+    }
+
+    pub type SpotUpToAmountConsumingFunction = fn(String, String, FPDecimal, FPDecimal, i32, Option<FPDecimal>);
+
+    pub fn create_spot_orders_up_to_amount_handler(
+        orders: Option<Vec<TrimmedSpotLimitOrder>>,
+        assertion: Option<SpotUpToAmountConsumingFunction>,
+    ) -> Option<Box<dyn HandlesTraderSpotOrdersToCancelUpToAmountQuery>> {
+        struct Temp {
+            orders: Option<Vec<TrimmedSpotLimitOrder>>,
+            assertion: Option<SpotUpToAmountConsumingFunction>,
+        }
+        impl HandlesTraderSpotOrdersToCancelUpToAmountQuery for Temp {
+            fn handle(
+                &self,
+                market_id: String,
+                subaccount_id: String,
+                base_amount: FPDecimal,
+                quote_amount: FPDecimal,
+                strategy: i32,
+                reference_price: Option<FPDecimal>,
+            ) -> QuerierResult {
+                if self.assertion.is_some() {
+                    self.assertion.as_ref().unwrap()(market_id, subaccount_id, base_amount, quote_amount, strategy, reference_price)
+                }
+                let response = TraderSpotOrdersResponse {
+                    orders: self.orders.to_owned(),
+                };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+        Some(Box::new(Temp { orders, assertion }))
+    }
+
+    pub fn create_derivative_market_handler(
+        market: Option<DerivativeMarket>,
+        info: Option<FullDerivativeMarketPerpetualInfo>,
+        mark_price: FPDecimal,
+    ) -> Option<Box<dyn HandlesMarketIdQuery>> {
+        struct Temp {
+            market: Option<DerivativeMarket>,
+            info: Option<FullDerivativeMarketPerpetualInfo>,
+            mark_price: FPDecimal,
+        }
+        impl HandlesMarketIdQuery for Temp {
+            fn handle(&self, _: String) -> QuerierResult {
+                let response = DerivativeMarketResponse {
+                    market: FullDerivativeMarket {
+                        market: self.market.to_owned(),
+                        info: self.info.to_owned(),
+                        mark_price: self.mark_price.to_owned(),
+                    },
+                };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+        Some(Box::new(Temp { market, info, mark_price }))
+    }
+
+    pub fn create_trader_spot_orders_handler(orders: Option<Vec<TrimmedSpotLimitOrder>>) -> Option<Box<dyn HandlesMarketAndSubaccountQuery>> {
+        struct Temp {
+            orders: Option<Vec<TrimmedSpotLimitOrder>>,
+        }
+        impl HandlesMarketAndSubaccountQuery for Temp {
+            fn handle(&self, _: String, _: String) -> QuerierResult {
+                let response = TraderSpotOrdersResponse {
+                    orders: self.orders.to_owned(),
+                };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+        Some(Box::new(Temp { orders }))
+    }
+
+    pub fn create_trader_derivative_orders_handler(
+        orders: Option<Vec<TrimmedDerivativeLimitOrder>>,
+    ) -> Option<Box<dyn HandlesMarketAndSubaccountQuery>> {
+        struct Temp {
+            orders: Option<Vec<TrimmedDerivativeLimitOrder>>,
+        }
+        impl HandlesMarketAndSubaccountQuery for Temp {
+            fn handle(&self, _: String, _: String) -> QuerierResult {
+                let response = TraderDerivativeOrdersResponse {
+                    orders: self.orders.to_owned(),
+                };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+        Some(Box::new(Temp { orders }))
+    }
+
+    pub fn create_subaccount_effective_position_in_market_handler(
+        position: Option<EffectivePosition>,
+    ) -> Option<Box<dyn HandlesMarketAndSubaccountQuery>> {
+        struct Temp {
+            position: Option<EffectivePosition>,
+        }
+
+        impl HandlesMarketAndSubaccountQuery for Temp {
+            fn handle(&self, _: String, _: String) -> QuerierResult {
+                let response = SubaccountEffectivePositionInMarketResponse {
+                    state: self.position.to_owned(),
+                };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+
+        Some(Box::new(Temp { position }))
+    }
+
+    pub fn create_subaccount_position_in_market_handler(position: Option<Position>) -> Option<Box<dyn HandlesMarketAndSubaccountQuery>> {
+        struct Temp {
+            position: Option<Position>,
+        }
+
+        impl HandlesMarketAndSubaccountQuery for Temp {
+            fn handle(&self, _: String, _: String) -> QuerierResult {
+                let response = SubaccountPositionInMarketResponse {
+                    state: self.position.to_owned(),
+                };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+
+        Some(Box::new(Temp { position }))
+    }
+
+    pub fn create_spot_market_mid_price_and_tob_handler(mid_price: Option<FPDecimal>) -> Option<Box<dyn HandlesMarketIdQuery>> {
+        struct Temp {
+            mid_price: Option<FPDecimal>,
+        }
+        impl HandlesMarketIdQuery for Temp {
+            fn handle(&self, _: String) -> QuerierResult {
+                let response = SpotMarketMidPriceAndTOBResponse {
+                    mid_price: self.mid_price.to_owned(),
+                    best_bid: None,
+                    best_ask: None,
+                };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+        Some(Box::new(Temp { mid_price }))
+    }
+
+    pub fn create_oracle_volatility_handler(
+        volatility: Option<FPDecimal>,
+        history_metadata: Option<MetadataStatistics>,
+        raw_history: Option<Vec<TradeRecord>>,
+    ) -> Option<Box<dyn HandlesOracleVolatilityQuery>> {
+        struct Temp {
+            volatility: Option<FPDecimal>,
+            history_metadata: Option<MetadataStatistics>,
+            raw_history: Option<Vec<TradeRecord>>,
+        }
+        impl HandlesOracleVolatilityQuery for Temp {
+            fn handle(
+                &self,
+                _: Option<crate::OracleInfo>,
+                _: Option<crate::OracleInfo>,
+                _: Option<crate::oracle::OracleHistoryOptions>,
+            ) -> QuerierResult {
+                let response = OracleVolatilityResponse {
+                    volatility: self.volatility.to_owned(),
+                    history_metadata: self.history_metadata.to_owned(),
+                    raw_history: self.raw_history.to_owned(),
+                };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+        Some(Box::new(Temp {
+            volatility,
+            history_metadata,
+            raw_history,
+        }))
     }
 }

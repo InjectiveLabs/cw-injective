@@ -1,6 +1,6 @@
 [package]
 name = "injective-math"
-version = "0.1.6"
+version = "0.1.8"
 authors = ["Markus Waas <markus@injectivelabs.org>"]
 edition = "2018"
 description = "Math library for CosmWasm contracts in Injective Protocol"
