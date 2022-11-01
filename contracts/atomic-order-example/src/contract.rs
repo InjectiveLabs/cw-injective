@@ -100,8 +100,8 @@ pub fn try_swap(
         false,
         true,
         &config.market_id,
-        &subaccount_id,
-        &contract,
+        subaccount_id.to_owned(),
+        Some(contract.to_owned()),
     );
 
     let coins = &info.funds[0];

@@ -63,13 +63,13 @@ impl DerivativeOrder {
         order_type: OrderType,
         market_id: MarketId,
         subaccount_id: SubaccountId,
-        fee_recipient: &Addr,
+        fee_recipient: Option<Addr>,
     ) -> Self {
         DerivativeOrder {
             market_id,
             order_info: OrderInfo {
                 subaccount_id,
-                fee_recipient: fee_recipient.to_owned(),
+                fee_recipient,
                 price,
                 quantity,
             },

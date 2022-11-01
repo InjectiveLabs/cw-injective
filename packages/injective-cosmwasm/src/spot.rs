@@ -45,14 +45,14 @@ impl SpotOrder {
         is_po: bool,
         is_atomic: bool,
         market_id: &MarketId,
-        subaccount_id: &SubaccountId,
-        fee_recipient: &Addr,
+        subaccount_id: SubaccountId,
+        fee_recipient: Option<Addr>,
     ) -> Self {
         SpotOrder {
             market_id: market_id.clone(),
             order_info: OrderInfo {
-                subaccount_id: subaccount_id.to_owned(),
-                fee_recipient: fee_recipient.to_owned(),
+                subaccount_id,
+                fee_recipient,
                 price,
                 quantity,
             },

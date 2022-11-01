@@ -119,7 +119,7 @@ fn test_swap() {
                         .to_string(),
                 )
                 .unwrap(),
-                fee_recipient: env.contract.address,
+                fee_recipient: Some(env.contract.address),
                 price: i32_to_dec(1000),
                 quantity: i32_to_dec(8),
             },

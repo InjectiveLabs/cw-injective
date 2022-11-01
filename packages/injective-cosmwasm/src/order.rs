@@ -15,7 +15,8 @@ pub struct OrderData {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct OrderInfo {
     pub subaccount_id: SubaccountId,
-    pub fee_recipient: Addr,
+    #[serde(default)]
+    pub fee_recipient: Option<Addr>,
     pub price: FPDecimal,
     pub quantity: FPDecimal,
 }
