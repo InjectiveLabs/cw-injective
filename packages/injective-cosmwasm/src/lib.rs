@@ -34,7 +34,7 @@ pub use exchange_mock_querier::handlers::{
     create_derivative_market_handler, create_oracle_volatility_handler, create_spot_market_handler, create_spot_market_mid_price_and_tob_handler,
     create_spot_orders_up_to_amount_handler, create_subaccount_deposit_complex_handler, create_subaccount_deposit_err_returning_handler,
     create_subaccount_deposit_handler, create_subaccount_effective_position_in_market_handler, create_subaccount_position_in_market_handler,
-    create_trader_derivative_orders_handler, create_trader_spot_orders_handler, SpotUpToAmountConsumingFunction,
+    create_trader_derivative_orders_handler, create_trader_spot_orders_handler, create_denom_supply_handler, SpotUpToAmountConsumingFunction,
 };
 
 pub use querier::InjectiveQuerier;

@@ -3,14 +3,14 @@ use std::str::FromStr;
 
 use cosmwasm_std::testing::{MockApi, MockStorage};
 use cosmwasm_std::{
-    from_slice, to_binary, BankQuery, Binary, ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest, SystemError, SystemResult,
-    Uint128, WasmQuery,
+    from_slice, to_binary, BankQuery, Binary, ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest, SystemError, SystemResult, Uint128,
+    WasmQuery,
 };
 
 use injective_math::FPDecimal;
 
 use crate::oracle::{OracleHistoryOptions, OracleType};
-use crate::query::{TokenFactoryDenomSupplyResponse};
+use crate::query::TokenFactoryDenomSupplyResponse;
 use crate::volatility::TradeHistoryOptions;
 use crate::{
     Deposit, DerivativeMarket, DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery,
@@ -242,6 +242,10 @@ pub trait HandlesMarketVolatilityQuery {
     fn handle(&self, market_id: String, trade_history_options: TradeHistoryOptions) -> QuerierResult;
 }
 
+pub trait HandlesDenomSupplyQuery {
+    fn handle(&self, denom: String) -> QuerierResult;
+}
+
 pub struct WasmMockQuerier {
     pub smart_query_handler: Option<Box<dyn HandlesSmartQuery>>,
     pub bank_query_handler: Option<Box<dyn HandlesBankQuery>>,
@@ -263,8 +267,7 @@ pub struct WasmMockQuerier {
     pub spot_market_mid_price_and_tob_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
     pub derivative_market_mid_price_and_tob_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
     pub oracle_volatility_response_handler: Option<Box<dyn HandlesOracleVolatilityQuery>>,
-    pub token_factory_denom_total_supply_handler: Option<fn(denom: String) -> QuerierResult>,
-
+    pub token_factory_denom_total_supply_handler: Option<Box<dyn HandlesDenomSupplyQuery>>,
 }
 
 impl Querier for WasmMockQuerier {
@@ -389,8 +392,8 @@ impl WasmMockQuerier {
                     Some(handler) => handler.handle(base_info, quote_info, oracle_history_options),
                     None => default_oracle_volatility_response_handler(),
                 },
-                InjectiveQuery::TokenFactoryDenomTotalSupply { denom } => match self.token_factory_denom_total_supply_handler {
-                    Some(handler) => handler(denom),
+                InjectiveQuery::TokenFactoryDenomTotalSupply { denom } => match &self.token_factory_denom_total_supply_handler {
+                    Some(handler) => handler.handle(denom),
                     None => default_token_factory_denom_total_supply_handler(),
                 },
             },
@@ -460,9 +463,12 @@ impl TestDeposit {
 }
 
 pub mod handlers {
-    use cosmwasm_std::{to_binary, ContractResult, QuerierResult, SystemError, SystemResult};
+    use cosmwasm_std::{to_binary, ContractResult, QuerierResult, SystemError, SystemResult, Uint128};
+
     use injective_math::FPDecimal;
 
+    use crate::exchange_mock_querier::HandlesDenomSupplyQuery;
+    use crate::query::TokenFactoryDenomSupplyResponse;
     use crate::{
         exchange_mock_querier::TestCoin, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition, FullDerivativeMarket,
         FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery,
@@ -720,5 +726,18 @@ pub mod handlers {
             history_metadata,
             raw_history,
         }))
+    }
+
+    pub fn create_denom_supply_handler(supply: Uint128) -> Option<Box<dyn HandlesDenomSupplyQuery>> {
+        struct Temp {
+            supply: Uint128,
+        }
+        impl HandlesDenomSupplyQuery for Temp {
+            fn handle(&self, _denom: String) -> QuerierResult {
+                let response = TokenFactoryDenomSupplyResponse { total_supply: self.supply };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+        Some(Box::new(Temp { supply }))
     }
 }
