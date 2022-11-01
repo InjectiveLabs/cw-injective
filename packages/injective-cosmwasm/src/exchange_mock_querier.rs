@@ -3,6 +3,7 @@ use cosmwasm_std::{
     from_slice, to_binary, BankQuery, Binary, ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest, SystemError, SystemResult, WasmQuery,
 };
 
+use crate::{MarketId, SubaccountId};
 use injective_math::FPDecimal;
 use std::marker::PhantomData;
 use std::str::FromStr;
@@ -37,7 +38,7 @@ fn default_subaccount_deposit_response_handler() -> QuerierResult {
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
 
-fn default_spot_market_response_handler(market_id: String) -> QuerierResult {
+fn default_spot_market_response_handler(market_id: MarketId) -> QuerierResult {
     let response = SpotMarketResponse {
         market: Some(SpotMarket {
             ticker: "INJ/USDT".to_string(),
@@ -70,7 +71,7 @@ fn default_trader_derivative_orders_to_cancel_up_to_amount_response_handler() ->
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
 
-fn default_derivative_market_response_handler(market_id: String) -> QuerierResult {
+fn default_derivative_market_response_handler(market_id: MarketId) -> QuerierResult {
     let response = DerivativeMarketResponse {
         market: FullDerivativeMarket {
             market: Some(DerivativeMarket {
@@ -183,8 +184,8 @@ pub trait HandlesBankQuery {
 pub trait HandlesTraderSpotOrdersToCancelUpToAmountQuery {
     fn handle(
         &self,
-        market_id: String,
-        subaccount_id: String,
+        market_id: MarketId,
+        subaccount_id: SubaccountId,
         base_amount: FPDecimal,
         quote_amount: FPDecimal,
         strategy: i32,
@@ -195,8 +196,8 @@ pub trait HandlesTraderSpotOrdersToCancelUpToAmountQuery {
 pub trait HandlesTraderDerivativeOrdersToCancelUpToAmountQuery {
     fn handle(
         &self,
-        market_id: String,
-        subaccount_id: String,
+        market_id: MarketId,
+        subaccount_id: SubaccountId,
         quote_amount: FPDecimal,
         strategy: i32,
         reference_price: Option<FPDecimal>,
@@ -204,19 +205,19 @@ pub trait HandlesTraderDerivativeOrdersToCancelUpToAmountQuery {
 }
 
 pub trait HandlesMarketIdQuery {
-    fn handle(&self, market_id: String) -> QuerierResult;
+    fn handle(&self, market_id: MarketId) -> QuerierResult;
 }
 
 pub trait HandlesSubaccountIdQuery {
-    fn handle(&self, subaccount_id: String) -> QuerierResult;
+    fn handle(&self, subaccount_id: SubaccountId) -> QuerierResult;
 }
 
 pub trait HandlesMarketAndSubaccountQuery {
-    fn handle(&self, market_id: String, subaccount_id: String) -> QuerierResult;
+    fn handle(&self, market_id: MarketId, subaccount_id: SubaccountId) -> QuerierResult;
 }
 
 pub trait HandlesSubaccountAndDenomQuery {
-    fn handle(&self, subaccount_id: String, denom: String) -> QuerierResult;
+    fn handle(&self, subaccount_id: SubaccountId, denom: String) -> QuerierResult;
 }
 
 pub trait HandlesOracleVolatilityQuery {
@@ -229,7 +230,7 @@ pub trait HandlesOracleVolatilityQuery {
 }
 
 pub trait HandlesMarketVolatilityQuery {
-    fn handle(&self, market_id: String, trade_history_options: TradeHistoryOptions) -> QuerierResult;
+    fn handle(&self, market_id: MarketId, trade_history_options: TradeHistoryOptions) -> QuerierResult;
 }
 
 pub struct WasmMockQuerier {
@@ -449,10 +450,10 @@ pub mod handlers {
     use crate::{
         exchange_mock_querier::TestCoin, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition, FullDerivativeMarket,
         FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery,
-        HandlesSubaccountAndDenomQuery, HandlesTraderSpotOrdersToCancelUpToAmountQuery, MetadataStatistics, OracleVolatilityResponse, Position,
-        SpotMarket, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse,
-        SubaccountPositionInMarketResponse, TradeRecord, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder,
-        TrimmedSpotLimitOrder,
+        HandlesSubaccountAndDenomQuery, HandlesTraderSpotOrdersToCancelUpToAmountQuery, MarketId, MetadataStatistics, OracleVolatilityResponse,
+        Position, SpotMarket, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse, SubaccountDepositResponse,
+        SubaccountEffectivePositionInMarketResponse, SubaccountId, SubaccountPositionInMarketResponse, TradeRecord, TraderDerivativeOrdersResponse,
+        TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder, TrimmedSpotLimitOrder,
     };
 
     use super::TestDeposit;
@@ -462,7 +463,7 @@ pub mod handlers {
             coins: Vec<TestCoin>,
         }
         impl HandlesSubaccountAndDenomQuery for Temp {
-            fn handle(&self, _: String, denom: String) -> QuerierResult {
+            fn handle(&self, _: SubaccountId, denom: String) -> QuerierResult {
                 let iter = IntoIterator::into_iter(&self.coins);
                 let matching_coins: Vec<&TestCoin> = iter.filter(|c| c.denom == denom).collect();
                 if matching_coins.is_empty() || matching_coins.len() > 1 {
@@ -486,7 +487,7 @@ pub mod handlers {
             deposits: Vec<TestDeposit>,
         }
         impl HandlesSubaccountAndDenomQuery for Temp {
-            fn handle(&self, _: String, denom: String) -> QuerierResult {
+            fn handle(&self, _: SubaccountId, denom: String) -> QuerierResult {
                 let iter = IntoIterator::into_iter(&self.deposits);
                 let matching_deposits: Vec<&TestDeposit> = iter.filter(|c| c.denom == denom).collect();
                 if matching_deposits.is_empty() || matching_deposits.len() > 1 {
@@ -509,7 +510,7 @@ pub mod handlers {
     pub fn create_subaccount_deposit_err_returning_handler() -> Option<Box<dyn HandlesSubaccountAndDenomQuery>> {
         struct A();
         impl HandlesSubaccountAndDenomQuery for A {
-            fn handle(&self, _: String, _: String) -> QuerierResult {
+            fn handle(&self, _: SubaccountId, _: String) -> QuerierResult {
                 SystemResult::Err(SystemError::Unknown {})
             }
         }
@@ -521,7 +522,7 @@ pub mod handlers {
             market: Option<SpotMarket>,
         }
         impl HandlesMarketIdQuery for Temp {
-            fn handle(&self, _: String) -> QuerierResult {
+            fn handle(&self, _: MarketId) -> QuerierResult {
                 let response = SpotMarketResponse {
                     market: self.market.to_owned(),
                 };
@@ -531,7 +532,7 @@ pub mod handlers {
         Some(Box::new(Temp { market }))
     }
 
-    pub type SpotUpToAmountConsumingFunction = fn(String, String, FPDecimal, FPDecimal, i32, Option<FPDecimal>);
+    pub type SpotUpToAmountConsumingFunction = fn(MarketId, SubaccountId, FPDecimal, FPDecimal, i32, Option<FPDecimal>);
 
     pub fn create_spot_orders_up_to_amount_handler(
         orders: Option<Vec<TrimmedSpotLimitOrder>>,
@@ -544,8 +545,8 @@ pub mod handlers {
         impl HandlesTraderSpotOrdersToCancelUpToAmountQuery for Temp {
             fn handle(
                 &self,
-                market_id: String,
-                subaccount_id: String,
+                market_id: MarketId,
+                subaccount_id: SubaccountId,
                 base_amount: FPDecimal,
                 quote_amount: FPDecimal,
                 strategy: i32,
@@ -574,7 +575,7 @@ pub mod handlers {
             mark_price: FPDecimal,
         }
         impl HandlesMarketIdQuery for Temp {
-            fn handle(&self, _: String) -> QuerierResult {
+            fn handle(&self, _: MarketId) -> QuerierResult {
                 let response = DerivativeMarketResponse {
                     market: FullDerivativeMarket {
                         market: self.market.to_owned(),
@@ -593,7 +594,7 @@ pub mod handlers {
             orders: Option<Vec<TrimmedSpotLimitOrder>>,
         }
         impl HandlesMarketAndSubaccountQuery for Temp {
-            fn handle(&self, _: String, _: String) -> QuerierResult {
+            fn handle(&self, _: MarketId, _: SubaccountId) -> QuerierResult {
                 let response = TraderSpotOrdersResponse {
                     orders: self.orders.to_owned(),
                 };
@@ -610,7 +611,7 @@ pub mod handlers {
             orders: Option<Vec<TrimmedDerivativeLimitOrder>>,
         }
         impl HandlesMarketAndSubaccountQuery for Temp {
-            fn handle(&self, _: String, _: String) -> QuerierResult {
+            fn handle(&self, _: MarketId, _: SubaccountId) -> QuerierResult {
                 let response = TraderDerivativeOrdersResponse {
                     orders: self.orders.to_owned(),
                 };
@@ -628,7 +629,7 @@ pub mod handlers {
         }
 
         impl HandlesMarketAndSubaccountQuery for Temp {
-            fn handle(&self, _: String, _: String) -> QuerierResult {
+            fn handle(&self, _: MarketId, _: SubaccountId) -> QuerierResult {
                 let response = SubaccountEffectivePositionInMarketResponse {
                     state: self.position.to_owned(),
                 };
@@ -645,7 +646,7 @@ pub mod handlers {
         }
 
         impl HandlesMarketAndSubaccountQuery for Temp {
-            fn handle(&self, _: String, _: String) -> QuerierResult {
+            fn handle(&self, _: MarketId, _: SubaccountId) -> QuerierResult {
                 let response = SubaccountPositionInMarketResponse {
                     state: self.position.to_owned(),
                 };
@@ -661,7 +662,7 @@ pub mod handlers {
             mid_price: Option<FPDecimal>,
         }
         impl HandlesMarketIdQuery for Temp {
-            fn handle(&self, _: String) -> QuerierResult {
+            fn handle(&self, _: MarketId) -> QuerierResult {
                 let response = SpotMarketMidPriceAndTOBResponse {
                     mid_price: self.mid_price.to_owned(),
                     best_bid: None,

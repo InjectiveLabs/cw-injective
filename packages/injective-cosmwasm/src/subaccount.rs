@@ -5,24 +5,25 @@ use subtle_encoding::bech32;
 
 use ethereum_types::H160;
 
-pub fn default_subaccount_id(addr: &Addr) -> String {
-    address_to_subaccount_id(addr, 0)
+use crate::SubaccountId;
+
+pub fn get_default_subaccount_id_for_checked_address(addr: &Addr) -> SubaccountId {
+    checked_address_to_subaccount_id(addr, 0)
 }
 
-// TODO: consider converting nonce to proper hex value, so e.g. 15 -> f
-pub fn address_to_subaccount_id(addr: &Addr, nonce: u32) -> String {
+pub fn checked_address_to_subaccount_id(addr: &Addr, nonce: u32) -> SubaccountId {
     let address_str = bech32_to_hex(addr);
-    let nonce_str = left_pad_with_zeroes(nonce, 24);
+    let hex_nonce = format!("{:08x}", nonce);
+    let nonce_str = left_pad_with_zeroes(hex_nonce, 24);
 
-    format!("{}{}", address_str, nonce_str)
+    SubaccountId::new(format!("{}{}", address_str, nonce_str)).unwrap()
 }
 
-fn left_pad_with_zeroes(input: u32, length: usize) -> String {
-    let mut padded_input = input.to_string();
-    while padded_input.len() < length {
-        padded_input = "0".to_string() + &padded_input;
+fn left_pad_with_zeroes(mut input: String, length: usize) -> String {
+    while input.len() < length {
+        input = "0".to_string() + &input;
     }
-    padded_input
+    input
 }
 
 pub fn bech32_to_hex(addr: &Addr) -> String {
@@ -49,7 +50,7 @@ pub fn subaccount_id_to_injective_address(subaccount_id: String) -> String {
 #[cfg(test)]
 mod tests {
     use crate::{
-        subaccount::{address_to_subaccount_id, bech32_to_hex, default_subaccount_id},
+        subaccount::{bech32_to_hex, checked_address_to_subaccount_id, get_default_subaccount_id_for_checked_address},
         subaccount_id_to_injective_address,
     };
     use cosmwasm_std::Addr;
@@ -57,19 +58,19 @@ mod tests {
     #[test]
     fn bech32_to_hex_test() {
         let decoded_string = bech32_to_hex(&Addr::unchecked("inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv"));
-        println!("{}", decoded_string);
         assert_eq!(decoded_string, "0xB5e09b93aCEb70C1711aF078922fA256011D7e56".to_lowercase());
     }
 
     #[test]
-    fn address_to_subaccount_id_test() {
-        let subaccount_id = address_to_subaccount_id(&Addr::unchecked("inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv"), 69);
-        println!("{}", subaccount_id);
-        assert_eq!(subaccount_id, "0xb5e09b93aceb70c1711af078922fa256011d7e56000000000000000000000069");
-
-        println!("{}", subaccount_id);
+    fn checked_address_to_subaccount_id_test() {
+        let subaccount_id = checked_address_to_subaccount_id(&Addr::unchecked("inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv"), 69);
         assert_eq!(
-            default_subaccount_id(&Addr::unchecked("inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv")),
+            subaccount_id.as_str(),
+            "0xb5e09b93aceb70c1711af078922fa256011d7e56000000000000000000000045"
+        );
+
+        assert_eq!(
+            get_default_subaccount_id_for_checked_address(&Addr::unchecked("inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv")).as_str(),
             "0xb5e09b93aceb70c1711af078922fa256011d7e56000000000000000000000000"
         );
     }
@@ -79,7 +80,6 @@ mod tests {
         let subaccount_id = "0xb5e09b93aceb70c1711af078922fa256011d7e56000000000000000000000000";
         let address = subaccount_id_to_injective_address(subaccount_id.to_string());
 
-        println!("{}", address);
         assert_eq!(address, "inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv");
     }
 }

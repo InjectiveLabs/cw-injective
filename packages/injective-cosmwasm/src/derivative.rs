@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use injective_math::FPDecimal;
 
 use crate::order::OrderInfo;
+use crate::{MarketId, SubaccountId};
 
 pub enum OrderType {
     Undefined = 0,
@@ -39,14 +40,14 @@ pub struct EffectivePosition {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct DerivativePosition {
-    pub subaccount_id: String,
-    pub market_id: String,
+    pub subaccount_id: SubaccountId,
+    pub market_id: MarketId,
     pub position: Position,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct DerivativeOrder {
-    pub market_id: String,
+    pub market_id: MarketId,
     pub order_info: OrderInfo,
     pub order_type: i32,
     pub margin: FPDecimal,
@@ -59,14 +60,14 @@ impl DerivativeOrder {
         quantity: FPDecimal,
         margin: FPDecimal,
         order_type: OrderType,
-        market_id: &str,
-        subaccount_id: &str,
+        market_id: MarketId,
+        subaccount_id: SubaccountId,
         fee_recipient: &str,
     ) -> Self {
         DerivativeOrder {
-            market_id: market_id.to_string(),
+            market_id,
             order_info: OrderInfo {
-                subaccount_id: subaccount_id.to_string(),
+                subaccount_id,
                 fee_recipient: fee_recipient.to_string(),
                 price,
                 quantity,

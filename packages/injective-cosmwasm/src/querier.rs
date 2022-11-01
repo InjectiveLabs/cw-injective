@@ -9,6 +9,7 @@ use crate::query::{
     TraderSpotOrdersResponse,
 };
 use crate::volatility::TradeHistoryOptions;
+use crate::{MarketId, SubaccountId};
 
 use crate::route::InjectiveRoute;
 
@@ -21,7 +22,11 @@ impl<'a> InjectiveQuerier<'a> {
         InjectiveQuerier { querier }
     }
 
-    pub fn query_subaccount_deposit<T: Into<String>>(&self, subaccount_id: T, denom: T) -> StdResult<SubaccountDepositResponse> {
+    pub fn query_subaccount_deposit<T: Into<SubaccountId>, P: Into<String>>(
+        &self,
+        subaccount_id: T,
+        denom: P,
+    ) -> StdResult<SubaccountDepositResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::SubaccountDeposit {
@@ -34,7 +39,7 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_derivative_market<T: Into<String>>(&self, market_id: T) -> StdResult<DerivativeMarketResponse> {
+    pub fn query_derivative_market<T: Into<MarketId>>(&self, market_id: T) -> StdResult<DerivativeMarketResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::DerivativeMarket { market_id: market_id.into() },
@@ -44,7 +49,7 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_spot_market<T: Into<String>>(&self, market_id: T) -> StdResult<SpotMarketResponse> {
+    pub fn query_spot_market<T: Into<MarketId>>(&self, market_id: T) -> StdResult<SpotMarketResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::SpotMarket { market_id: market_id.into() },
@@ -54,10 +59,10 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_effective_subaccount_position<T: Into<String>>(
+    pub fn query_effective_subaccount_position<T: Into<MarketId>, P: Into<SubaccountId>>(
         &self,
         market_id: T,
-        subaccount_id: T,
+        subaccount_id: P,
     ) -> StdResult<SubaccountEffectivePositionInMarketResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
@@ -71,10 +76,10 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_vanilla_subaccount_position<T: Into<String>>(
+    pub fn query_vanilla_subaccount_position<T: Into<MarketId>, P: Into<SubaccountId>>(
         &self,
         market_id: T,
-        subaccount_id: T,
+        subaccount_id: P,
     ) -> StdResult<SubaccountPositionInMarketResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
@@ -88,7 +93,11 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_trader_derivative_orders<T: Into<String>>(&self, market_id: T, subaccount_id: T) -> StdResult<TraderDerivativeOrdersResponse> {
+    pub fn query_trader_derivative_orders<T: Into<MarketId>, P: Into<SubaccountId>>(
+        &self,
+        market_id: T,
+        subaccount_id: P,
+    ) -> StdResult<TraderDerivativeOrdersResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::TraderDerivativeOrders {
@@ -101,7 +110,11 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_trader_transient_spot_orders<T: Into<String>>(&self, market_id: T, subaccount_id: T) -> StdResult<TraderSpotOrdersResponse> {
+    pub fn query_trader_transient_spot_orders<T: Into<MarketId>, P: Into<SubaccountId>>(
+        &self,
+        market_id: T,
+        subaccount_id: P,
+    ) -> StdResult<TraderSpotOrdersResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::TraderTransientSpotOrders {
@@ -114,10 +127,10 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_trader_transient_derivative_orders<T: Into<String>>(
+    pub fn query_trader_transient_derivative_orders<T: Into<MarketId>, P: Into<SubaccountId>>(
         &self,
         market_id: T,
-        subaccount_id: T,
+        subaccount_id: P,
     ) -> StdResult<TraderDerivativeOrdersResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
@@ -131,7 +144,11 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_trader_spot_orders<T: Into<String>>(&self, market_id: T, subaccount_id: T) -> StdResult<TraderSpotOrdersResponse> {
+    pub fn query_trader_spot_orders<T: Into<MarketId>, P: Into<SubaccountId>>(
+        &self,
+        market_id: T,
+        subaccount_id: P,
+    ) -> StdResult<TraderSpotOrdersResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::TraderSpotOrders {
@@ -144,10 +161,10 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_spot_orders_to_cancel_up_to_amount<T: Into<String>>(
+    pub fn query_spot_orders_to_cancel_up_to_amount<T: Into<MarketId>, P: Into<SubaccountId>>(
         &self,
         market_id: T,
-        subaccount_id: T,
+        subaccount_id: P,
         base_amount: FPDecimal,
         quote_amount: FPDecimal,
         strategy: i32,
@@ -169,10 +186,10 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_derivative_orders_to_cancel_up_to_amount<T: Into<String>>(
+    pub fn query_derivative_orders_to_cancel_up_to_amount<T: Into<MarketId>, P: Into<SubaccountId>>(
         &self,
         market_id: T,
-        subaccount_id: T,
+        subaccount_id: P,
         quote_amount: FPDecimal,
         strategy: i32,
         reference_price: Option<FPDecimal>,
@@ -192,7 +209,7 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_perpetual_market_info<T: Into<String>>(&self, market_id: T) -> StdResult<PerpetualMarketInfoResponse> {
+    pub fn query_perpetual_market_info<T: Into<MarketId>>(&self, market_id: T) -> StdResult<PerpetualMarketInfoResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::PerpetualMarketInfo { market_id: market_id.into() },
@@ -202,7 +219,7 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_perpetual_market_funding<T: Into<String>>(&self, market_id: T) -> StdResult<PerpetualMarketFundingResponse> {
+    pub fn query_perpetual_market_funding<T: Into<MarketId>>(&self, market_id: T) -> StdResult<PerpetualMarketFundingResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::PerpetualMarketFunding { market_id: market_id.into() },
@@ -212,7 +229,7 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_market_volatility<T: Into<String>>(
+    pub fn query_market_volatility<T: Into<MarketId>>(
         &self,
         market_id: T,
         trade_grouping_sec: u64,
@@ -237,7 +254,7 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_derivative_market_mid_price_and_tob<T: Into<String>>(&self, market_id: T) -> StdResult<DerivativeMarketMidPriceAndTOBResponse> {
+    pub fn query_derivative_market_mid_price_and_tob<T: Into<MarketId>>(&self, market_id: T) -> StdResult<DerivativeMarketMidPriceAndTOBResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::DerivativeMarketMidPriceAndTob { market_id: market_id.into() },
@@ -247,7 +264,7 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_spot_market_mid_price_and_tob<T: Into<String>>(&self, market_id: T) -> StdResult<SpotMarketMidPriceAndTOBResponse> {
+    pub fn query_spot_market_mid_price_and_tob<T: Into<MarketId>>(&self, market_id: T) -> StdResult<SpotMarketMidPriceAndTOBResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::SpotMarketMidPriceAndTob { market_id: market_id.into() },

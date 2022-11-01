@@ -5,6 +5,7 @@ use injective_math::FPDecimal;
 
 use crate::order::OrderInfo;
 use crate::OrderType;
+use crate::{MarketId, SubaccountId};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SpotLimitOrder {
@@ -29,7 +30,7 @@ impl SpotLimitOrder {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SpotOrder {
-    pub market_id: String,
+    pub market_id: MarketId,
     pub order_info: OrderInfo,
     pub order_type: i32,
     pub trigger_price: Option<String>,
@@ -42,14 +43,14 @@ impl SpotOrder {
         is_buy: bool,
         is_po: bool,
         is_atomic: bool,
-        market_id: &str,
-        subaccount_id: &str,
+        market_id: &MarketId,
+        subaccount_id: &SubaccountId,
         fee_recipient: &str,
     ) -> Self {
         SpotOrder {
-            market_id: market_id.to_string(),
+            market_id: market_id.clone(),
             order_info: OrderInfo {
-                subaccount_id: subaccount_id.to_string(),
+                subaccount_id: subaccount_id.clone(),
                 fee_recipient: fee_recipient.to_string(),
                 price,
                 quantity,

@@ -8,8 +8,9 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 
 use injective_cosmwasm::{
-    create_deposit_msg, create_spot_market_order_msg, create_withdraw_msg, default_subaccount_id,
-    InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, SpotOrder,
+    create_deposit_msg, create_spot_market_order_msg, create_withdraw_msg,
+    get_default_subaccount_id_for_checked_address, InjectiveMsgWrapper, InjectiveQuerier,
+    InjectiveQueryWrapper, SpotOrder,
 };
 use injective_math::FPDecimal;
 
@@ -32,13 +33,15 @@ pub fn instantiate(
     msg: InstantiateMsg,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let querier = InjectiveQuerier::new(&deps.querier);
-    if let Some(market) = querier.query_spot_market(&msg.market_id)?.market {
+    if let Some(market) = querier.query_spot_market(msg.market_id.clone())?.market {
         let state = ContractConfigState {
             market_id: msg.market_id,
             base_denom: market.base_denom,
             quote_denom: market.quote_denom,
             owner: info.sender.clone(),
-            contract_subaccount_id: default_subaccount_id(&env.contract.address),
+            contract_subaccount_id: get_default_subaccount_id_for_checked_address(
+                &env.contract.address,
+            ),
         };
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
         STATE.save(deps.storage, &state)?;
@@ -48,7 +51,7 @@ pub fn instantiate(
             .add_attribute("owner", info.sender))
     } else {
         Err(ContractError::CustomError {
-            val: format!("Market with id: {} not found", msg.market_id),
+            val: format!("Market with id: {} not found", msg.market_id.as_str()),
         })
     }
 }

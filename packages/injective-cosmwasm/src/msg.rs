@@ -2,6 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{derivative::DerivativeOrder, order::OrderData, route::InjectiveRoute, spot::SpotOrder};
+use crate::{MarketId, SubaccountId};
 use cosmwasm_std::{Addr, Coin, CosmosMsg, CustomMsg};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -25,24 +26,24 @@ impl CustomMsg for InjectiveMsgWrapper {}
 pub enum InjectiveMsg {
     Deposit {
         sender: String,
-        subaccount_id: String,
+        subaccount_id: SubaccountId,
         amount: Coin,
     },
     Withdraw {
         sender: String,
-        subaccount_id: String,
+        subaccount_id: SubaccountId,
         amount: Coin,
     },
     SubaccountTransfer {
         sender: Addr,
-        source_subaccount_id: String,
-        destination_subaccount_id: String,
+        source_subaccount_id: SubaccountId,
+        destination_subaccount_id: SubaccountId,
         amount: Coin,
     },
     ExternalTransfer {
         sender: String,
-        source_subaccount_id: String,
-        destination_subaccount_id: String,
+        source_subaccount_id: SubaccountId,
+        destination_subaccount_id: SubaccountId,
         amount: Coin,
     },
     CreateSpotMarketOrder {
@@ -55,15 +56,15 @@ pub enum InjectiveMsg {
     },
     IncreasePositionMargin {
         sender: String,
-        source_subaccount_id: String,
-        destination_subaccount_id: String,
-        market_id: String,
+        source_subaccount_id: SubaccountId,
+        destination_subaccount_id: SubaccountId,
+        market_id: MarketId,
         amount: Coin,
     },
     LiquidatePosition {
         sender: String,
-        subaccount_id: String,
-        market_id: String,
+        subaccount_id: SubaccountId,
+        market_id: MarketId,
         order: Option<DerivativeOrder>,
     },
     RegisterAsDMM {
@@ -72,9 +73,9 @@ pub enum InjectiveMsg {
     },
     BatchUpdateOrders {
         sender: String,
-        subaccount_id: String,
-        spot_market_ids_to_cancel_all: Vec<String>,
-        derivative_market_ids_to_cancel_all: Vec<String>,
+        subaccount_id: SubaccountId,
+        spot_market_ids_to_cancel_all: Vec<MarketId>,
+        derivative_market_ids_to_cancel_all: Vec<MarketId>,
         spot_orders_to_cancel: Vec<OrderData>,
         derivative_orders_to_cancel: Vec<OrderData>,
         spot_orders_to_create: Vec<SpotOrder>,
@@ -96,7 +97,7 @@ pub enum InjectiveMsg {
     },
 }
 
-pub fn create_deposit_msg(sender: String, subaccount_id: String, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
+pub fn create_deposit_msg(sender: String, subaccount_id: SubaccountId, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,
         msg_data: InjectiveMsg::Deposit {
@@ -108,7 +109,7 @@ pub fn create_deposit_msg(sender: String, subaccount_id: String, amount: Coin) -
     .into()
 }
 
-pub fn create_withdraw_msg(sender: String, subaccount_id: String, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
+pub fn create_withdraw_msg(sender: String, subaccount_id: SubaccountId, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,
         msg_data: InjectiveMsg::Withdraw {
@@ -122,8 +123,8 @@ pub fn create_withdraw_msg(sender: String, subaccount_id: String, amount: Coin) 
 
 pub fn create_subaccount_transfer_msg(
     sender: Addr,
-    source_subaccount_id: String,
-    destination_subaccount_id: String,
+    source_subaccount_id: SubaccountId,
+    destination_subaccount_id: SubaccountId,
     amount: Coin,
 ) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
@@ -140,8 +141,8 @@ pub fn create_subaccount_transfer_msg(
 
 pub fn create_external_transfer_msg(
     sender: String,
-    source_subaccount_id: String,
-    destination_subaccount_id: String,
+    source_subaccount_id: SubaccountId,
+    destination_subaccount_id: SubaccountId,
     amount: Coin,
 ) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
@@ -174,9 +175,9 @@ pub fn create_derivative_market_order_msg(sender: String, order: DerivativeOrder
 
 pub fn create_increase_position_margin_msg(
     sender: String,
-    source_subaccount_id: String,
-    destination_subaccount_id: String,
-    market_id: String,
+    source_subaccount_id: SubaccountId,
+    destination_subaccount_id: SubaccountId,
+    market_id: MarketId,
     amount: Coin,
 ) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
@@ -194,8 +195,8 @@ pub fn create_increase_position_margin_msg(
 
 pub fn create_liquidate_position_msg(
     sender: String,
-    subaccount_id: String,
-    market_id: String,
+    subaccount_id: SubaccountId,
+    market_id: MarketId,
     order: Option<DerivativeOrder>,
 ) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
@@ -220,9 +221,9 @@ pub fn create_register_as_dmm_msg(sender: String, dmm_account: String) -> Cosmos
 
 pub fn create_batch_update_orders_msg(
     sender: String,
-    subaccount_id: String,
-    spot_market_ids_to_cancel_all: Vec<String>,
-    derivative_market_ids_to_cancel_all: Vec<String>,
+    subaccount_id: SubaccountId,
+    spot_market_ids_to_cancel_all: Vec<MarketId>,
+    derivative_market_ids_to_cancel_all: Vec<MarketId>,
     spot_orders_to_cancel: Vec<OrderData>,
     derivative_orders_to_cancel: Vec<OrderData>,
     spot_orders_to_create: Vec<SpotOrder>,
