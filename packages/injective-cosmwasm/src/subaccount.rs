@@ -38,11 +38,12 @@ pub fn addr_to_bech32(addr: String) -> String {
     bech32::encode("inj", encoded_bytes)
 }
 
-pub fn subaccount_id_to_ethereum_address(subaccount_id: String) -> String {
-    subaccount_id[0..subaccount_id.len() - 24].to_string()
+pub fn subaccount_id_to_ethereum_address(subaccount_id: SubaccountId) -> String {
+    let subaccount_id_str = subaccount_id.as_str();
+    subaccount_id_str[0..subaccount_id_str.len() - 24].to_string()
 }
 
-pub fn subaccount_id_to_injective_address(subaccount_id: String) -> String {
+pub fn subaccount_id_to_injective_address(subaccount_id: SubaccountId) -> String {
     let ethereum_address = subaccount_id_to_ethereum_address(subaccount_id);
     addr_to_bech32(ethereum_address)
 }
@@ -51,7 +52,7 @@ pub fn subaccount_id_to_injective_address(subaccount_id: String) -> String {
 mod tests {
     use crate::{
         subaccount::{bech32_to_hex, checked_address_to_subaccount_id, get_default_subaccount_id_for_checked_address},
-        subaccount_id_to_injective_address,
+        subaccount_id_to_injective_address, SubaccountId,
     };
     use cosmwasm_std::Addr;
 
@@ -78,7 +79,7 @@ mod tests {
     #[test]
     fn subaccount_id_to_address_test() {
         let subaccount_id = "0xb5e09b93aceb70c1711af078922fa256011d7e56000000000000000000000000";
-        let address = subaccount_id_to_injective_address(subaccount_id.to_string());
+        let address = subaccount_id_to_injective_address(SubaccountId::new(subaccount_id.to_string()).unwrap());
 
         assert_eq!(address, "inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv");
     }
