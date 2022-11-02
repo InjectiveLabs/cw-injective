@@ -3,7 +3,12 @@ use cosmwasm_std::{QuerierWrapper, StdResult};
 use injective_math::FPDecimal;
 
 use crate::oracle::{OracleHistoryOptions, OracleInfo};
-use crate::query::{DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse, OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse};
+use crate::query::{
+    DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse,
+    OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse,
+    SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TokenFactoryDenomSupplyResponse,
+    TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+};
 use crate::route::InjectiveRoute;
 use crate::volatility::TradeHistoryOptions;
 
@@ -286,5 +291,4 @@ impl<'a> InjectiveQuerier<'a> {
         let res: TokenFactoryDenomSupplyResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
-
 }

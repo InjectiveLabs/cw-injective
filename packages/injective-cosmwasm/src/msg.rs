@@ -264,11 +264,10 @@ pub fn create_burn_tokens_msg(sender: String, amount: Coin) -> CosmosMsg<Injecti
     .into()
 }
 
-
 pub fn create_new_denom_msg(sender: String, subdenom: String) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Tokenfactory,
         msg_data: InjectiveMsg::CreateDenom { sender, subdenom },
     }
-        .into()
+    .into()
 }
