@@ -26,17 +26,12 @@ impl MarketId {
     pub fn as_str(&self) -> &str {
         self.0.as_str()
     }
-}
 
-impl From<String> for MarketId {
-    fn from(market_id: String) -> Self {
-        MarketId::new(market_id).unwrap()
-    }
-}
-
-impl From<&str> for MarketId {
-    fn from(market_id: &str) -> Self {
-        MarketId::new(market_id).unwrap()
+    pub fn unchecked<S>(market_id_s: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Self(market_id_s.into().to_lowercase())
     }
 }
 
@@ -71,17 +66,12 @@ impl SubaccountId {
     pub fn as_str(&self) -> &str {
         self.0.as_str()
     }
-}
 
-impl From<String> for SubaccountId {
-    fn from(subaccount_id: String) -> Self {
-        SubaccountId::new(subaccount_id).unwrap()
-    }
-}
-
-impl From<&str> for SubaccountId {
-    fn from(subaccount_id: &str) -> Self {
-        SubaccountId::new(subaccount_id).unwrap()
+    pub fn unchecked<S>(subaccount_id_s: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Self(subaccount_id_s.into().to_lowercase())
     }
 }
 
@@ -94,11 +84,13 @@ impl Into<String> for SubaccountId {
 
 #[cfg(test)]
 mod tests {
+    use cosmwasm_std::StdError;
+
     use crate::{MarketId, SubaccountId};
 
     #[test]
-    fn subaccount_id_to_lowercase() {
-        let subaccount_id: SubaccountId = "0xB5e09b93aCEb70C1711aF078922fA256011D7e56000000000000000000000045".into();
+    fn unchecked_subaccount_id_to_lowercase() {
+        let subaccount_id = SubaccountId::unchecked("0xB5e09b93aCEb70C1711aF078922fA256011D7e56000000000000000000000045");
         let subaccount_id_str: String = subaccount_id.into();
         assert_eq!(
             subaccount_id_str,
@@ -107,12 +99,59 @@ mod tests {
     }
 
     #[test]
-    fn market_id_to_lowercase() {
-        let market_id: MarketId = "0x01EDFAB47F124748DC89998EB33144AF734484BA07099014594321729A0CA16B".into();
+    fn unchecked_market_id_to_lowercase() {
+        let market_id = MarketId::unchecked("0x01EDFAB47F124748DC89998EB33144AF734484BA07099014594321729A0CA16B");
         let market_id_str: String = market_id.into();
         assert_eq!(
             market_id_str,
             "0x01edfab47f124748dc89998eb33144af734484ba07099014594321729a0ca16b".to_lowercase()
+        );
+    }
+
+    #[test]
+    fn checked_subaccount_id_to_lowercase() {
+        let subaccount_id = SubaccountId::new("0xB5e09b93aCEb70C1711aF078922fA256011D7e56000000000000000000000045").unwrap();
+        let subaccount_id_str: String = subaccount_id.into();
+        assert_eq!(
+            subaccount_id_str,
+            "0xB5e09b93aCEb70C1711aF078922fA256011D7e56000000000000000000000045".to_lowercase()
+        );
+    }
+
+    #[test]
+    fn checked_market_id_to_lowercase() {
+        let market_id = MarketId::new("0x01EDFAB47F124748DC89998EB33144AF734484BA07099014594321729A0CA16B").unwrap();
+        let market_id_str: String = market_id.into();
+        assert_eq!(
+            market_id_str,
+            "0x01edfab47f124748dc89998eb33144af734484ba07099014594321729a0ca16b".to_lowercase()
+        );
+    }
+
+    #[test]
+    fn subaccount_id_checks() {
+        let wrong_prefix_err = SubaccountId::new("00B5e09b93aCEb70C1711aF078922fA256011D7e56000000000000000000000045").unwrap_err();
+        assert_eq!(
+            wrong_prefix_err,
+            StdError::generic_err("Invalid prefix: subaccount_id must start with 0x")
+        );
+
+        let wrong_length_err = SubaccountId::new("0xB5e09b93aCEb70C1711aF078922fA256011D7e5600000000000000000000004").unwrap_err();
+        assert_eq!(
+            wrong_length_err,
+            StdError::generic_err("Invalid length: subaccount_id must be exactly 66 characters")
+        );
+    }
+
+    #[test]
+    fn market_id_checks() {
+        let wrong_prefix_err = MarketId::new("0001EDFAB47F124748DC89998EB33144AF734484BA07099014594321729A0CA16B").unwrap_err();
+        assert_eq!(wrong_prefix_err, StdError::generic_err("Invalid prefix: market_id must start with 0x"));
+
+        let wrong_length_err = MarketId::new("0x01EDFAB47F124748DC89998EB33144AF734484BA07099014594321729A0CA16").unwrap_err();
+        assert_eq!(
+            wrong_length_err,
+            StdError::generic_err("Invalid length: market_id must be exactly 66 characters")
         );
     }
 }
