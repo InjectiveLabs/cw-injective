@@ -256,7 +256,7 @@ pub fn create_mint_tokens_msg(sender: String, amount: Coin, mint_to: String) -> 
     .into()
 }
 
-pub fn create_burn_tokens_msg(sender: String, amount: Coin, _burn_from_address: String) -> CosmosMsg<InjectiveMsgWrapper> {
+pub fn create_burn_tokens_msg(sender: String, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Tokenfactory,
         msg_data: InjectiveMsg::Burn { sender, amount },
