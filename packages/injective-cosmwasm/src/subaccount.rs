@@ -16,7 +16,7 @@ pub fn checked_address_to_subaccount_id(addr: &Addr, nonce: u32) -> SubaccountId
     let hex_nonce = format!("{:08x}", nonce);
     let nonce_str = left_pad_with_zeroes(hex_nonce, 24);
 
-    SubaccountId::new(format!("{}{}", address_str, nonce_str)).unwrap()
+    SubaccountId::new(format!("{}{}", address_str, nonce_str)).expect("failed to create subaccount_id")
 }
 
 fn left_pad_with_zeroes(mut input: String, length: usize) -> String {
@@ -79,7 +79,7 @@ mod tests {
     #[test]
     fn subaccount_id_to_address_test() {
         let subaccount_id = "0xb5e09b93aceb70c1711af078922fa256011d7e56000000000000000000000000";
-        let address = subaccount_id_to_injective_address(SubaccountId::new(subaccount_id.to_string()).unwrap());
+        let address = subaccount_id_to_injective_address(SubaccountId::new(subaccount_id.to_string()).expect("failed to create subaccount_id"));
 
         assert_eq!(address, "inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv");
     }

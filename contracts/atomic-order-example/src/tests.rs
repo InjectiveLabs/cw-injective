@@ -76,7 +76,7 @@ fn proper_initialization() {
         market_id: MarketId::new(
             "0x78c2d3af98c517b164070a739681d4bd4d293101e7ffc3a30968945329b47ec6".to_string(),
         )
-        .unwrap(),
+        .expect("failed to create market_id"),
     };
     let info = mock_info(sender_addr, &coins(1000, "earth"));
 
@@ -92,7 +92,7 @@ fn test_swap() {
     let market_id = MarketId::new(
         "0x78c2d3af98c517b164070a739681d4bd4d293101e7ffc3a30968945329b47ec6".to_string(),
     )
-    .unwrap();
+    .expect("failed to create market_id");
 
     let msg = InstantiateMsg {
         market_id: market_id.clone(),
@@ -118,7 +118,7 @@ fn test_swap() {
                     "0xade4a5f5803a439835c636395a8d648dee57b2fc000000000000000000000000"
                         .to_string(),
                 )
-                .unwrap(),
+                .expect("failed to create subaccount_id"),
                 fee_recipient: Some(env.contract.address),
                 price: i32_to_dec(1000),
                 quantity: i32_to_dec(8),

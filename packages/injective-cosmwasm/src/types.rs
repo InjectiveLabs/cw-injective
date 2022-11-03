@@ -141,6 +141,12 @@ mod tests {
             wrong_length_err,
             StdError::generic_err("Invalid length: subaccount_id must be exactly 66 characters")
         );
+
+        let wrong_length_err = SubaccountId::new("0xB5e09b93aCEb70C1711aF078922fA256011D7e560000000000000000000000451").unwrap_err();
+        assert_eq!(
+            wrong_length_err,
+            StdError::generic_err("Invalid length: subaccount_id must be exactly 66 characters")
+        );
     }
 
     #[test]
@@ -149,6 +155,12 @@ mod tests {
         assert_eq!(wrong_prefix_err, StdError::generic_err("Invalid prefix: market_id must start with 0x"));
 
         let wrong_length_err = MarketId::new("0x01EDFAB47F124748DC89998EB33144AF734484BA07099014594321729A0CA16").unwrap_err();
+        assert_eq!(
+            wrong_length_err,
+            StdError::generic_err("Invalid length: market_id must be exactly 66 characters")
+        );
+
+        let wrong_length_err = MarketId::new("0x01EDFAB47F124748DC89998EB33144AF734484BA07099014594321729A0CA16B2").unwrap_err();
         assert_eq!(
             wrong_length_err,
             StdError::generic_err("Invalid length: market_id must be exactly 66 characters")
