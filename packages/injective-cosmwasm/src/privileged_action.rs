@@ -1,3 +1,4 @@
+use crate::{MarketId, SubaccountId};
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -10,8 +11,8 @@ pub struct FPDecimalCoin {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SyntheticTrade {
-    pub market_id: String,
-    pub subaccount_id: String,
+    pub market_id: MarketId,
+    pub subaccount_id: SubaccountId,
     pub is_buy: bool,
     pub quantity: FPDecimal,
     pub price: FPDecimal,
@@ -27,9 +28,9 @@ pub struct SyntheticTradeAction {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PositionTransferAction {
-    pub market_id: String,
-    pub source_subaccount_id: String,
-    pub destination_subaccount_id: String,
+    pub market_id: MarketId,
+    pub source_subaccount_id: SubaccountId,
+    pub destination_subaccount_id: SubaccountId,
     pub quantity: FPDecimal,
 }
 
