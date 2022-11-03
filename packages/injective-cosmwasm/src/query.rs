@@ -14,7 +14,7 @@ use crate::{
     route::InjectiveRoute,
     spot::TrimmedSpotLimitOrder,
     volatility::{MetadataStatistics, TradeHistoryOptions, TradeRecord},
-    Position, SpotMarket,
+    OracleType, Position, SpotMarket,
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -103,6 +103,11 @@ pub enum InjectiveQuery {
         quote_info: Option<OracleInfo>,
         oracle_history_options: Option<OracleHistoryOptions>,
     },
+    OraclePrice {
+        oracle_type: OracleType,
+        base: String,
+        quote: String,
+    },
     TokenFactoryDenomTotalSupply {
         denom: String,
     },
@@ -162,6 +167,11 @@ pub struct OracleVolatilityResponse {
     pub volatility: Option<FPDecimal>,
     pub history_metadata: Option<MetadataStatistics>,
     pub raw_history: Option<Vec<TradeRecord>>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct OraclePriceResponse {
+    pub price: FPDecimal,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
