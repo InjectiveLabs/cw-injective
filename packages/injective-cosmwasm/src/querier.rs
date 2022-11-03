@@ -1,17 +1,17 @@
 use cosmwasm_std::{QuerierWrapper, StdResult};
+
 use injective_math::FPDecimal;
 
 use crate::oracle::{OracleHistoryOptions, OracleInfo};
 use crate::query::{
     DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse,
     OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse,
-    SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse,
-    TraderSpotOrdersResponse,
+    SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TokenFactoryDenomSupplyResponse,
+    TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
 };
+use crate::route::InjectiveRoute;
 use crate::volatility::TradeHistoryOptions;
 use crate::{MarketId, SubaccountId};
-
-use crate::route::InjectiveRoute;
 
 pub struct InjectiveQuerier<'a> {
     querier: &'a QuerierWrapper<'a, InjectiveQueryWrapper>,
@@ -296,6 +296,16 @@ impl<'a> InjectiveQuerier<'a> {
         };
 
         let res: OracleVolatilityResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_token_factory_denom_total_supply<T: Into<String>>(&self, denom: T) -> StdResult<TokenFactoryDenomSupplyResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Tokenfactory,
+            query_data: InjectiveQuery::TokenFactoryDenomTotalSupply { denom: denom.into() },
+        };
+
+        let res: TokenFactoryDenomSupplyResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 }

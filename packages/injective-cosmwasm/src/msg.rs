@@ -1,9 +1,9 @@
+use cosmwasm_std::{Addr, Coin, CosmosMsg, CustomMsg};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{derivative::DerivativeOrder, order::OrderData, route::InjectiveRoute, spot::SpotOrder};
 use crate::{MarketId, SubaccountId};
-use cosmwasm_std::{Addr, Coin, CosmosMsg, CustomMsg};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -80,6 +80,10 @@ pub enum InjectiveMsg {
         derivative_orders_to_cancel: Vec<OrderData>,
         spot_orders_to_create: Vec<SpotOrder>,
         derivative_orders_to_create: Vec<DerivativeOrder>,
+    },
+    CreateDenom {
+        sender: String,
+        subdenom: String,
     },
     /// Contracts can mint native tokens for an existing factory denom
     /// that they are the admin of.
@@ -253,10 +257,18 @@ pub fn create_mint_tokens_msg(sender: Addr, amount: Coin, mint_to: String) -> Co
     .into()
 }
 
-pub fn create_burn_tokens_msg(sender: Addr, amount: Coin, _burn_from_address: String) -> CosmosMsg<InjectiveMsgWrapper> {
+pub fn create_burn_tokens_msg(sender: Addr, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Tokenfactory,
         msg_data: InjectiveMsg::Burn { sender, amount },
+    }
+    .into()
+}
+
+pub fn create_new_denom_msg(sender: String, subdenom: String) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Tokenfactory,
+        msg_data: InjectiveMsg::CreateDenom { sender, subdenom },
     }
     .into()
 }

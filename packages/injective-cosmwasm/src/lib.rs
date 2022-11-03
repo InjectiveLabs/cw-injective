@@ -16,7 +16,7 @@ mod volatility;
 
 pub use msg::{
     create_batch_update_orders_msg, create_burn_tokens_msg, create_deposit_msg, create_derivative_market_order_msg, create_external_transfer_msg,
-    create_increase_position_margin_msg, create_liquidate_position_msg, create_mint_tokens_msg, create_register_as_dmm_msg,
+    create_increase_position_margin_msg, create_liquidate_position_msg, create_mint_tokens_msg, create_new_denom_msg, create_register_as_dmm_msg,
     create_spot_market_order_msg, create_subaccount_transfer_msg, create_withdraw_msg, InjectiveMsg, InjectiveMsgWrapper,
 };
 
@@ -32,10 +32,11 @@ pub use exchange_mock_querier::{
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use exchange_mock_querier::handlers::{
-    create_derivative_market_handler, create_oracle_volatility_handler, create_spot_market_handler, create_spot_market_mid_price_and_tob_handler,
-    create_spot_orders_up_to_amount_handler, create_subaccount_deposit_complex_handler, create_subaccount_deposit_err_returning_handler,
-    create_subaccount_deposit_handler, create_subaccount_effective_position_in_market_handler, create_subaccount_position_in_market_handler,
-    create_trader_derivative_orders_handler, create_trader_spot_orders_handler, SpotUpToAmountConsumingFunction,
+    create_denom_supply_handler, create_derivative_market_handler, create_oracle_volatility_handler, create_spot_market_handler,
+    create_spot_market_mid_price_and_tob_handler, create_spot_orders_up_to_amount_handler, create_subaccount_deposit_complex_handler,
+    create_subaccount_deposit_err_returning_handler, create_subaccount_deposit_handler, create_subaccount_effective_position_in_market_handler,
+    create_subaccount_position_in_market_handler, create_trader_derivative_orders_handler, create_trader_spot_orders_handler,
+    SpotUpToAmountConsumingFunction,
 };
 
 pub use querier::InjectiveQuerier;
