@@ -1,4 +1,5 @@
 use cosmwasm_std::{StdError, StdResult};
+use cw_storage_plus::{Key, KeyDeserialize, Prefixer, PrimaryKey};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -73,12 +74,78 @@ impl SubaccountId {
     {
         Self(subaccount_id_s.into().to_lowercase())
     }
+
+    #[inline]
+    pub fn as_bytes(&self) -> &[u8] {
+        self.0.as_bytes()
+    }
 }
 
 #[allow(clippy::from_over_into)]
 impl Into<String> for SubaccountId {
     fn into(self) -> String {
         self.0
+    }
+}
+
+impl KeyDeserialize for SubaccountId {
+    type Output = SubaccountId;
+
+    #[inline(always)]
+    fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
+        Ok(SubaccountId::unchecked(String::from_vec(value)?))
+    }
+}
+
+impl<'a> PrimaryKey<'a> for SubaccountId {
+    type Prefix = ();
+    type SubPrefix = ();
+    type Suffix = Self;
+    type SuperSuffix = Self;
+
+    fn key(&self) -> Vec<Key> {
+        // this is simple, we don't add more prefixes
+        vec![Key::Ref(self.as_bytes())]
+    }
+}
+
+impl<'a> Prefixer<'a> for SubaccountId {
+    fn prefix(&self) -> Vec<Key> {
+        vec![Key::Ref(self.as_bytes())]
+    }
+}
+
+impl KeyDeserialize for &SubaccountId {
+    type Output = SubaccountId;
+
+    #[inline(always)]
+    fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
+        Self::Output::from_vec(value)
+    }
+}
+
+impl AsRef<str> for SubaccountId {
+    #[inline]
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl<'a> PrimaryKey<'a> for &'a SubaccountId {
+    type Prefix = ();
+    type SubPrefix = ();
+    type Suffix = Self;
+    type SuperSuffix = Self;
+
+    fn key(&self) -> Vec<Key> {
+        // this is simple, we don't add more prefixes
+        vec![Key::Ref(self.as_ref().as_bytes())]
+    }
+}
+
+impl<'a> Prefixer<'a> for &'a SubaccountId {
+    fn prefix(&self) -> Vec<Key> {
+        vec![Key::Ref(self.as_bytes())]
     }
 }
 
@@ -165,5 +232,35 @@ mod tests {
             wrong_length_err,
             StdError::generic_err("Invalid length: market_id must be exactly 66 characters")
         );
+    }
+
+    #[test]
+    fn subaccount_id_unchecked_works() {
+        let a = SubaccountId::unchecked("123");
+        let aa = SubaccountId::unchecked(String::from("123"));
+        let b = SubaccountId::unchecked("be");
+        assert_eq!(a, aa);
+        assert_ne!(a, b);
+    }
+
+    #[test]
+    fn subaccount_id_as_str_works() {
+        let subaccount_id = SubaccountId::unchecked("amazing-id");
+        assert_eq!(subaccount_id.as_str(), "amazing-id");
+    }
+
+    #[test]
+    fn subaccount_id_as_bytes_works() {
+        let subaccount_id = SubaccountId::unchecked("literal-string");
+        assert_eq!(
+            subaccount_id.as_bytes(),
+            [108, 105, 116, 101, 114, 97, 108, 45, 115, 116, 114, 105, 110, 103]
+        );
+    }
+
+    #[test]
+    fn subaccount_id_implements_as_ref_for_str() {
+        let subaccount_id = SubaccountId::unchecked("literal-string");
+        assert_eq!(subaccount_id.as_ref(), "literal-string");
     }
 }
