@@ -10,8 +10,8 @@ use cosmwasm_std::{
 
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
 use injective_cosmwasm::{
-    HandlesMarketIdQuery, InjectiveMsg, InjectiveQueryWrapper, InjectiveRoute, OrderInfo,
-    SpotMarket, SpotMarketResponse, SpotOrder, WasmMockQuerier,
+    HandlesMarketIdQuery, InjectiveMsg, InjectiveQueryWrapper, InjectiveRoute, MarketId, OrderInfo,
+    SpotMarket, SpotMarketResponse, SpotOrder, SubaccountId, WasmMockQuerier,
 };
 use injective_math::FPDecimal;
 
@@ -73,7 +73,10 @@ pub fn inj_mock_deps() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, Injec
 fn proper_initialization() {
     let sender_addr = "inj1x2ck0ql2ngyxqtw8jteyc0tchwnwxv7npaungt";
     let msg = InstantiateMsg {
-        market_id: "0x78c2d3af98c517b164070a739681d4bd4d293101e7ffc3a30968945329b47ec6".to_string(),
+        market_id: MarketId::new(
+            "0x78c2d3af98c517b164070a739681d4bd4d293101e7ffc3a30968945329b47ec6".to_string(),
+        )
+        .expect("failed to create market_id"),
     };
     let info = mock_info(sender_addr, &coins(1000, "earth"));
 
@@ -86,10 +89,13 @@ fn proper_initialization() {
 fn test_swap() {
     let contract_addr = "inj14hj2tavq8fpesdwxxcu44rty3hh90vhujaxlnz";
     let sender_addr = "inj1x2ck0ql2ngyxqtw8jteyc0tchwnwxv7npaungt";
-    let market_id = "0x78c2d3af98c517b164070a739681d4bd4d293101e7ffc3a30968945329b47ec6";
+    let market_id = MarketId::new(
+        "0x78c2d3af98c517b164070a739681d4bd4d293101e7ffc3a30968945329b47ec6".to_string(),
+    )
+    .expect("failed to create market_id");
 
     let msg = InstantiateMsg {
-        market_id: market_id.to_string(),
+        market_id: market_id.clone(),
     };
     let info = mock_info(contract_addr, &coins(1000, "earth"));
     let mut deps = inj_mock_deps();
@@ -104,13 +110,16 @@ fn test_swap() {
     let res = execute(deps.as_mut_deps(), env.clone(), info, msg).unwrap();
 
     let expected_atomic_order_message = CreateSpotMarketOrder {
-        sender: env.contract.address.into_string(),
+        sender: env.contract.address.to_owned(),
         order: SpotOrder {
-            market_id: String::from(market_id),
+            market_id,
             order_info: OrderInfo {
-                subaccount_id: "0xade4a5f5803a439835c636395a8d648dee57b2fc000000000000000000000000"
-                    .to_string(),
-                fee_recipient: contract_addr.to_string(),
+                subaccount_id: SubaccountId::new(
+                    "0xade4a5f5803a439835c636395a8d648dee57b2fc000000000000000000000000"
+                        .to_string(),
+                )
+                .expect("failed to create subaccount_id"),
+                fee_recipient: Some(env.contract.address),
                 price: i32_to_dec(1000),
                 quantity: i32_to_dec(8),
             },
@@ -125,7 +134,7 @@ fn test_swap() {
         amount: _amount,
     } = &get_message_data(&res.messages, 0).msg_data
     {
-        assert_eq!(sender, contract_addr, "sender not correct")
+        assert_eq!(sender.to_string(), contract_addr, "sender not correct")
     }
     let order_message = get_message_data(&res.messages, 1);
     assert_eq!(
@@ -157,7 +166,7 @@ fn test_swap() {
         amount,
     } = &get_message_data(&messages, 0).msg_data
     {
-        assert_eq!(sender, contract_addr, "sender not correct");
+        assert_eq!(sender.to_string(), contract_addr, "sender not correct");
         assert_eq!(amount.amount, Uint128::from(8u128));
     } else {
         panic!("Wrong message type!");
@@ -169,7 +178,7 @@ fn test_swap() {
         amount,
     } = &get_message_data(&messages, 1).msg_data
     {
-        assert_eq!(sender, contract_addr, "sender not correct");
+        assert_eq!(sender.to_string(), contract_addr, "sender not correct");
         assert_eq!(amount.amount, Uint128::from(9000u128 - 8036u128));
     } else {
         panic!("Wrong message type!");
@@ -190,7 +199,7 @@ fn test_swap() {
 fn create_spot_market_handler() -> impl HandlesMarketIdQuery {
     struct Temp();
     impl HandlesMarketIdQuery for Temp {
-        fn handle(&self, market_id: String) -> QuerierResult {
+        fn handle(&self, market_id: MarketId) -> QuerierResult {
             let response = SpotMarketResponse {
                 market: Some(SpotMarket {
                     ticker: "INJ/USDT".to_string(),

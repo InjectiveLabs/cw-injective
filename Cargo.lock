@@ -607,10 +607,11 @@ dependencies = [
 
 [[package]]
 name = "injective-cosmwasm"
-version = "0.1.55"
+version = "0.1.67"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
+ "cw-storage-plus 0.15.1",
  "ethereum-types",
  "injective-math",
  "schemars",

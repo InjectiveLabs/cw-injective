@@ -1,6 +1,9 @@
-use injective_math::FPDecimal;
+use crate::{MarketId, SubaccountId};
+use cosmwasm_std::{CustomQuery, Uint128};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+use injective_math::FPDecimal;
 
 use crate::{
     derivative::EffectivePosition,
@@ -13,7 +16,6 @@ use crate::{
     volatility::{MetadataStatistics, TradeHistoryOptions, TradeRecord},
     OracleType, Position, SpotMarket,
 };
-use cosmwasm_std::CustomQuery;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -28,73 +30,73 @@ pub struct InjectiveQueryWrapper {
 pub enum InjectiveQuery {
     // SubaccountDeposit will return the subaccount deposits for a given subaccount_id and denom
     SubaccountDeposit {
-        subaccount_id: String,
+        subaccount_id: SubaccountId,
         denom: String,
     },
     SpotMarket {
-        market_id: String,
+        market_id: MarketId,
     },
     TraderSpotOrders {
-        market_id: String,
-        subaccount_id: String,
+        market_id: MarketId,
+        subaccount_id: SubaccountId,
     },
     TraderSpotOrdersToCancelUpToAmount {
-        market_id: String,
-        subaccount_id: String,
+        market_id: MarketId,
+        subaccount_id: SubaccountId,
         base_amount: FPDecimal,
         quote_amount: FPDecimal,
         strategy: i32,
         reference_price: Option<FPDecimal>,
     },
     TraderDerivativeOrdersToCancelUpToAmount {
-        market_id: String,
-        subaccount_id: String,
+        market_id: MarketId,
+        subaccount_id: SubaccountId,
         quote_amount: FPDecimal,
         strategy: i32,
         reference_price: Option<FPDecimal>,
     },
     // DerivativeMarket will return the derivative market for a given id
     DerivativeMarket {
-        market_id: String,
+        market_id: MarketId,
     },
     SubaccountPositions {
-        subaccount_id: String,
+        subaccount_id: SubaccountId,
     },
     SubaccountPositionInMarket {
-        market_id: String,
-        subaccount_id: String,
+        market_id: MarketId,
+        subaccount_id: SubaccountId,
     },
     SubaccountEffectivePositionInMarket {
-        market_id: String,
-        subaccount_id: String,
+        market_id: MarketId,
+        subaccount_id: SubaccountId,
     },
     TraderDerivativeOrders {
-        market_id: String,
-        subaccount_id: String,
+        market_id: MarketId,
+        subaccount_id: SubaccountId,
     },
     TraderTransientSpotOrders {
-        market_id: String,
-        subaccount_id: String,
+        market_id: MarketId,
+        subaccount_id: SubaccountId,
     },
     TraderTransientDerivativeOrders {
-        market_id: String,
-        subaccount_id: String,
+        market_id: MarketId,
+        subaccount_id: SubaccountId,
     },
     PerpetualMarketInfo {
-        market_id: String,
+        market_id: MarketId,
     },
     PerpetualMarketFunding {
-        market_id: String,
+        market_id: MarketId,
     },
     MarketVolatility {
-        market_id: String,
+        market_id: MarketId,
         trade_history_options: TradeHistoryOptions,
     },
     SpotMarketMidPriceAndTob {
-        market_id: String,
+        market_id: MarketId,
     },
     DerivativeMarketMidPriceAndTob {
-        market_id: String,
+        market_id: MarketId,
     },
     OracleVolatility {
         base_info: Option<OracleInfo>,
@@ -105,6 +107,9 @@ pub enum InjectiveQuery {
         oracle_type: OracleType,
         base: String,
         quote: String,
+    },
+    TokenFactoryDenomTotalSupply {
+        denom: String,
     },
 }
 
@@ -191,4 +196,9 @@ pub struct DerivativeMarketMidPriceAndTOBResponse {
     pub mid_price: Option<FPDecimal>,
     pub best_bid: Option<FPDecimal>,
     pub best_ask: Option<FPDecimal>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct TokenFactoryDenomSupplyResponse {
+    pub total_supply: Uint128,
 }

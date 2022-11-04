@@ -1,3 +1,4 @@
+use injective_cosmwasm::{MarketId, SubaccountId};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -8,9 +9,9 @@ pub const STATE: Item<ContractConfigState> = Item::new("state");
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct ContractConfigState {
-    pub market_id: String,
+    pub market_id: MarketId,
     pub owner: Addr,
-    pub contract_subaccount_id: String,
+    pub contract_subaccount_id: SubaccountId,
     pub base_denom: String,
     pub quote_denom: String,
 }

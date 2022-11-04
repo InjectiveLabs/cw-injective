@@ -1,11 +1,12 @@
 use crate::oracle::OracleType;
+use crate::MarketId;
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PerpetualMarketInfo {
-    pub market_id: String,
+    pub market_id: MarketId,
     #[serde(default)]
     pub hourly_funding_rate_cap: FPDecimal,
     #[serde(default)]
@@ -54,7 +55,7 @@ pub struct DerivativeMarket {
     #[serde(default)]
     pub oracle_scale_factor: u32,
     pub quote_denom: String,
-    pub market_id: String,
+    pub market_id: MarketId,
     pub initial_margin_ratio: FPDecimal,
     pub maintenance_margin_ratio: FPDecimal,
     pub maker_fee_rate: FPDecimal,
