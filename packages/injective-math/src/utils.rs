@@ -67,5 +67,5 @@ pub fn ensure_band<T: Ord + Display>(v: &T, min: Option<&T>, max: Option<&T>, ra
 }
 
 pub fn band_error_to_human(err: StdError, value_name: &str) -> StdError {
-    StdError::generic_err(format!("Value '{}' failed validation due to: '{}'", value_name, err.to_string()))
+    StdError::generic_err(format!("Value '{}' failed validation due to: '{}'", value_name, err))
 }
