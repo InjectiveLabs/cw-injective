@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use cosmwasm_std::{QuerierWrapper, StdResult};
 
 use injective_math::FPDecimal;
@@ -40,10 +42,12 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_derivative_market<T: Into<MarketId>>(&self, market_id: T) -> StdResult<DerivativeMarketResponse> {
+    pub fn query_derivative_market<T: Into<MarketId> + Clone>(&self, market_id: &'a T) -> StdResult<DerivativeMarketResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
-            query_data: InjectiveQuery::DerivativeMarket { market_id: market_id.into() },
+            query_data: InjectiveQuery::DerivativeMarket {
+                market_id: market_id.clone().into(),
+            },
         };
 
         let res: DerivativeMarketResponse = self.querier.query(&request.into())?;
