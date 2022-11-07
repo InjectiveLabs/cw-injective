@@ -72,7 +72,7 @@ pub use derivative_market::{
 
 pub use volatility::{MetadataStatistics, PriceRecord, TradeHistoryOptions, TradeRecord};
 
-pub use types::{MarketId, SubaccountId};
+pub use types::{MarketId, SubaccountId, TFDenom};
 
 // This export is added to all contracts that import this package, signifying that they require
 // "injective" support on the chain they run on.

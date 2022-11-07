@@ -149,6 +149,114 @@ impl<'a> Prefixer<'a> for &'a SubaccountId {
     }
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
+pub struct TFDenom(String); // format!("factory/{}/lp{}", master_address, vault_address)
+
+impl TFDenom {
+    pub fn new<S>(denom: S) -> StdResult<Self>
+    where
+        S: Into<String>,
+    {
+        let denom = denom.into();
+
+        if !denom.starts_with("factory/") {
+            return Err(StdError::generic_err(
+                "Invalid prefix: token factory denoms must start with \"factory/...\"",
+            ));
+        }
+
+        if denom.len() != "factory/".len() + 33 + "/lp".len() + 33 {
+            return Err(StdError::generic_err("Invalid length: token factorydenom must be exactly 77 characters"));
+        }
+
+        Ok(Self(denom.to_lowercase()))
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+
+    pub fn unchecked<S>(denom_s: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Self(denom_s.into().to_lowercase())
+    }
+
+    #[inline]
+    pub fn as_bytes(&self) -> &[u8] {
+        self.0.as_bytes()
+    }
+}
+
+#[allow(clippy::from_over_into)]
+impl Into<String> for TFDenom {
+    fn into(self) -> String {
+        self.0
+    }
+}
+
+impl KeyDeserialize for TFDenom {
+    type Output = TFDenom;
+
+    #[inline(always)]
+    fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
+        Ok(TFDenom::unchecked(String::from_vec(value)?))
+    }
+}
+
+impl<'a> PrimaryKey<'a> for TFDenom {
+    type Prefix = ();
+    type SubPrefix = ();
+    type Suffix = Self;
+    type SuperSuffix = Self;
+
+    fn key(&self) -> Vec<Key> {
+        // this is simple, we don't add more prefixes
+        vec![Key::Ref(self.as_bytes())]
+    }
+}
+
+impl<'a> Prefixer<'a> for TFDenom {
+    fn prefix(&self) -> Vec<Key> {
+        vec![Key::Ref(self.as_bytes())]
+    }
+}
+
+impl KeyDeserialize for &TFDenom {
+    type Output = TFDenom;
+
+    #[inline(always)]
+    fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
+        Self::Output::from_vec(value)
+    }
+}
+
+impl AsRef<str> for TFDenom {
+    #[inline]
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl<'a> PrimaryKey<'a> for &'a TFDenom {
+    type Prefix = ();
+    type SubPrefix = ();
+    type Suffix = Self;
+    type SuperSuffix = Self;
+
+    fn key(&self) -> Vec<Key> {
+        // this is simple, we don't add more prefixes
+        vec![Key::Ref(self.as_ref().as_bytes())]
+    }
+}
+
+impl<'a> Prefixer<'a> for &'a TFDenom {
+    fn prefix(&self) -> Vec<Key> {
+        vec![Key::Ref(self.as_bytes())]
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::StdError;
