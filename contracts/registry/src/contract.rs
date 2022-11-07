@@ -1,8 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, ContractInfoResponse, Deps, DepsMut, Env, MessageInfo, Order,
-    Response, StdResult, WasmQuery,
+    to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdResult,
 };
 use cw2::set_contract_version;
 use cw_storage_plus::Bound;
@@ -33,7 +32,7 @@ pub fn instantiate(
         .add_attribute("owner", info.sender))
 }
 
-#[entry_point]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn sudo(deps: DepsMut, _env: Env, msg: ExecuteMsg) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Register {
@@ -56,6 +55,7 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: ExecuteMsg) -> Result<Response, Contr
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
+    _env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
@@ -395,7 +395,13 @@ mod tests {
             is_executable: true,
         };
 
-        let err = execute(deps.as_mut(), info_contract.clone(), msg.clone()).unwrap_err();
+        let err = execute(
+            deps.as_mut(),
+            mock_env(),
+            info_contract.clone(),
+            msg.clone(),
+        )
+        .unwrap_err();
         assert_eq!(err, ContractError::Unauthorized {});
 
         let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
@@ -406,27 +412,57 @@ mod tests {
             gas_limit: 1000,
             gas_price: 20000000,
         };
-        let err = execute(deps.as_mut(), info_contract_other.clone(), msg.clone()).unwrap_err();
+        let err = execute(
+            deps.as_mut(),
+            mock_env(),
+            info_contract_other.clone(),
+            msg.clone(),
+        )
+        .unwrap_err();
         assert_eq!(err, ContractError::Unauthorized {});
-        let _res = execute(deps.as_mut(), info_contract.clone(), msg.clone()).unwrap();
+        let _res = execute(
+            deps.as_mut(),
+            mock_env(),
+            info_contract.clone(),
+            msg.clone(),
+        )
+        .unwrap();
         let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
 
         // sudo or contract can Activate
         let msg = ExecuteMsg::Activate {
             contract_address: market_maker1.clone(),
         };
-        let err = execute(deps.as_mut(), info_contract_other.clone(), msg.clone()).unwrap_err();
+        let err = execute(
+            deps.as_mut(),
+            mock_env(),
+            info_contract_other.clone(),
+            msg.clone(),
+        )
+        .unwrap_err();
         assert_eq!(err, ContractError::Unauthorized {});
-        let _res = execute(deps.as_mut(), info_contract.clone(), msg.clone()).unwrap();
+        let _res = execute(
+            deps.as_mut(),
+            mock_env(),
+            info_contract.clone(),
+            msg.clone(),
+        )
+        .unwrap();
         let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
 
         // sudo or contract can Deactivate
         let msg = ExecuteMsg::Deactivate {
             contract_address: market_maker1.clone(),
         };
-        let err = execute(deps.as_mut(), info_contract_other, msg.clone()).unwrap_err();
+        let err = execute(deps.as_mut(), mock_env(), info_contract_other, msg.clone()).unwrap_err();
         assert_eq!(err, ContractError::Unauthorized {});
-        let _res = execute(deps.as_mut(), info_contract.clone(), msg.clone()).unwrap();
+        let _res = execute(
+            deps.as_mut(),
+            mock_env(),
+            info_contract.clone(),
+            msg.clone(),
+        )
+        .unwrap();
         let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
 
         // only sudo can unregister contracts
@@ -434,7 +470,7 @@ mod tests {
             contract_address: market_maker1,
         };
 
-        let err = execute(deps.as_mut(), info_contract, msg.clone()).unwrap_err();
+        let err = execute(deps.as_mut(), mock_env(), info_contract, msg.clone()).unwrap_err();
         assert_eq!(err, ContractError::Unauthorized {});
         let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
     }
@@ -506,7 +542,7 @@ mod tests {
             contract_address: market_maker.clone(),
         };
         let info = mock_info(market_maker.as_ref(), &coins(2, "token"));
-        let _res = execute(deps.as_mut(), info, msg).unwrap();
+        let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Query by contract address
         let res = query(
@@ -539,7 +575,7 @@ mod tests {
             contract_address: market_maker.clone(),
         };
         let info = mock_info(market_maker.as_ref(), &coins(2, "token"));
-        let _res = execute(deps.as_mut(), info, msg).unwrap();
+        let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Query by contract address
         let res = query(
@@ -611,7 +647,7 @@ mod tests {
             gas_price: 15000000,
         };
         let info = mock_info(market_maker.as_ref(), &coins(2, "token"));
-        let _res = execute(deps.as_mut(), info, msg).unwrap();
+        let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Query contract info & validate
         let res = query(
