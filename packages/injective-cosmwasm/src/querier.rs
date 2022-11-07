@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use cosmwasm_std::{QuerierWrapper, StdResult};
 
 use injective_math::FPDecimal;
