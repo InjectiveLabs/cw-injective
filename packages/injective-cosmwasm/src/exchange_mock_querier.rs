@@ -479,7 +479,8 @@ pub mod handlers {
     use injective_math::FPDecimal;
 
     use crate::exchange_mock_querier::HandlesDenomSupplyQuery;
-    use crate::query::TokenFactoryDenomSupplyResponse;
+    use crate::query::{OraclePriceResponse, TokenFactoryDenomSupplyResponse};
+    use crate::OracleType;
     use crate::{
         exchange_mock_querier::TestCoin, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition, FullDerivativeMarket,
         FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery,
@@ -489,7 +490,7 @@ pub mod handlers {
         TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder, TrimmedSpotLimitOrder,
     };
 
-    use super::TestDeposit;
+    use super::{HandlesOraclePriceQuery, TestDeposit};
 
     pub fn create_subaccount_deposit_handler(coins: Vec<TestCoin>) -> Option<Box<dyn HandlesSubaccountAndDenomQuery>> {
         struct Temp {
@@ -737,6 +738,21 @@ pub mod handlers {
             history_metadata,
             raw_history,
         }))
+    }
+
+    pub fn create_oracle_query_handler(price: FPDecimal) -> Option<Box<dyn HandlesOraclePriceQuery>> {
+        struct Temp {
+            price: FPDecimal,
+        }
+        impl HandlesOraclePriceQuery for Temp {
+            fn handle(&self, _: OracleType, _: String, _: String) -> QuerierResult {
+                let response = OraclePriceResponse {
+                    price: self.price.to_owned(),
+                };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+        Some(Box::new(Temp { price }))
     }
 
     pub fn create_denom_supply_handler(supply: Uint128) -> Option<Box<dyn HandlesDenomSupplyQuery>> {
