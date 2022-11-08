@@ -170,20 +170,20 @@ impl<'a> InjectiveQuerier<'a> {
         &self,
         market_id: &'a T,
         subaccount_id: &'a P,
-        base_amount: &'a FPDecimal,
-        quote_amount: &'a FPDecimal,
+        base_amount: FPDecimal,
+        quote_amount: FPDecimal,
         strategy: i32,
-        reference_price: &'a Option<FPDecimal>,
+        reference_price: Option<FPDecimal>,
     ) -> StdResult<TraderSpotOrdersResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::TraderSpotOrdersToCancelUpToAmount {
                 market_id: market_id.clone().into(),
                 subaccount_id: subaccount_id.clone().into(),
-                base_amount: *base_amount,
-                quote_amount: *quote_amount,
+                base_amount,
+                quote_amount,
                 strategy,
-                reference_price: *reference_price,
+                reference_price,
             },
         };
 
@@ -195,18 +195,18 @@ impl<'a> InjectiveQuerier<'a> {
         &self,
         market_id: &'a T,
         subaccount_id: &'a P,
-        quote_amount: &'a FPDecimal,
+        quote_amount: FPDecimal,
         strategy: i32,
-        reference_price: &'a Option<FPDecimal>,
+        reference_price: Option<FPDecimal>,
     ) -> StdResult<TraderDerivativeOrdersResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::TraderDerivativeOrdersToCancelUpToAmount {
                 market_id: market_id.clone().into(),
                 subaccount_id: subaccount_id.clone().into(),
-                quote_amount: *quote_amount,
+                quote_amount,
                 strategy,
-                reference_price: *reference_price,
+                reference_price,
             },
         };
 
