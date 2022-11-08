@@ -1,8 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, ContractInfoResponse, Deps, DepsMut, Env, MessageInfo, Order,
-    Response, StdResult, WasmQuery,
+    to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdResult,
 };
 use cw2::set_contract_version;
 use cw_storage_plus::Bound;
@@ -33,7 +32,7 @@ pub fn instantiate(
         .add_attribute("owner", info.sender))
 }
 
-#[entry_point]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn sudo(deps: DepsMut, _env: Env, msg: ExecuteMsg) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Register {
@@ -56,11 +55,10 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: ExecuteMsg) -> Result<Response, Contr
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
-    only_owner(&env.contract.address, &deps, info)?; // we keep a path for contract owner to update it
     match msg {
         ExecuteMsg::Register { .. } => Err(ContractError::Unauthorized {}),
         ExecuteMsg::Deregister { .. } => Err(ContractError::Unauthorized {}),
@@ -68,9 +66,18 @@ pub fn execute(
             contract_address,
             gas_limit,
             gas_price,
-        } => try_update(deps, contract_address, gas_limit, gas_price),
-        ExecuteMsg::Activate { contract_address } => try_activate(deps, contract_address),
-        ExecuteMsg::Deactivate { contract_address } => try_deactivate(deps, contract_address),
+        } => {
+            only_managed_contract(&contract_address, info)?;
+            try_update(deps, contract_address, gas_limit, gas_price)
+        }
+        ExecuteMsg::Activate { contract_address } => {
+            only_managed_contract(&contract_address, info)?;
+            try_activate(deps, contract_address)
+        }
+        ExecuteMsg::Deactivate { contract_address } => {
+            only_managed_contract(&contract_address, info)?;
+            try_deactivate(deps, contract_address)
+        }
     }
 }
 
@@ -83,19 +90,11 @@ pub fn only_registry(env: Env, info: MessageInfo) -> Result<(), ContractError> {
     }
 }
 
-pub fn only_owner(
+pub fn only_managed_contract(
     contract_address: &Addr,
-    deps: &DepsMut,
     info: MessageInfo,
 ) -> Result<(), ContractError> {
-    // Query contract info
-    let query = WasmQuery::ContractInfo {
-        contract_addr: contract_address.to_string(),
-    };
-    let res: ContractInfoResponse = deps.querier.query(&query.into())?;
-
-    // Check if the sender is the owner of the contract
-    if res.creator != info.sender {
+    if contract_address != &info.sender {
         Err(ContractError::Unauthorized {})
     } else {
         Ok(())
@@ -371,6 +370,111 @@ mod tests {
         assert_eq!(1, active_contracts.contracts.len());
     }
 
+    #[test]
+    fn access_authorisation() {
+        let mut deps = mock_dependencies_with_balance(&coins(2, "token"));
+        let msg = InstantiateMsg {};
+        let info = mock_info("creator", &coins(1000, "earth"));
+
+        // we can just call .unwrap() to assert this was a success
+        let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        // Only sudo can register  contracts
+        let _registry_addr = mock_env().contract.address;
+
+        let market_maker1: Addr = Addr::unchecked("market_maker1".to_string());
+        let info_contract = mock_info(market_maker1.as_ref(), &coins(2, "token"));
+
+        let market_maker2: Addr = Addr::unchecked("market_maker2".to_string());
+        let info_contract_other = mock_info(market_maker2.as_ref(), &coins(2, "token"));
+
+        let msg = ExecuteMsg::Register {
+            contract_address: market_maker1.clone(),
+            gas_limit: 100,
+            gas_price: 10000000,
+            is_executable: true,
+        };
+
+        let err = execute(
+            deps.as_mut(),
+            mock_env(),
+            info_contract.clone(),
+            msg.clone(),
+        )
+        .unwrap_err();
+        assert_eq!(err, ContractError::Unauthorized {});
+
+        let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
+
+        // sudo or contract can Update
+        let msg = ExecuteMsg::Update {
+            contract_address: market_maker1.clone(),
+            gas_limit: 1000,
+            gas_price: 20000000,
+        };
+        let err = execute(
+            deps.as_mut(),
+            mock_env(),
+            info_contract_other.clone(),
+            msg.clone(),
+        )
+        .unwrap_err();
+        assert_eq!(err, ContractError::Unauthorized {});
+        let _res = execute(
+            deps.as_mut(),
+            mock_env(),
+            info_contract.clone(),
+            msg.clone(),
+        )
+        .unwrap();
+        let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
+
+        // sudo or contract can Activate
+        let msg = ExecuteMsg::Activate {
+            contract_address: market_maker1.clone(),
+        };
+        let err = execute(
+            deps.as_mut(),
+            mock_env(),
+            info_contract_other.clone(),
+            msg.clone(),
+        )
+        .unwrap_err();
+        assert_eq!(err, ContractError::Unauthorized {});
+        let _res = execute(
+            deps.as_mut(),
+            mock_env(),
+            info_contract.clone(),
+            msg.clone(),
+        )
+        .unwrap();
+        let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
+
+        // sudo or contract can Deactivate
+        let msg = ExecuteMsg::Deactivate {
+            contract_address: market_maker1.clone(),
+        };
+        let err = execute(deps.as_mut(), mock_env(), info_contract_other, msg.clone()).unwrap_err();
+        assert_eq!(err, ContractError::Unauthorized {});
+        let _res = execute(
+            deps.as_mut(),
+            mock_env(),
+            info_contract.clone(),
+            msg.clone(),
+        )
+        .unwrap();
+        let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
+
+        // only sudo can unregister contracts
+        let msg = ExecuteMsg::Deregister {
+            contract_address: market_maker1,
+        };
+
+        let err = execute(deps.as_mut(), mock_env(), info_contract, msg.clone()).unwrap_err();
+        assert_eq!(err, ContractError::Unauthorized {});
+        let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
+    }
+
     #[ignore]
     #[test]
     fn activation() {
@@ -500,7 +604,6 @@ mod tests {
         assert_eq!(1, active_contracts.contracts.len());
     }
 
-    #[ignore]
     #[test]
     fn update() {
         let mut deps = mock_dependencies_with_balance(&coins(2, "token"));
@@ -512,7 +615,7 @@ mod tests {
 
         // Only Registry contract can register other contracts
         let registry_addr = mock_env().contract.address;
-        let info = mock_info(registry_addr.as_ref(), &coins(2, "token"));
+        let _info = mock_info(registry_addr.as_ref(), &coins(2, "token"));
         let market_maker: Addr = Addr::unchecked("market_maker1".to_string());
         let msg = ExecuteMsg::Register {
             contract_address: market_maker.clone(),
@@ -521,7 +624,7 @@ mod tests {
             is_executable: true,
         };
 
-        let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+        let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
 
         // Query by contract address
         let res = query(
