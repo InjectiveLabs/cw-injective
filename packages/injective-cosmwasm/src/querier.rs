@@ -170,20 +170,20 @@ impl<'a> InjectiveQuerier<'a> {
         &self,
         market_id: &'a T,
         subaccount_id: &'a P,
-        base_amount: FPDecimal,
-        quote_amount: FPDecimal,
+        base_amount: &'a FPDecimal,
+        quote_amount: &'a FPDecimal,
         strategy: i32,
-        reference_price: Option<FPDecimal>,
+        reference_price: &'a Option<FPDecimal>,
     ) -> StdResult<TraderSpotOrdersResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::TraderSpotOrdersToCancelUpToAmount {
                 market_id: market_id.clone().into(),
                 subaccount_id: subaccount_id.clone().into(),
-                base_amount,
-                quote_amount,
+                base_amount: *base_amount,
+                quote_amount: *quote_amount,
                 strategy,
-                reference_price,
+                reference_price: *reference_price,
             },
         };
 
@@ -195,18 +195,18 @@ impl<'a> InjectiveQuerier<'a> {
         &self,
         market_id: &'a T,
         subaccount_id: &'a P,
-        quote_amount: FPDecimal,
+        quote_amount: &'a FPDecimal,
         strategy: i32,
-        reference_price: Option<FPDecimal>,
+        reference_price: &'a Option<FPDecimal>,
     ) -> StdResult<TraderDerivativeOrdersResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::TraderDerivativeOrdersToCancelUpToAmount {
                 market_id: market_id.clone().into(),
                 subaccount_id: subaccount_id.clone().into(),
-                quote_amount,
+                quote_amount: *quote_amount,
                 strategy,
-                reference_price,
+                reference_price: *reference_price,
             },
         };
 
@@ -292,8 +292,8 @@ impl<'a> InjectiveQuerier<'a> {
 
     pub fn query_oracle_volatility(
         &self,
-        base_info: Option<OracleInfo>,
-        quote_info: Option<OracleInfo>,
+        base_info: &'a Option<OracleInfo>,
+        quote_info: &'a Option<OracleInfo>,
         max_age: u64,
         include_raw_history: bool,
         include_metadata: bool,
@@ -301,8 +301,8 @@ impl<'a> InjectiveQuerier<'a> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Oracle,
             query_data: InjectiveQuery::OracleVolatility {
-                base_info,
-                quote_info,
+                base_info: base_info.clone(),
+                quote_info: quote_info.clone(),
                 oracle_history_options: Some(OracleHistoryOptions {
                     max_age,
                     include_raw_history,
@@ -315,10 +315,14 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_oracle_price(&self, oracle_type: OracleType, base: String, quote: String) -> StdResult<OraclePriceResponse> {
+    pub fn query_oracle_price(&self, oracle_type: &'a OracleType, base: &str, quote: &str) -> StdResult<OraclePriceResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Oracle,
-            query_data: InjectiveQuery::OraclePrice { oracle_type, base, quote },
+            query_data: InjectiveQuery::OraclePrice {
+                oracle_type: *oracle_type,
+                base: base.into(),
+                quote: quote.into(),
+            },
         };
 
         let res: OraclePriceResponse = self.querier.query(&request.into())?;
