@@ -7,7 +7,7 @@ use crate::query::{
     DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse,
     OraclePriceResponse, OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, SpotMarketMidPriceAndTOBResponse,
     SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse,
-    TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+    TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
 };
 use crate::route::InjectiveRoute;
 use crate::volatility::TradeHistoryOptions;
@@ -336,6 +336,16 @@ impl<'a> InjectiveQuerier<'a> {
         };
 
         let res: TokenFactoryDenomSupplyResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_token_factory_creation_fee<T: Into<String> + Clone>(&self) -> StdResult<TokenFactoryCreateDenomFeeResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Tokenfactory,
+            query_data: InjectiveQuery::TokenFactoryDenomCreationFee,
+        };
+
+        let res: TokenFactoryCreateDenomFeeResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 }

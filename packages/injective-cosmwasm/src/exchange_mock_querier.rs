@@ -3,15 +3,15 @@ use std::str::FromStr;
 
 use cosmwasm_std::testing::{MockApi, MockStorage};
 use cosmwasm_std::{
-    from_slice, to_binary, BankQuery, Binary, ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest, SystemError, SystemResult, Uint128,
-    WasmQuery,
+    from_slice, to_binary, BankQuery, Binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest, SystemError, SystemResult,
+    Uint128, WasmQuery,
 };
 
 use crate::{MarketId, SubaccountId};
 use injective_math::FPDecimal;
 
 use crate::oracle::{OracleHistoryOptions, OracleType};
-use crate::query::TokenFactoryDenomSupplyResponse;
+use crate::query::{TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
 use crate::volatility::TradeHistoryOptions;
 use crate::{
     Deposit, DerivativeMarket, DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery,
@@ -183,6 +183,13 @@ fn default_token_factory_denom_total_supply_handler() -> QuerierResult {
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
 
+fn default_token_factory_denom_creation_fee_handler() -> QuerierResult {
+    let response = TokenFactoryCreateDenomFeeResponse {
+        fee: vec![Coin::new(10, "inj")],
+    };
+    SystemResult::Ok(ContractResult::from(to_binary(&response)))
+}
+
 pub trait HandlesSmartQuery {
     fn handle(&self, contract_addr: &str, msg: &Binary) -> QuerierResult;
 }
@@ -251,6 +258,10 @@ pub trait HandlesDenomSupplyQuery {
     fn handle(&self, denom: String) -> QuerierResult;
 }
 
+pub trait HandlesFeeQuery {
+    fn handle(&self) -> QuerierResult;
+}
+
 pub struct WasmMockQuerier {
     pub smart_query_handler: Option<Box<dyn HandlesSmartQuery>>,
     pub bank_query_handler: Option<Box<dyn HandlesBankQuery>>,
@@ -274,6 +285,7 @@ pub struct WasmMockQuerier {
     pub oracle_volatility_response_handler: Option<Box<dyn HandlesOracleVolatilityQuery>>,
     pub oracle_price_response_handler: Option<Box<dyn HandlesOraclePriceQuery>>,
     pub token_factory_denom_total_supply_handler: Option<Box<dyn HandlesDenomSupplyQuery>>,
+    pub token_factory_denom_creation_fee_handler: Option<Box<dyn HandlesFeeQuery>>,
 }
 
 impl Querier for WasmMockQuerier {
@@ -406,6 +418,10 @@ impl WasmMockQuerier {
                     Some(handler) => handler.handle(denom),
                     None => default_token_factory_denom_total_supply_handler(),
                 },
+                InjectiveQuery::TokenFactoryDenomCreationFee => match &self.token_factory_denom_creation_fee_handler {
+                    Some(handler) => handler.handle(),
+                    None => default_token_factory_denom_creation_fee_handler(),
+                },
             },
             QueryRequest::Bank(query) => match &self.bank_query_handler {
                 Some(handler) => handler.handle(query),
@@ -447,6 +463,7 @@ impl WasmMockQuerier {
             oracle_volatility_response_handler: None,
             oracle_price_response_handler: None,
             token_factory_denom_total_supply_handler: None,
+            token_factory_denom_creation_fee_handler: None,
         }
     }
 }
@@ -474,12 +491,12 @@ impl TestDeposit {
 }
 
 pub mod handlers {
-    use cosmwasm_std::{to_binary, ContractResult, QuerierResult, SystemError, SystemResult, Uint128};
+    use cosmwasm_std::{to_binary, Coin, ContractResult, QuerierResult, SystemError, SystemResult, Uint128};
 
     use injective_math::FPDecimal;
 
-    use crate::exchange_mock_querier::HandlesDenomSupplyQuery;
-    use crate::query::{OraclePriceResponse, TokenFactoryDenomSupplyResponse};
+    use crate::exchange_mock_querier::{HandlesDenomSupplyQuery, HandlesFeeQuery};
+    use crate::query::{OraclePriceResponse, TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
     use crate::OracleType;
     use crate::{
         exchange_mock_querier::TestCoin, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition, FullDerivativeMarket,
@@ -766,5 +783,18 @@ pub mod handlers {
             }
         }
         Some(Box::new(Temp { supply }))
+    }
+
+    pub fn create_denom_creation_fee_handler(fee: Vec<Coin>) -> Option<Box<dyn HandlesFeeQuery>> {
+        struct Temp {
+            fee: Vec<Coin>,
+        }
+        impl HandlesFeeQuery for Temp {
+            fn handle(&self) -> QuerierResult {
+                let response = TokenFactoryCreateDenomFeeResponse { fee: self.fee.to_owned() };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+        Some(Box::new(Temp { fee }))
     }
 }
