@@ -339,7 +339,7 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_token_factory_creation_feec(&self) -> StdResult<TokenFactoryCreateDenomFeeResponse> {
+    pub fn query_token_factory_creation_fee(&self) -> StdResult<TokenFactoryCreateDenomFeeResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Tokenfactory,
             query_data: InjectiveQuery::TokenFactoryDenomCreationFee,
