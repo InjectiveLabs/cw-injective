@@ -418,7 +418,7 @@ impl WasmMockQuerier {
                     Some(handler) => handler.handle(denom),
                     None => default_token_factory_denom_total_supply_handler(),
                 },
-                InjectiveQuery::TokenFactoryDenomCreationFee => match &self.token_factory_denom_creation_fee_handler {
+                InjectiveQuery::TokenFactoryDenomCreationFee {} => match &self.token_factory_denom_creation_fee_handler {
                     Some(handler) => handler.handle(),
                     None => default_token_factory_denom_creation_fee_handler(),
                 },

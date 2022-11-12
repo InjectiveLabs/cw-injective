@@ -111,7 +111,7 @@ pub enum InjectiveQuery {
     TokenFactoryDenomTotalSupply {
         denom: String,
     },
-    TokenFactoryDenomCreationFee,
+    TokenFactoryDenomCreationFee {},
 }
 
 impl CustomQuery for InjectiveQueryWrapper {}
