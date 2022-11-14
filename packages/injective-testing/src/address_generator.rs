@@ -10,11 +10,49 @@ const ADDRESS_LENGTH: usize = 40;
 const ADDRESS_BYTES: usize = ADDRESS_LENGTH / 2;
 const KECCAK_OUTPUT_BYTES: usize = 32;
 const ADDRESS_BYTE_INDEX: usize = KECCAK_OUTPUT_BYTES - ADDRESS_BYTES;
+
+#[derive(Default)]
 pub struct InjectiveAddressGenerator();
 
 impl AddressGenerator for InjectiveAddressGenerator {
     fn next_address(&self, _: &mut dyn Storage) -> Addr {
         generate_inj_address()
+    }
+}
+
+pub struct StorageAwareInjectiveAddressGenerator {
+    key: String,
+}
+
+impl Default for StorageAwareInjectiveAddressGenerator {
+    fn default() -> Self {
+        Self {
+            key: "generated_addresses".to_string(),
+        }
+    }
+}
+
+impl AddressGenerator for StorageAwareInjectiveAddressGenerator {
+    fn next_address(&self, storage: &mut dyn Storage) -> Addr {
+        let generated_address = generate_inj_address();
+        let key = self.key.as_bytes();
+        let stored = storage.get(key);
+
+        match stored {
+            Some(value) => {
+                let as_string = String::from_utf8_lossy(&value);
+                let mut split = as_string.split(',').collect::<Vec<&str>>();
+                split.push(generated_address.as_str());
+                let joined_as_string = split.join(",");
+                storage.set(key, joined_as_string.as_bytes())
+            }
+            None => {
+                let value = generated_address.as_str().as_bytes();
+                storage.set(key, value);
+            }
+        }
+
+        generated_address
     }
 }
 

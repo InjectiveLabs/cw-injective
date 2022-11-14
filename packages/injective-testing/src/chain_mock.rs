@@ -1,7 +1,7 @@
 use anyhow::{bail, Result as AnyResult};
 use cosmwasm_std::{testing::MockApi, Addr, Api, Binary, BlockInfo, Coin, CustomQuery, Empty, MemoryStorage, Querier, Storage};
 use cosmwasm_std::{to_binary, StdError};
-use cw_multi_test::App;
+use cw_multi_test::{AddressGenerator, App};
 use cw_multi_test::{AppResponse, BankKeeper, BasicAppBuilder, CosmosRouter, DistributionKeeper, Module, Router, StakeKeeper, WasmKeeper};
 use injective_cosmwasm::{InjectiveMsgWrapper, InjectiveQueryWrapper};
 
@@ -281,6 +281,7 @@ pub fn mock_custom_injective_chain_app(
     query_responses: Vec<QueryResponseContainer>,
     execute_assertions: Vec<ExecuteAssertionContainer<InjectiveMsgWrapper>>,
     query_assertions: Vec<QueryAssertionContainer<InjectiveQueryWrapper>>,
+    address_generator: Option<impl AddressGenerator + 'static>,
 ) -> MockedInjectiveApp {
     let inj_handler = CustomInjectiveHandler {
         responses: CustomInjectiveHandlerResponses {
@@ -294,7 +295,10 @@ pub fn mock_custom_injective_chain_app(
         ..Default::default()
     };
 
-    let inj_wasm_keeper = WasmKeeper::<InjectiveMsgWrapper, InjectiveQueryWrapper>::new_with_custom_address_generator(InjectiveAddressGenerator());
+    let inj_wasm_keeper = match address_generator {
+        Some(generator) => WasmKeeper::<InjectiveMsgWrapper, InjectiveQueryWrapper>::new_with_custom_address_generator(generator),
+        None => WasmKeeper::<InjectiveMsgWrapper, InjectiveQueryWrapper>::new_with_custom_address_generator(InjectiveAddressGenerator()),
+    };
 
     BasicAppBuilder::new()
         .with_custom(inj_handler)
