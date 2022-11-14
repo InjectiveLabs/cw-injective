@@ -15,3 +15,7 @@ codegen-units = 1
 panic = 'abort'
 incremental = false
 overflow-checks = true
+
+[patch.crates-io]
+#cw-multi-test = { path = "../cw-multi-test" }
+cw-multi-test = { git = "https://github.com/Tofel/cw-multi-test.git", branch ="feat/custom_address_generator" }
