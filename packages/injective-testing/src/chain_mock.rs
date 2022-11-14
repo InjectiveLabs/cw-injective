@@ -55,11 +55,6 @@ where
         self.execs.borrow_mut().clear();
         self.queries.borrow_mut().clear();
     }
-
-    pub fn new(&mut self) {
-        self.execs = Rc::new(RefCell::new(vec![]));
-        self.queries = Rc::new(RefCell::new(vec![]));
-    }
 }
 
 impl Default for CachingCustomHandlerState<CustomInjectiveHandler, InjectiveMsgWrapper, InjectiveQueryWrapper> {
@@ -176,34 +171,17 @@ impl<InjectiveMsgWrapper, InjectiveQueryWrapper> Default for CustomInjectiveHand
     }
 }
 
+#[derive(Default)]
 pub struct CustomInjectiveHandlerResponses {
     pub executes: Vec<ExecuteResponseContainer>,
     pub queries: Vec<QueryResponseContainer>,
 }
 
-impl Default for CustomInjectiveHandlerResponses {
-    fn default() -> Self {
-        Self {
-            executes: vec![],
-            queries: vec![],
-        }
-    }
-}
-
+#[derive(Default)]
 pub struct CustomInjectiveHandler {
     pub state: CachingCustomHandlerState<CustomInjectiveHandler, InjectiveMsgWrapper, InjectiveQueryWrapper>,
     pub responses: CustomInjectiveHandlerResponses,
     pub assertions: CustomInjectiveHandlerAssertions<InjectiveMsgWrapper, InjectiveQueryWrapper>,
-}
-
-impl Default for CustomInjectiveHandler {
-    fn default() -> Self {
-        Self {
-            state: CachingCustomHandlerState::default(),
-            responses: CustomInjectiveHandlerResponses::default(),
-            assertions: CustomInjectiveHandlerAssertions::default(),
-        }
-    }
 }
 
 impl Module for CustomInjectiveHandler {
@@ -223,37 +201,34 @@ impl Module for CustomInjectiveHandler {
         let mut exec_calls_count = self.state.execs.borrow().len();
 
         if !self.assertions.executes.is_empty()
-            && &exec_calls_count < &self.assertions.executes.len()
+            && exec_calls_count < self.assertions.executes.len()
             && !self.assertions.executes[exec_calls_count].is_empty()
         {
             self.assertions.executes[exec_calls_count].assertion.unwrap()(&msg);
         }
 
         self.state.execs.borrow_mut().push(msg);
-        exec_calls_count = exec_calls_count + 1;
+        exec_calls_count += 1;
 
         if self.responses.executes.is_empty()
-            || &exec_calls_count > &self.responses.executes.len()
+            || exec_calls_count > self.responses.executes.len()
             || self.responses.executes[exec_calls_count - 1].is_empty()
         {
             Ok(AppResponse::default())
         } else {
             let stored_result = self.responses.executes.get(exec_calls_count - 1).unwrap().response.as_ref().unwrap();
 
+            //In order to implement the trait that method has to receive &self and neither Result nor Binary implements Copy
+            //and that the reason why I'm manually copying the underlying [u8] in order to return owned data
             match &stored_result {
-                &Ok(optional_data) => match &optional_data {
-                    Some(binary) => {
-                        let mut c: Vec<u8> = vec![0; binary.0.len()];
-                        c.clone_from_slice(&binary.0);
-
-                        Ok(AppResponse {
-                            events: vec![],
-                            data: Some(Binary(c)),
-                        })
-                    }
+                Ok(optional_data) => match &optional_data {
+                    Some(binary) => Ok(AppResponse {
+                        events: vec![],
+                        data: Some(copy_binary(binary)),
+                    }),
                     &None => Ok(AppResponse::default()),
                 },
-                &Err(e) => Err(anyhow::Error::new(StdError::generic_err(e.to_string()))),
+                Err(e) => Err(anyhow::Error::new(StdError::generic_err(e.to_string()))),
             }
         }
     }
@@ -262,30 +237,28 @@ impl Module for CustomInjectiveHandler {
         let mut query_calls_count = self.state.queries.borrow().len();
 
         if !self.assertions.queries.is_empty()
-            && &query_calls_count < &self.assertions.queries.len()
+            && query_calls_count < self.assertions.queries.len()
             && !self.assertions.queries[query_calls_count].is_empty()
         {
             self.assertions.queries[query_calls_count].assertion.unwrap()(&request);
         }
 
         self.state.queries.borrow_mut().push(request);
-        query_calls_count = query_calls_count + 1;
+        query_calls_count += 1;
 
         if self.responses.queries.is_empty()
-            || &query_calls_count > &self.responses.queries.len()
+            || query_calls_count > self.responses.queries.len()
             || self.responses.queries[query_calls_count - 1].is_empty()
         {
             Ok(Binary::default())
         } else {
             let stored_result = self.responses.queries.get(query_calls_count - 1).unwrap().response.as_ref().unwrap();
 
+            //In order to implement the trait that method has to receive &self and neither Result nor Binary implements Copy
+            //and that the reason why I'm manually copying the underlying [u8] in order to return owned data
             match &stored_result {
-                &Ok(optional_data) => {
-                    let mut c: Vec<u8> = vec![0; optional_data.0.len()];
-                    c.clone_from_slice(&optional_data.0);
-                    Ok(Binary(c))
-                }
-                &Err(e) => Err(anyhow::Error::new(StdError::generic_err(e.to_string()))),
+                Ok(optional_data) => Ok(copy_binary(optional_data)),
+                Err(e) => Err(anyhow::Error::new(StdError::generic_err(e.to_string()))),
             }
         }
     }
@@ -309,15 +282,16 @@ pub fn mock_custom_injective_chain_app(
     execute_assertions: Vec<ExecuteAssertionContainer<InjectiveMsgWrapper>>,
     query_assertions: Vec<QueryAssertionContainer<InjectiveQueryWrapper>>,
 ) -> MockedInjectiveApp {
-    let mut inj_handler = CustomInjectiveHandler::default();
-    inj_handler.responses = CustomInjectiveHandlerResponses {
-        executes: execute_respones,
-        queries: query_responses,
-    };
-
-    inj_handler.assertions = CustomInjectiveHandlerAssertions {
-        executes: execute_assertions,
-        queries: query_assertions,
+    let inj_handler = CustomInjectiveHandler {
+        responses: CustomInjectiveHandlerResponses {
+            executes: execute_respones,
+            queries: query_responses,
+        },
+        assertions: CustomInjectiveHandlerAssertions {
+            executes: execute_assertions,
+            queries: query_assertions,
+        },
+        ..Default::default()
     };
 
     let inj_wasm_keeper = WasmKeeper::<InjectiveMsgWrapper, InjectiveQueryWrapper>::new_with_custom_address_generator(InjectiveAddressGenerator());
@@ -344,4 +318,10 @@ pub fn mock_default_injective_chain_app() -> MockedInjectiveApp {
         .with_custom(inj_handler)
         .with_wasm::<CustomInjectiveHandler, WasmKeeper<InjectiveMsgWrapper, InjectiveQueryWrapper>>(inj_wasm_keeper)
         .build(no_init)
+}
+
+fn copy_binary(binary: &Binary) -> Binary {
+    let mut c: Vec<u8> = vec![0; binary.0.len()];
+    c.clone_from_slice(&binary.0);
+    Binary(c)
 }
