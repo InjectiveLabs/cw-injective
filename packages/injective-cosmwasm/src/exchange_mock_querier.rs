@@ -190,14 +190,14 @@ fn default_token_factory_denom_creation_fee_handler() -> QuerierResult {
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
 
-fn default_balance_query_handler(denom: impl Into<String>) -> QuerierResult {
+fn default_balance_bank_query_handler(denom: impl Into<String>) -> QuerierResult {
     let response = BalanceResponse {
         amount: Coin::new(1000000000000000, denom),
     };
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
 
-fn default_all_balances_query_handler() -> QuerierResult {
+fn default_all_balances_bank_query_handler() -> QuerierResult {
     let response = AllBalanceResponse {
         amount: vec![Coin::new(1000000000000000, "inj")],
     };
@@ -286,7 +286,6 @@ pub trait HandlesBankAllBalancesQuery {
 
 pub struct WasmMockQuerier {
     pub smart_query_handler: Option<Box<dyn HandlesSmartQuery>>,
-    pub bank_query_handler: Option<Box<dyn HandlesBankQuery>>,
     pub subaccount_deposit_response_handler: Option<Box<dyn HandlesSubaccountAndDenomQuery>>,
     pub spot_market_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
     pub trader_spot_orders_response_handler: Option<Box<dyn HandlesMarketAndSubaccountQuery>>,
@@ -338,11 +337,11 @@ impl WasmMockQuerier {
             QueryRequest::Bank(query) => match query {
                 BankQuery::Balance { address, denom } => match &self.balance_query_handler {
                     Some(handler) => handler.handle(address.to_string(), denom.to_string()),
-                    None => default_balance_query_handler(denom),
+                    None => default_balance_bank_query_handler(denom),
                 },
                 BankQuery::AllBalances { address } => match &self.all_balances_query_handler {
                     Some(handler) => handler.handle(address.to_string()),
-                    None => default_all_balances_query_handler(),
+                    None => default_all_balances_bank_query_handler(),
                 },
                 _ => panic!("unsupported"),
             },
@@ -473,7 +472,6 @@ impl WasmMockQuerier {
     pub fn new() -> Self {
         WasmMockQuerier {
             smart_query_handler: None,
-            bank_query_handler: None,
             subaccount_deposit_response_handler: None,
             spot_market_response_handler: None,
             trader_spot_orders_response_handler: None,
@@ -524,13 +522,12 @@ impl TestDeposit {
 }
 
 pub mod handlers {
-    use cosmwasm_std::{to_binary, Coin, ContractResult, QuerierResult, SystemError, SystemResult, Uint128};
+    use cosmwasm_std::{to_binary, AllBalanceResponse, BalanceResponse, Coin, ContractResult, QuerierResult, SystemError, SystemResult, Uint128};
 
     use injective_math::FPDecimal;
 
     use crate::exchange_mock_querier::{HandlesDenomSupplyQuery, HandlesFeeQuery};
     use crate::query::{OraclePriceResponse, TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
-    use crate::OracleType;
     use crate::{
         exchange_mock_querier::TestCoin, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition, FullDerivativeMarket,
         FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery,
@@ -539,6 +536,7 @@ pub mod handlers {
         SubaccountEffectivePositionInMarketResponse, SubaccountId, SubaccountPositionInMarketResponse, TradeRecord, TraderDerivativeOrdersResponse,
         TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder, TrimmedSpotLimitOrder,
     };
+    use crate::{HandlesBankAllBalancesQuery, HandlesBankBalanceQuery, OracleType};
 
     use super::{HandlesOraclePriceQuery, TestDeposit};
 
@@ -829,5 +827,38 @@ pub mod handlers {
             }
         }
         Some(Box::new(Temp { fee }))
+    }
+
+    pub fn create_simple_balance_bank_query_handler(balances: Vec<Coin>) -> Option<Box<dyn HandlesBankBalanceQuery>> {
+        struct Temp {
+            balances: Vec<Coin>,
+        }
+        impl HandlesBankBalanceQuery for Temp {
+            fn handle(&self, _: String, denom: String) -> QuerierResult {
+                let balances = self.balances.to_owned();
+                let empty = Coin::new(0, denom.clone());
+                let balance = balances.iter().find(|b| -> bool { b.denom == denom }).unwrap_or(&empty);
+                let res = BalanceResponse { amount: balance.to_owned() };
+
+                SystemResult::Ok(ContractResult::from(to_binary(&res)))
+            }
+        }
+        Some(Box::new(Temp { balances }))
+    }
+
+    pub fn create_simple_all_balances_bank_query_handler(balances: Vec<Coin>) -> Option<Box<dyn HandlesBankAllBalancesQuery>> {
+        struct Temp {
+            balances: Vec<Coin>,
+        }
+        impl HandlesBankAllBalancesQuery for Temp {
+            fn handle(&self, _: String) -> QuerierResult {
+                let res = AllBalanceResponse {
+                    amount: self.balances.to_owned(),
+                };
+
+                SystemResult::Ok(ContractResult::from(to_binary(&res)))
+            }
+        }
+        Some(Box::new(Temp { balances }))
     }
 }
