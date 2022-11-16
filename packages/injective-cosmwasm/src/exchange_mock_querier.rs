@@ -1,24 +1,24 @@
 use std::marker::PhantomData;
 use std::str::FromStr;
 
+use cosmwasm_std::testing::{MockApi, MockStorage};
 use cosmwasm_std::{
-    BankQuery, Binary, Coin, ContractResult, from_slice, OwnedDeps, Querier, QuerierResult, QueryRequest, SystemError, SystemResult, to_binary,
+    from_slice, to_binary, BankQuery, Binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest, SystemError, SystemResult,
     Uint128, WasmQuery,
 };
-use cosmwasm_std::testing::{MockApi, MockStorage};
 
 use injective_math::FPDecimal;
 
-use crate::{MarketId, SubaccountId};
+use crate::oracle::{OracleHistoryOptions, OracleType};
+use crate::query::{TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
+use crate::volatility::TradeHistoryOptions;
 use crate::{
     Deposit, DerivativeMarket, DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery,
     InjectiveQueryWrapper, MarketVolatilityResponse, OracleInfo, OracleVolatilityResponse, PerpetualMarketFundingResponse,
     PerpetualMarketInfoResponse, SpotMarket, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse, SubaccountDepositResponse,
     SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
 };
-use crate::oracle::{OracleHistoryOptions, OracleType};
-use crate::query::{TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
-use crate::volatility::TradeHistoryOptions;
+use crate::{MarketId, SubaccountId};
 
 pub fn mock_dependencies() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQueryWrapper> {
     let custom_querier: WasmMockQuerier = WasmMockQuerier::new();
@@ -491,21 +491,23 @@ impl TestDeposit {
 }
 
 pub mod handlers {
-    use cosmwasm_std::{AllBalanceResponse, BalanceResponse, BankQuery, Coin, ContractResult, QuerierResult, SystemError, SystemResult, to_binary, Uint128};
+    use cosmwasm_std::{
+        to_binary, AllBalanceResponse, BalanceResponse, BankQuery, Coin, ContractResult, QuerierResult, SystemError, SystemResult, Uint128,
+    };
 
     use injective_math::FPDecimal;
 
-    use crate::{HandlesBankQuery, OracleType};
+    use crate::exchange_mock_querier::{HandlesDenomSupplyQuery, HandlesFeeQuery};
+    use crate::query::{OraclePriceResponse, TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
     use crate::{
-        Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition, exchange_mock_querier::TestCoin, FullDerivativeMarket,
+        exchange_mock_querier::TestCoin, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition, FullDerivativeMarket,
         FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery,
         HandlesSubaccountAndDenomQuery, HandlesTraderSpotOrdersToCancelUpToAmountQuery, MarketId, MetadataStatistics, OracleVolatilityResponse,
         Position, SpotMarket, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse, SubaccountDepositResponse,
-        SubaccountEffectivePositionInMarketResponse, SubaccountId, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TradeRecord,
+        SubaccountEffectivePositionInMarketResponse, SubaccountId, SubaccountPositionInMarketResponse, TradeRecord, TraderDerivativeOrdersResponse,
         TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder, TrimmedSpotLimitOrder,
     };
-    use crate::exchange_mock_querier::{HandlesDenomSupplyQuery, HandlesFeeQuery};
-    use crate::query::{OraclePriceResponse, TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
+    use crate::{HandlesBankQuery, OracleType};
 
     use super::{HandlesOraclePriceQuery, TestDeposit};
 
@@ -799,7 +801,7 @@ pub mod handlers {
     }
 
     // Creates a simple bank query handler, that will return same balance for every address
-     pub fn create_simple_bank_query_handler(balances: Vec<Coin>) -> Option<Box<dyn HandlesBankQuery>> {
+    pub fn create_simple_bank_query_handler(balances: Vec<Coin>) -> Option<Box<dyn HandlesBankQuery>> {
         struct Temp {
             balances: Vec<Coin>,
         }
@@ -809,24 +811,26 @@ pub mod handlers {
                     // BankQuery::Supply { .. } => {
                     //     panic!("Not implemented")
                     // }
-                    BankQuery::Balance { address, denom  } => {
+                    BankQuery::Balance { address: _, denom } => {
                         let balances = self.balances.to_owned();
                         let empty = Coin::new(0, denom);
-                        let balance = balances.iter().find(|b| -> bool { &b.denom == denom}).unwrap_or(&empty);
-                        let res = BalanceResponse{ amount:   balance.to_owned()};
+                        let balance = balances.iter().find(|b| -> bool { &b.denom == denom }).unwrap_or(&empty);
+                        let res = BalanceResponse { amount: balance.to_owned() };
                         to_binary(&res)
                     }
                     BankQuery::AllBalances { .. } => {
-                        let res = AllBalanceResponse{ amount: self.balances.to_owned()};
+                        let res = AllBalanceResponse {
+                            amount: self.balances.to_owned(),
+                        };
                         to_binary(&res)
                     }
-                    _ => {panic!("Not implemented")}
+                    _ => {
+                        panic!("Not implemented")
+                    }
                 };
                 SystemResult::Ok(ContractResult::from(response))
             }
         }
         Some(Box::new(Temp { balances }))
     }
-
-
 }

@@ -9,10 +9,10 @@ pub use exchange::Deposit;
 #[cfg(not(target_arch = "wasm32"))]
 pub use exchange_mock_querier::handlers::{
     create_denom_creation_fee_handler, create_denom_supply_handler, create_derivative_market_handler, create_oracle_query_handler,
-    create_oracle_volatility_handler, create_spot_market_handler, create_spot_market_mid_price_and_tob_handler,
+    create_oracle_volatility_handler, create_simple_bank_query_handler, create_spot_market_handler, create_spot_market_mid_price_and_tob_handler,
     create_spot_orders_up_to_amount_handler, create_subaccount_deposit_complex_handler, create_subaccount_deposit_err_returning_handler,
     create_subaccount_deposit_handler, create_subaccount_effective_position_in_market_handler, create_subaccount_position_in_market_handler,
-    create_trader_derivative_orders_handler, create_trader_spot_orders_handler, create_simple_bank_query_handler, SpotUpToAmountConsumingFunction,
+    create_trader_derivative_orders_handler, create_trader_spot_orders_handler, SpotUpToAmountConsumingFunction,
 };
 #[cfg(not(target_arch = "wasm32"))]
 pub use exchange_mock_querier::{
