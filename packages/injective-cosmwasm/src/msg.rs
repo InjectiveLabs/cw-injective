@@ -99,6 +99,13 @@ pub enum InjectiveMsg {
         sender: Addr,
         amount: Coin,
     },
+    /// Sets metadata of token-factory token
+    SetTokenMetadata {
+        denom: String,
+        name: String,
+        symbol: String,
+        decimals: u8,
+    },
 }
 
 pub fn create_deposit_msg(sender: Addr, subaccount_id: SubaccountId, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
@@ -269,6 +276,19 @@ pub fn create_new_denom_msg(sender: String, subdenom: String) -> CosmosMsg<Injec
     InjectiveMsgWrapper {
         route: InjectiveRoute::Tokenfactory,
         msg_data: InjectiveMsg::CreateDenom { sender, subdenom },
+    }
+    .into()
+}
+
+pub fn create_set_token_metadata_msg(denom: String, name: String, symbol: String, decimals: u8) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Tokenfactory,
+        msg_data: InjectiveMsg::SetTokenMetadata {
+            denom,
+            name,
+            symbol,
+            decimals,
+        },
     }
     .into()
 }
