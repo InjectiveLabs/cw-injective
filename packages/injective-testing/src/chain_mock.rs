@@ -218,8 +218,8 @@ impl Module for CustomInjectiveHandler {
         } else {
             let stored_result = self.responses.executes.get(exec_calls_count - 1).unwrap().response.as_ref().unwrap();
 
-            //In order to implement the trait that method has to receive &self and neither Result nor Binary implements Copy
-            //and that the reason why I'm manually copying the underlying [u8] in order to return owned data
+            // In order to implement the trait that method has to receive &self and neither Result nor Binary implements Copy
+            // and that's the reason why I'm manually copying the underlying [u8] in order to return owned data
             match &stored_result {
                 Ok(optional_data) => match &optional_data {
                     Some(binary) => Ok(AppResponse {
@@ -254,8 +254,8 @@ impl Module for CustomInjectiveHandler {
         } else {
             let stored_result = self.responses.queries.get(query_calls_count - 1).unwrap().response.as_ref().unwrap();
 
-            //In order to implement the trait that method has to receive &self and neither Result nor Binary implements Copy
-            //and that the reason why I'm manually copying the underlying [u8] in order to return owned data
+            // In order to implement the trait that method has to receive &self and neither Result nor Binary implements Copy
+            // and that's the reason why I'm manually copying the underlying [u8] in order to return owned data
             match &stored_result {
                 Ok(optional_data) => Ok(copy_binary(optional_data)),
                 Err(e) => Err(anyhow::Error::new(StdError::generic_err(e.to_string()))),
