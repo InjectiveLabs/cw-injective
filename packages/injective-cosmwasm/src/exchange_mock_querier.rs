@@ -522,7 +522,9 @@ impl TestDeposit {
 }
 
 pub mod handlers {
-    use cosmwasm_std::{to_binary, AllBalanceResponse, BalanceResponse, Coin, ContractResult, QuerierResult, SystemError, SystemResult, Uint128};
+    use cosmwasm_std::{
+        to_binary, AllBalanceResponse, BalanceResponse, Binary, Coin, ContractResult, QuerierResult, StdResult, SystemError, SystemResult, Uint128,
+    };
 
     use injective_math::FPDecimal;
 
@@ -530,7 +532,7 @@ pub mod handlers {
     use crate::query::{OraclePriceResponse, TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
     use crate::{
         exchange_mock_querier::TestCoin, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition, FullDerivativeMarket,
-        FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery,
+        FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery, HandlesSmartQuery,
         HandlesSubaccountAndDenomQuery, HandlesTraderSpotOrdersToCancelUpToAmountQuery, MarketId, MetadataStatistics, OracleVolatilityResponse,
         Position, SpotMarket, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse, SubaccountDepositResponse,
         SubaccountEffectivePositionInMarketResponse, SubaccountId, SubaccountPositionInMarketResponse, TradeRecord, TraderDerivativeOrdersResponse,
@@ -860,5 +862,20 @@ pub mod handlers {
             }
         }
         Some(Box::new(Temp { balances }))
+    }
+
+    pub fn create_smart_query_handler(result: Result<Binary, SystemError>) -> Option<Box<dyn HandlesSmartQuery>> {
+        struct Temp {
+            result: Result<Binary, SystemError>,
+        }
+        impl HandlesSmartQuery for Temp {
+            fn handle(&self, _contract_addr: &str, _msg: &Binary) -> QuerierResult {
+                match self.result.clone() {
+                    Ok(resp) => SystemResult::Ok(ContractResult::from(StdResult::Ok(resp))),
+                    Err(err) => SystemResult::Err(err),
+                }
+            }
+        }
+        Some(Box::new(Temp { result }))
     }
 }
