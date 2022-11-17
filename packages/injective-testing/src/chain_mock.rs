@@ -214,22 +214,22 @@ impl Module for CustomInjectiveHandler {
             || exec_calls_count > self.responses.executes.len()
             || self.responses.executes[exec_calls_count - 1].is_empty()
         {
-            Ok(AppResponse::default())
-        } else {
-            let stored_result = self.responses.executes.get(exec_calls_count - 1).unwrap().response.as_ref().unwrap();
+            return Ok(AppResponse::default());
+        }
 
-            // In order to implement the trait that method has to receive &self and neither Result nor Binary implements Copy
-            // and that's the reason why I'm manually copying the underlying [u8] in order to return owned data
-            match &stored_result {
-                Ok(optional_data) => match &optional_data {
-                    Some(binary) => Ok(AppResponse {
-                        events: vec![],
-                        data: Some(copy_binary(binary)),
-                    }),
-                    &None => Ok(AppResponse::default()),
-                },
-                Err(e) => Err(anyhow::Error::new(StdError::generic_err(e.to_string()))),
-            }
+        let stored_result = self.responses.executes.get(exec_calls_count - 1).unwrap().response.as_ref().unwrap();
+
+        // In order to implement the trait that method has to receive &self and neither Result nor Binary implements Copy
+        // and that's the reason why I'm manually copying the underlying [u8] in order to return owned data
+        match &stored_result {
+            Ok(optional_data) => match &optional_data {
+                Some(binary) => Ok(AppResponse {
+                    events: vec![],
+                    data: Some(copy_binary(binary)),
+                }),
+                &None => Ok(AppResponse::default()),
+            },
+            Err(e) => Err(anyhow::Error::new(StdError::generic_err(e.to_string()))),
         }
     }
 
