@@ -13,7 +13,8 @@ pub use exchange_mock_querier::*;
 pub use msg::{
     create_batch_update_orders_msg, create_burn_tokens_msg, create_deposit_msg, create_derivative_market_order_msg, create_external_transfer_msg,
     create_increase_position_margin_msg, create_liquidate_position_msg, create_mint_tokens_msg, create_new_denom_msg, create_register_as_dmm_msg,
-    create_spot_market_order_msg, create_subaccount_transfer_msg, create_withdraw_msg, InjectiveMsg, InjectiveMsgWrapper,
+    create_set_token_metadata_msg, create_spot_market_order_msg, create_subaccount_transfer_msg, create_withdraw_msg, InjectiveMsg,
+    InjectiveMsgWrapper,
 };
 pub use oracle::{OracleInfo, OracleType};
 pub use order::{OrderData, OrderInfo};
