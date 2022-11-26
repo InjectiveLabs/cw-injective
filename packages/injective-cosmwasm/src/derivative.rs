@@ -29,6 +29,34 @@ pub struct Position {
     pub cumulative_funding_entry: FPDecimal,
 }
 
+impl Position {
+    pub fn get_position_value(&mut self, valuation_price: FPDecimal, cumulative_funding: FPDecimal) -> FPDecimal {
+        if self.isLong {
+            let pnl = self.quantity * (valuation_price - self.entry_price);
+            let unrealized_funding = self.quantity * (self.cumulative_funding_entry - cumulative_funding);
+
+            return self.margin + pnl + unrealized_funding;
+        }
+
+        let pnl = self.quantity * (self.entry_price - valuation_price);
+        let unrealized_funding = self.quantity * (cumulative_funding - self.cumulative_funding_entry);
+
+        self.margin + pnl + unrealized_funding
+    }
+
+    pub fn apply_funding(&mut self, cumulative_funding: FPDecimal) {
+        let unrealized_funding = self.quantity
+            * if self.isLong {
+                self.cumulative_funding_entry - cumulative_funding
+            } else {
+                cumulative_funding - self.cumulative_funding_entry
+            };
+
+        self.margin += unrealized_funding;
+        self.cumulative_funding_entry = cumulative_funding;
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct EffectivePosition {
     #[serde(default)]
