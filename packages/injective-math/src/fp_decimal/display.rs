@@ -25,7 +25,6 @@ impl fmt::Display for FPDecimal {
 
 #[cfg(test)]
 mod tests {
-
     use crate::FPDecimal;
     use bigint::U256;
 

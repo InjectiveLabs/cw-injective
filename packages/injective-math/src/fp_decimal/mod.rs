@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use bigint::U256;
-use cosmwasm_std::Uint256;
+use cosmwasm_std::{Uint128, Uint256};
 use schemars::JsonSchema;
 // pub struct FPDecimal(#[schemars(with = "String")] pub i128);
 
@@ -56,6 +56,19 @@ impl From<FPDecimal> for u128 {
 impl From<U256> for FPDecimal {
     fn from(x: U256) -> FPDecimal {
         FPDecimal { num: x, sign: 1 }
+    }
+}
+
+impl From<FPDecimal> for Uint128 {
+    fn from(x: FPDecimal) -> Uint128 {
+        let number: u128 = x.into();
+        number.into()
+    }
+}
+
+impl From<Uint128> for FPDecimal {
+    fn from(x: Uint128) -> FPDecimal {
+        FPDecimal::from_str(&x.to_string()).unwrap()
     }
 }
 
