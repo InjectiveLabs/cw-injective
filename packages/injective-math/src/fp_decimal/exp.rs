@@ -1,5 +1,6 @@
 /// Exponential functions for FPDecimal
 use crate::fp_decimal::{FPDecimal, U256};
+use num::pow::Pow;
 
 impl FPDecimal {
     // a^b
@@ -52,11 +53,19 @@ impl FPDecimal {
     }
 }
 
+impl Pow<FPDecimal> for FPDecimal {
+    type Output = Self;
+    fn pow(self, rhs: FPDecimal) -> Self::Output {
+        Self::_pow(self, rhs)
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
     use crate::FPDecimal;
     use bigint::U256;
+    use num::pow::Pow;
 
     #[test]
     fn test_exp() {
@@ -80,8 +89,36 @@ mod tests {
     }
 
     #[test]
-    fn test_zero() {
+    fn test_pow_zero() {
         // FPDecimal::_ln(FPDecimal::zero());
-        FPDecimal::_pow(FPDecimal::zero(), FPDecimal::one().div(2i128));
+        FPDecimal::pow(FPDecimal::zero(), FPDecimal::one().div(2i128));
+        assert_eq!(FPDecimal::ZERO.pow(FPDecimal::ONE), FPDecimal::ZERO);
+    }
+
+    #[test]
+    fn test_pow_exp() {
+        assert_eq!(FPDecimal::E.pow(FPDecimal::ONE), FPDecimal::E);
+    }
+
+    #[test]
+    fn test_pow_exp0() {
+        assert_eq!(FPDecimal::E.pow(FPDecimal::zero()), FPDecimal::ONE);
+    }
+
+    #[test]
+    fn test_pow_exp10() {
+        assert_eq!(
+            FPDecimal::E.pow(FPDecimal {
+                num: U256([10, 0, 0, 0]) * FPDecimal::ONE.num,
+                sign: 1
+            }),
+            FPDecimal::E_10
+        );
+    }
+
+    #[test]
+    fn test_pow_zero_2() {
+        // FPDecimal::_ln(FPDecimal::zero());
+        FPDecimal::ZERO.pow(FPDecimal::one().div(2i128));
     }
 }
