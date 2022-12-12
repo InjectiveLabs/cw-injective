@@ -20,33 +20,33 @@ impl FPDecimal {
         x = FPDecimal::_change_range(x);
         let pi_by_2 = FPDecimal::PI / FPDecimal::TWO;
         let pi_plus_pi_by_2 = FPDecimal::PI + FPDecimal::PI / FPDecimal::TWO;
-        
+
         if (FPDecimal::ZERO == x) || (FPDecimal::PI == x) {
             return FPDecimal::ZERO;
-        } 
-        
+        }
+
         if pi_by_2 == x {
             return FPDecimal::ONE;
-        } 
-        
+        }
+
         if pi_plus_pi_by_2 == x {
             return FPDecimal::ZERO - FPDecimal::ONE;
-        } 
-        
+        }
+
         if FPDecimal::ZERO < x && x < pi_by_2 {
             return FPDecimal::_taylor_expansion(x);
         }
-        
+
         if pi_by_2 < x && x < FPDecimal::PI {
             return FPDecimal::_taylor_expansion(FPDecimal::PI - x);
-        } 
-        
+        }
+
         if FPDecimal::PI < x && x < pi_plus_pi_by_2 {
             let mut output = FPDecimal::_taylor_expansion(x - FPDecimal::PI);
             output.sign = 0;
             return output;
         }
-        
+
         let mut output = FPDecimal::_taylor_expansion(FPDecimal::PI * FPDecimal::TWO - x);
         output.sign = 0;
         output
