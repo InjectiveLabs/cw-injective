@@ -19,7 +19,7 @@ impl<'de> de::Visitor<'de> for FPDecimalVisitor {
     {
         match FPDecimal::from_str(v) {
             Ok(d) => Ok(d),
-            Err(e) => Err(E::custom(format!("Error parsing FPDecimal '{}': {}", v, e))),
+            Err(e) => Err(E::custom(format!("Error parsing FPDecimal '{v}': {e}"))),
         }
     }
 }
