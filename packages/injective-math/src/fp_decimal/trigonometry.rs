@@ -22,29 +22,29 @@ impl FPDecimal {
         let pi_plus_pi_by_2 = FPDecimal::PI + FPDecimal::PI / FPDecimal::TWO;
         
         if (FPDecimal::ZERO == x) || (FPDecimal::PI == x) {
-            return FPDecimal::ZERO
+            return FPDecimal::ZERO;
         } 
         
         if pi_by_2 == x {
-            return FPDecimal::ONE
+            return FPDecimal::ONE;
         } 
         
         if pi_plus_pi_by_2 == x {
-            return FPDecimal::ZERO - FPDecimal::ONE
+            return FPDecimal::ZERO - FPDecimal::ONE;
         } 
         
         if FPDecimal::ZERO < x && x < pi_by_2 {
-            return FPDecimal::_taylor_expansion(x)
+            return FPDecimal::_taylor_expansion(x);
         }
         
         if pi_by_2 < x && x < FPDecimal::PI {
-            return FPDecimal::_taylor_expansion(FPDecimal::PI - x)
+            return FPDecimal::_taylor_expansion(FPDecimal::PI - x);
         } 
         
         if FPDecimal::PI < x && x < pi_plus_pi_by_2 {
             let mut output = FPDecimal::_taylor_expansion(x - FPDecimal::PI);
             output.sign = 0;
-            return output
+            return output;
         }
         
         let mut output = FPDecimal::_taylor_expansion(FPDecimal::PI * FPDecimal::TWO - x);
@@ -97,7 +97,6 @@ mod tests {
 
     #[test]
     fn test_cosine_one() {
-        //assert!(FPDecimal::ONE.imprecise_cos() < FPDecimal::ONE);
         almost_eq(FPDecimal::ONE.imprecise_cos(), FPDecimal::from_str("0.54030230586").unwrap());
     }
 
@@ -121,7 +120,6 @@ mod tests {
 
     #[test]
     fn test_sine_negative_one() {
-        //println!("#############{:?}", (FPDecimal::ZERO - FPDecimal::ONE).imprecise_sin());
         almost_eq(
             (FPDecimal::ZERO - FPDecimal::ONE).imprecise_sin(),
             FPDecimal::from_str("-0.8414709848").unwrap(),
