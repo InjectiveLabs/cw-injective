@@ -182,6 +182,7 @@ pub struct CustomInjectiveHandler {
     pub state: CachingCustomHandlerState<CustomInjectiveHandler, InjectiveMsgWrapper, InjectiveQueryWrapper>,
     pub responses: CustomInjectiveHandlerResponses,
     pub assertions: CustomInjectiveHandlerAssertions<InjectiveMsgWrapper, InjectiveQueryWrapper>,
+    pub enable_debug: bool
 }
 
 impl Module for CustomInjectiveHandler {
@@ -207,8 +208,12 @@ impl Module for CustomInjectiveHandler {
             self.assertions.executes[exec_calls_count].assertion.unwrap()(&msg);
         }
 
-        self.state.execs.borrow_mut().push(msg);
+        self.state.execs.borrow_mut().push(msg.clone());
         exec_calls_count += 1;
+
+        if self.enable_debug {
+            println!("[{}] Execute mesage: {:?}", exec_calls_count, msg);
+        }
 
         if self.responses.executes.is_empty()
             || exec_calls_count > self.responses.executes.len()
@@ -243,8 +248,12 @@ impl Module for CustomInjectiveHandler {
             self.assertions.queries[query_calls_count].assertion.unwrap()(&request);
         }
 
-        self.state.queries.borrow_mut().push(request);
+        self.state.queries.borrow_mut().push(request.clone());
         query_calls_count += 1;
+
+        if self.enable_debug {
+            println!("[{}] Query request: {:?}", query_calls_count, request);
+        }
 
         if self.responses.queries.is_empty()
             || query_calls_count > self.responses.queries.len()
@@ -282,6 +291,7 @@ pub fn mock_custom_injective_chain_app(
     execute_assertions: Vec<ExecuteAssertionContainer<InjectiveMsgWrapper>>,
     query_assertions: Vec<QueryAssertionContainer<InjectiveQueryWrapper>>,
     address_generator: Option<impl AddressGenerator + 'static>,
+    enable_debug: bool
 ) -> MockedInjectiveApp {
     let inj_handler = CustomInjectiveHandler {
         responses: CustomInjectiveHandlerResponses {
@@ -292,6 +302,7 @@ pub fn mock_custom_injective_chain_app(
             executes: execute_assertions,
             queries: query_assertions,
         },
+        enable_debug,
         ..Default::default()
     };
 
