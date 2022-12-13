@@ -4,7 +4,7 @@ use cosmwasm_std::{
     to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdResult,
 };
 use cw2::set_contract_version;
-use cw_storage_plus::Bound;
+use cw_storage_plus::{Bound};
 use cw_utils::maybe_addr;
 
 use crate::error::ContractError;
@@ -12,7 +12,7 @@ use crate::msg::{
     ContractExecutionParams, ContractResponse, ContractsResponse, ExecuteMsg, InstantiateMsg,
     QueryMsg,
 };
-use crate::state::{contracts, Contract, ACTIVE_CONTRACT};
+use crate::state::{contracts, Contract};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:registry";
@@ -67,21 +67,21 @@ pub fn execute(
             gas_limit,
             gas_price,
         } => {
-            only_managed_contract(&contract_address, info)?;
+            ensure_only_managed_contract(&contract_address, info)?;
             try_update(deps, contract_address, gas_limit, gas_price)
         }
         ExecuteMsg::Activate { contract_address } => {
-            only_managed_contract(&contract_address, info)?;
+            ensure_only_managed_contract(&contract_address, info)?;
             try_activate(deps, contract_address)
         }
         ExecuteMsg::Deactivate { contract_address } => {
-            only_managed_contract(&contract_address, info)?;
+            ensure_only_managed_contract(&contract_address, info)?;
             try_deactivate(deps, contract_address)
         }
     }
 }
 
-pub fn only_registry(env: Env, info: MessageInfo) -> Result<(), ContractError> {
+pub fn ensure_only_registry(env: Env, info: MessageInfo) -> Result<(), ContractError> {
     // Check if the sender is the registry contract address (only wasmx module can do this)
     if env.contract.address != info.sender {
         Err(ContractError::Unauthorized {})
@@ -90,7 +90,7 @@ pub fn only_registry(env: Env, info: MessageInfo) -> Result<(), ContractError> {
     }
 }
 
-pub fn only_managed_contract(
+pub fn ensure_only_managed_contract(
     contract_address: &Addr,
     info: MessageInfo,
 ) -> Result<(), ContractError> {
@@ -204,9 +204,16 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetContracts { start_after, limit } => {
             to_binary(&query_contracts(deps, start_after, limit)?)
         }
-        QueryMsg::GetActiveContracts { start_after, limit } => {
-            to_binary(&query_active_contracts(deps, start_after, limit)?)
-        }
+        QueryMsg::GetActiveContracts {
+            min_gas_price,
+            start_after,
+            limit,
+        } => to_binary(&query_active_contracts(
+            deps,
+            min_gas_price,
+            start_after,
+            limit,
+        )?),
     }
 }
 
@@ -257,18 +264,40 @@ fn query_contracts(
 
 fn query_active_contracts(
     deps: Deps,
-    start_after: Option<String>,
+    min_gas_price: Option<u64>,
+    start_after: Option<(u64, String)>,
     limit: Option<u32>,
 ) -> StdResult<ContractsResponse> {
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
-    let addr = maybe_addr(deps.api, start_after)?;
-    let start = addr.map(Bound::exclusive);
-    // iterate over all and return only executable contracts
-    let contracts = contracts()
+
+    let min_gas = min_gas_price.unwrap_or(1_u64);
+    let start: Bound<(u64, Addr)> = Bound::inclusive((min_gas, Addr::unchecked("")));
+    let end: Option<Bound<(u64, Addr)>> = match start_after {
+        None => None,
+        Some(key) => {
+            let addr = maybe_addr(deps.api, Some(key.1))?;
+            match addr {
+                None => None,
+                Some(addr) => Some(Bound::exclusive((key.0, addr))),
+            }
+        }
+    };
+
+    // let end: Option<Bound<(u64, Addr)>> = match min_gas_price {
+    //     None => None,
+    //     Some(min_price) => Some(Bound::inclusive((min_price + 1, Addr::unchecked("")))),
+    // };
+
+    let contracts_page = contracts()
         .idx
-        .active
-        .prefix(ACTIVE_CONTRACT)
-        .range(deps.storage, start, None, Order::Ascending)
+        .active_by_gasprice_addr
+        .range(
+            deps.storage,
+            Some(start),
+            end,
+            Order::Descending,
+        )
+        // .rev()
         .take(limit)
         .map(|item| {
             item.map(|(addr, contract)| ContractExecutionParams {
@@ -279,7 +308,9 @@ fn query_active_contracts(
             })
         })
         .collect::<StdResult<_>>()?;
-    Ok(ContractsResponse { contracts })
+    Ok(ContractsResponse {
+        contracts: contracts_page,
+    })
 }
 
 #[cfg(test)]
@@ -361,6 +392,7 @@ mod tests {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetActiveContracts {
+                min_gas_price: None,
                 start_after: None,
                 limit: None,
             },
@@ -488,7 +520,7 @@ mod tests {
         // Only Registry contract can register other contracts
         let registry_addr = mock_env().contract.address;
         let _info = mock_info(registry_addr.as_ref(), &coins(2, "token"));
-        let market_maker: Addr = Addr::unchecked("market_maker1".to_string());
+        let market_maker: Addr = Addr::unchecked("market_maker");
         let msg = ExecuteMsg::Register {
             contract_address: market_maker.clone(),
             gas_limit: 100,
@@ -529,6 +561,7 @@ mod tests {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetActiveContracts {
+                min_gas_price: None,
                 start_after: None,
                 limit: None,
             },
@@ -562,6 +595,7 @@ mod tests {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetActiveContracts {
+                min_gas_price: None,
                 start_after: None,
                 limit: None,
             },
@@ -595,6 +629,7 @@ mod tests {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetActiveContracts {
+                min_gas_price: None,
                 start_after: None,
                 limit: None,
             },
@@ -680,7 +715,7 @@ mod tests {
         let msg = ExecuteMsg::Register {
             contract_address: market_maker1.clone(),
             gas_limit: 100,
-            gas_price: 10000000,
+            gas_price: 900,
             is_executable: true,
         };
 
@@ -690,16 +725,26 @@ mod tests {
         let msg = ExecuteMsg::Register {
             contract_address: market_maker2.clone(),
             gas_limit: 1000,
-            gas_price: 100000000,
+            gas_price: 1000,
+            is_executable: true,
+        };
+
+        let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
+
+        let market_maker3: Addr = Addr::unchecked("market_maker3".to_string());
+        let msg = ExecuteMsg::Register {
+            contract_address: market_maker3.clone(),
+            gas_limit: 1000,
+            gas_price: 950,
             is_executable: true,
         };
 
         let _res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
 
         // Register an inactive contract
-        let market_maker3: Addr = Addr::unchecked("market_maker3".to_string());
+        let market_maker4: Addr = Addr::unchecked("market_maker4".to_string());
         let msg = ExecuteMsg::Register {
-            contract_address: market_maker3,
+            contract_address: market_maker4,
             gas_limit: 10,
             gas_price: 100000,
             is_executable: false,
@@ -718,13 +763,28 @@ mod tests {
         )
         .unwrap();
         let registered_contracts: ContractsResponse = from_binary(&res).unwrap();
-        assert_eq!(3, registered_contracts.contracts.len());
+        assert_eq!(4, registered_contracts.contracts.len());
 
         // Query all active contracts
         let res = query(
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetActiveContracts {
+                min_gas_price: None,
+                start_after: None,
+                limit: None,
+            },
+        )
+        .unwrap();
+        let active_contracts: ContractsResponse = from_binary(&res).unwrap();
+        assert_eq!(3, active_contracts.contracts.len());
+
+        // Query all active contracts with min gas price
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetActiveContracts {
+                min_gas_price: Some(950),
                 start_after: None,
                 limit: None,
             },
@@ -738,6 +798,7 @@ mod tests {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetActiveContracts {
+                min_gas_price: None,
                 start_after: None,
                 limit: Some(1),
             },
@@ -745,33 +806,59 @@ mod tests {
         .unwrap();
         let active_contracts: ContractsResponse = from_binary(&res).unwrap();
         assert_eq!(1, active_contracts.contracts.len());
-        assert_eq!(active_contracts.contracts[0].address, market_maker1); // Notice this is lexicographically sorted by address
+        assert_eq!(active_contracts.contracts[0].address, market_maker2); // Notice this is lexicographically sorted by address
 
         // Continuation
         let res = query(
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetActiveContracts {
-                start_after: Some(active_contracts.contracts[0].address.to_string()),
+                min_gas_price: Some(920),
+                start_after: Some((
+                    active_contracts.contracts[0].gas_price,
+                    active_contracts.contracts[0].address.to_string(),
+                )),
                 limit: None,
             },
         )
         .unwrap();
         let active_contracts: ContractsResponse = from_binary(&res).unwrap();
         assert_eq!(1, active_contracts.contracts.len());
-        assert_eq!(active_contracts.contracts[0].address, market_maker2);
+        assert_eq!(active_contracts.contracts[0].address, market_maker3);
 
         // There's no more
         let res = query(
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetActiveContracts {
-                start_after: Some(active_contracts.contracts[0].address.to_string()),
+                min_gas_price: Some(920),
+                start_after: Some((
+                    active_contracts.contracts[0].gas_price,
+                    active_contracts.contracts[0].address.to_string(),
+                )),
                 limit: None,
             },
         )
         .unwrap();
+        let active_contracts2: ContractsResponse = from_binary(&res).unwrap();
+        assert_eq!(0, active_contracts2.contracts.len());
+
+        // There's one if we remove gas limit
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetActiveContracts {
+                min_gas_price: None,
+                start_after: Some((
+                    active_contracts.contracts[0].gas_price,
+                    active_contracts.contracts[0].address.to_string(),
+                )),
+                limit: None,
+            },
+        )
+            .unwrap();
         let active_contracts: ContractsResponse = from_binary(&res).unwrap();
-        assert_eq!(0, active_contracts.contracts.len());
+        assert_eq!(1, active_contracts.contracts.len());
+        assert_eq!(active_contracts.contracts[0].address, market_maker1);
     }
 }

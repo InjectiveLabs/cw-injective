@@ -13,27 +13,27 @@ pub struct Contract {
 }
 
 pub(crate) const INACTIVE_CONTRACT: u8 = 0;
-pub(crate) const ACTIVE_CONTRACT: u8 = 1;
 
 pub struct ContractIndexes<'a> {
-    pub active: MultiIndex<'a, u8, Contract, Addr>,
+    pub active_by_gasprice_addr: MultiIndex<'a, u64, Contract, Addr>,
+    // pub active: MultiIndex<'a, u8, Contract, Addr>,
 }
 
 impl<'a> IndexList<Contract> for ContractIndexes<'a> {
     fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<Contract>> + '_> {
-        let v: Vec<&dyn Index<Contract>> = vec![&self.active];
+        let v: Vec<&dyn Index<Contract>> = vec![&self.active_by_gasprice_addr];
         Box::new(v.into_iter())
     }
 }
 
 pub fn contracts<'a>() -> IndexedMap<'a, &'a Addr, Contract, ContractIndexes<'a>> {
     let indexes = ContractIndexes {
-        active: MultiIndex::new(
+        active_by_gasprice_addr: MultiIndex::new(
             |_, c: &Contract| {
                 if c.is_executable {
-                    ACTIVE_CONTRACT
+                    c.gas_price
                 } else {
-                    INACTIVE_CONTRACT
+                    u64::from(INACTIVE_CONTRACT)
                 }
             },
             "contracts",

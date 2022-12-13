@@ -42,7 +42,8 @@ pub enum QueryMsg {
         limit: Option<u32>,
     },
     GetActiveContracts {
-        start_after: Option<String>,
+        min_gas_price: Option<u64>,
+        start_after: Option<(u64, String)>,
         limit: Option<u32>,
     },
 }
