@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use bigint::U256;
-use cosmwasm_std::Uint256;
+use cosmwasm_std::{Uint128, Uint256};
 use schemars::JsonSchema;
 // pub struct FPDecimal(#[schemars(with = "String")] pub i128);
 
@@ -59,6 +59,19 @@ impl From<U256> for FPDecimal {
     }
 }
 
+impl From<FPDecimal> for Uint128 {
+    fn from(x: FPDecimal) -> Uint128 {
+        let number: u128 = x.into();
+        number.into()
+    }
+}
+
+impl From<Uint128> for FPDecimal {
+    fn from(x: Uint128) -> FPDecimal {
+        FPDecimal::from_str(&x.to_string()).unwrap()
+    }
+}
+
 impl From<Uint256> for FPDecimal {
     fn from(x: Uint256) -> FPDecimal {
         FPDecimal::from_str(&x.to_string()).unwrap()
@@ -76,10 +89,51 @@ impl FPDecimal {
     pub const MAX: FPDecimal = FPDecimal { num: U256::MAX, sign: 1 };
     pub const MIN: FPDecimal = FPDecimal { num: U256::MAX, sign: 0 };
     pub const DIGITS: usize = 18;
+    pub const ZERO: FPDecimal = FPDecimal {
+        num: U256([0, 0, 0, 0]),
+        sign: 1,
+    };
     pub const ONE: FPDecimal = FPDecimal {
         num: U256([1_000_000_000_000_000_000, 0, 0, 0]),
         sign: 1,
     };
+
+    pub const TWO: FPDecimal = FPDecimal {
+        num: U256([2_000_000_000_000_000_000, 0, 0, 0]),
+        sign: 1,
+    };
+
+    pub const THREE: FPDecimal = FPDecimal {
+        num: U256([3_000_000_000_000_000_000, 0, 0, 0]),
+        sign: 1,
+    };
+
+    pub const FOUR: FPDecimal = FPDecimal {
+        num: U256([4_000_000_000_000_000_000, 0, 0, 0]),
+        sign: 1,
+    };
+
+    pub const FIVE: FPDecimal = FPDecimal {
+        num: U256([5_000_000_000_000_000_000, 0, 0, 0]),
+        sign: 1,
+    };
+    pub const SIX: FPDecimal = FPDecimal {
+        num: U256([6_000_000_000_000_000_000, 0, 0, 0]),
+        sign: 1,
+    };
+    pub const SEVEN: FPDecimal = FPDecimal {
+        num: U256([7_000_000_000_000_000_000, 0, 0, 0]),
+        sign: 1,
+    };
+    pub const EIGHT: FPDecimal = FPDecimal {
+        num: U256([8_000_000_000_000_000_000, 0, 0, 0]),
+        sign: 1,
+    };
+    pub const NINE: FPDecimal = FPDecimal {
+        num: U256([9_000_000_000_000_000_000, 0, 0, 0]),
+        sign: 1,
+    };
+
     pub const MUL_PRECISION: FPDecimal = FPDecimal {
         num: U256([1_000_000_000, 0, 0, 0]),
         sign: 1,
@@ -100,16 +154,17 @@ impl FPDecimal {
         num: U256([405465108108164382, 0, 0, 0]),
         sign: 1,
     }; // ln(1.5)
+    pub const PI: FPDecimal = FPDecimal {
+        num: U256([3_141_592_653_589_793_238, 0, 0, 0]),
+        sign: 1,
+    };
 
     pub const fn one() -> FPDecimal {
         FPDecimal::ONE
     }
 
     pub const fn zero() -> FPDecimal {
-        FPDecimal {
-            num: U256([0, 0, 0, 0]),
-            sign: 1,
-        }
+        FPDecimal::ZERO
     }
 
     pub fn is_zero(&self) -> bool {
@@ -138,6 +193,9 @@ impl FPDecimal {
     pub fn int(&self) -> FPDecimal {
         FPDecimal::_int(*self)
     }
+    pub fn is_int(&self) -> bool {
+        *self == self.int()
+    }
 
     pub fn _sign(x: FPDecimal) -> i8 {
         x.sign
@@ -160,7 +218,9 @@ mod arithmetic;
 mod comparison;
 mod display;
 mod exp;
+mod factorial;
 mod from_str;
 mod hyper;
 mod log;
-mod serde; // cosmwasm serialization
+mod serde;
+mod trigonometry; // cosmwasm serialization

@@ -538,7 +538,7 @@ pub mod handlers {
         SubaccountEffectivePositionInMarketResponse, SubaccountId, SubaccountPositionInMarketResponse, TradeRecord, TraderDerivativeOrdersResponse,
         TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder, TrimmedSpotLimitOrder,
     };
-    use crate::{HandlesBankAllBalancesQuery, HandlesBankBalanceQuery, OracleType};
+    use crate::{HandlesBankAllBalancesQuery, HandlesBankBalanceQuery, HandlesTraderDerivativeOrdersToCancelUpToAmountQuery, OracleType};
 
     use super::{HandlesOraclePriceQuery, TestDeposit};
 
@@ -640,6 +640,37 @@ pub mod handlers {
                     self.assertion.as_ref().unwrap()(market_id, subaccount_id, base_amount, quote_amount, strategy, reference_price)
                 }
                 let response = TraderSpotOrdersResponse {
+                    orders: self.orders.to_owned(),
+                };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+        Some(Box::new(Temp { orders, assertion }))
+    }
+
+    pub type DerivativeUpToAmountConsumingFunction = fn(MarketId, SubaccountId, FPDecimal, i32, Option<FPDecimal>);
+
+    pub fn create_derivative_orders_up_to_amount_handler(
+        orders: Option<Vec<TrimmedDerivativeLimitOrder>>,
+        assertion: Option<DerivativeUpToAmountConsumingFunction>,
+    ) -> Option<Box<dyn HandlesTraderDerivativeOrdersToCancelUpToAmountQuery>> {
+        struct Temp {
+            orders: Option<Vec<TrimmedDerivativeLimitOrder>>,
+            assertion: Option<DerivativeUpToAmountConsumingFunction>,
+        }
+        impl HandlesTraderDerivativeOrdersToCancelUpToAmountQuery for Temp {
+            fn handle(
+                &self,
+                market_id: MarketId,
+                subaccount_id: SubaccountId,
+                quote_amount: FPDecimal,
+                strategy: i32,
+                reference_price: Option<FPDecimal>,
+            ) -> QuerierResult {
+                if self.assertion.is_some() {
+                    self.assertion.as_ref().unwrap()(market_id, subaccount_id, quote_amount, strategy, reference_price)
+                }
+                let response = TraderDerivativeOrdersResponse {
                     orders: self.orders.to_owned(),
                 };
                 SystemResult::Ok(ContractResult::from(to_binary(&response)))
