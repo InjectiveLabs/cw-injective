@@ -701,7 +701,7 @@ dependencies = [
 
 [[package]]
 name = "injective-math"
-version = "0.1.10"
+version = "0.1.11"
 dependencies = [
  "bigint",
  "cosmwasm-schema",
