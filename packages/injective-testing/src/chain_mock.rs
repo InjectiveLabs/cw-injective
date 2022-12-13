@@ -182,7 +182,7 @@ pub struct CustomInjectiveHandler {
     pub state: CachingCustomHandlerState<CustomInjectiveHandler, InjectiveMsgWrapper, InjectiveQueryWrapper>,
     pub responses: CustomInjectiveHandlerResponses,
     pub assertions: CustomInjectiveHandlerAssertions<InjectiveMsgWrapper, InjectiveQueryWrapper>,
-    pub enable_debug: bool
+    pub enable_debug: bool,
 }
 
 impl Module for CustomInjectiveHandler {
@@ -291,7 +291,7 @@ pub fn mock_custom_injective_chain_app(
     execute_assertions: Vec<ExecuteAssertionContainer<InjectiveMsgWrapper>>,
     query_assertions: Vec<QueryAssertionContainer<InjectiveQueryWrapper>>,
     address_generator: Option<impl AddressGenerator + 'static>,
-    enable_debug: bool
+    enable_debug: bool,
 ) -> MockedInjectiveApp {
     let inj_handler = CustomInjectiveHandler {
         responses: CustomInjectiveHandlerResponses {

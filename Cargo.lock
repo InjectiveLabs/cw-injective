@@ -714,18 +714,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "injective-mocks"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-std",
- "injective-cosmwasm",
- "schemars",
- "serde 1.0.145",
-]
-
-[[package]]
 name = "injective-testing"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "base64",
