@@ -18,4 +18,4 @@ overflow-checks = true
 
 [patch.crates-io]
 #cw-multi-test = { path = "../cw-multi-test" }
-cw-multi-test = { git = "https://github.com/Tofel/cw-multi-test.git", branch ="feat/custom_address_generator" }
+cw-multi-test = { git = "https://github.com/InjectiveLabs/cw-multi-test.git", branch ="feature/custom_address_generator" }

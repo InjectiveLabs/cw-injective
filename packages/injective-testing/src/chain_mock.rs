@@ -15,7 +15,12 @@ use std::{
 
 use crate::InjectiveAddressGenerator;
 
-fn no_init<BankT, CustomT, WasmT, StakingT, DistrT>(_: &mut Router<BankT, CustomT, WasmT, StakingT, DistrT>, _: &dyn Api, _: &mut dyn Storage) {}
+fn no_init<BankT, CustomT, WasmT, StakingT, DistrT, IbcT, GovT>(
+    _: &mut Router<BankT, CustomT, WasmT, StakingT, DistrT, IbcT, GovT>,
+    _: &dyn Api,
+    _: &mut dyn Storage,
+) {
+}
 
 pub type MockedInjectiveApp = App<
     BankKeeper,
@@ -26,6 +31,8 @@ pub type MockedInjectiveApp = App<
     StakeKeeper,
     DistributionKeeper,
 >;
+
+#[derive(Clone)]
 pub struct InitialBalance {
     pub amounts: Vec<Coin>,
     pub address: Addr,

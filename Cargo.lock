@@ -280,7 +280,7 @@ dependencies = [
 [[package]]
 name = "cw-multi-test"
 version = "0.16.1"
-source = "git+https://github.com/Tofel/cw-multi-test.git?branch=feat/custom_address_generator#b301d11f7c9095e18c7ef09e04b42760a49a40b8"
+source = "git+https://github.com/InjectiveLabs/cw-multi-test.git?branch=feature/custom_address_generator#3705a9e6bca0db7a3229f3a786dad94846cdeed4"
 dependencies = [
  "anyhow",
  "cosmwasm-std",
