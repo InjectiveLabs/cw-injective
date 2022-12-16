@@ -12,7 +12,7 @@ cosmwasm-std = { version = "1.1.1", features = ["iterator", "abort"] }
 injective-cosmwasm = { version = "0.1.69", path = "../injective-cosmwasm" }
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 base64 = "0.13.1"
-cw-multi-test = "0.16.1"
+cw-multi-test = "0.16.2"
 anyhow = "1.0.66"
 secp256k1 = "0.6.2"
 rand = "0.4.6"
