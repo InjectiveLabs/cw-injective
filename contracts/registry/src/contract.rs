@@ -283,11 +283,6 @@ fn query_active_contracts(
         }
     };
 
-    // let end: Option<Bound<(u64, Addr)>> = match min_gas_price {
-    //     None => None,
-    //     Some(min_price) => Some(Bound::inclusive((min_price + 1, Addr::unchecked("")))),
-    // };
-
     let contracts_page = contracts()
         .idx
         .active_by_gasprice_addr

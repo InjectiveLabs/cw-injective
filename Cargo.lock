@@ -456,7 +456,7 @@ name = "dummy"
 version = "1.0.0"
 dependencies = [
  "cosmwasm-std",
- "cosmwasm-storage",
+ "cw-storage-plus 0.16.0",
  "cw2 0.14.0",
  "schemars",
  "serde 1.0.145",
