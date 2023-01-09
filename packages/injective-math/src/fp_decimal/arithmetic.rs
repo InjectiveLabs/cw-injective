@@ -76,13 +76,13 @@ impl FPDecimal {
 
         assert_ne!(y.num, U256::zero());
 
-        let num = FPDecimal::ONE.num * x.num / y.num;
+        let num = FPDecimal::ONE.num.full_mul(x.num) / y.num.into();
         if num.is_zero() {
             return FPDecimal::zero();
         }
 
         FPDecimal {
-            num,
+            num: num.into(),
             sign: 1 ^ x.sign ^ y.sign,
         }
     }
