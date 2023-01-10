@@ -15,7 +15,6 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub const COUNTER: Item<u32> = Item::new("counter");
 
-
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
@@ -52,25 +51,23 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, Contract
     match msg {
         SudoMsg::BeginBlocker {} => {
             for i in 1..10000 {
-                let _r = i*2/i*i/3*2*7/7;
+                let _r = i * 2 / i * i / 3 * 2 * 7 / 7;
             }
             let runs = COUNTER.load(deps.storage)? + 1;
             COUNTER.save(deps.storage, &runs)?;
             Ok(Response::new())
-        },
+        }
     }
 }
-
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Ping { .. } => to_binary("pong"),
         QueryMsg::Error { .. } => Err(StdError::generic_err("oh no!")),
-        QueryMsg::Runs { } => {
+        QueryMsg::Runs {} => {
             let runs_count = COUNTER.load(deps.storage)?;
             to_binary(&format!("{}", runs_count))
         }
     }
 }
-
