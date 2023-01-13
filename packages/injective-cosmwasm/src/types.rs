@@ -3,6 +3,8 @@ use cw_storage_plus::{Key, KeyDeserialize, Prefixer, PrimaryKey};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::InjectiveQuerier;
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
 pub struct MarketId(String);
 
@@ -26,6 +28,16 @@ impl MarketId {
 
     pub fn as_str(&self) -> &str {
         self.0.as_str()
+    }
+
+    pub fn validate(self, querier: InjectiveQuerier, is_spot: bool) -> StdResult<Self> {
+        if is_spot {
+            querier.query_spot_market(&self)?;
+        } else {
+            querier.query_derivative_market(&self)?;
+        }
+
+        Ok(self)
     }
 
     pub fn unchecked<S>(market_id_s: S) -> Self
