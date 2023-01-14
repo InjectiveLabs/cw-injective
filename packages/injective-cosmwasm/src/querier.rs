@@ -350,7 +350,10 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_contract_registration_info<A: Into<String> + Clone>(&self, contract_address: A) -> StdResult<QueryContractRegistrationInfoResponse> {
+    pub fn query_contract_registration_info<A: Into<String> + Clone>(
+        &self,
+        contract_address: &'a A,
+    ) -> StdResult<QueryContractRegistrationInfoResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Wasmx,
             query_data: InjectiveQuery::WasmxRegisteredContractInfo {
