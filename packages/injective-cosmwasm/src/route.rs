@@ -10,5 +10,6 @@ pub enum InjectiveRoute {
     // Insurance,
     Tokenfactory,
     Oracle,
+    Wasmx,
     // Peggy,
 }

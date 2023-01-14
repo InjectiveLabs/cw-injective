@@ -5,9 +5,10 @@ use injective_math::FPDecimal;
 use crate::oracle::{OracleHistoryOptions, OracleInfo};
 use crate::query::{
     DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse,
-    OraclePriceResponse, OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, SpotMarketMidPriceAndTOBResponse,
-    SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse,
-    TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+    OraclePriceResponse, OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse,
+    QueryContractRegistrationInfoResponse, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse, SubaccountDepositResponse,
+    SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TokenFactoryCreateDenomFeeResponse,
+    TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
 };
 use crate::route::InjectiveRoute;
 use crate::volatility::TradeHistoryOptions;
@@ -346,6 +347,18 @@ impl<'a> InjectiveQuerier<'a> {
         };
 
         let res: TokenFactoryCreateDenomFeeResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_contract_registration_info<A: Into<String> + Clone>(&self, contract_address: A) -> StdResult<QueryContractRegistrationInfoResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Wasmx,
+            query_data: InjectiveQuery::WasmxRegisteredContractInfo {
+                contract_address: contract_address.clone().into(),
+            },
+        };
+
+        let res: QueryContractRegistrationInfoResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 }

@@ -1,4 +1,3 @@
-use crate::{MarketId, SubaccountId};
 use cosmwasm_std::{Coin, CustomQuery, Uint128};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -16,6 +15,7 @@ use crate::{
     volatility::{MetadataStatistics, TradeHistoryOptions, TradeRecord},
     OracleType, Position, SpotMarket,
 };
+use crate::{MarketId, SubaccountId};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -112,6 +112,10 @@ pub enum InjectiveQuery {
         denom: String,
     },
     TokenFactoryDenomCreationFee {},
+    // wasxm
+    WasmxRegisteredContractInfo {
+        contract_address: String,
+    },
 }
 
 impl CustomQuery for InjectiveQueryWrapper {}
@@ -207,4 +211,23 @@ pub struct TokenFactoryDenomSupplyResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct TokenFactoryCreateDenomFeeResponse {
     pub fee: Vec<Coin>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct RegisteredContract {
+    // limit of gas per BB execution
+    pub gas_limit: u64,
+    // gas price that contract is willing to pay for execution in BeginBlocker
+    pub gas_price: u64,
+    // is contract currently active
+    pub is_executable: bool,
+    // code_id that is allowed to be executed (to prevent malicious updates) - if nil/0 any code_id can be executed
+    pub code_id: u64,
+    // optional - admin addr that is allowed to update contract data
+    pub admin_address: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct QueryContractRegistrationInfoResponse {
+    pub contract: Option<RegisteredContract>,
 }
