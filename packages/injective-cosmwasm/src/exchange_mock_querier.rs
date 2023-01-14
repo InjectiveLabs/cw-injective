@@ -935,7 +935,7 @@ pub mod handlers {
         impl HandlesSmartQuery for Temp {
             fn handle(&self, _contract_addr: &str, _msg: &Binary) -> QuerierResult {
                 match self.result.clone() {
-                    Ok(resp) => SystemResult::Ok(ContractResult::from(Ok(resp))),
+                    Ok(resp) => SystemResult::Ok(ContractResult::from(StdResult::Ok(resp))),
                     Err(err) => SystemResult::Err(err),
                 }
             }
