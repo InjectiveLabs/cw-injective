@@ -32,7 +32,7 @@ pub use subaccount::{
     addr_to_bech32, bech32_to_hex, checked_address_to_subaccount_id, get_default_subaccount_id_for_checked_address,
     subaccount_id_to_ethereum_address, subaccount_id_to_injective_address,
 };
-pub use types::{MarketId, SubaccountId};
+pub use types::{MarketId, MarketType, SubaccountId};
 pub use volatility::{MetadataStatistics, PriceRecord, TradeHistoryOptions, TradeRecord};
 
 mod derivative;

@@ -1,7 +1,14 @@
-use cosmwasm_std::{StdError, StdResult};
+use cosmwasm_std::{Empty, StdError, StdResult};
 use cw_storage_plus::{Key, KeyDeserialize, Prefixer, PrimaryKey};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+use crate::InjectiveQuerier;
+
+pub enum MarketType {
+    Spot,
+    Derivative,
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
 pub struct MarketId(String);
@@ -26,6 +33,21 @@ impl MarketId {
 
     pub fn as_str(&self) -> &str {
         self.0.as_str()
+    }
+
+    pub fn validate(self, querier: &InjectiveQuerier, market_type: MarketType) -> StdResult<Self> {
+        match market_type {
+            MarketType::Spot => {
+                let _spot_market = querier.query_spot_market(&self)?;
+                Empty {}
+            }
+            MarketType::Derivative => {
+                let _derivative_market = querier.query_derivative_market(&self)?;
+                Empty {}
+            }
+        };
+
+        Ok(self)
     }
 
     pub fn unchecked<S>(market_id_s: S) -> Self
