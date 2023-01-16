@@ -106,6 +106,22 @@ pub enum InjectiveMsg {
         symbol: String,
         decimals: u8,
     },
+    /// Wasmx - update contract
+    UpdateContract {
+        sender: Addr,
+        contract_address: Addr,
+        gas_limit: u64,
+        gas_price: u64,
+        admin_address: String,
+    },
+    ActivateContract {
+        sender: Addr,
+        contract_address: Addr,
+    },
+    DeactivateContract {
+        sender: Addr,
+        contract_address: Addr,
+    },
 }
 
 pub fn create_deposit_msg(sender: Addr, subaccount_id: SubaccountId, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
@@ -289,6 +305,46 @@ pub fn create_set_token_metadata_msg(denom: String, name: String, symbol: String
             symbol,
             decimals,
         },
+    }
+    .into()
+}
+
+pub fn create_update_contract_msg(
+    sender: Addr,
+    contract_address: Addr,
+    gas_limit: u64,
+    gas_price: u64,
+    admin_address: Option<Addr>,
+) -> CosmosMsg<InjectiveMsgWrapper> {
+    let admin = match admin_address {
+        None => "".to_string(),
+        Some(addr) => addr.to_string(),
+    };
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Wasmx,
+        msg_data: InjectiveMsg::UpdateContract {
+            sender,
+            contract_address,
+            gas_limit,
+            gas_price,
+            admin_address: admin,
+        },
+    }
+    .into()
+}
+
+pub fn create_activate_contract_msg(sender: Addr, contract_address: Addr) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Wasmx,
+        msg_data: InjectiveMsg::ActivateContract { sender, contract_address },
+    }
+    .into()
+}
+
+pub fn create_deactivate_contract_msg(sender: Addr, contract_address: Addr) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Wasmx,
+        msg_data: InjectiveMsg::DeactivateContract { sender, contract_address },
     }
     .into()
 }
