@@ -1,4 +1,5 @@
 use crate::volatility::{MetadataStatistics, TradeRecord};
+use crate::Hash;
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -50,4 +51,29 @@ impl Default for OracleType {
     fn default() -> Self {
         OracleType::Unspecified
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct PriceAttestation {
+    pub product_id: String,
+    pub price_id: Hash,
+    pub price: i64,
+    pub conf: u64,
+    pub expo: i32,
+    pub ema_price: i64,
+    pub ema_conf: u64,
+    pub status: PythStatus,
+    pub num_publishers: u32,
+    pub max_num_publishers: u32,
+    pub attestation_time: i64,
+    pub publish_time: i64,
+}
+
+#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema, Copy)]
+#[repr(i32)]
+pub enum PythStatus {
+    Unknown = 0,
+    Trading = 1,
+    Halted = 2,
+    Auction = 3,
 }

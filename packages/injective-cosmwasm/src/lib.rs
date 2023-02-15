@@ -13,8 +13,8 @@ pub use exchange_mock_querier::*;
 pub use msg::{
     create_activate_contract_msg, create_batch_update_orders_msg, create_burn_tokens_msg, create_deactivate_contract_msg, create_deposit_msg,
     create_derivative_market_order_msg, create_external_transfer_msg, create_increase_position_margin_msg, create_liquidate_position_msg,
-    create_mint_tokens_msg, create_new_denom_msg, create_register_as_dmm_msg, create_set_token_metadata_msg, create_spot_market_order_msg,
-    create_subaccount_transfer_msg, create_update_contract_msg, create_withdraw_msg, InjectiveMsg, InjectiveMsgWrapper,
+    create_mint_tokens_msg, create_new_denom_msg, create_register_as_dmm_msg, create_relay_pyth_prices_msg, create_set_token_metadata_msg,
+    create_spot_market_order_msg, create_subaccount_transfer_msg, create_update_contract_msg, create_withdraw_msg, InjectiveMsg, InjectiveMsgWrapper,
 };
 pub use oracle::{OracleInfo, OracleType};
 pub use order::{OrderData, OrderInfo};
@@ -32,7 +32,7 @@ pub use subaccount::{
     addr_to_bech32, bech32_to_hex, checked_address_to_subaccount_id, get_default_subaccount_id_for_checked_address,
     subaccount_id_to_ethereum_address, subaccount_id_to_injective_address,
 };
-pub use types::{MarketId, MarketType, SubaccountId};
+pub use types::{Hash, MarketId, MarketType, SubaccountId};
 pub use volatility::{MetadataStatistics, PriceRecord, TradeHistoryOptions, TradeRecord};
 
 mod derivative;

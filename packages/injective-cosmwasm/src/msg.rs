@@ -2,7 +2,7 @@ use cosmwasm_std::{Addr, Coin, CosmosMsg, CustomMsg};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::{derivative::DerivativeOrder, order::OrderData, route::InjectiveRoute, spot::SpotOrder};
+use crate::{derivative::DerivativeOrder, oracle::PriceAttestation, order::OrderData, route::InjectiveRoute, spot::SpotOrder};
 use crate::{MarketId, SubaccountId};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -80,6 +80,10 @@ pub enum InjectiveMsg {
         derivative_orders_to_cancel: Vec<OrderData>,
         spot_orders_to_create: Vec<SpotOrder>,
         derivative_orders_to_create: Vec<DerivativeOrder>,
+    },
+    RelayPythPrices {
+        sender: Addr,
+        price_attestations: Vec<PriceAttestation>,
     },
     CreateDenom {
         sender: String,
@@ -268,6 +272,14 @@ pub fn create_batch_update_orders_msg(
             spot_orders_to_create,
             derivative_orders_to_create,
         },
+    }
+    .into()
+}
+
+pub fn create_relay_pyth_prices_msg(sender: Addr, price_attestations: Vec<PriceAttestation>) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Oracle,
+        msg_data: InjectiveMsg::RelayPythPrices { sender, price_attestations },
     }
     .into()
 }
