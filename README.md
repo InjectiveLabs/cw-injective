@@ -1,21 +1,22 @@
 # Injective Cosmwasm Contracts
 
 This repository contains the full source code for the core smart contracts deployed
-on [Injective Protocol](https://injective.com).
+on [Injective](https://injective.com).
 
 ## Contracts
 
 These contracts hold the core logic of the system.
 
-| Contract                            | Description                                            |
-|-------------------------------------|--------------------------------------------------------|
-| [`registry`](./contracts/registry/) | Logic for the BeginBlocker contract execution registry |
+| Contract                                                    | Description                                                                                |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [`dummy`](./contracts/dummy/)                               | A simply template for starting a new contract                                              |
+| [`atomic-order-example`](./contracts/atomic-order-example/) | Example contract on how to do atomic market orders on Injective incl handling the response |
 
 ## Development
 
 ### Environment Setup
 
-- Rust v1.57.0
+- Rust v1.67.0
 - `wasm32-unknown-unknown` target
 - Docker
 
@@ -23,7 +24,7 @@ These contracts hold the core logic of the system.
 2. Run the following
 
 ```shell
-rustup default 1.57.0
+rustup default 1.67.0
 rustup target add wasm32-unknown-unknown
 ```
 
@@ -56,14 +57,7 @@ For production builds, run the following:
 docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/workspace-optimizer:0.12.6
-```
-
-or
-
-```bash
-chmod +x build_release.sh
-./build_release.sh
+  cosmwasm/workspace-optimizer-arm64:0.12.11
 ```
 
 This performs several optimizations which can significantly reduce the final size of the contract binaries, which will
@@ -71,11 +65,7 @@ be available inside the `artifacts/` directory.
 
 ## Formatting
 
-Make sure you run `rustfmt` before creating a PR to the repo. You need to install the `nightly` version of `rustfmt`.
-
-```
-rustup toolchain install nightly
-```
+Make sure you run `rustfmt` before creating a PR to the repo.
 
 To run `rustfmt`,
 
@@ -86,14 +76,7 @@ cargo fmt
 ## Linting
 
 You should run `clippy` also. This is a lint tool for Rust. It suggests more efficient/readable code. You can
-see [the clippy document](https://rust-lang.github.io/rust-clippy/master/index.html) for more information. You need to
-install `nightly` version of `clippy`.
-
-### Install
-
-```
-rustup toolchain install nightly
-```
+see [the clippy document](https://rust-lang.github.io/rust-clippy/master/index.html) for more information.
 
 ### Run
 
@@ -105,7 +88,3 @@ cargo clippy -- -D warnings
 
 Developers are strongly encouraged to write unit tests for new code, and to submit new unit tests for old code. Unit
 tests can be compiled and run with: `cargo test --all`. For more details, please reference Unit Tests.
-
-[//]: # (## Bug Bounty)
-
-[//]: # (The contracts in this repo are included in a bug bounty program)
