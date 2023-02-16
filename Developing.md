@@ -74,7 +74,7 @@ to run it is this:
 docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/workspace-optimizer-arm64:0.12.11
+  cosmwasm/workspace-optimizer:0.12.11
 ```
 
 Or, If you're on an arm64 machine, you should use a docker image built with arm64.
