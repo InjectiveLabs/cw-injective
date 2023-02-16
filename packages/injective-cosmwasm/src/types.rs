@@ -68,6 +68,9 @@ impl Into<String> for MarketId {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
 pub struct SubaccountId(String);
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
+pub struct Hash([u8; 32]);
+
 impl SubaccountId {
     pub fn new<S>(subaccount_id_s: S) -> StdResult<Self>
     where
