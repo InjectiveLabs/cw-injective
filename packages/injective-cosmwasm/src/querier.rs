@@ -5,7 +5,7 @@ use injective_math::FPDecimal;
 use crate::oracle::{OracleHistoryOptions, OracleInfo};
 use crate::query::{
     DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse,
-    OraclePriceResponse, OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse,
+    OraclePriceResponse, OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, QueryAggregateVolumeResponse,
     QueryContractRegistrationInfoResponse, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse, SubaccountDepositResponse,
     SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TokenFactoryCreateDenomFeeResponse,
     TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
@@ -276,6 +276,30 @@ impl<'a> InjectiveQuerier<'a> {
         };
 
         let res: DerivativeMarketMidPriceAndTOBResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_aggregate_market_volume<T: Into<MarketId> + Clone>(&self, market_id: &'a T) -> StdResult<QueryAggregateVolumeResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::AggregateMarketVolume {
+                market_id: market_id.clone().into(),
+            },
+        };
+
+        let res: QueryAggregateVolumeResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_aggregate_account_volume<T: Into<String> + Clone>(&self, account_id: &'a T) -> StdResult<QueryAggregateVolumeResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::AggregateAccountVolume {
+                account: account_id.clone().into(),
+            },
+        };
+
+        let res: QueryAggregateVolumeResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 
