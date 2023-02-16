@@ -5,7 +5,6 @@ on: [push, pull_request]
 name: Basic
 
 jobs:
-
   test:
     name: Test Suite
     runs-on: ubuntu-latest
@@ -17,7 +16,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.65.0
+          toolchain: 1.67.0
           target: wasm32-unknown-unknown
           override: true
 
@@ -28,14 +27,6 @@ jobs:
           args: --locked
         env:
           RUST_BACKTRACE: 1
-
-#      - name: Compile WASM contract
-#        uses: actions-rs/cargo@v1
-#        with:
-#          command: wasm
-#          args: --locked --package registry
-#        env:
-#          RUSTFLAGS: "-C link-arg=-s"
 
   lints:
     name: Lints
@@ -48,7 +39,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.65.0
+          toolchain: 1.67.0
           override: true
           components: rustfmt, clippy
 
@@ -63,13 +54,3 @@ jobs:
         with:
           command: clippy
           args: -- -D warnings
-
-      # TODO: we should check
-      # CHANGES_IN_REPO=$(git status --porcelain)
-      # after this, but I don't know how
-      # TODO add back in
-      # - name: Generate Schema
-      #   uses: actions-rs/cargo@v1
-      #   with:
-      #     command: schema
-      #     args: --locked

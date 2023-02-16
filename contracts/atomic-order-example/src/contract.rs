@@ -87,10 +87,7 @@ pub fn try_swap(
     let message_deposit = FPDecimal::from(info.funds[0].amount.u128());
     if message_deposit < min_deposit {
         return Err(ContractError::CustomError {
-            val: format!(
-                "Deposit: {} below min_deposit: {}",
-                message_deposit, min_deposit
-            ),
+            val: format!("Deposit: {message_deposit} below min_deposit: {min_deposit}"),
         });
     }
     let order = SpotOrder::new(
@@ -135,7 +132,7 @@ pub fn reply(
 ) -> Result<Response<InjectiveMsgWrapper>, StdError> {
     match msg.id {
         ATOMIC_ORDER_REPLY_ID => handle_atomic_order_reply(deps, env, msg),
-        id => Err(StdError::generic_err(format!("Unknown reply id: {}", id))),
+        id => Err(StdError::generic_err(format!("Unknown reply id: {id}"))),
     }
 }
 

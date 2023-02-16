@@ -219,7 +219,7 @@ impl Module for CustomInjectiveHandler {
         exec_calls_count += 1;
 
         if self.enable_debug {
-            println!("[{}] Execute mesage: {:?}", exec_calls_count, msg);
+            println!("[{exec_calls_count}] Execute mesage: {msg:?}");
         }
 
         if self.responses.executes.is_empty()
@@ -259,7 +259,7 @@ impl Module for CustomInjectiveHandler {
         query_calls_count += 1;
 
         if self.enable_debug {
-            println!("[{}] Query request: {:?}", query_calls_count, request);
+            println!("[{query_calls_count}] Query request: {request:?}");
         }
 
         if self.responses.queries.is_empty()

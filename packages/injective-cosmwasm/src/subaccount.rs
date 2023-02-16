@@ -13,10 +13,10 @@ pub fn get_default_subaccount_id_for_checked_address(addr: &Addr) -> SubaccountI
 
 pub fn checked_address_to_subaccount_id(addr: &Addr, nonce: u32) -> SubaccountId {
     let address_str = bech32_to_hex(addr);
-    let hex_nonce = format!("{:08x}", nonce);
+    let hex_nonce = format!("{nonce:08x}");
     let nonce_str = left_pad_with_zeroes(hex_nonce, 24);
 
-    SubaccountId::new(format!("{}{}", address_str, nonce_str)).expect("failed to create subaccount_id")
+    SubaccountId::new(format!("{address_str}{nonce_str}")).expect("failed to create subaccount_id")
 }
 
 fn left_pad_with_zeroes(mut input: String, length: usize) -> String {
@@ -29,7 +29,7 @@ fn left_pad_with_zeroes(mut input: String, length: usize) -> String {
 pub fn bech32_to_hex(addr: &Addr) -> String {
     let decoded_bytes = bech32::decode(addr.as_str()).unwrap().1;
     let decoded_h160 = H160::from_slice(&decoded_bytes);
-    let decoded_string = format!("{:?}", decoded_h160);
+    let decoded_string = format!("{decoded_h160:?}");
     decoded_string
 }
 

@@ -17,8 +17,7 @@ pub fn parse_protobuf_varint(
     while i < VARINT_MAX_BYTES {
         if data_len == i {
             return Err(ParseReplyError::ParseFailure(format!(
-                "failed to decode Protobuf message: field #{}: varint data too short",
-                field_number
+                "failed to decode Protobuf message: field #{field_number}: varint data too short"
             )));
         }
         len += ((data[i] & 0x7f) as u64) << (i * 7);
@@ -29,8 +28,7 @@ pub fn parse_protobuf_varint(
     }
     if i == VARINT_MAX_BYTES {
         return Err(ParseReplyError::ParseFailure(format!(
-            "failed to decode Protobuf message: field #{}: varint data too long",
-            field_number
+            "failed to decode Protobuf message: field #{field_number}: varint data too long"
         )));
     }
     *data = data[i + 1..].to_owned();
@@ -53,22 +51,19 @@ fn parse_protobuf_length_prefixed(
 
     if field != field_number {
         return Err(ParseReplyError::ParseFailure(format!(
-            "failed to decode Protobuf message: invalid field #{} for field #{}",
-            field, field_number
+            "failed to decode Protobuf message: invalid field #{field} for field #{field_number}"
         )));
     }
     if wire_type != WIRE_TYPE_LENGTH_DELIMITED {
         return Err(ParseReplyError::ParseFailure(format!(
-            "failed to decode Protobuf message: field #{}: invalid wire type {}",
-            field_number, wire_type
+            "failed to decode Protobuf message: field #{field_number}: invalid wire type {wire_type}"
         )));
     }
 
     let len = parse_protobuf_varint(&mut rest_1, field_number)?;
     if rest_1.len() < len {
         return Err(ParseReplyError::ParseFailure(format!(
-            "failed to decode Protobuf message: field #{}: message too short",
-            field_number
+            "failed to decode Protobuf message: field #{field_number}: message too short"
         )));
     }
     *data = rest_1.split_off(len);

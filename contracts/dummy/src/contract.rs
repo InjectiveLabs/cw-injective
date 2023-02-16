@@ -67,7 +67,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::Error { .. } => Err(StdError::generic_err("oh no!")),
         QueryMsg::Runs {} => {
             let runs_count = COUNTER.load(deps.storage)?;
-            to_binary(&format!("{}", runs_count))
+            to_binary(&format!("{runs_count}"))
         }
     }
 }
