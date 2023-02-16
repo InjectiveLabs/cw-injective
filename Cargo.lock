@@ -434,6 +434,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus 0.16.0",
  "cw2 0.14.0",
+ "injective-cosmwasm",
  "schemars",
  "serde 1.0.152",
  "thiserror",
