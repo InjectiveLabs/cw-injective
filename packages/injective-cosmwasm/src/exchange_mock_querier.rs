@@ -9,14 +9,16 @@ use cosmwasm_std::{
 
 use injective_math::FPDecimal;
 
+use crate::exchange::{MarketVolume, VolumeByType};
 use crate::oracle::{OracleHistoryOptions, OracleType};
 use crate::query::{QueryContractRegistrationInfoResponse, TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
 use crate::volatility::TradeHistoryOptions;
 use crate::{
     Deposit, DerivativeMarket, DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery,
     InjectiveQueryWrapper, MarketVolatilityResponse, OracleInfo, OracleVolatilityResponse, PerpetualMarketFundingResponse,
-    PerpetualMarketInfoResponse, SpotMarket, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse, SubaccountDepositResponse,
-    SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+    PerpetualMarketInfoResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse, SpotMarket, SpotMarketMidPriceAndTOBResponse,
+    SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse,
+    TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
 };
 use crate::{MarketId, SubaccountId};
 
@@ -167,6 +169,38 @@ fn default_derivative_market_mid_price_and_tob_response_handler() -> QuerierResu
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
 
+fn default_aggregate_market_volume_handler() -> QuerierResult {
+    let response = QueryAggregateMarketVolumeResponse {
+        volume: VolumeByType {
+            maker_volume: FPDecimal::from(100u128),
+            taker_volume: FPDecimal::from(100u128),
+        },
+    };
+    SystemResult::Ok(ContractResult::from(to_binary(&response)))
+}
+
+fn default_aggregate_account_volume_handler() -> QuerierResult {
+    let response = QueryAggregateVolumeResponse {
+        aggregate_volumes: vec![
+            MarketVolume {
+                market_id: MarketId::unchecked("market_id_1"),
+                volume: VolumeByType {
+                    maker_volume: FPDecimal::from(10000000u128),
+                    taker_volume: FPDecimal::from(14000000u128),
+                },
+            },
+            MarketVolume {
+                market_id: MarketId::unchecked("market_id_2"),
+                volume: VolumeByType {
+                    maker_volume: FPDecimal::from(20000000u128),
+                    taker_volume: FPDecimal::from(25000000u128),
+                },
+            },
+        ],
+    };
+    SystemResult::Ok(ContractResult::from(to_binary(&response)))
+}
+
 fn default_oracle_volatility_response_handler() -> QuerierResult {
     let response = OracleVolatilityResponse {
         volatility: Some(FPDecimal::one()),
@@ -293,6 +327,14 @@ pub trait HandlesByAddressQuery {
     fn handle(&self, address: String) -> QuerierResult;
 }
 
+pub trait HandlesMarketVolumeQuery {
+    fn handle(&self, market_id: MarketId) -> QuerierResult;
+}
+
+pub trait HandlesAccountVolumeQuery {
+    fn handle(&self, account: String) -> QuerierResult;
+}
+
 pub struct WasmMockQuerier {
     pub smart_query_handler: Option<Box<dyn HandlesSmartQuery>>,
     pub subaccount_deposit_response_handler: Option<Box<dyn HandlesSubaccountAndDenomQuery>>,
@@ -312,6 +354,8 @@ pub struct WasmMockQuerier {
     pub market_volatility_response_handler: Option<Box<dyn HandlesMarketVolatilityQuery>>,
     pub spot_market_mid_price_and_tob_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
     pub derivative_market_mid_price_and_tob_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
+    pub aggregate_market_volume_handler: Option<Box<dyn HandlesMarketVolumeQuery>>,
+    pub aggregate_account_volume_handler: Option<Box<dyn HandlesAccountVolumeQuery>>,
     pub oracle_volatility_response_handler: Option<Box<dyn HandlesOracleVolatilityQuery>>,
     pub oracle_price_response_handler: Option<Box<dyn HandlesOraclePriceQuery>>,
     pub token_factory_denom_total_supply_handler: Option<Box<dyn HandlesDenomSupplyQuery>>,
@@ -446,6 +490,14 @@ impl WasmMockQuerier {
                     Some(handler) => handler.handle(market_id),
                     None => default_derivative_market_mid_price_and_tob_response_handler(),
                 },
+                InjectiveQuery::AggregateMarketVolume { market_id } => match &self.aggregate_market_volume_handler {
+                    Some(handler) => handler.handle(market_id),
+                    None => default_aggregate_market_volume_handler(),
+                },
+                InjectiveQuery::AggregateAccountVolume { account } => match &self.aggregate_account_volume_handler {
+                    Some(handler) => handler.handle(account),
+                    None => default_aggregate_account_volume_handler(),
+                },
                 InjectiveQuery::OracleVolatility {
                     base_info,
                     quote_info,
@@ -503,6 +555,8 @@ impl WasmMockQuerier {
             market_volatility_response_handler: None,
             spot_market_mid_price_and_tob_response_handler: None,
             derivative_market_mid_price_and_tob_response_handler: None,
+            aggregate_account_volume_handler: None,
+            aggregate_market_volume_handler: None,
             oracle_volatility_response_handler: None,
             oracle_price_response_handler: None,
             token_factory_denom_total_supply_handler: None,

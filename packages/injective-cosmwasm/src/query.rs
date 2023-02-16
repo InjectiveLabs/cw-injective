@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use injective_math::FPDecimal;
 
+use crate::exchange::{MarketVolume, VolumeByType};
 use crate::{
     derivative::EffectivePosition,
     derivative::TrimmedDerivativeLimitOrder,
@@ -97,6 +98,12 @@ pub enum InjectiveQuery {
     },
     DerivativeMarketMidPriceAndTob {
         market_id: MarketId,
+    },
+    AggregateMarketVolume {
+        market_id: MarketId,
+    },
+    AggregateAccountVolume {
+        account: String,
     },
     OracleVolatility {
         base_info: Option<OracleInfo>,
@@ -230,4 +237,16 @@ pub struct RegisteredContract {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct QueryContractRegistrationInfoResponse {
     pub contract: Option<RegisteredContract>,
+}
+
+/// Response to query for aggregate volumes of a given account/subaccount - divided by markets
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct QueryAggregateVolumeResponse {
+    pub aggregate_volumes: Vec<MarketVolume>,
+}
+
+/// Response to query for aggregate volume for a given market
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct QueryAggregateMarketVolumeResponse {
+    pub volume: VolumeByType,
 }
