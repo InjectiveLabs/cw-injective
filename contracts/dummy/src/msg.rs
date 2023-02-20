@@ -9,7 +9,7 @@ pub struct InstantiateMsg {}
 pub enum ExecuteMsg {
     Ping {},
     Error {},
-    TriggerPythUpdate { price: i64 },
+    TriggerPythUpdate { price: u32 },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
