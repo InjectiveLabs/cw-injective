@@ -2,11 +2,11 @@ use cosmwasm_std::Addr;
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use serde_repr::Serialize_repr;
+use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::{MarketId, SubaccountId};
 
-#[derive(Serialize_repr, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[repr(u8)]
 pub enum OrderType {
     Undefined = 0,
