@@ -4,19 +4,8 @@ use serde::{Deserialize, Serialize};
 
 use injective_math::FPDecimal;
 
-use crate::order::OrderInfo;
+use crate::order::{OrderInfo, OrderType};
 use crate::{GenericOrder, MarketId, SubaccountId};
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-pub enum OrderType {
-    Undefined = 0,
-    Buy = 1,
-    Sell = 2,
-    BuyPo = 7,
-    SellPo = 8,
-    BuyAtomic = 9,
-    SellAtomic = 10,
-}
 
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
