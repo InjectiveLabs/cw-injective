@@ -18,7 +18,7 @@ use crate::ContractError;
 pub fn execute_trigger_pyth_update(
     deps: DepsMut<InjectiveQueryWrapper>,
     env: Env,
-    price: u32,
+    price: i64,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     deps.api.debug("Starting trigger update");
     let mut response = Response::new();
@@ -28,15 +28,15 @@ pub fn execute_trigger_pyth_update(
             "f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b",
         )?,
         price: price.into(),
-        conf: Uint64::new(500),
+        conf: 500,
         expo: -3,
-        ema_price: Uint64::new(1000),
-        ema_conf: Uint64::new(2000),
+        ema_price: 1000,
+        ema_conf: 2000,
         status: PythStatus::Trading,
         num_publishers: 10,
         max_num_publishers: 20,
-        attestation_time: Uint64::new(env.block.time.nanos() - 100),
-        publish_time: Uint64::new(env.block.time.nanos()),
+        attestation_time: env.block.time.nanos() - 100,
+        publish_time: env.block.time.nanos(),
     };
     deps.api.debug(&format!("Msg: {}", to_string(&pa).unwrap()));
     let relay_msg = create_relay_pyth_prices_msg(env.contract.address, vec![pa]);
@@ -46,6 +46,18 @@ pub fn execute_trigger_pyth_update(
 
 #[cfg(test)]
 mod tests {
+    use std::marker::PhantomData;
+
+    use cosmwasm_std::testing::{mock_env, mock_info, MockApi, MockStorage};
+    use cosmwasm_std::{
+        Addr, Api, BlockInfo, ContractInfo, CustomQuery, DepsMut, Env, OwnedDeps, Querier,
+        QuerierWrapper, Storage, Timestamp, TransactionInfo,
+    };
+
+    use injective_cosmwasm::{InjectiveQueryWrapper, WasmMockQuerier};
+
+    use crate::contract::execute;
+    use crate::msg::ExecuteMsg;
 
     #[test]
     pub fn test_send_pyth() {
@@ -58,12 +70,6 @@ mod tests {
         assert!(res.is_ok())
     }
 
-    use std::marker::PhantomData;
-    use cosmwasm_std::{Addr, Api, BlockInfo, ContractInfo, CustomQuery, DepsMut, Env, OwnedDeps, Querier, QuerierWrapper, Storage, Timestamp, TransactionInfo};
-    use cosmwasm_std::testing::{mock_env, mock_info, MockApi, MockStorage};
-    use injective_cosmwasm::{InjectiveQueryWrapper, WasmMockQuerier};
-    use crate::contract::execute;
-    use crate::msg::ExecuteMsg;
     //
     // pub fn inj_mock_env() -> Env {
     //     Env {
@@ -79,7 +85,8 @@ mod tests {
     //     }
     // }
 
-    pub fn inj_mock_deps() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQueryWrapper> {
+    pub fn inj_mock_deps() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQueryWrapper>
+    {
         let mut custom_querier: WasmMockQuerier = WasmMockQuerier::new();
         OwnedDeps {
             api: MockApi::default(),
