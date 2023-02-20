@@ -2,7 +2,7 @@
 ARCH=""
 
 if [[ $(arch) = "arm64" ]]; then
-  ARCH=-aarch64
+  ARCH=-arm64
 fi
 
 docker run --rm -v "$(pwd)":/code \
