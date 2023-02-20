@@ -1,4 +1,3 @@
-use cosmwasm_std::{Uint64};
 use crate::volatility::{MetadataStatistics, TradeRecord};
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
@@ -59,19 +58,16 @@ pub struct PriceAttestation {
     pub product_id: String,
     // pub price_id: Hash,
     pub price_id: Hash,
-    pub price: Uint64,
-    pub conf: Uint64,
+    pub price: i64,
+    pub conf: u64,
     pub expo: i32,
-    // pub ema_price: i64,
-    pub ema_price: Uint64,
-    pub ema_conf: Uint64,
+    pub ema_price: i64,
+    pub ema_conf: u64,
     pub status: PythStatus,
     pub num_publishers: u32,
     pub max_num_publishers: u32,
-    // pub attestation_time: i64,
-    pub attestation_time: Uint64,
-    // pub publish_time: i64,
-    pub publish_time: Uint64,
+    pub attestation_time: u64,
+    pub publish_time: u64,
 }
 
 #[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema, Copy)]
