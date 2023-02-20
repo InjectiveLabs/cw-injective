@@ -1,18 +1,21 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, Coin, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Response, StdError,
-    StdResult, SubMsg,
+    to_binary, Addr, Api, Binary, BlockInfo, Coin, ContractInfo, CosmosMsg, CustomQuery, Deps,
+    DepsMut, Env, MessageInfo, OwnedDeps, Querier, QuerierWrapper, Response, StdError, StdResult,
+    Storage, SubMsg, Timestamp, TransactionInfo, Uint64,
 };
 use cw2::set_contract_version;
 use cw_storage_plus::Item;
+use schemars::_serde_json::to_string;
 
 use injective_cosmwasm::{
-    create_relay_pyth_prices_msg, create_withdraw_msg, Hash, InjectiveMsgWrapper, PriceAttestation,
-    PythStatus, SubaccountId,
+    create_relay_pyth_prices_msg, create_withdraw_msg, Hash,
+    InjectiveMsgWrapper, InjectiveQueryWrapper, PriceAttestation, PythStatus, SubaccountId,
 };
 
 use crate::error::ContractError;
+use crate::mock_pyth_attestation::execute_trigger_pyth_update;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, SudoMsg};
 
 // version info for migration info
@@ -37,7 +40,7 @@ pub fn instantiate(
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
-    _: DepsMut,
+    deps: DepsMut<InjectiveQueryWrapper>,
     env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
@@ -50,26 +53,7 @@ pub fn execute(
         }
         ExecuteMsg::Error { .. } => Err(ContractError::Std(StdError::generic_err("oh no!"))),
         ExecuteMsg::TriggerPythUpdate { price } => {
-            let mut response = Response::new();
-            let relay_msg = create_relay_pyth_prices_msg(
-                info.sender,
-                vec![PriceAttestation {
-                    product_id: "MOCK_PRODUCT_ID".to_string(),
-                    price_id: Hash::from_hex("0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b")?,
-                    price,
-                    conf: 500,
-                    expo: -3,
-                    ema_price: 1000,
-                    ema_conf: 2000,
-                    status: PythStatus::Trading,
-                    num_publishers: 10,
-                    max_num_publishers: 20,
-                    attestation_time: (env.block.time.nanos() - 100) as i64,
-                    publish_time: env.block.time.nanos() as i64,
-                }],
-            );
-            response = response.add_message(relay_msg);
-            Ok(response)
+            execute_trigger_pyth_update(deps, env, price)
         }
     }
 }

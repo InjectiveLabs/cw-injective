@@ -1,8 +1,8 @@
+use std::fmt;
 use cosmwasm_std::{Empty, StdError, StdResult};
 use cw_storage_plus::{Key, KeyDeserialize, Prefixer, PrimaryKey};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use subtle_encoding::hex;
 
 use crate::InjectiveQuerier;
 
@@ -185,16 +185,25 @@ impl Hash {
         self.0
     }
 
-    // pub fn to_hex(&self) -> String {
-    //     String::from_vec(hex::encode(self.0))
-    // }
+    pub fn to_hex(&self) -> String {
+        hex::encode(self.0)
+    }
 
     pub fn from_hex<T: AsRef<[u8]>>(s: T) -> StdResult<Hash> {
         let mut bytes = [0u8; 32];
-        hex::decode(bytes).map_err(|e| StdError::generic_err(e.to_string()))?;
+        hex::decode_to_slice(s, &mut bytes).map_err(|e| StdError::generic_err(e.to_string()))?;
+        // hex::decode(bytes).map_err(|e| StdError::generic_err(e.to_string()))?;
         Ok(Hash::new(bytes))
     }
 }
+
+
+impl fmt::Display for Hash {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "0x{}", self.to_hex())
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
