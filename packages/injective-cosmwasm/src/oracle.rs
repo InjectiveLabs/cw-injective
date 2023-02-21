@@ -66,8 +66,8 @@ pub struct PriceAttestation {
     pub status: PythStatus,
     pub num_publishers: u32,
     pub max_num_publishers: u32,
-    pub attestation_time: u64,
-    pub publish_time: u64,
+    pub attestation_time: i64,
+    pub publish_time: i64,
 }
 
 #[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema, Copy)]
