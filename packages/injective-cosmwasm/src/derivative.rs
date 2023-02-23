@@ -4,18 +4,8 @@ use serde::{Deserialize, Serialize};
 
 use injective_math::FPDecimal;
 
-use crate::order::OrderInfo;
-use crate::{MarketId, SubaccountId};
-
-pub enum OrderType {
-    Undefined = 0,
-    Buy = 1,
-    Sell = 2,
-    BuyPo = 7,
-    SellPo = 8,
-    BuyAtomic = 9,
-    SellAtomic = 10,
-}
+use crate::order::{OrderInfo, OrderType};
+use crate::{GenericOrder, MarketId, SubaccountId};
 
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -78,9 +68,9 @@ pub struct DerivativePosition {
 pub struct DerivativeOrder {
     pub market_id: MarketId,
     pub order_info: OrderInfo,
-    pub order_type: i32,
+    pub order_type: OrderType,
     pub margin: FPDecimal,
-    pub trigger_price: Option<String>,
+    pub trigger_price: Option<FPDecimal>,
 }
 
 impl DerivativeOrder {
@@ -101,13 +91,19 @@ impl DerivativeOrder {
                 price,
                 quantity,
             },
-            order_type: order_type as i32,
+            order_type,
             margin,
             trigger_price: None,
         }
     }
     pub fn is_reduce_only(&self) -> bool {
         self.margin.is_zero()
+    }
+    pub fn is_post_only(&self) -> bool {
+        self.order_type == OrderType::BuyPo || self.order_type == OrderType::SellPo
+    }
+    pub fn is_atomic(&self) -> bool {
+        self.order_type == OrderType::BuyAtomic || self.order_type == OrderType::SellAtomic
     }
     pub fn get_price(&self) -> FPDecimal {
         self.order_info.price
@@ -129,21 +125,30 @@ impl DerivativeOrder {
 
         self.get_price().is_zero() || self.get_qty().is_zero()
     }
+
     pub fn get_order_type(&self) -> OrderType {
-        match self.order_type {
-            1 => OrderType::Buy,
-            2 => OrderType::Sell,
-            7 => OrderType::BuyPo,
-            8 => OrderType::SellPo,
-            _ => OrderType::Undefined,
-        }
+        self.order_type.to_owned()
+    }
+}
+
+impl GenericOrder for DerivativeOrder {
+    fn get_order_type(&self) -> &OrderType {
+        &self.order_type
+    }
+
+    fn get_order_info(&self) -> &OrderInfo {
+        &self.order_info
+    }
+
+    fn get_trigger_price(&self) -> Option<FPDecimal> {
+        self.trigger_price
     }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct DerivativeLimitOrder {
     pub order_info: OrderInfo,
-    pub order_type: i32,
+    pub order_type: OrderType,
     pub margin: FPDecimal,
     pub fillable: FPDecimal,
     pub trigger_price: Option<FPDecimal>,
@@ -164,7 +169,7 @@ impl DerivativeLimitOrder {
             fillable,
             order_hash,
             trigger_price,
-            order_type: order_type as i32,
+            order_type,
             order_info,
         }
     }
@@ -173,20 +178,28 @@ impl DerivativeLimitOrder {
     }
 
     pub fn get_order_type(&self) -> OrderType {
-        match self.order_type {
-            1 => OrderType::Buy,
-            2 => OrderType::Sell,
-            7 => OrderType::BuyPo,
-            8 => OrderType::SellPo,
-            _ => OrderType::Undefined,
-        }
+        self.order_type.to_owned()
+    }
+}
+
+impl GenericOrder for DerivativeLimitOrder {
+    fn get_order_type(&self) -> &OrderType {
+        &self.order_type
+    }
+
+    fn get_order_info(&self) -> &OrderInfo {
+        &self.order_info
+    }
+
+    fn get_trigger_price(&self) -> Option<FPDecimal> {
+        self.trigger_price
     }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct DerivativeMarketOrder {
     pub order_info: OrderInfo,
-    pub order_type: i32,
+    pub order_type: OrderType,
     pub margin: FPDecimal,
     pub fillable: FPDecimal,
     pub trigger_price: Option<FPDecimal>,
@@ -207,7 +220,7 @@ impl DerivativeMarketOrder {
             fillable,
             order_hash,
             trigger_price,
-            order_type: order_type as i32,
+            order_type,
             order_info,
         }
     }
@@ -216,13 +229,7 @@ impl DerivativeMarketOrder {
     }
 
     pub fn get_order_type(&self) -> OrderType {
-        match self.order_type {
-            1 => OrderType::Buy,
-            2 => OrderType::Sell,
-            7 => OrderType::BuyPo,
-            8 => OrderType::SellPo,
-            _ => OrderType::Undefined,
-        }
+        self.order_type.to_owned()
     }
 }
 

@@ -10,7 +10,7 @@ use cw2::set_contract_version;
 use injective_cosmwasm::{
     create_deposit_msg, create_spot_market_order_msg, create_withdraw_msg,
     get_default_subaccount_id_for_checked_address, InjectiveMsgWrapper, InjectiveQuerier,
-    InjectiveQueryWrapper, SpotOrder,
+    InjectiveQueryWrapper, OrderType, SpotOrder,
 };
 use injective_math::FPDecimal;
 
@@ -93,9 +93,7 @@ pub fn try_swap(
     let order = SpotOrder::new(
         price,
         quantity,
-        true,
-        false,
-        true,
+        OrderType::BuyAtomic,
         &config.market_id,
         subaccount_id.to_owned(),
         Some(contract.to_owned()),

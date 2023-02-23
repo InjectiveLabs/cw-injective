@@ -660,7 +660,7 @@ dependencies = [
 
 [[package]]
 name = "injective-cosmwasm"
-version = "0.1.80"
+version = "0.1.84"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -669,6 +669,7 @@ dependencies = [
  "injective-math",
  "schemars",
  "serde 1.0.152",
+ "serde-json-wasm",
  "serde_repr",
  "subtle-encoding",
 ]
