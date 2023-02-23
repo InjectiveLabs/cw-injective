@@ -1,18 +1,12 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Api, Binary, BlockInfo, Coin, ContractInfo, CosmosMsg, CustomQuery, Deps,
-    DepsMut, Env, MessageInfo, OwnedDeps, Querier, QuerierWrapper, Response, StdError, StdResult,
-    Storage, SubMsg, Timestamp, TransactionInfo, Uint64,
+    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
 };
 use cw2::set_contract_version;
 use cw_storage_plus::Item;
-use schemars::_serde_json::to_string;
 
-use injective_cosmwasm::{
-    create_relay_pyth_prices_msg, create_withdraw_msg, Hash,
-    InjectiveMsgWrapper, InjectiveQueryWrapper, PriceAttestation, PythStatus, SubaccountId,
-};
+use injective_cosmwasm::{InjectiveMsgWrapper, InjectiveQueryWrapper};
 
 use crate::error::ContractError;
 use crate::mock_pyth_attestation::execute_trigger_pyth_update;
@@ -42,7 +36,7 @@ pub fn instantiate(
 pub fn execute(
     deps: DepsMut<InjectiveQueryWrapper>,
     env: Env,
-    info: MessageInfo,
+    _info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     match msg {
@@ -52,9 +46,7 @@ pub fn execute(
             Ok(response)
         }
         ExecuteMsg::Error { .. } => Err(ContractError::Std(StdError::generic_err("oh no!"))),
-        ExecuteMsg::TriggerPythUpdate { price } => {
-            execute_trigger_pyth_update(deps, env, price)
-        }
+        ExecuteMsg::TriggerPythUpdate { price } => execute_trigger_pyth_update(deps, env, price),
     }
 }
 

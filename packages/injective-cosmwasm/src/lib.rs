@@ -16,7 +16,7 @@ pub use msg::{
     create_mint_tokens_msg, create_new_denom_msg, create_register_as_dmm_msg, create_relay_pyth_prices_msg, create_set_token_metadata_msg,
     create_spot_market_order_msg, create_subaccount_transfer_msg, create_update_contract_msg, create_withdraw_msg, InjectiveMsg, InjectiveMsgWrapper,
 };
-pub use oracle::{OracleInfo, OracleType, PriceAttestation,PythStatus};
+pub use oracle::{OracleInfo, OracleType, PriceAttestation, PythStatus};
 pub use order::{OrderData, OrderInfo};
 pub use querier::InjectiveQuerier;
 pub use query::{

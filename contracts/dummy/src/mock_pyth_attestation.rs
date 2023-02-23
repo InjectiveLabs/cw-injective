@@ -1,9 +1,4 @@
-use std::marker::PhantomData;
-
-use cosmwasm_std::{
-    Api, CustomQuery, DepsMut, Env, MessageInfo, OwnedDeps, Querier, QuerierWrapper, Response,
-    StdResult, Storage, Uint64,
-};
+use cosmwasm_std::{DepsMut, Env, Response};
 use schemars::_serde_json::to_string;
 
 use injective_cosmwasm::{
@@ -11,8 +6,6 @@ use injective_cosmwasm::{
     PriceAttestation, PythStatus,
 };
 
-use crate::contract::execute;
-use crate::msg::ExecuteMsg;
 use crate::ContractError;
 
 pub fn execute_trigger_pyth_update(
@@ -27,7 +20,7 @@ pub fn execute_trigger_pyth_update(
         price_id: Hash::from_hex(
             "f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b",
         )?,
-        price: price.into(),
+        price,
         conf: 500,
         expo: -3,
         ema_price: 1000,
@@ -35,8 +28,8 @@ pub fn execute_trigger_pyth_update(
         status: PythStatus::Trading,
         num_publishers: 10,
         max_num_publishers: 20,
-        attestation_time: env.block.time.nanos() - 100,
-        publish_time: env.block.time.nanos(),
+        attestation_time: (env.block.time.nanos() - 100) as i64,
+        publish_time: env.block.time.nanos() as i64,
     };
     deps.api.debug(&format!("Msg: {}", to_string(&pa).unwrap()));
     let relay_msg = create_relay_pyth_prices_msg(env.contract.address, vec![pa]);
@@ -49,10 +42,7 @@ mod tests {
     use std::marker::PhantomData;
 
     use cosmwasm_std::testing::{mock_env, mock_info, MockApi, MockStorage};
-    use cosmwasm_std::{
-        Addr, Api, BlockInfo, ContractInfo, CustomQuery, DepsMut, Env, OwnedDeps, Querier,
-        QuerierWrapper, Storage, Timestamp, TransactionInfo,
-    };
+    use cosmwasm_std::{Api, CustomQuery, DepsMut, OwnedDeps, Querier, QuerierWrapper, Storage};
 
     use injective_cosmwasm::{InjectiveQueryWrapper, WasmMockQuerier};
 
@@ -70,24 +60,9 @@ mod tests {
         assert!(res.is_ok())
     }
 
-    //
-    // pub fn inj_mock_env() -> Env {
-    //     Env {
-    //         block: BlockInfo {
-    //             height: 12_345,
-    //             time: Timestamp::from_nanos(1_571_797_419_879_305_533),
-    //             chain_id: "cosmos-testnet-14002".to_string(),
-    //         },
-    //         transaction: Some(TransactionInfo { index: 3 }),
-    //         contract: ContractInfo {
-    //             address: Addr::unchecked(TEST_CONTRACT_ADDR),
-    //         },
-    //     }
-    // }
-
     pub fn inj_mock_deps() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQueryWrapper>
     {
-        let mut custom_querier: WasmMockQuerier = WasmMockQuerier::new();
+        let custom_querier: WasmMockQuerier = WasmMockQuerier::new();
         OwnedDeps {
             api: MockApi::default(),
             storage: MockStorage::default(),
@@ -118,27 +93,4 @@ mod tests {
             };
         }
     }
-    //
-    // fn mock_attestation(prod: Option<[u8; 32]>, price: Option<[u8; 32]>) -> PriceAttestation {
-    //     let product_id_bytes = prod.unwrap_or([21u8; 32]);
-    //     let price_id_bytes = price.unwrap_or([222u8; 32]);
-    //     PriceAttestation {
-    //         product_id: Identifier::new(product_id_bytes),
-    //         price_id: Identifier::new(price_id_bytes),
-    //         price: 0x2bad2feed7,
-    //         conf: 101,
-    //         ema_price: -42,
-    //         ema_conf: 42,
-    //         expo: -3,
-    //         status: PriceStatus::Trading,
-    //         num_publishers: 123212u32,
-    //         max_num_publishers: 321232u32,
-    //         attestation_time: (0xdeadbeeffadedeedu64) as i64,
-    //         publish_time: 0xdadebeefi64,
-    //         prev_publish_time: 0xdeadbabei64,
-    //         prev_price: 0xdeadfacebeefi64,
-    //         prev_conf: 0xbadbadbeefu64, // I could do this all day -SD
-    //         last_attested_publish_time: (0xdeadbeeffadedeafu64) as i64,
-    //     }
-    // }
 }

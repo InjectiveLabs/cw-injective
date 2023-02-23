@@ -1,8 +1,8 @@
-use std::fmt;
 use cosmwasm_std::{Empty, StdError, StdResult};
 use cw_storage_plus::{Key, KeyDeserialize, Prefixer, PrimaryKey};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 use crate::InjectiveQuerier;
 
@@ -172,7 +172,6 @@ impl<'a> Prefixer<'a> for &'a SubaccountId {
     }
 }
 
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
 pub struct Hash([u8; 32]);
 
@@ -197,13 +196,11 @@ impl Hash {
     }
 }
 
-
 impl fmt::Display for Hash {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "0x{}", self.to_hex())
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -320,5 +317,3 @@ mod tests {
         assert_eq!(subaccount_id.as_ref(), "literal-string");
     }
 }
-
-
