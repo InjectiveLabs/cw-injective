@@ -191,7 +191,6 @@ impl Hash {
     pub fn from_hex<T: AsRef<[u8]>>(s: T) -> StdResult<Hash> {
         let mut bytes = [0u8; 32];
         hex::decode_to_slice(s, &mut bytes).map_err(|e| StdError::generic_err(e.to_string()))?;
-        // hex::decode(bytes).map_err(|e| StdError::generic_err(e.to_string()))?;
         Ok(Hash::new(bytes))
     }
 }
