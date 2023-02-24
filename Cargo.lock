@@ -198,7 +198,7 @@ dependencies = [
  "hex",
  "schemars",
  "serde 1.0.152",
- "serde-json-wasm",
+ "serde-json-wasm 0.5.0",
  "sha2 0.10.6",
  "thiserror",
  "uint 0.9.5",
@@ -665,7 +665,7 @@ dependencies = [
 
 [[package]]
 name = "injective-cosmwasm"
-version = "0.1.81"
+version = "0.1.85"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -675,6 +675,7 @@ dependencies = [
  "injective-math",
  "schemars",
  "serde 1.0.152",
+ "serde-json-wasm 0.4.1",
  "serde_repr",
  "subtle-encoding",
 ]
@@ -1128,6 +1129,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bb7d1f0d3021d347a83e556fc4683dea2ea09d87bccdf88ff5c12545d89d5efb"
 dependencies = [
  "serde_derive",
+]
+
+[[package]]
+name = "serde-json-wasm"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "479b4dbc401ca13ee8ce902851b834893251404c4f3c65370a49e047a6be09a5"
+dependencies = [
+ "serde 1.0.152",
 ]
 
 [[package]]

@@ -4,21 +4,21 @@ use serde::{Deserialize, Serialize};
 
 use injective_math::FPDecimal;
 
-use crate::order::OrderInfo;
+use crate::order::{GenericOrder, OrderInfo};
 use crate::OrderType;
 use crate::{MarketId, SubaccountId};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SpotLimitOrder {
     pub order_info: OrderInfo,
-    pub order_type: i32,
+    pub order_type: OrderType,
     pub fillable: FPDecimal,
     pub trigger_price: Option<FPDecimal>,
     pub order_hash: String,
 }
 
 impl SpotLimitOrder {
-    pub fn new(order_info: OrderInfo, order_type: i32, fillable: FPDecimal, trigger_price: Option<FPDecimal>, order_hash: String) -> Self {
+    pub fn new(order_info: OrderInfo, order_type: OrderType, fillable: FPDecimal, trigger_price: Option<FPDecimal>, order_hash: String) -> Self {
         SpotLimitOrder {
             order_info,
             order_type,
@@ -29,21 +29,33 @@ impl SpotLimitOrder {
     }
 }
 
+impl GenericOrder for SpotLimitOrder {
+    fn get_order_type(&self) -> &OrderType {
+        &self.order_type
+    }
+
+    fn get_order_info(&self) -> &OrderInfo {
+        &self.order_info
+    }
+
+    fn get_trigger_price(&self) -> Option<FPDecimal> {
+        self.trigger_price
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SpotOrder {
     pub market_id: MarketId,
     pub order_info: OrderInfo,
-    pub order_type: i32,
-    pub trigger_price: Option<String>,
+    pub order_type: OrderType,
+    pub trigger_price: Option<FPDecimal>,
 }
 
 impl SpotOrder {
     pub fn new(
         price: FPDecimal,
         quantity: FPDecimal,
-        is_buy: bool,
-        is_po: bool,
-        is_atomic: bool,
+        order_type: OrderType,
         market_id: &MarketId,
         subaccount_id: SubaccountId,
         fee_recipient: Option<Addr>,
@@ -56,14 +68,7 @@ impl SpotOrder {
                 price,
                 quantity,
             },
-            order_type: match (is_buy, is_po, is_atomic) {
-                (true, false, false) => OrderType::Buy as i32,
-                (true, true, _) => OrderType::BuyPo as i32,
-                (true, _, true) => OrderType::BuyAtomic as i32,
-                (false, false, false) => OrderType::Sell as i32,
-                (false, true, _) => OrderType::SellPo as i32,
-                (false, _, true) => OrderType::SellAtomic as i32,
-            },
+            order_type,
             trigger_price: None,
         }
     }
@@ -77,19 +82,39 @@ impl SpotOrder {
     pub fn get_val(&self) -> FPDecimal {
         self.get_price() * self.get_qty()
     }
+    pub fn is_post_only(&self) -> bool {
+        self.order_type == OrderType::BuyPo || self.order_type == OrderType::SellPo
+    }
+    pub fn is_atomic(&self) -> bool {
+        self.order_type == OrderType::BuyAtomic || self.order_type == OrderType::SellAtomic
+    }
+}
+
+impl GenericOrder for SpotOrder {
+    fn get_order_type(&self) -> &OrderType {
+        &self.order_type
+    }
+
+    fn get_order_info(&self) -> &OrderInfo {
+        &self.order_info
+    }
+
+    fn get_trigger_price(&self) -> Option<FPDecimal> {
+        self.trigger_price
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SpotMarketOrder {
     pub order_info: OrderInfo,
-    pub order_type: i32,
+    pub order_type: OrderType,
     pub fillable: FPDecimal,
     pub trigger_price: Option<FPDecimal>,
     pub order_hash: String,
 }
 
 impl SpotMarketOrder {
-    pub fn new(order_info: OrderInfo, order_type: i32, fillable: FPDecimal, trigger_price: Option<FPDecimal>, order_hash: String) -> Self {
+    pub fn new(order_info: OrderInfo, order_type: OrderType, fillable: FPDecimal, trigger_price: Option<FPDecimal>, order_hash: String) -> Self {
         SpotMarketOrder {
             order_info,
             order_type,

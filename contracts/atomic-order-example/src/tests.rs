@@ -11,7 +11,7 @@ use cosmwasm_std::{
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
 use injective_cosmwasm::{
     HandlesMarketIdQuery, InjectiveMsg, InjectiveQueryWrapper, InjectiveRoute, MarketId, OrderInfo,
-    SpotMarket, SpotMarketResponse, SpotOrder, SubaccountId, WasmMockQuerier,
+    OrderType, SpotMarket, SpotMarketResponse, SpotOrder, SubaccountId, WasmMockQuerier,
 };
 use injective_math::FPDecimal;
 
@@ -123,7 +123,7 @@ fn test_swap() {
                 price: i32_to_dec(1000),
                 quantity: i32_to_dec(8),
             },
-            order_type: 9,
+            order_type: OrderType::BuyAtomic,
             trigger_price: None,
         },
     };
