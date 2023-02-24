@@ -42,6 +42,8 @@ dependencies = [
  "cw2 0.14.0",
  "injective-cosmwasm",
  "injective-math",
+ "protobuf",
+ "protobuf-codegen-pure",
  "schemars",
  "serde 1.0.152",
  "thiserror",
