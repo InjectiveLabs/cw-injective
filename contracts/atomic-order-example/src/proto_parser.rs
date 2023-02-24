@@ -73,6 +73,7 @@ fn parse_protobuf_length_prefixed(
     Ok(rest_1)
 }
 
+#[allow(dead_code)]
 pub fn parse_protobuf_string(
     data: &mut Vec<u8>,
     field_number: u8,

@@ -15,8 +15,7 @@ use injective_math::FPDecimal;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
-use crate::proto::MsgOrderResponse;
-use crate::proto_parser::{parse_protobuf_string, ResultToStdErrExt};
+use crate::proto::{MsgOrderResponse, MsgTradeData};
 use crate::state::{ContractConfigState, SwapCacheState, STATE, SWAP_OPERATION_STATE};
 
 // version info for migration info
@@ -156,13 +155,14 @@ fn handle_atomic_order_reply(
         id,
         err: err.to_string(),
     })?;
-    let mut trade_data = order_response.data;
-    let field1 = parse_protobuf_string(&mut trade_data, 1).with_stderr()?;
-    let field2 = parse_protobuf_string(&mut trade_data, 2).with_stderr()?;
-    let field3 = parse_protobuf_string(&mut trade_data, 3).with_stderr()?;
-    let quantity = FPDecimal::from_str(&field1)? / dec_scale_factor;
-    let price = FPDecimal::from_str(&field2)? / dec_scale_factor;
-    let fee = FPDecimal::from_str(&field3)? / dec_scale_factor;
+    let trade_data: MsgTradeData = Message::parse_from_bytes(order_response.data.as_slice())
+        .map_err(|err| ContractError::ReplyParseFailure {
+            id,
+            err: err.to_string(),
+        })?;
+    let quantity = FPDecimal::from_str(&trade_data.quantity)? / dec_scale_factor;
+    let price = FPDecimal::from_str(&trade_data.price)? / dec_scale_factor;
+    let fee = FPDecimal::from_str(&trade_data.fee)? / dec_scale_factor;
 
     let config = STATE.load(deps.storage)?;
     let contract_address = env.contract.address;
