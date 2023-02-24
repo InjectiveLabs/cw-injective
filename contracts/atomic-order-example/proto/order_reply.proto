@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+// MsgOrderResponse defines the order reply response type.
+message MsgOrderResponse {
+    // OrderHash is the order hash of the processed order.
+    string order_hash = 1;
+    // Data contains base64-encoded bytes (which are protobuf encoded in turn).
+    bytes data = 2;
+}
