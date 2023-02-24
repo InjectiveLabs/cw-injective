@@ -2,11 +2,9 @@ use std::str::FromStr;
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{
-    BankMsg, Coin, DepsMut, Env, MessageInfo, Reply, Response, StdError, SubMsg, Uint128,
-};
+use cosmwasm_std::{BankMsg, Coin, DepsMut, Env, MessageInfo, Reply, Response, SubMsg, Uint128};
 use cw2::set_contract_version;
-use cw_utils::parse_reply_instantiate_data;
+use protobuf::Message;
 
 use injective_cosmwasm::{
     create_deposit_msg, create_spot_market_order_msg, create_withdraw_msg,
@@ -17,6 +15,7 @@ use injective_math::FPDecimal;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
+use crate::proto::MsgOrderResponse;
 use crate::proto_parser::{parse_protobuf_string, ResultToStdErrExt};
 use crate::state::{ContractConfigState, SwapCacheState, STATE, SWAP_OPERATION_STATE};
 
@@ -128,10 +127,10 @@ pub fn reply(
     deps: DepsMut<InjectiveQueryWrapper>,
     env: Env,
     msg: Reply,
-) -> Result<Response<InjectiveMsgWrapper>, StdError> {
+) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     match msg.id {
         ATOMIC_ORDER_REPLY_ID => handle_atomic_order_reply(deps, env, msg),
-        id => Err(StdError::generic_err(format!("Unknown reply id: {id}"))),
+        _ => Err(ContractError::UnrecognisedReply(msg.id)),
     }
 }
 
@@ -139,11 +138,25 @@ fn handle_atomic_order_reply(
     deps: DepsMut<InjectiveQueryWrapper>,
     env: Env,
     msg: Reply,
-) -> Result<Response<InjectiveMsgWrapper>, StdError> {
+) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let dec_scale_factor: FPDecimal = FPDecimal::from(1000000000000000000_i128);
-    // res.contract_address contains the (ignored) order hash
-    let res = parse_reply_instantiate_data(msg).with_stderr()?;
-    let mut trade_data = res.data.unwrap_or_default().to_vec();
+    let id = msg.id;
+    let order_response: MsgOrderResponse = Message::parse_from_bytes(
+        msg.result
+            .into_result()
+            .map_err(ContractError::SubMsgFailure)?
+            .data
+            .ok_or_else(|| ContractError::ReplyParseFailure {
+                id,
+                err: "Missing reply data".to_owned(),
+            })?
+            .as_slice(),
+    )
+    .map_err(|err| ContractError::ReplyParseFailure {
+        id,
+        err: err.to_string(),
+    })?;
+    let mut trade_data = order_response.data;
     let field1 = parse_protobuf_string(&mut trade_data, 1).with_stderr()?;
     let field2 = parse_protobuf_string(&mut trade_data, 2).with_stderr()?;
     let field3 = parse_protobuf_string(&mut trade_data, 3).with_stderr()?;
