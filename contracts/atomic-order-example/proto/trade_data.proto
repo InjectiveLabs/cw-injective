@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+// MsgTradeData defines the associated order reply trade data.
+message MsgTradeData {
+    // Quantity is the quantity of the trade.
+    string quantity = 1;
+    // Price is the price of the trade.
+    string price = 2;
+    // Fee is the order fee.
+    string fee = 3;
+}
