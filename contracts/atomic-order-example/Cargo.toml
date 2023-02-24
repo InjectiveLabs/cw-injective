@@ -12,6 +12,9 @@ exclude = [
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[build-dependencies]
+protobuf-codegen-pure = "2"
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 
@@ -39,7 +42,7 @@ serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
 injective-cosmwasm = { version = "0.1.39", path = "../../packages/injective-cosmwasm" }
 injective-math = { path = "../../packages/injective-math", version = "0.1.4" }
-
+protobuf = { version = "2", features = ["with-bytes"] }
 
 [dev-dependencies]
 cosmwasm-schema = "1.0.0"
