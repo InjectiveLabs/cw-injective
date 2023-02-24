@@ -139,6 +139,7 @@ fn handle_atomic_order_reply(
     msg: Reply,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let dec_scale_factor: FPDecimal = FPDecimal::from(1000000000000000000_i128);
+    // Adapted from original tgrade-valset code by Bartłomiej Kuras <bart.k@confio.gmbh>
     let id = msg.id;
     let order_response: MsgOrderResponse = Message::parse_from_bytes(
         &msg.result
