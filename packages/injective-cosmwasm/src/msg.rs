@@ -54,6 +54,19 @@ pub enum InjectiveMsg {
         sender: Addr,
         order: DerivativeOrder,
     },
+    CancelDerivativeOrder {
+        sender: Addr,
+        market_id: MarketId,
+        subaccount_id: SubaccountId,
+        order_hash: String,
+        order_mask: i32,
+    },
+    CancelSpotOrder {
+        sender: Addr,
+        market_id: MarketId,
+        subaccount_id: SubaccountId,
+        order_hash: String,
+    },
     IncreasePositionMargin {
         sender: Addr,
         source_subaccount_id: SubaccountId,
@@ -200,6 +213,39 @@ pub fn create_derivative_market_order_msg(sender: Addr, order: DerivativeOrder) 
     InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,
         msg_data: InjectiveMsg::CreateDerivativeMarketOrder { sender, order },
+    }
+    .into()
+}
+
+pub fn cancel_spot_order_msg(sender: Addr, market_id: MarketId, subaccount_id: SubaccountId, order_hash: String) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Exchange,
+        msg_data: InjectiveMsg::CancelSpotOrder {
+            sender,
+            market_id,
+            subaccount_id,
+            order_hash,
+        },
+    }
+    .into()
+}
+
+pub fn cancel_derivative_order_msg(
+    sender: Addr,
+    market_id: MarketId,
+    subaccount_id: SubaccountId,
+    order_hash: String,
+    order_mask: i32,
+) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Exchange,
+        msg_data: InjectiveMsg::CancelDerivativeOrder {
+            sender,
+            market_id,
+            subaccount_id,
+            order_hash,
+            order_mask,
+        },
     }
     .into()
 }
