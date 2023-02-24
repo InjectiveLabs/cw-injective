@@ -2,6 +2,7 @@ use cosmwasm_std::{Empty, StdError, StdResult};
 use cw_storage_plus::{Key, KeyDeserialize, Prefixer, PrimaryKey};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 use crate::InjectiveQuerier;
 
@@ -67,9 +68,6 @@ impl Into<String> for MarketId {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
 pub struct SubaccountId(String);
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
-pub struct Hash([u8; 32]);
 
 impl SubaccountId {
     pub fn new<S>(subaccount_id_s: S) -> StdResult<Self>
@@ -171,6 +169,35 @@ impl<'a> PrimaryKey<'a> for &'a SubaccountId {
 impl<'a> Prefixer<'a> for &'a SubaccountId {
     fn prefix(&self) -> Vec<Key> {
         vec![Key::Ref(self.as_bytes())]
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
+pub struct Hash([u8; 32]);
+
+impl Hash {
+    pub fn new(bytes: [u8; 32]) -> Hash {
+        Hash(bytes)
+    }
+
+    pub fn to_bytes(&self) -> [u8; 32] {
+        self.0
+    }
+
+    pub fn to_hex(&self) -> String {
+        hex::encode(self.0)
+    }
+
+    pub fn from_hex<T: AsRef<[u8]>>(s: T) -> StdResult<Hash> {
+        let mut bytes = [0u8; 32];
+        hex::decode_to_slice(s, &mut bytes).map_err(|e| StdError::generic_err(e.to_string()))?;
+        Ok(Hash::new(bytes))
+    }
+}
+
+impl fmt::Display for Hash {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "0x{}", self.to_hex())
     }
 }
 

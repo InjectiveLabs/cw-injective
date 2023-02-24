@@ -3,11 +3,14 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
 };
-
-use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, SudoMsg};
 use cw2::set_contract_version;
 use cw_storage_plus::Item;
+
+use injective_cosmwasm::{InjectiveMsgWrapper, InjectiveQueryWrapper};
+
+use crate::error::ContractError;
+use crate::mock_pyth_attestation::execute_trigger_pyth_update;
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, SudoMsg};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:injective:dummy";
@@ -31,11 +34,11 @@ pub fn instantiate(
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
-    _: DepsMut,
-    _: Env,
-    _: MessageInfo,
+    deps: DepsMut<InjectiveQueryWrapper>,
+    env: Env,
+    _info: MessageInfo,
     msg: ExecuteMsg,
-) -> Result<Response, ContractError> {
+) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     match msg {
         ExecuteMsg::Ping { .. } => {
             let mut response = Response::new();
@@ -43,6 +46,7 @@ pub fn execute(
             Ok(response)
         }
         ExecuteMsg::Error { .. } => Err(ContractError::Std(StdError::generic_err("oh no!"))),
+        ExecuteMsg::TriggerPythUpdate { price } => execute_trigger_pyth_update(deps, env, price),
     }
 }
 
