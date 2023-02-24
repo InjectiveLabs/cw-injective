@@ -141,8 +141,7 @@ fn handle_atomic_order_reply(
     let dec_scale_factor: FPDecimal = FPDecimal::from(1000000000000000000_i128);
     let id = msg.id;
     let order_response: MsgOrderResponse = Message::parse_from_bytes(
-        &msg
-            .result
+        &msg.result
             .into_result()
             .map_err(ContractError::SubMsgFailure)?
             .data
