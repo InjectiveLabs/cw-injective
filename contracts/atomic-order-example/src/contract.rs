@@ -6,6 +6,7 @@ use cosmwasm_std::{
     BankMsg, Coin, DepsMut, Env, MessageInfo, Reply, Response, StdError, SubMsg, Uint128,
 };
 use cw2::set_contract_version;
+use cw_utils::parse_reply_instantiate_data;
 
 use injective_cosmwasm::{
     create_deposit_msg, create_spot_market_order_msg, create_withdraw_msg,
@@ -16,7 +17,7 @@ use injective_math::FPDecimal;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
-use crate::proto_parser::{parse_protobuf_bytes, parse_protobuf_string, ResultToStdErrExt};
+use crate::proto_parser::{parse_protobuf_string, ResultToStdErrExt};
 use crate::state::{ContractConfigState, SwapCacheState, STATE, SWAP_OPERATION_STATE};
 
 // version info for migration info
@@ -140,11 +141,9 @@ fn handle_atomic_order_reply(
     msg: Reply,
 ) -> Result<Response<InjectiveMsgWrapper>, StdError> {
     let dec_scale_factor: FPDecimal = FPDecimal::from(1000000000000000000_i128);
-    let mut data = msg.result.unwrap().data.unwrap().to_vec();
-    let _ = parse_protobuf_string(&mut data, 1); // order hash - we need to read to advance reader
-
-    let trade_result = parse_protobuf_bytes(&mut data, 2).with_stderr()?;
-    let mut trade_data = trade_result.unwrap().to_vec();
+    // res.contract_address contains the (ignored) order hash
+    let res = parse_reply_instantiate_data(msg).with_stderr()?;
+    let mut trade_data = res.data.unwrap_or_default().to_vec();
     let field1 = parse_protobuf_string(&mut trade_data, 1).with_stderr()?;
     let field2 = parse_protobuf_string(&mut trade_data, 2).with_stderr()?;
     let field3 = parse_protobuf_string(&mut trade_data, 3).with_stderr()?;

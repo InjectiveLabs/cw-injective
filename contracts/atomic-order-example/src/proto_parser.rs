@@ -1,3 +1,5 @@
+// Copied from cw-utils repository: https://github.com/CosmWasm/cw-utils/tree/main/src/parse_reply.rs
+
 use cosmwasm_std::{Binary, StdError};
 use cw_utils::ParseReplyError;
 
@@ -79,6 +81,7 @@ pub fn parse_protobuf_string(
     Ok(String::from_utf8(str_field)?)
 }
 
+#[allow(dead_code)]
 pub fn parse_protobuf_bytes(
     data: &mut Vec<u8>,
     field_number: u8,
