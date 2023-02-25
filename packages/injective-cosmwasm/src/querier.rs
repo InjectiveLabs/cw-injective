@@ -6,9 +6,9 @@ use crate::oracle::{OracleHistoryOptions, OracleInfo};
 use crate::query::{
     DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse,
     OraclePriceResponse, OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, QueryAggregateVolumeResponse,
-    QueryContractRegistrationInfoResponse, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse, SubaccountDepositResponse,
-    SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TokenFactoryCreateDenomFeeResponse,
-    TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+    QueryContractRegistrationInfoResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse, SpotMarketMidPriceAndTOBResponse,
+    SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse,
+    TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
 };
 use crate::route::InjectiveRoute;
 use crate::volatility::TradeHistoryOptions;
@@ -300,6 +300,26 @@ impl<'a> InjectiveQuerier<'a> {
         };
 
         let res: QueryAggregateVolumeResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_denom_decimal<T: Into<String> + Clone>(&self, denom: &'a T) -> StdResult<QueryDenomDecimalResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::DenomDecimal { denom: denom.clone().into() },
+        };
+
+        let res: QueryDenomDecimalResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_denom_decimals<T: Into<String> + Clone>(&self, denoms: &'a T) -> StdResult<QueryDenomDecimalsResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::DenomDecimals { denoms: denoms.into() },
+        };
+
+        let res: QueryDenomDecimalsResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 

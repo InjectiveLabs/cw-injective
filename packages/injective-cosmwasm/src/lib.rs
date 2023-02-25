@@ -22,9 +22,9 @@ pub use querier::InjectiveQuerier;
 pub use query::{
     DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse,
     OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, QueryAggregateMarketVolumeResponse,
-    QueryAggregateVolumeResponse, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse, SubaccountDepositResponse,
-    SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse,
-    TraderSpotOrdersResponse, FROM_WORST_TO_BEST_CANCELLATION_STRATEGY, UNSORTED_CANCELLATION_STRATEGY,
+    QueryAggregateVolumeResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse,
+    SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TokenFactoryDenomSupplyResponse,
+    TraderDerivativeOrdersResponse, TraderSpotOrdersResponse, FROM_WORST_TO_BEST_CANCELLATION_STRATEGY, UNSORTED_CANCELLATION_STRATEGY,
 };
 pub use route::InjectiveRoute;
 pub use spot::{MsgCreateSpotMarketOrderResponse, SpotLimitOrder, SpotMarketOrder, SpotOrder, TrimmedSpotLimitOrder};

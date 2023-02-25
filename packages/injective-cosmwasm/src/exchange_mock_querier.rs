@@ -16,9 +16,9 @@ use crate::volatility::TradeHistoryOptions;
 use crate::{
     Deposit, DerivativeMarket, DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery,
     InjectiveQueryWrapper, MarketVolatilityResponse, OracleInfo, OracleVolatilityResponse, PerpetualMarketFundingResponse,
-    PerpetualMarketInfoResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse, SpotMarket, SpotMarketMidPriceAndTOBResponse,
-    SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse,
-    TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+    PerpetualMarketInfoResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse,
+    QueryDenomDecimalsResponse, SpotMarket, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse, SubaccountDepositResponse,
+    SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
 };
 use crate::{MarketId, SubaccountId};
 
@@ -201,6 +201,16 @@ fn default_aggregate_account_volume_handler() -> QuerierResult {
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
 
+fn default_denom_decimal_handler() -> QuerierResult {
+    let response = QueryDenomDecimalResponse { decimals: 6 };
+    SystemResult::Ok(ContractResult::from(to_binary(&response)))
+}
+
+fn default_denom_decimals_handler() -> QuerierResult {
+    let response = QueryDenomDecimalsResponse { denom_decimals: vec![] };
+    SystemResult::Ok(ContractResult::from(to_binary(&response)))
+}
+
 fn default_oracle_volatility_response_handler() -> QuerierResult {
     let response = OracleVolatilityResponse {
         volatility: Some(FPDecimal::one()),
@@ -335,6 +345,14 @@ pub trait HandlesAccountVolumeQuery {
     fn handle(&self, account: String) -> QuerierResult;
 }
 
+pub trait HandlesDenomDecimalQuery {
+    fn handle(&self, denom: String) -> QuerierResult;
+}
+
+pub trait HandlesDenomDecimalsQuery {
+    fn handle(&self, denoms: Vec<String>) -> QuerierResult;
+}
+
 pub struct WasmMockQuerier {
     pub smart_query_handler: Option<Box<dyn HandlesSmartQuery>>,
     pub subaccount_deposit_response_handler: Option<Box<dyn HandlesSubaccountAndDenomQuery>>,
@@ -356,6 +374,8 @@ pub struct WasmMockQuerier {
     pub derivative_market_mid_price_and_tob_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
     pub aggregate_market_volume_handler: Option<Box<dyn HandlesMarketVolumeQuery>>,
     pub aggregate_account_volume_handler: Option<Box<dyn HandlesAccountVolumeQuery>>,
+    pub denom_decimal_handler: Option<Box<dyn HandlesDenomDecimalQuery>>,
+    pub denom_decimals_handler: Option<Box<dyn HandlesDenomDecimalsQuery>>,
     pub oracle_volatility_response_handler: Option<Box<dyn HandlesOracleVolatilityQuery>>,
     pub oracle_price_response_handler: Option<Box<dyn HandlesOraclePriceQuery>>,
     pub token_factory_denom_total_supply_handler: Option<Box<dyn HandlesDenomSupplyQuery>>,
@@ -373,7 +393,7 @@ impl Querier for WasmMockQuerier {
                 return SystemResult::Err(SystemError::InvalidRequest {
                     error: format!("Parsing query request: {e:?}"),
                     request: bin_request.into(),
-                })
+                });
             }
         };
 
@@ -498,6 +518,14 @@ impl WasmMockQuerier {
                     Some(handler) => handler.handle(account),
                     None => default_aggregate_account_volume_handler(),
                 },
+                InjectiveQuery::DenomDecimal { denom } => match &self.denom_decimal_handler {
+                    Some(handler) => handler.handle(denom),
+                    None => default_denom_decimal_handler(),
+                },
+                InjectiveQuery::DenomDecimals { denoms } => match &self.denom_decimals_handler {
+                    Some(handler) => handler.handle(denoms),
+                    None => default_denom_decimals_handler(),
+                },
                 InjectiveQuery::OracleVolatility {
                     base_info,
                     quote_info,
@@ -556,6 +584,7 @@ impl WasmMockQuerier {
             spot_market_mid_price_and_tob_response_handler: None,
             derivative_market_mid_price_and_tob_response_handler: None,
             aggregate_account_volume_handler: None,
+            denom_decimal_handler: None,
             aggregate_market_volume_handler: None,
             oracle_volatility_response_handler: None,
             oracle_price_response_handler: None,
@@ -564,6 +593,7 @@ impl WasmMockQuerier {
             balance_query_handler: None,
             all_balances_query_handler: None,
             registered_contract_info_query_handler: None,
+            denom_decimals_handler: None,
         }
     }
 }
