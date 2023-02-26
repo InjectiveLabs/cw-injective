@@ -313,10 +313,12 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_denom_decimals<T: Into<String> + Clone>(&self, denoms: &'a T) -> StdResult<QueryDenomDecimalsResponse> {
+    pub fn query_denom_decimals<T: Into<Vec<String>> + Clone>(&self, denoms: &'a T) -> StdResult<QueryDenomDecimalsResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
-            query_data: InjectiveQuery::DenomDecimals { denoms: denoms.into() },
+            query_data: InjectiveQuery::DenomDecimals {
+                denoms: denoms.clone().into(),
+            },
         };
 
         let res: QueryDenomDecimalsResponse = self.querier.query(&request.into())?;
