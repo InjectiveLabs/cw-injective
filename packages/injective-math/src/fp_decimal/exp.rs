@@ -53,7 +53,9 @@ impl FPDecimal {
     }
 
     // a^(0.5)
-    pub fn _root(a: FPDecimal) -> Option<FPDecimal> {
+    pub fn sqrt(a: FPDecimal) -> Option<FPDecimal> {
+        const MAX_ITERATIONS: i64 = 300;
+
         if a < FPDecimal::zero() {
             return None;
         }
@@ -67,9 +69,12 @@ impl FPDecimal {
         let mut l = r + FPDecimal::one();
 
         // Keep going while the difference is larger than the tolerance
-        while l != r {
+        let mut c = 0i64;
+        while (l != r) && (c < MAX_ITERATIONS) {
             l = r;
             r = (r + a / r) / FPDecimal::TWO;
+
+            c += 1;
         }
 
         Some(r)
@@ -174,7 +179,7 @@ mod tests {
         ];
 
         for (ix, el) in inputs.iter().enumerate() {
-            let result = FPDecimal::_root(FPDecimal::from(*el));
+            let result = FPDecimal::sqrt(FPDecimal::from(*el));
 
             assert_eq!(result, expected[ix]);
         }
