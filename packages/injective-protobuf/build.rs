@@ -1,8 +1,10 @@
 use protobuf_codegen_pure::Customize;
 
 fn main() {
-    let mut customizer = Customize::default();
-    customizer.gen_mod_rs = Some(true);
+    let customizer = Customize {
+        gen_mod_rs: Some(true),
+        ..Default::default()
+    };
 
     protobuf_codegen_pure::Codegen::new()
         .out_dir("src/proto")
