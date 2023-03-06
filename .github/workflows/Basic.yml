@@ -11,6 +11,14 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
+      - name: Set ownership
+        run: |
+          # This is to fix git not liking owner of the checkout dir
+          chown -R $(id -u):$(id -g) $PWD
+      - name: Checkout submodules
+        uses: srt32/git-actions@v0.0.3
+        with:
+          args: git submodule update --init --recursive
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
@@ -34,6 +42,14 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
+      - name: Set ownership
+        run: |
+          # This is to fix git not liking owner of the checkout dir
+          chown -R $(id -u):$(id -g) $PWD
+      - name: Checkout submodules
+        uses: srt32/git-actions@v0.0.3
+        with:
+          args: git submodule update --init --recursive
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
