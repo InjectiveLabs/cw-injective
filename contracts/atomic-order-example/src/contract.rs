@@ -154,7 +154,13 @@ fn handle_atomic_order_reply(
         id,
         err: err.to_string(),
     })?;
-    let trade_data = order_response.results.unwrap();
+    // unwrap results into trade_data
+    let trade_data = match order_response.results.into_option() {
+        Some(trade_data) => Ok(trade_data),
+        None => Err(ContractError::CustomError {
+            val: "No trade data in order response".to_string(),
+        }),
+    }?;
     let quantity = FPDecimal::from_str(&trade_data.quantity)? / dec_scale_factor;
     let price = FPDecimal::from_str(&trade_data.price)? / dec_scale_factor;
     let fee = FPDecimal::from_str(&trade_data.fee)? / dec_scale_factor;
