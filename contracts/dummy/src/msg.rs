@@ -16,6 +16,8 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub enum SudoMsg {
     BeginBlocker {},
+    Deactivate {},
+    Deregister {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -24,4 +26,5 @@ pub enum QueryMsg {
     Ping {},
     Error {},
     Runs {},
+    Active {},
 }
