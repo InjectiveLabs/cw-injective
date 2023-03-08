@@ -1,7 +1,7 @@
 use cosmwasm_std::{Empty, StdError, StdResult};
 use cw_storage_plus::{Key, KeyDeserialize, Prefixer, PrimaryKey};
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::{de::Error, Deserialize, Deserializer, Serialize};
 use std::fmt;
 
 use crate::InjectiveQuerier;
@@ -11,7 +11,7 @@ pub enum MarketType {
     Derivative,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
 pub struct MarketId(String);
 
 impl MarketId {
@@ -66,11 +66,32 @@ impl Into<String> for MarketId {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
+impl<'de> Deserialize<'de> for MarketId {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+
+        if !s.starts_with("0x") {
+            let error_message = "Invalid prefix in deserialization: market_id must start with 0x";
+            return Err(D::Error::custom(error_message));
+        }
+
+        if s.len() != 66 {
+            let error_message = "Invalid length in deserialization: market_id must be exactly 66 characters";
+            return Err(D::Error::custom(error_message));
+        }
+
+        Ok(MarketId::unchecked(s))
+    }
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
 pub struct SubaccountId(String);
 
 impl SubaccountId {
-    pub fn new<S>(subaccount_id_s: S) -> StdResult<Self>
+    pub fn new<S>(subaccount_id_s: S) -> std::result::Result<SubaccountId, cosmwasm_std::StdError>
     where
         S: Into<String>,
     {
@@ -101,6 +122,27 @@ impl SubaccountId {
     #[inline]
     pub fn as_bytes(&self) -> &[u8] {
         self.0.as_bytes()
+    }
+}
+
+impl<'de> Deserialize<'de> for SubaccountId {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+
+        if !s.starts_with("0x") {
+            let error_message = "Invalid prefix in deserialization: subaccount_id must start with 0x";
+            return Err(D::Error::custom(error_message));
+        }
+
+        if s.len() != 66 {
+            let error_message = "Invalid length in deserialization: subaccount_id must be exactly 66 characters";
+            return Err(D::Error::custom(error_message));
+        }
+
+        Ok(SubaccountId::unchecked(s))
     }
 }
 
