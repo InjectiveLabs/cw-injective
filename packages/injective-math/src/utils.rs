@@ -2,17 +2,13 @@ use crate::FPDecimal;
 use cosmwasm_std::StdError;
 use std::{fmt::Display, str::FromStr};
 
+#[derive(Default)]
 pub enum RangeEnds {
+    #[default]
     BothInclusive,
     MinInclusive,
     MaxInclusive,
     Exclusive,
-}
-
-impl Default for RangeEnds {
-    fn default() -> Self {
-        RangeEnds::BothInclusive
-    }
 }
 
 pub fn parse_dec(vs: &str, min: Option<&FPDecimal>, max: Option<&FPDecimal>, range_ends: RangeEnds) -> Result<FPDecimal, StdError> {
