@@ -1,9 +1,10 @@
-use cosmwasm_std::{Addr, Coin, CosmosMsg, CustomMsg};
+use cosmwasm_std::{Addr, BankMsg, Coin, CosmosMsg, CustomMsg, Deps, StdResult};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::subaccount::is_default_subaccount;
 use crate::{derivative::DerivativeOrder, oracle::PriceAttestation, order::OrderData, route::InjectiveRoute, spot::SpotOrder};
-use crate::{MarketId, SubaccountId};
+use crate::{subaccount_id_to_injective_address, InjectiveQueryWrapper, MarketId, SubaccountId};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -166,40 +167,68 @@ pub fn create_withdraw_msg(sender: Addr, subaccount_id: SubaccountId, amount: Co
 }
 
 pub fn create_subaccount_transfer_msg(
-    sender: Addr,
-    source_subaccount_id: SubaccountId,
-    destination_subaccount_id: SubaccountId,
-    amount: Coin,
-) -> CosmosMsg<InjectiveMsgWrapper> {
-    InjectiveMsgWrapper {
+    deps: &Deps<InjectiveQueryWrapper>,
+    source_subaccount_id: &SubaccountId,
+    destination_subaccount_id: &SubaccountId,
+    amount: &Coin,
+) -> StdResult<Vec<CosmosMsg<InjectiveMsgWrapper>>> {
+    let sender = subaccount_id_to_injective_address(source_subaccount_id, deps)?;
+    let to_address = subaccount_id_to_injective_address(destination_subaccount_id, deps)?;
+
+    let is_external_transfer = sender != to_address;
+    if is_external_transfer {
+        return create_external_transfer_msg(deps, source_subaccount_id, destination_subaccount_id, amount);
+    }
+
+    if is_default_subaccount(destination_subaccount_id) {
+        return Ok(vec![create_withdraw_msg(sender, source_subaccount_id.to_owned(), amount.to_owned())]);
+    }
+
+    Ok(vec![InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,
         msg_data: InjectiveMsg::SubaccountTransfer {
             sender,
-            source_subaccount_id,
-            destination_subaccount_id,
-            amount,
+            source_subaccount_id: source_subaccount_id.to_owned(),
+            destination_subaccount_id: destination_subaccount_id.to_owned(),
+            amount: amount.to_owned(),
         },
     }
-    .into()
+    .into()])
 }
 
 pub fn create_external_transfer_msg(
-    sender: Addr,
-    source_subaccount_id: SubaccountId,
-    destination_subaccount_id: SubaccountId,
-    amount: Coin,
-) -> CosmosMsg<InjectiveMsgWrapper> {
-    InjectiveMsgWrapper {
+    deps: &Deps<InjectiveQueryWrapper>,
+    source_subaccount_id: &SubaccountId,
+    destination_subaccount_id: &SubaccountId,
+    amount: &Coin,
+) -> StdResult<Vec<CosmosMsg<InjectiveMsgWrapper>>> {
+    let sender = subaccount_id_to_injective_address(source_subaccount_id, deps)?;
+
+    if is_default_subaccount(destination_subaccount_id) {
+        let to_address = subaccount_id_to_injective_address(destination_subaccount_id, deps)?;
+
+        let withdraw_msg = create_withdraw_msg(sender, source_subaccount_id.to_owned(), amount.to_owned());
+        let bank_send_msg = CosmosMsg::Bank(BankMsg::Send {
+            to_address: to_address.to_string(),
+            amount: vec![amount.to_owned()],
+        });
+
+        return Ok(vec![withdraw_msg, bank_send_msg]);
+    }
+
+    Ok(vec![InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,
         msg_data: InjectiveMsg::ExternalTransfer {
             sender,
-            source_subaccount_id,
-            destination_subaccount_id,
-            amount,
+            source_subaccount_id: source_subaccount_id.to_owned(),
+            destination_subaccount_id: destination_subaccount_id.to_owned(),
+            amount: amount.to_owned(),
         },
     }
-    .into()
+    .into()])
 }
+
+// return create_subaccount_transfer_msg(sender, subaccount_id, amount);
 
 pub fn create_spot_market_order_msg(sender: Addr, order: SpotOrder) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
