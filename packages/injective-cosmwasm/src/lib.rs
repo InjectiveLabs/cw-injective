@@ -30,7 +30,7 @@ pub use route::InjectiveRoute;
 pub use spot::{MsgCreateSpotMarketOrderResponse, SpotLimitOrder, SpotMarketOrder, SpotOrder, TrimmedSpotLimitOrder};
 pub use spot_market::SpotMarket;
 pub use subaccount::{
-    addr_to_bech32, bech32_to_hex, checked_address_to_subaccount_id, get_default_subaccount_id_for_checked_address,
+    addr_to_bech32, bech32_to_hex, checked_address_to_subaccount_id, get_default_subaccount_id_for_checked_address, is_default_subaccount,
     subaccount_id_to_ethereum_address, subaccount_id_to_injective_address,
 };
 pub use types::{Hash, MarketId, MarketType, SubaccountId};
