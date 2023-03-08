@@ -53,7 +53,7 @@ pub fn execute(
 }
 
 #[entry_point]
-pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
+pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
     match msg {
         SudoMsg::BeginBlocker {} => {
             let runs = COUNTER.load(deps.storage)? + 1;

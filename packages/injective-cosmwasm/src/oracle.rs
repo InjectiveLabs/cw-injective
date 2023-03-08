@@ -32,7 +32,9 @@ pub struct OracleVolatilityResponse {
 
 #[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema, Copy)]
 #[repr(i32)]
+#[derive(Default)]
 pub enum OracleType {
+    #[default]
     Unspecified = 0,
     Band = 1,
     PriceFeed = 2,
@@ -45,12 +47,6 @@ pub enum OracleType {
     Pyth = 9,
     BandIBC = 10,
     Provider = 11,
-}
-
-impl Default for OracleType {
-    fn default() -> Self {
-        OracleType::Unspecified
-    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
