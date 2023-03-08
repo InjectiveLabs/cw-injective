@@ -51,6 +51,34 @@ impl FPDecimal {
         }
         val
     }
+
+    // a^(0.5)
+    pub fn sqrt(a: FPDecimal) -> Option<FPDecimal> {
+        const MAX_ITERATIONS: i64 = 300;
+
+        if a < FPDecimal::zero() {
+            return None;
+        }
+
+        if a.is_zero() {
+            return Some(FPDecimal::zero());
+        }
+
+        // Start with an arbitrary number as the first guess
+        let mut r = a / FPDecimal::TWO;
+        let mut l = r + FPDecimal::one();
+
+        // Keep going while the difference is larger than the tolerance
+        let mut c = 0i64;
+        while (l != r) && (c < MAX_ITERATIONS) {
+            l = r;
+            r = (r + a / r) / FPDecimal::TWO;
+
+            c += 1;
+        }
+
+        Some(r)
+    }
 }
 
 impl Pow<FPDecimal> for FPDecimal {
@@ -66,6 +94,7 @@ mod tests {
     use crate::FPDecimal;
     use bigint::U256;
     use num::pow::Pow;
+    use std::str::FromStr;
 
     #[test]
     fn test_exp() {
@@ -96,6 +125,12 @@ mod tests {
     }
 
     #[test]
+    fn test_pow_four() {
+        // NOTE: this test is not correct, but is an example of why we need a square root
+        assert!(FPDecimal::pow(FPDecimal::FOUR, FPDecimal::one().div(2i128)) != FPDecimal::TWO);
+    }
+
+    #[test]
     fn test_pow_exp() {
         assert_eq!(FPDecimal::E.pow(FPDecimal::ONE), FPDecimal::E);
     }
@@ -120,5 +155,33 @@ mod tests {
     fn test_pow_zero_2() {
         // FPDecimal::_ln(FPDecimal::zero());
         FPDecimal::ZERO.pow(FPDecimal::one().div(2i128));
+    }
+
+    #[test]
+    fn test_square_root() {
+        let inputs: Vec<i128> = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 16, 25, -1];
+
+        let expected: Vec<Option<FPDecimal>> = vec![
+            Some(FPDecimal::zero()),
+            Some(FPDecimal::one()),
+            Some(FPDecimal::from_str("1.414213562373095048").unwrap()),
+            Some(FPDecimal::from_str("1.732050807568877293").unwrap()),
+            Some(FPDecimal::TWO),
+            Some(FPDecimal::from_str("2.236067977499789696").unwrap()),
+            Some(FPDecimal::from_str("2.449489742783178098").unwrap()),
+            Some(FPDecimal::from_str("2.645751311064590590").unwrap()),
+            Some(FPDecimal::from_str("2.828427124746190097").unwrap()),
+            Some(FPDecimal::THREE),
+            Some(FPDecimal::from_str("3.162277660168379331").unwrap()),
+            Some(FPDecimal::FOUR),
+            Some(FPDecimal::FIVE),
+            None,
+        ];
+
+        for (ix, el) in inputs.iter().enumerate() {
+            let result = FPDecimal::sqrt(FPDecimal::from(*el));
+
+            assert_eq!(result, expected[ix]);
+        }
     }
 }

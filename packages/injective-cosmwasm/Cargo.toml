@@ -1,6 +1,6 @@
 [package]
 name = "injective-cosmwasm"
-version = "0.1.81"
+version = "0.1.86"
 authors = ["Albert Chon <albert@injectivelabs.org>"]
 edition = "2018"
 description = "Bindings for CosmWasm contracts to call into custom modules of Injective Core"
@@ -24,3 +24,4 @@ hex= { version="0.4.3", features = ["serde"]}
 
 [dev-dependencies]
 cosmwasm-schema = { version = "1.1.1" }
+serde-json-wasm = {version = "0.4.1" }

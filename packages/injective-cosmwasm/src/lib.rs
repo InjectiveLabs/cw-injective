@@ -1,6 +1,5 @@
 pub use derivative::{
-    DerivativeLimitOrder, DerivativeMarketOrder, DerivativeOrder, DerivativePosition, EffectivePosition, OrderType, Position,
-    TrimmedDerivativeLimitOrder,
+    DerivativeLimitOrder, DerivativeMarketOrder, DerivativeOrder, DerivativePosition, EffectivePosition, Position, TrimmedDerivativeLimitOrder,
 };
 pub use derivative_market::{
     DerivativeMarket, FullDerivativeMarket, FullDerivativeMarketPerpetualInfo, PerpetualMarketFunding, PerpetualMarketInfo, PerpetualMarketState,
@@ -11,20 +10,21 @@ pub use exchange_mock_querier::handlers::*;
 #[cfg(not(target_arch = "wasm32"))]
 pub use exchange_mock_querier::*;
 pub use msg::{
-    create_activate_contract_msg, create_batch_update_orders_msg, create_burn_tokens_msg, create_deactivate_contract_msg, create_deposit_msg,
-    create_derivative_market_order_msg, create_external_transfer_msg, create_increase_position_margin_msg, create_liquidate_position_msg,
-    create_mint_tokens_msg, create_new_denom_msg, create_register_as_dmm_msg, create_relay_pyth_prices_msg, create_set_token_metadata_msg,
-    create_spot_market_order_msg, create_subaccount_transfer_msg, create_update_contract_msg, create_withdraw_msg, InjectiveMsg, InjectiveMsgWrapper,
+    cancel_derivative_order_msg, cancel_spot_order_msg, create_activate_contract_msg, create_batch_update_orders_msg, create_burn_tokens_msg,
+    create_deactivate_contract_msg, create_deposit_msg, create_derivative_market_order_msg, create_external_transfer_msg,
+    create_increase_position_margin_msg, create_liquidate_position_msg, create_mint_tokens_msg, create_new_denom_msg, create_register_as_dmm_msg,
+    create_relay_pyth_prices_msg, create_set_token_metadata_msg, create_spot_market_order_msg, create_subaccount_transfer_msg,
+    create_update_contract_msg, create_withdraw_msg, InjectiveMsg, InjectiveMsgWrapper,
 };
 pub use oracle::{OracleInfo, OracleType, PriceAttestation, PythStatus};
-pub use order::{OrderData, OrderInfo};
+pub use order::{GenericOrder, OrderData, OrderInfo, OrderType};
 pub use querier::InjectiveQuerier;
 pub use query::{
     DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse,
-    OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, QueryAggregateMarketVolumeResponse,
-    QueryAggregateVolumeResponse, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse, SubaccountDepositResponse,
-    SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse,
-    TraderSpotOrdersResponse, FROM_WORST_TO_BEST_CANCELLATION_STRATEGY, UNSORTED_CANCELLATION_STRATEGY,
+    OraclePriceResponse, OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, QueryAggregateMarketVolumeResponse,
+    QueryAggregateVolumeResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse,
+    SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TokenFactoryDenomSupplyResponse,
+    TraderDerivativeOrdersResponse, TraderSpotOrdersResponse, FROM_WORST_TO_BEST_CANCELLATION_STRATEGY, UNSORTED_CANCELLATION_STRATEGY,
 };
 pub use route::InjectiveRoute;
 pub use spot::{MsgCreateSpotMarketOrderResponse, SpotLimitOrder, SpotMarketOrder, SpotOrder, TrimmedSpotLimitOrder};

@@ -1,0 +1,3 @@
+# Protobuf
+src/proto/*
+!src/proto/.gitkeep

@@ -105,6 +105,12 @@ pub enum InjectiveQuery {
     AggregateAccountVolume {
         account: String,
     },
+    DenomDecimal {
+        denom: String,
+    },
+    DenomDecimals {
+        denoms: Vec<String>,
+    },
     OracleVolatility {
         base_info: Option<OracleInfo>,
         quote_info: Option<OracleInfo>,
@@ -119,7 +125,7 @@ pub enum InjectiveQuery {
         denom: String,
     },
     TokenFactoryDenomCreationFee {},
-    // wasxm
+    // wasmx
     WasmxRegisteredContractInfo {
         contract_address: String,
     },
@@ -249,4 +255,23 @@ pub struct QueryAggregateVolumeResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct QueryAggregateMarketVolumeResponse {
     pub volume: VolumeByType,
+}
+
+/// Response to query for aggregate volume for a given market
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct DenomDecimals {
+    pub denom: String,
+    pub decimals: u64,
+}
+
+/// Response to query for decimals for a given denom
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct QueryDenomDecimalResponse {
+    pub decimals: u64,
+}
+
+/// Response to query for decimals for multiple denoms
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct QueryDenomDecimalsResponse {
+    pub denom_decimals: Vec<DenomDecimals>,
 }
