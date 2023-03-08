@@ -219,7 +219,7 @@ impl Module for CustomInjectiveHandler {
         exec_calls_count += 1;
 
         if self.enable_debug {
-            println!("[{exec_calls_count}] Execute mesage: {msg:?}");
+            println!("[{exec_calls_count}] Execute message: {msg:?}");
         }
 
         if self.responses.executes.is_empty()
