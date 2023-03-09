@@ -3,6 +3,7 @@ use protobuf_codegen_pure::Customize;
 fn main() {
     let customizer = Customize {
         gen_mod_rs: Some(true),
+        lite_runtime: Some(true),
         ..Default::default()
     };
 
