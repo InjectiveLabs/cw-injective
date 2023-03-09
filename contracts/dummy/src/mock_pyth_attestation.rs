@@ -22,7 +22,8 @@ pub fn execute_trigger_pyth_update(
         // )?,
         price_id: Hash::from_hex(
             "f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b",
-        )?.to_string(),
+        )?
+        .to_string(),
         price,
         conf: 500,
         expo: -3,
