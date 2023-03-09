@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, BankMsg, Coin, CosmosMsg, CustomMsg, Deps, StdResult};
+use cosmwasm_std::{Addr, BankMsg, Coin, CosmosMsg, CustomMsg, Deps, StdError, StdResult};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -207,13 +207,21 @@ pub fn create_external_transfer_msg(
     if is_default_subaccount(destination_subaccount_id) {
         let to_address = subaccount_id_to_injective_address(destination_subaccount_id, deps)?;
 
-        let withdraw_msg = create_withdraw_msg(sender, source_subaccount_id.to_owned(), amount.to_owned());
         let bank_send_msg = CosmosMsg::Bank(BankMsg::Send {
             to_address: to_address.to_string(),
             amount: vec![amount.to_owned()],
         });
 
+        if is_default_subaccount(source_subaccount_id) {
+            return Ok(vec![bank_send_msg]);
+        }
+
+        let withdraw_msg = create_withdraw_msg(sender, source_subaccount_id.to_owned(), amount.to_owned());
         return Ok(vec![withdraw_msg, bank_send_msg]);
+    }
+
+    if is_default_subaccount(source_subaccount_id) {
+        return Err(StdError::generic_err("Cannot send from default subaccount to external subaccount"));
     }
 
     Ok(vec![InjectiveMsgWrapper {
