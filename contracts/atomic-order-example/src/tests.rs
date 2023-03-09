@@ -128,15 +128,7 @@ fn test_swap() {
         },
     };
 
-    if let InjectiveMsg::Deposit {
-        sender,
-        subaccount_id: _subaccount_id,
-        amount: _amount,
-    } = &get_message_data(&res.messages, 0).msg_data
-    {
-        assert_eq!(sender.to_string(), contract_addr, "sender not correct")
-    }
-    let order_message = get_message_data(&res.messages, 1);
+    let order_message = get_message_data(&res.messages, 0);
     assert_eq!(
         InjectiveRoute::Exchange,
         order_message.route,
@@ -158,33 +150,9 @@ fn test_swap() {
 
     let transfers_response = reply(deps.as_mut_deps(), inj_mock_env(), reply_msg);
     let messages = transfers_response.unwrap().messages;
-    assert_eq!(messages.len(), 3);
+    assert_eq!(messages.len(), 1);
 
-    if let InjectiveMsg::Withdraw {
-        sender,
-        subaccount_id: _subaccount_id,
-        amount,
-    } = &get_message_data(&messages, 0).msg_data
-    {
-        assert_eq!(sender.to_string(), contract_addr, "sender not correct");
-        assert_eq!(amount.amount, Uint128::from(8u128));
-    } else {
-        panic!("Wrong message type!");
-    }
-
-    if let InjectiveMsg::Withdraw {
-        sender,
-        subaccount_id: _subaccount_id,
-        amount,
-    } = &get_message_data(&messages, 1).msg_data
-    {
-        assert_eq!(sender.to_string(), contract_addr, "sender not correct");
-        assert_eq!(amount.amount, Uint128::from(9000u128 - 8036u128));
-    } else {
-        panic!("Wrong message type!");
-    }
-
-    if let CosmosMsg::Bank(BankMsg::Send { to_address, amount }) = &messages[2].msg {
+    if let CosmosMsg::Bank(BankMsg::Send { to_address, amount }) = &messages[0].msg {
         assert_eq!(to_address, sender_addr);
         assert_eq!(2, amount.len());
         assert_eq!(amount[0].denom, "INJ");
