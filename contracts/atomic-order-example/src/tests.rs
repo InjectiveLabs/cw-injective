@@ -10,8 +10,8 @@ use cosmwasm_std::{
 
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
 use injective_cosmwasm::{
-    HandlesMarketIdQuery, InjectiveQueryWrapper, InjectiveRoute, MarketId, OrderInfo,
-    OrderType, SpotMarket, SpotMarketResponse, SpotOrder, SubaccountId, WasmMockQuerier,
+    HandlesMarketIdQuery, InjectiveQueryWrapper, InjectiveRoute, MarketId, OrderInfo, OrderType,
+    SpotMarket, SpotMarketResponse, SpotOrder, SubaccountId, WasmMockQuerier,
 };
 use injective_math::FPDecimal;
 

@@ -6,9 +6,8 @@ use protobuf::Message;
 use std::str::FromStr;
 
 use injective_cosmwasm::{
-    create_spot_market_order_msg,
-    get_default_subaccount_id_for_checked_address, InjectiveMsgWrapper, InjectiveQuerier,
-    InjectiveQueryWrapper, OrderType, SpotOrder,
+    create_spot_market_order_msg, get_default_subaccount_id_for_checked_address,
+    InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, OrderType, SpotOrder,
 };
 use injective_math::FPDecimal;
 use injective_protobuf::proto::tx;
