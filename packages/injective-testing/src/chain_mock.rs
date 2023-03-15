@@ -293,7 +293,7 @@ impl Module for CustomInjectiveHandler {
 
 pub fn mock_custom_injective_chain_app(
     initial_balances: Vec<InitialBalance>,
-    execute_respones: Vec<ExecuteResponseContainer>,
+    execute_responses: Vec<ExecuteResponseContainer>,
     query_responses: Vec<QueryResponseContainer>,
     execute_assertions: Vec<ExecuteAssertionContainer<InjectiveMsgWrapper>>,
     query_assertions: Vec<QueryAssertionContainer<InjectiveQueryWrapper>>,
@@ -302,7 +302,7 @@ pub fn mock_custom_injective_chain_app(
 ) -> MockedInjectiveApp {
     let inj_handler = CustomInjectiveHandler {
         responses: CustomInjectiveHandlerResponses {
-            executes: execute_respones,
+            executes: execute_responses,
             queries: query_responses,
         },
         assertions: CustomInjectiveHandlerAssertions {

@@ -90,6 +90,8 @@ impl<'de> Deserialize<'de> for MarketId {
 #[derive(Serialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
 pub struct SubaccountId(String);
 
+const MAX_SUBACCOUNT_NONE_LENGTH: usize = 3;
+
 impl SubaccountId {
     pub fn new<S>(subaccount_id_s: S) -> std::result::Result<SubaccountId, cosmwasm_std::StdError>
     where
@@ -97,11 +99,18 @@ impl SubaccountId {
     {
         let subaccount_id = subaccount_id_s.into();
 
-        if !subaccount_id.starts_with("0x") {
+        let is_nonce_derived = subaccount_id.len() <= MAX_SUBACCOUNT_NONE_LENGTH;
+        if is_nonce_derived && (subaccount_id.is_empty() || subaccount_id.parse::<u64>().is_err()) {
+            return Err(StdError::generic_err(
+                "Invalid nonce: when subaccount_id is derived from nonce, it must be a valid u64",
+            ));
+        }
+
+        if !is_nonce_derived && !subaccount_id.starts_with("0x") {
             return Err(StdError::generic_err("Invalid prefix: subaccount_id must start with 0x"));
         }
 
-        if subaccount_id.len() != 66 {
+        if !is_nonce_derived && subaccount_id.len() != 66 {
             return Err(StdError::generic_err("Invalid length: subaccount_id must be exactly 66 characters"));
         }
 
@@ -130,19 +139,25 @@ impl<'de> Deserialize<'de> for SubaccountId {
     where
         D: Deserializer<'de>,
     {
-        let s = String::deserialize(deserializer)?;
+        let subaccount_id = String::deserialize(deserializer)?;
 
-        if !s.starts_with("0x") {
+        let is_nonce_derived = subaccount_id.len() <= MAX_SUBACCOUNT_NONE_LENGTH;
+        if is_nonce_derived && (subaccount_id.is_empty() || subaccount_id.parse::<u64>().is_err()) {
+            let error_message = "Invalid nonce: when subaccount_id is derived from nonce, it must be a valid u64";
+            return Err(D::Error::custom(error_message));
+        }
+
+        if !is_nonce_derived && !subaccount_id.starts_with("0x") {
             let error_message = "Invalid prefix in deserialization: subaccount_id must start with 0x";
             return Err(D::Error::custom(error_message));
         }
 
-        if s.len() != 66 {
+        if !is_nonce_derived && subaccount_id.len() != 66 {
             let error_message = "Invalid length in deserialization: subaccount_id must be exactly 66 characters";
             return Err(D::Error::custom(error_message));
         }
 
-        Ok(SubaccountId::unchecked(s))
+        Ok(SubaccountId::unchecked(subaccount_id))
     }
 }
 
