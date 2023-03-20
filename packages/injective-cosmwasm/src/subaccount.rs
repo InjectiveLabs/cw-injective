@@ -1,11 +1,11 @@
 use std::str::FromStr;
 
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Deps, StdResult};
 use subtle_encoding::bech32;
 
 use ethereum_types::H160;
 
-use crate::SubaccountId;
+use crate::{InjectiveQueryWrapper, SubaccountId};
 
 pub fn get_default_subaccount_id_for_checked_address(addr: &Addr) -> SubaccountId {
     checked_address_to_subaccount_id(addr, 0)
@@ -17,6 +17,13 @@ pub fn checked_address_to_subaccount_id(addr: &Addr, nonce: u32) -> SubaccountId
     let nonce_str = left_pad_with_zeroes(hex_nonce, 24);
 
     SubaccountId::new(format!("{address_str}{nonce_str}")).expect("failed to create subaccount_id")
+}
+
+pub fn is_default_subaccount(subaccount_id: &SubaccountId) -> bool {
+    let subaccount_id_str = subaccount_id.as_str();
+    let hex_nonce = &subaccount_id_str[subaccount_id_str.len() - 24..subaccount_id_str.len()];
+
+    hex_nonce == "000000000000000000000000"
 }
 
 fn left_pad_with_zeroes(mut input: String, length: usize) -> String {
@@ -43,14 +50,15 @@ pub fn subaccount_id_to_ethereum_address(subaccount_id: &SubaccountId) -> String
     subaccount_id_str[0..subaccount_id_str.len() - 24].to_string()
 }
 
-pub fn subaccount_id_to_injective_address(subaccount_id: &SubaccountId) -> String {
+pub fn subaccount_id_to_injective_address(subaccount_id: &SubaccountId, deps: &Deps<InjectiveQueryWrapper>) -> StdResult<Addr> {
     let ethereum_address = subaccount_id_to_ethereum_address(subaccount_id);
-    addr_to_bech32(ethereum_address)
+    deps.api.addr_validate(addr_to_bech32(ethereum_address).as_str())
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
+        mock_dependencies,
         subaccount::{bech32_to_hex, checked_address_to_subaccount_id, get_default_subaccount_id_for_checked_address},
         subaccount_id_to_injective_address, SubaccountId,
     };
@@ -79,8 +87,11 @@ mod tests {
     #[test]
     fn subaccount_id_to_address_test() {
         let subaccount_id = "0xb5e09b93aceb70c1711af078922fa256011d7e56000000000000000000000000";
-        let address = subaccount_id_to_injective_address(&SubaccountId::new(subaccount_id.to_string()).expect("failed to create subaccount_id"));
+        let address = subaccount_id_to_injective_address(
+            &SubaccountId::new(subaccount_id.to_string()).expect("failed to create subaccount_id"),
+            &mock_dependencies().as_ref(),
+        );
 
-        assert_eq!(address, "inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv");
+        assert_eq!(address.unwrap(), "inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv");
     }
 }

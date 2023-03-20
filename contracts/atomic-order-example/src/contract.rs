@@ -1,11 +1,9 @@
-use std::str::FromStr;
-
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{
-    BankMsg, Coin, DepsMut, Env, MessageInfo, Reply, Response, StdError, SubMsg, Uint128,
-};
+use cosmwasm_std::{BankMsg, Coin, DepsMut, Env, MessageInfo, Reply, Response, SubMsg, Uint128};
 use cw2::set_contract_version;
+use protobuf::Message;
+use std::str::FromStr;
 
 use injective_cosmwasm::{
     create_deposit_msg, create_spot_market_order_msg, create_withdraw_msg,
@@ -13,10 +11,10 @@ use injective_cosmwasm::{
     InjectiveQueryWrapper, OrderType, SpotOrder,
 };
 use injective_math::FPDecimal;
+use injective_protobuf::proto::tx;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
-use crate::proto_parser::{parse_protobuf_bytes, parse_protobuf_string, ResultToStdErrExt};
 use crate::state::{ContractConfigState, SwapCacheState, STATE, SWAP_OPERATION_STATE};
 
 // version info for migration info
@@ -127,10 +125,10 @@ pub fn reply(
     deps: DepsMut<InjectiveQueryWrapper>,
     env: Env,
     msg: Reply,
-) -> Result<Response<InjectiveMsgWrapper>, StdError> {
+) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     match msg.id {
         ATOMIC_ORDER_REPLY_ID => handle_atomic_order_reply(deps, env, msg),
-        id => Err(StdError::generic_err(format!("Unknown reply id: {id}"))),
+        _ => Err(ContractError::UnrecognisedReply(msg.id)),
     }
 }
 
@@ -138,19 +136,34 @@ fn handle_atomic_order_reply(
     deps: DepsMut<InjectiveQueryWrapper>,
     env: Env,
     msg: Reply,
-) -> Result<Response<InjectiveMsgWrapper>, StdError> {
+) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let dec_scale_factor: FPDecimal = FPDecimal::from(1000000000000000000_i128);
-    let mut data = msg.result.unwrap().data.unwrap().to_vec();
-    let _ = parse_protobuf_string(&mut data, 1); // order hash - we need to read to advance reader
-
-    let trade_result = parse_protobuf_bytes(&mut data, 2).with_stderr()?;
-    let mut trade_data = trade_result.unwrap().to_vec();
-    let field1 = parse_protobuf_string(&mut trade_data, 1).with_stderr()?;
-    let field2 = parse_protobuf_string(&mut trade_data, 2).with_stderr()?;
-    let field3 = parse_protobuf_string(&mut trade_data, 3).with_stderr()?;
-    let quantity = FPDecimal::from_str(&field1)? / dec_scale_factor;
-    let price = FPDecimal::from_str(&field2)? / dec_scale_factor;
-    let fee = FPDecimal::from_str(&field3)? / dec_scale_factor;
+    let id = msg.id;
+    let order_response: tx::MsgCreateSpotMarketOrderResponse = Message::parse_from_bytes(
+        msg.result
+            .into_result()
+            .map_err(ContractError::SubMsgFailure)?
+            .data
+            .ok_or_else(|| ContractError::ReplyParseFailure {
+                id,
+                err: "Missing reply data".to_owned(),
+            })?
+            .as_slice(),
+    )
+    .map_err(|err| ContractError::ReplyParseFailure {
+        id,
+        err: err.to_string(),
+    })?;
+    // unwrap results into trade_data
+    let trade_data = match order_response.results.into_option() {
+        Some(trade_data) => Ok(trade_data),
+        None => Err(ContractError::CustomError {
+            val: "No trade data in order response".to_string(),
+        }),
+    }?;
+    let quantity = FPDecimal::from_str(&trade_data.quantity)? / dec_scale_factor;
+    let price = FPDecimal::from_str(&trade_data.price)? / dec_scale_factor;
+    let fee = FPDecimal::from_str(&trade_data.fee)? / dec_scale_factor;
 
     let config = STATE.load(deps.storage)?;
     let contract_address = env.contract.address;

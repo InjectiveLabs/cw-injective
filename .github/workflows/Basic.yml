@@ -11,6 +11,12 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
+      - name: Fix git safe.directory in container
+        run: mkdir -p /home/runner/work/_temp/_github_home && printf "[safe]\n\tdirectory = /github/workspace" >/home/runner/work/_temp/_github_home/.gitconfig
+      - name: Checkout submodules
+        uses: srt32/git-actions@v0.0.3
+        with:
+          args: git submodule update --init --recursive
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
@@ -34,6 +40,14 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
+      - name: Fix git safe.directory in container
+        run: mkdir -p /home/runner/work/_temp/_github_home && printf "[safe]\n\tdirectory = /github/workspace" >/home/runner/work/_temp/_github_home/.gitconfig
+      - name: Checkout submodules
+        uses: srt32/git-actions@v0.0.3
+        with:
+          args: git submodule update --init --recursive
+      - name: Fix protobuf output dir error
+        run: echo >packages/injective-protobuf/src/proto/mod.rs
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
