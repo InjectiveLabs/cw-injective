@@ -81,6 +81,22 @@ impl PartialOrd for FPDecimal {
     }
 }
 
+impl FPDecimal {
+    pub fn maximum(&self, other: &Self) -> FPDecimal {
+        match self.cmp(other) {
+            Ordering::Greater | Ordering::Equal => *self,
+            Ordering::Less => *other,
+        }
+    }
+
+    pub fn minimum(&self, other: &Self) -> FPDecimal {
+        match self.cmp(other) {
+            Ordering::Less | Ordering::Equal => *self,
+            Ordering::Greater => *other,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::FPDecimal;
@@ -246,5 +262,35 @@ mod tests {
 
         is_lesser_equal = FPDecimal::from_str("4.0").unwrap() <= FPDecimal::from_str("1.0").unwrap();
         assert!(!is_lesser_equal);
+    }
+
+    #[test]
+    fn test_maximum_of_values() {
+        let lhs = FPDecimal::from_str("-1.0").unwrap();
+        let rhs = FPDecimal::from_str("1.0").unwrap();
+        assert_eq!(rhs, lhs.maximum(&rhs));
+
+        let lhs = FPDecimal::from_str("1.0").unwrap();
+        let rhs = FPDecimal::from_str("1.0").unwrap();
+        assert_eq!(lhs, lhs.maximum(&rhs));
+
+        let lhs = FPDecimal::from_str("1.0").unwrap();
+        let rhs = FPDecimal::from_str("-1.0").unwrap();
+        assert_eq!(lhs, lhs.maximum(&rhs));
+    }
+
+    #[test]
+    fn test_minimum_of_values() {
+        let lhs = FPDecimal::from_str("-1.0").unwrap();
+        let rhs = FPDecimal::from_str("1.0").unwrap();
+        assert_eq!(lhs, lhs.minimum(&rhs));
+
+        let lhs = FPDecimal::from_str("1.0").unwrap();
+        let rhs = FPDecimal::from_str("1.0").unwrap();
+        assert_eq!(rhs, lhs.minimum(&rhs));
+
+        let lhs = FPDecimal::from_str("1.0").unwrap();
+        let rhs = FPDecimal::from_str("-1.0").unwrap();
+        assert_eq!(rhs, lhs.minimum(&rhs));
     }
 }

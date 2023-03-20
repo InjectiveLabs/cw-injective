@@ -3,7 +3,6 @@ use std::str::FromStr;
 use bigint::U256;
 use cosmwasm_std::{Uint128, Uint256};
 use schemars::JsonSchema;
-// pub struct FPDecimal(#[schemars(with = "String")] pub i128);
 
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Copy, Clone, Default, Debug, Eq, JsonSchema)]
@@ -89,6 +88,10 @@ impl FPDecimal {
     pub const MAX: FPDecimal = FPDecimal { num: U256::MAX, sign: 1 };
     pub const MIN: FPDecimal = FPDecimal { num: U256::MAX, sign: 0 };
     pub const DIGITS: usize = 18;
+    pub const NEGATIVE_ONE: FPDecimal = FPDecimal {
+        num: U256([1_000_000_000_000_000_000, 0, 0, 0]),
+        sign: 0,
+    };
     pub const ZERO: FPDecimal = FPDecimal {
         num: U256([0, 0, 0, 0]),
         sign: 1,
@@ -169,6 +172,10 @@ impl FPDecimal {
 
     pub fn is_zero(&self) -> bool {
         self.num.is_zero()
+    }
+
+    pub fn is_negative(&self) -> bool {
+        self.sign == 0
     }
 
     pub const fn max() -> FPDecimal {
