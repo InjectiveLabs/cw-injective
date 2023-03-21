@@ -175,6 +175,11 @@ impl FPDecimal {
     }
 
     pub fn is_negative(&self) -> bool {
+        // Zero is positive regardless of sign
+        if self.num == FPDecimal::ZERO.num {
+            return false;
+        }
+
         self.sign == 0
     }
 
