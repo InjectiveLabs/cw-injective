@@ -102,6 +102,14 @@ impl FPDecimal {
     pub fn abs(&self) -> FPDecimal {
         FPDecimal { num: self.num, sign: 1i8 }
     }
+
+    pub fn abs_diff(&self, other: &Self) -> Self {
+        if self > other {
+            *self - *other
+        } else {
+            *other - *self
+        }
+    }
 }
 
 impl ops::Add for FPDecimal {
@@ -465,5 +473,42 @@ mod tests {
         five *= two;
         let neg_ten_2 = five;
         assert_eq!(neg_ten, neg_ten_2);
+    }
+
+    #[test]
+    fn test_is_negative() {
+        let val = FPDecimal::TWO;
+        assert_eq!(val.is_negative(), false);
+
+        let val = FPDecimal::zero();
+        assert_eq!(val.is_negative(), false);
+
+        // even a manually assigned negative zero value returns positive
+        let val = FPDecimal {
+            num: U256([0, 0, 0, 0]),
+            sign: 1,
+        };
+        assert_eq!(val.is_negative(), false);
+
+        let val = FPDecimal::NEGATIVE_ONE;
+        assert_eq!(val.is_negative(), true);
+    }
+
+    #[test]
+    fn test_abs_diff() {
+        let lhs = FPDecimal::from(2u128);
+        let rhs = FPDecimal::from(3u128);
+        let ans = lhs.abs_diff(&rhs);
+        assert_eq!(FPDecimal::one(), ans);
+
+        let lhs = FPDecimal::from(3u128);
+        let rhs = FPDecimal::one();
+        let ans = lhs.abs_diff(&rhs);
+        assert_eq!(FPDecimal::from(2u128), ans);
+
+        let lhs = FPDecimal::NEGATIVE_ONE;
+        let rhs = FPDecimal::TWO;
+        let ans = lhs.abs_diff(&rhs);
+        assert_eq!(FPDecimal::from(3u128), ans);
     }
 }
