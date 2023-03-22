@@ -54,7 +54,7 @@ fn default_spot_market_response_handler(market_id: MarketId) -> QuerierResult {
             relayer_fee_share_rate: FPDecimal::from_str("0.4").unwrap(),
             market_id,
             status: 0,
-            min_price_tick_size: FPDecimal::from_str("1000").unwrap(),
+            min_price_tick_size: FPDecimal::from_str("0.1").unwrap(),
             min_quantity_tick_size: FPDecimal::from_str("0.001").unwrap(),
         }),
     };
@@ -93,7 +93,7 @@ fn default_derivative_market_response_handler(market_id: MarketId) -> QuerierRes
                 taker_fee_rate: FPDecimal::from_str("0.002").unwrap(),
                 isPerpetual: true,
                 status: 0,
-                min_price_tick_size: FPDecimal::from_str("1000").unwrap(),
+                min_price_tick_size: FPDecimal::from_str("0.1").unwrap(),
                 min_quantity_tick_size: FPDecimal::from_str("0.001").unwrap(),
             }),
             info: None,
