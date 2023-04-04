@@ -944,7 +944,7 @@ pub mod handlers {
         impl HandlesOraclePriceQuery for Temp {
             fn handle(&self, _: OracleType, _: String, _: String) -> QuerierResult {
                 let response = OraclePriceResponse {
-                    price_pair_state: PricePairState {
+                    price_pair_state: Some(PricePairState {
                         pair_price: self.pair_price.to_owned(),
                         base_price: self.base_price.to_owned(),
                         quote_price: self.quote_price.to_owned(),
@@ -952,7 +952,7 @@ pub mod handlers {
                         quote_cumulative_price: self.quote_cumulative_price.to_owned(),
                         base_timestamp: self.base_timestamp.to_owned(),
                         quote_timestamp: self.quote_timestamp.to_owned(),
-                    },
+                    }),
                 };
                 SystemResult::Ok(ContractResult::from(to_binary(&response)))
             }

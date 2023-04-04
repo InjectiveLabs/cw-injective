@@ -189,17 +189,24 @@ pub struct OracleVolatilityResponse {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct OraclePriceResponse {
-    pub price_pair_state: PricePairState,
+    pub price_pair_state: Option<PricePairState>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PricePairState {
+    #[serde(default)]
     pub pair_price: FPDecimal,
+    #[serde(default)]
     pub base_price: FPDecimal,
+    #[serde(default)]
     pub quote_price: FPDecimal,
+    #[serde(default)]
     pub base_cumulative_price: FPDecimal,
+    #[serde(default)]
     pub quote_cumulative_price: FPDecimal,
+    #[serde(default)]
     pub base_timestamp: i64,
+    #[serde(default)]
     pub quote_timestamp: i64,
 }
 

@@ -478,20 +478,20 @@ mod tests {
     #[test]
     fn test_is_negative() {
         let val = FPDecimal::TWO;
-        assert_eq!(val.is_negative(), false);
+        assert!(!val.is_negative());
 
         let val = FPDecimal::zero();
-        assert_eq!(val.is_negative(), false);
+        assert!(!val.is_negative());
 
         // even a manually assigned negative zero value returns positive
         let val = FPDecimal {
             num: U256([0, 0, 0, 0]),
             sign: 1,
         };
-        assert_eq!(val.is_negative(), false);
+        assert!(!val.is_negative());
 
         let val = FPDecimal::NEGATIVE_ONE;
-        assert_eq!(val.is_negative(), true);
+        assert!(val.is_negative());
     }
 
     #[test]
