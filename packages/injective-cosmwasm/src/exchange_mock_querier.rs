@@ -629,7 +629,7 @@ pub mod handlers {
 
     use crate::exchange_mock_querier::{HandlesByAddressQuery, HandlesDenomSupplyQuery, HandlesFeeQuery};
     use crate::query::{
-        OraclePriceResponse, QueryContractRegistrationInfoResponse, RegisteredContract, TokenFactoryCreateDenomFeeResponse,
+        OraclePriceResponse, PricePairState, QueryContractRegistrationInfoResponse, RegisteredContract, TokenFactoryCreateDenomFeeResponse,
         TokenFactoryDenomSupplyResponse,
     };
     use crate::{
@@ -923,19 +923,49 @@ pub mod handlers {
         }))
     }
 
-    pub fn create_oracle_query_handler(price: FPDecimal) -> Option<Box<dyn HandlesOraclePriceQuery>> {
+    pub fn create_oracle_query_handler(
+        pair_price: FPDecimal,
+        base_price: FPDecimal,
+        quote_price: FPDecimal,
+        base_cumulative_price: FPDecimal,
+        quote_cumulative_price: FPDecimal,
+        base_timestamp: i64,
+        quote_timestamp: i64,
+    ) -> Option<Box<dyn HandlesOraclePriceQuery>> {
         struct Temp {
-            price: FPDecimal,
+            pair_price: FPDecimal,
+            base_price: FPDecimal,
+            quote_price: FPDecimal,
+            base_cumulative_price: FPDecimal,
+            quote_cumulative_price: FPDecimal,
+            base_timestamp: i64,
+            quote_timestamp: i64,
         }
         impl HandlesOraclePriceQuery for Temp {
             fn handle(&self, _: OracleType, _: String, _: String) -> QuerierResult {
                 let response = OraclePriceResponse {
-                    price: self.price.to_owned(),
+                    price_pair_state: Some(PricePairState {
+                        pair_price: self.pair_price.to_owned(),
+                        base_price: self.base_price.to_owned(),
+                        quote_price: self.quote_price.to_owned(),
+                        base_cumulative_price: self.base_cumulative_price.to_owned(),
+                        quote_cumulative_price: self.quote_cumulative_price.to_owned(),
+                        base_timestamp: self.base_timestamp.to_owned(),
+                        quote_timestamp: self.quote_timestamp.to_owned(),
+                    }),
                 };
                 SystemResult::Ok(ContractResult::from(to_binary(&response)))
             }
         }
-        Some(Box::new(Temp { price }))
+        Some(Box::new(Temp {
+            pair_price,
+            base_price,
+            quote_price,
+            base_cumulative_price,
+            quote_cumulative_price,
+            base_timestamp,
+            quote_timestamp,
+        }))
     }
 
     pub fn create_denom_supply_handler(supply: Uint128) -> Option<Box<dyn HandlesDenomSupplyQuery>> {
