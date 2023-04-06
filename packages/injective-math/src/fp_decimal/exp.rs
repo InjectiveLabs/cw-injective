@@ -472,9 +472,8 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn test_pow_10_underflow() {
         let base = FPDecimal::from(10u128);
-        FPDecimal::_pow(base, FPDecimal::from_str("-19").unwrap());
+        assert_eq!(FPDecimal::_pow(base, FPDecimal::from_str("-19").unwrap()), FPDecimal::zero());
     }
 }
