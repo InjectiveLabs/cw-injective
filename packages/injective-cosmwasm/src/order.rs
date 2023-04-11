@@ -38,6 +38,8 @@ pub trait GenericOrder {
     fn get_order_type(&self) -> &OrderType;
     fn get_order_info(&self) -> &OrderInfo;
     fn get_trigger_price(&self) -> Option<FPDecimal>;
+    fn is_buy(&self) -> bool;
+    fn is_sell(&self) -> bool;
 }
 
 #[cfg(test)]

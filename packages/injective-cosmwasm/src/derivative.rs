@@ -132,6 +132,14 @@ impl DerivativeOrder {
 }
 
 impl GenericOrder for DerivativeOrder {
+    fn is_buy(&self) -> bool {
+        self.order_type == OrderType::Buy || self.order_type == OrderType::BuyPo || self.order_type == OrderType::BuyAtomic
+    }
+
+    fn is_sell(&self) -> bool {
+        self.order_type == OrderType::Sell || self.order_type == OrderType::SellPo || self.order_type == OrderType::SellAtomic
+    }
+
     fn get_order_type(&self) -> &OrderType {
         &self.order_type
     }
@@ -183,6 +191,14 @@ impl DerivativeLimitOrder {
 }
 
 impl GenericOrder for DerivativeLimitOrder {
+    fn is_buy(&self) -> bool {
+        self.order_type == OrderType::Buy || self.order_type == OrderType::BuyPo || self.order_type == OrderType::BuyAtomic
+    }
+
+    fn is_sell(&self) -> bool {
+        self.order_type == OrderType::Sell || self.order_type == OrderType::SellPo || self.order_type == OrderType::SellAtomic
+    }
+
     fn get_order_type(&self) -> &OrderType {
         &self.order_type
     }
