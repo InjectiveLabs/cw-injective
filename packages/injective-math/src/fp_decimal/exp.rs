@@ -1,3 +1,4 @@
+use cosmwasm_std::{OverflowError, OverflowOperation};
 use std::str::FromStr;
 
 /// Exponential functions for FPDecimal
@@ -7,253 +8,8 @@ use num::pow::Pow;
 impl FPDecimal {
     // a^b
     pub fn _pow(a: FPDecimal, b: FPDecimal) -> FPDecimal {
-        if a == FPDecimal::zero() {
-            return FPDecimal::zero();
-        }
-        if a > FPDecimal::zero() && b == FPDecimal::zero() {
-            return FPDecimal::one();
-        }
-        if a.is_negative() && b == FPDecimal::zero() {
-            return FPDecimal::NEGATIVE_ONE;
-        }
-
-        if a == FPDecimal::from(10u128) {
-            if b == FPDecimal::one() {
-                return FPDecimal::from(10u128);
-            }
-            if b == FPDecimal::TWO {
-                return FPDecimal::from(100u128);
-            }
-            if b == FPDecimal::THREE {
-                return FPDecimal::from(1000u128);
-            }
-            if b == FPDecimal::FOUR {
-                return FPDecimal::from(10000u128);
-            }
-            if b == FPDecimal::FIVE {
-                return FPDecimal::from(100000u128);
-            }
-            if b == FPDecimal::SIX {
-                return FPDecimal::from(1000000u128);
-            }
-            if b == FPDecimal::SEVEN {
-                return FPDecimal::from(10000000u128);
-            }
-            if b == FPDecimal::EIGHT {
-                return FPDecimal::from(100000000u128);
-            }
-            if b == FPDecimal::NINE {
-                return FPDecimal::from(1000000000u128);
-            }
-            if b == FPDecimal::from(10u128) {
-                return FPDecimal::from(10000000000u128);
-            }
-            if b == FPDecimal::from(11u128) {
-                return FPDecimal::from(100000000000u128);
-            }
-            if b == FPDecimal::from(12u128) {
-                return FPDecimal::from(1000000000000u128);
-            }
-            if b == FPDecimal::from(13u128) {
-                return FPDecimal::from(10000000000000u128);
-            }
-            if b == FPDecimal::from(14u128) {
-                return FPDecimal::from(100000000000000u128);
-            }
-            if b == FPDecimal::from(15u128) {
-                return FPDecimal::from(1000000000000000u128);
-            }
-            if b == FPDecimal::from(16u128) {
-                return FPDecimal::from(10000000000000000u128);
-            }
-            if b == FPDecimal::from(17u128) {
-                return FPDecimal::from(100000000000000000u128);
-            }
-            if b == FPDecimal::from(18u128) {
-                return FPDecimal::from(1000000000000000000u128);
-            }
-            if b == FPDecimal::from(19u128) {
-                return FPDecimal::from(10000000000000000000u128);
-            }
-            if b == FPDecimal::from(20u128) {
-                return FPDecimal::from(100000000000000000000u128);
-            }
-            if b == FPDecimal::NEGATIVE_ONE {
-                return FPDecimal::from_str("0.1").unwrap();
-            }
-            if b == FPDecimal::from_str("-2").unwrap() {
-                return FPDecimal::from_str("0.01").unwrap();
-            }
-            if b == FPDecimal::from_str("-3").unwrap() {
-                return FPDecimal::from_str("0.001").unwrap();
-            }
-            if b == FPDecimal::from_str("-4").unwrap() {
-                return FPDecimal::from_str("0.0001").unwrap();
-            }
-            if b == FPDecimal::from_str("-5").unwrap() {
-                return FPDecimal::from_str("0.00001").unwrap();
-            }
-            if b == FPDecimal::from_str("-6").unwrap() {
-                return FPDecimal::from_str("0.000001").unwrap();
-            }
-            if b == FPDecimal::from_str("-7").unwrap() {
-                return FPDecimal::from_str("0.0000001").unwrap();
-            }
-            if b == FPDecimal::from_str("-8").unwrap() {
-                return FPDecimal::from_str("0.00000001").unwrap();
-            }
-            if b == FPDecimal::from_str("-9").unwrap() {
-                return FPDecimal::from_str("0.000000001").unwrap();
-            }
-            if b == FPDecimal::from_str("-10").unwrap() {
-                return FPDecimal::from_str("0.0000000001").unwrap();
-            }
-            if b == FPDecimal::from_str("-11").unwrap() {
-                return FPDecimal::from_str("0.00000000001").unwrap();
-            }
-            if b == FPDecimal::from_str("-12").unwrap() {
-                return FPDecimal::from_str("0.000000000001").unwrap();
-            }
-            if b == FPDecimal::from_str("-13").unwrap() {
-                return FPDecimal::from_str("0.0000000000001").unwrap();
-            }
-            if b == FPDecimal::from_str("-14").unwrap() {
-                return FPDecimal::from_str("0.00000000000001").unwrap();
-            }
-            if b == FPDecimal::from_str("-15").unwrap() {
-                return FPDecimal::from_str("0.000000000000001").unwrap();
-            }
-            if b == FPDecimal::from_str("-16").unwrap() {
-                return FPDecimal::from_str("0.0000000000000001").unwrap();
-            }
-            if b == FPDecimal::from_str("-17").unwrap() {
-                return FPDecimal::from_str("0.00000000000000001").unwrap();
-            }
-            if b == FPDecimal::from_str("-18").unwrap() {
-                return FPDecimal::from_str("0.000000000000000001").unwrap();
-            }
-            if b == FPDecimal::from(21u128) {
-                return FPDecimal::from(1000000000000000000000u128);
-            }
-            if b == FPDecimal::from(22u128) {
-                return FPDecimal::from(10000000000000000000000u128);
-            }
-            if b == FPDecimal::from(23u128) {
-                return FPDecimal::from(100000000000000000000000u128);
-            }
-            if b == FPDecimal::from(24u128) {
-                return FPDecimal::from(1000000000000000000000000u128);
-            }
-            if b == FPDecimal::from(25u128) {
-                return FPDecimal::from(10000000000000000000000000u128);
-            }
-            if b == FPDecimal::from(26u128) {
-                return FPDecimal::from(100000000000000000000000000u128);
-            }
-            if b == FPDecimal::from(27u128) {
-                return FPDecimal::from(1000000000000000000000000000u128);
-            }
-            if b == FPDecimal::from(28u128) {
-                return FPDecimal::from(10000000000000000000000000000u128);
-            }
-            if b == FPDecimal::from(29u128) {
-                return FPDecimal::from(100000000000000000000000000000u128);
-            }
-            if b == FPDecimal::from(30u128) {
-                return FPDecimal::from(1000000000000000000000000000000u128);
-            }
-            if b == FPDecimal::from(31u128) {
-                return FPDecimal::from(10000000000000000000000000000000u128);
-            }
-            if b == FPDecimal::from(32u128) {
-                return FPDecimal::from(100000000000000000000000000000000u128);
-            }
-            if b == FPDecimal::from(33u128) {
-                return FPDecimal::from(1000000000000000000000000000000000u128);
-            }
-            if b == FPDecimal::from(34u128) {
-                return FPDecimal::from(10000000000000000000000000000000000u128);
-            }
-            if b == FPDecimal::from(35u128) {
-                return FPDecimal::from(100000000000000000000000000000000000u128);
-            }
-            if b == FPDecimal::from(36u128) {
-                return FPDecimal::from(1000000000000000000000000000000000000u128);
-            }
-            if b == FPDecimal::from(37u128) {
-                return FPDecimal::from(10000000000000000000000000000000000000u128);
-            }
-            if b == FPDecimal::from(38u128) {
-                return FPDecimal::from(100000000000000000000000000000000000000u128);
-            }
-            if b == FPDecimal::from(39u128) {
-                return FPDecimal::from_str("1000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(40u128) {
-                return FPDecimal::from_str("10000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(41u128) {
-                return FPDecimal::from_str("100000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(42u128) {
-                return FPDecimal::from_str("1000000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(43u128) {
-                return FPDecimal::from_str("10000000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(44u128) {
-                return FPDecimal::from_str("100000000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(45u128) {
-                return FPDecimal::from_str("1000000000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(46u128) {
-                return FPDecimal::from_str("10000000000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(47u128) {
-                return FPDecimal::from_str("100000000000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(48u128) {
-                return FPDecimal::from_str("1000000000000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(49u128) {
-                return FPDecimal::from_str("10000000000000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(50u128) {
-                return FPDecimal::from_str("100000000000000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(51u128) {
-                return FPDecimal::from_str("1000000000000000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(52u128) {
-                return FPDecimal::from_str("10000000000000000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(53u128) {
-                return FPDecimal::from_str("100000000000000000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(54u128) {
-                return FPDecimal::from_str("1000000000000000000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(55u128) {
-                return FPDecimal::from_str("10000000000000000000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(56u128) {
-                return FPDecimal::from_str("100000000000000000000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(57u128) {
-                return FPDecimal::from_str("1000000000000000000000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(58u128) {
-                return FPDecimal::from_str("10000000000000000000000000000000000000000000000000000000000").unwrap();
-            }
-            if b == FPDecimal::from(59u128) {
-                return FPDecimal::from_str("100000000000000000000000000000000000000000000000000000000000").unwrap();
-            }
-        }
-
-        FPDecimal::_exp(FPDecimal::_mul(FPDecimal::_ln(a), b))
+        a.checked_pow(b).unwrap()
     }
-
     // e^(a)
     pub fn _exp(a: FPDecimal) -> FPDecimal {
         // this throws underflow with a sufficiently large negative exponent
@@ -322,12 +78,301 @@ impl FPDecimal {
 
         Some(r)
     }
+
+    pub fn checked_pow(self, rhs: FPDecimal) -> Result<FPDecimal, OverflowError> {
+        {
+            // This uses the exponentiation by squaring algorithm:
+            // https://en.wikipedia.org/wiki/Exponentiation_by_squaring#Basic_method
+
+            if self == FPDecimal::zero() {
+                return Ok(FPDecimal::zero());
+            }
+            if self > FPDecimal::zero() && rhs == FPDecimal::zero() {
+                return Ok(FPDecimal::one());
+            }
+            if self.is_negative() && rhs == FPDecimal::zero() {
+                return Ok(FPDecimal::NEGATIVE_ONE);
+            }
+
+            if self == FPDecimal::from(10u128) {
+                if rhs == FPDecimal::one() {
+                    return Ok(FPDecimal::from(10u128));
+                }
+                if rhs == FPDecimal::TWO {
+                    return Ok(FPDecimal::from(100u128));
+                }
+                if rhs == FPDecimal::THREE {
+                    return Ok(FPDecimal::from(1000u128));
+                }
+                if rhs == FPDecimal::FOUR {
+                    return Ok(FPDecimal::from(10000u128));
+                }
+                if rhs == FPDecimal::FIVE {
+                    return Ok(FPDecimal::from(100000u128));
+                }
+                if rhs == FPDecimal::SIX {
+                    return Ok(FPDecimal::from(1000000u128));
+                }
+                if rhs == FPDecimal::SEVEN {
+                    return Ok(FPDecimal::from(10000000u128));
+                }
+                if rhs == FPDecimal::EIGHT {
+                    return Ok(FPDecimal::from(100000000u128));
+                }
+                if rhs == FPDecimal::NINE {
+                    return Ok(FPDecimal::from(1000000000u128));
+                }
+                if rhs == FPDecimal::from(10u128) {
+                    return Ok(FPDecimal::from(10000000000u128));
+                }
+                if rhs == FPDecimal::from(11u128) {
+                    return Ok(FPDecimal::from(100000000000u128));
+                }
+                if rhs == FPDecimal::from(12u128) {
+                    return Ok(FPDecimal::from(1000000000000u128));
+                }
+                if rhs == FPDecimal::from(13u128) {
+                    return Ok(FPDecimal::from(10000000000000u128));
+                }
+                if rhs == FPDecimal::from(14u128) {
+                    return Ok(FPDecimal::from(100000000000000u128));
+                }
+                if rhs == FPDecimal::from(15u128) {
+                    return Ok(FPDecimal::from(1000000000000000u128));
+                }
+                if rhs == FPDecimal::from(16u128) {
+                    return Ok(FPDecimal::from(10000000000000000u128));
+                }
+                if rhs == FPDecimal::from(17u128) {
+                    return Ok(FPDecimal::from(100000000000000000u128));
+                }
+                if rhs == FPDecimal::from(18u128) {
+                    return Ok(FPDecimal::from(1000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(19u128) {
+                    return Ok(FPDecimal::from(10000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(20u128) {
+                    return Ok(FPDecimal::from(100000000000000000000u128));
+                }
+                if rhs == FPDecimal::NEGATIVE_ONE {
+                    return Ok(FPDecimal::from_str("0.1").unwrap());
+                }
+                if rhs == FPDecimal::from_str("-2").unwrap() {
+                    return Ok(FPDecimal::from_str("0.01").unwrap());
+                }
+                if rhs == FPDecimal::from_str("-3").unwrap() {
+                    return Ok(FPDecimal::from_str("0.001").unwrap());
+                }
+                if rhs == FPDecimal::from_str("-4").unwrap() {
+                    return Ok(FPDecimal::from_str("0.0001").unwrap());
+                }
+                if rhs == FPDecimal::from_str("-5").unwrap() {
+                    return Ok(FPDecimal::from_str("0.00001").unwrap());
+                }
+                if rhs == FPDecimal::from_str("-6").unwrap() {
+                    return Ok(FPDecimal::from_str("0.000001").unwrap());
+                }
+                if rhs == FPDecimal::from_str("-7").unwrap() {
+                    return Ok(FPDecimal::from_str("0.0000001").unwrap());
+                }
+                if rhs == FPDecimal::from_str("-8").unwrap() {
+                    return Ok(FPDecimal::from_str("0.00000001").unwrap());
+                }
+                if rhs == FPDecimal::from_str("-9").unwrap() {
+                    return Ok(FPDecimal::from_str("0.000000001").unwrap());
+                }
+                if rhs == FPDecimal::from_str("-10").unwrap() {
+                    return Ok(FPDecimal::from_str("0.0000000001").unwrap());
+                }
+                if rhs == FPDecimal::from_str("-11").unwrap() {
+                    return Ok(FPDecimal::from_str("0.00000000001").unwrap());
+                }
+                if rhs == FPDecimal::from_str("-12").unwrap() {
+                    return Ok(FPDecimal::from_str("0.000000000001").unwrap());
+                }
+                if rhs == FPDecimal::from_str("-13").unwrap() {
+                    return Ok(FPDecimal::from_str("0.0000000000001").unwrap());
+                }
+                if rhs == FPDecimal::from_str("-14").unwrap() {
+                    return Ok(FPDecimal::from_str("0.00000000000001").unwrap());
+                }
+                if rhs == FPDecimal::from_str("-15").unwrap() {
+                    return Ok(FPDecimal::from_str("0.000000000000001").unwrap());
+                }
+                if rhs == FPDecimal::from_str("-16").unwrap() {
+                    return Ok(FPDecimal::from_str("0.0000000000000001").unwrap());
+                }
+                if rhs == FPDecimal::from_str("-17").unwrap() {
+                    return Ok(FPDecimal::from_str("0.00000000000000001").unwrap());
+                }
+                if rhs == FPDecimal::from_str("-18").unwrap() {
+                    return Ok(FPDecimal::from_str("0.000000000000000001").unwrap());
+                }
+                if rhs < FPDecimal::from_str("-18").unwrap() {
+                    return Ok(FPDecimal::zero());
+                }
+                if rhs == FPDecimal::from(21u128) {
+                    return Ok(FPDecimal::from(1000000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(22u128) {
+                    return Ok(FPDecimal::from(10000000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(23u128) {
+                    return Ok(FPDecimal::from(100000000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(24u128) {
+                    return Ok(FPDecimal::from(1000000000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(25u128) {
+                    return Ok(FPDecimal::from(10000000000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(26u128) {
+                    return Ok(FPDecimal::from(100000000000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(27u128) {
+                    return Ok(FPDecimal::from(1000000000000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(28u128) {
+                    return Ok(FPDecimal::from(10000000000000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(29u128) {
+                    return Ok(FPDecimal::from(100000000000000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(30u128) {
+                    return Ok(FPDecimal::from(1000000000000000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(31u128) {
+                    return Ok(FPDecimal::from(10000000000000000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(32u128) {
+                    return Ok(FPDecimal::from(100000000000000000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(33u128) {
+                    return Ok(FPDecimal::from(1000000000000000000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(34u128) {
+                    return Ok(FPDecimal::from(10000000000000000000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(35u128) {
+                    return Ok(FPDecimal::from(100000000000000000000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(36u128) {
+                    return Ok(FPDecimal::from(1000000000000000000000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(37u128) {
+                    return Ok(FPDecimal::from(10000000000000000000000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(38u128) {
+                    return Ok(FPDecimal::from(100000000000000000000000000000000000000u128));
+                }
+                if rhs == FPDecimal::from(39u128) {
+                    return Ok(FPDecimal::from_str("1000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(40u128) {
+                    return Ok(FPDecimal::from_str("10000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(41u128) {
+                    return Ok(FPDecimal::from_str("100000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(42u128) {
+                    return Ok(FPDecimal::from_str("1000000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(43u128) {
+                    return Ok(FPDecimal::from_str("10000000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(44u128) {
+                    return Ok(FPDecimal::from_str("100000000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(45u128) {
+                    return Ok(FPDecimal::from_str("1000000000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(46u128) {
+                    return Ok(FPDecimal::from_str("10000000000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(47u128) {
+                    return Ok(FPDecimal::from_str("100000000000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(48u128) {
+                    return Ok(FPDecimal::from_str("1000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(49u128) {
+                    return Ok(FPDecimal::from_str("10000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(50u128) {
+                    return Ok(FPDecimal::from_str("100000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(51u128) {
+                    return Ok(FPDecimal::from_str("1000000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(52u128) {
+                    return Ok(FPDecimal::from_str("10000000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(53u128) {
+                    return Ok(FPDecimal::from_str("100000000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(54u128) {
+                    return Ok(FPDecimal::from_str("1000000000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(55u128) {
+                    return Ok(FPDecimal::from_str("10000000000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(56u128) {
+                    return Ok(FPDecimal::from_str("100000000000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(57u128) {
+                    return Ok(FPDecimal::from_str("1000000000000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(58u128) {
+                    return Ok(FPDecimal::from_str("10000000000000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if rhs == FPDecimal::from(59u128) {
+                    return Ok(FPDecimal::from_str("100000000000000000000000000000000000000000000000000000000000").unwrap());
+                }
+            }
+
+            fn inner(mut x: FPDecimal, mut n: FPDecimal) -> Result<FPDecimal, OverflowError> {
+                if n == FPDecimal::zero() {
+                    return Ok(FPDecimal::one());
+                }
+
+                let mut y = FPDecimal::one();
+
+                while n > FPDecimal::one() {
+                    if n.num % FPDecimal::TWO.num == FPDecimal::zero().num {
+                        x = x * x;
+                        n = n / FPDecimal::TWO;
+                    } else {
+                        y = x * y;
+                        x = x * x;
+                        n = (n - FPDecimal::ONE) / FPDecimal::TWO;
+                    }
+                }
+
+                Ok(x * y)
+            }
+
+            inner(self, rhs).map_err(|_| OverflowError {
+                operation: OverflowOperation::Pow,
+                operand1: self.to_string(),
+                operand2: rhs.to_string(),
+            })
+        }
+    }
 }
 
 impl Pow<FPDecimal> for FPDecimal {
     type Output = Self;
-    fn pow(self, rhs: FPDecimal) -> Self::Output {
-        Self::_pow(self, rhs)
+    // fn pow(self, rhs: FPDecimal) -> Self::Output {
+    //     Self::_pow(self, rhs)
+    // }
+
+    /// Raises a value to the power of `exp`, panics if an overflow occurred.
+    fn pow(self, exp: FPDecimal) -> Self {
+        match self.checked_pow(exp) {
+            Ok(value) => value,
+            Err(_) => panic!("Multiplication overflow"),
+        }
     }
 }
 
@@ -396,7 +441,6 @@ mod tests {
 
     #[test]
     fn test_pow_zero_2() {
-        // FPDecimal::_ln(FPDecimal::zero());
         FPDecimal::ZERO.pow(FPDecimal::one().div(2i128));
     }
 
@@ -431,17 +475,14 @@ mod tests {
     #[test]
     fn test_pow_10_positive() {
         let base = FPDecimal::from(10u128);
-        assert_eq!(
-            FPDecimal::_pow(base, FPDecimal::from_str("6").unwrap()),
-            FPDecimal::from_str("1000000").unwrap()
-        );
+        assert_eq!(base.pow(FPDecimal::from_str("6").unwrap()), FPDecimal::from_str("1000000").unwrap());
     }
 
     #[test]
     fn test_pow_10_max() {
         let base = FPDecimal::from(10u128);
         assert_eq!(
-            FPDecimal::_pow(base, FPDecimal::from_str("59").unwrap()),
+            base.pow(FPDecimal::from_str("59").unwrap()),
             FPDecimal::from_str("100000000000000000000000000000000000000000000000000000000000").unwrap()
         );
     }
@@ -450,23 +491,20 @@ mod tests {
     #[should_panic]
     fn test_pow_10_overflow() {
         let base = FPDecimal::from(10u128);
-        FPDecimal::_pow(base, FPDecimal::from_str("60").unwrap());
+        base.pow(FPDecimal::from_str("60").unwrap());
     }
 
     #[test]
     fn test_pow_10_negative() {
         let base = FPDecimal::from(10u128);
-        assert_eq!(
-            FPDecimal::_pow(base, FPDecimal::from_str("-3").unwrap()),
-            FPDecimal::from_str("0.001").unwrap()
-        );
+        assert_eq!(base.pow(FPDecimal::from_str("-3").unwrap()), FPDecimal::from_str("0.001").unwrap());
     }
 
     #[test]
     fn test_pow_10_min() {
         let base = FPDecimal::from(10u128);
         assert_eq!(
-            FPDecimal::_pow(base, FPDecimal::from_str("-18").unwrap()),
+            base.pow(FPDecimal::from_str("-18").unwrap()),
             FPDecimal::from_str("0.000000000000000001").unwrap()
         );
     }
@@ -474,6 +512,14 @@ mod tests {
     #[test]
     fn test_pow_10_underflow() {
         let base = FPDecimal::from(10u128);
-        assert_eq!(FPDecimal::_pow(base, FPDecimal::from_str("-19").unwrap()), FPDecimal::zero());
+        assert_eq!(base.pow(FPDecimal::from_str("-19").unwrap()), FPDecimal::zero());
+    }
+
+    #[test]
+    fn test_checked_pow() {
+        let base = FPDecimal::from(2u128);
+
+        let result = FPDecimal::checked_pow(base, FPDecimal::from(2u128)).unwrap();
+        assert_eq!(result, FPDecimal::from(4u128));
     }
 }

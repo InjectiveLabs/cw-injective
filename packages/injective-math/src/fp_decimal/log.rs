@@ -94,7 +94,7 @@ mod tests {
         let half = FPDecimal::one().div(2i128);
         println!("{}", FPDecimal::_ln(half)); // works if you comment this out
         let num = FPDecimal::one().mul(5).div(4);
-        println!("{}", FPDecimal::_pow(num, half));
+        println!("{}", FPDecimal::checked_pow(num, half).unwrap());
     }
 
     #[test]
