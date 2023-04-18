@@ -121,6 +121,9 @@ pub enum InjectiveQuery {
         base: String,
         quote: String,
     },
+    PythPrice {
+        price_id: String,
+    },
     TokenFactoryDenomTotalSupply {
         denom: String,
     },
@@ -193,6 +196,11 @@ pub struct OraclePriceResponse {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct PythPriceResponse {
+    pub pyth_price_state: Option<PythPriceState>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PricePairState {
     #[serde(default)]
     pub pair_price: FPDecimal,
@@ -208,6 +216,31 @@ pub struct PricePairState {
     pub base_timestamp: i64,
     #[serde(default)]
     pub quote_timestamp: i64,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct PriceState {
+    #[serde(default)]
+    pub price: FPDecimal,
+    #[serde(default)]
+    pub cumulative_price: FPDecimal,
+    #[serde(default)]
+    pub timestamp: i64,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct PythPriceState {
+    #[serde(default)]
+    pub price_id: String,
+    #[serde(default)]
+    pub ema_price: FPDecimal,
+    #[serde(default)]
+    pub ema_conf: FPDecimal,
+    #[serde(default)]
+    pub conf: FPDecimal,
+    #[serde(default)]
+    pub publish_time: i64,
+    pub price_state: PriceState,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]

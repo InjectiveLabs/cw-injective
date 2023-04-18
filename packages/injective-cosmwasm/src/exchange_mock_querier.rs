@@ -11,12 +11,14 @@ use injective_math::FPDecimal;
 
 use crate::exchange::{MarketVolume, VolumeByType};
 use crate::oracle::{OracleHistoryOptions, OracleType};
-use crate::query::{QueryContractRegistrationInfoResponse, TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
+use crate::query::{
+    PriceState, PythPriceState, QueryContractRegistrationInfoResponse, TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse,
+};
 use crate::volatility::TradeHistoryOptions;
 use crate::{
     Deposit, DerivativeMarket, DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery,
     InjectiveQueryWrapper, MarketVolatilityResponse, OracleInfo, OracleVolatilityResponse, PerpetualMarketFundingResponse,
-    PerpetualMarketInfoResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse,
+    PerpetualMarketInfoResponse, PythPriceResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse,
     QueryDenomDecimalsResponse, SpotMarket, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse, SubaccountDepositResponse,
     SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
 };
@@ -220,6 +222,24 @@ fn default_oracle_volatility_response_handler() -> QuerierResult {
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
 
+fn default_pyth_price_response_handler() -> QuerierResult {
+    let response = PythPriceResponse {
+        pyth_price_state: Some(PythPriceState {
+            price_id: "0xff0ec26442c57d7456695b843694e7379b15cf1b250b27e0e47e657f1955aaff".to_string(),
+            ema_price: FPDecimal::one(),
+            ema_conf: FPDecimal::one(),
+            conf: FPDecimal::one(),
+            publish_time: 1i64,
+            price_state: PriceState {
+                price: FPDecimal::one(),
+                cumulative_price: FPDecimal::one(),
+                timestamp: 1i64,
+            },
+        }),
+    };
+    SystemResult::Ok(ContractResult::from(to_binary(&response)))
+}
+
 fn default_token_factory_denom_total_supply_handler() -> QuerierResult {
     let response = TokenFactoryDenomSupplyResponse {
         total_supply: Uint128::from(1000u128),
@@ -313,6 +333,10 @@ pub trait HandlesOraclePriceQuery {
     fn handle(&self, oracle_type: OracleType, base: String, quote: String) -> QuerierResult;
 }
 
+pub trait HandlesPythPriceQuery {
+    fn handle(&self, price_id: String) -> QuerierResult;
+}
+
 pub trait HandlesMarketVolatilityQuery {
     fn handle(&self, market_id: MarketId, trade_history_options: TradeHistoryOptions) -> QuerierResult;
 }
@@ -378,6 +402,7 @@ pub struct WasmMockQuerier {
     pub denom_decimals_handler: Option<Box<dyn HandlesDenomDecimalsQuery>>,
     pub oracle_volatility_response_handler: Option<Box<dyn HandlesOracleVolatilityQuery>>,
     pub oracle_price_response_handler: Option<Box<dyn HandlesOraclePriceQuery>>,
+    pub pyth_price_response_handler: Option<Box<dyn HandlesPythPriceQuery>>,
     pub token_factory_denom_total_supply_handler: Option<Box<dyn HandlesDenomSupplyQuery>>,
     pub token_factory_denom_creation_fee_handler: Option<Box<dyn HandlesFeeQuery>>,
     pub balance_query_handler: Option<Box<dyn HandlesBankBalanceQuery>>,
@@ -538,6 +563,10 @@ impl WasmMockQuerier {
                     Some(handler) => handler.handle(oracle_type, base, quote),
                     None => default_oracle_volatility_response_handler(),
                 },
+                InjectiveQuery::PythPrice { price_id } => match &self.pyth_price_response_handler {
+                    Some(handler) => handler.handle(price_id),
+                    None => default_pyth_price_response_handler(),
+                },
                 InjectiveQuery::TokenFactoryDenomTotalSupply { denom } => match &self.token_factory_denom_total_supply_handler {
                     Some(handler) => handler.handle(denom),
                     None => default_token_factory_denom_total_supply_handler(),
@@ -588,6 +617,7 @@ impl WasmMockQuerier {
             aggregate_market_volume_handler: None,
             oracle_volatility_response_handler: None,
             oracle_price_response_handler: None,
+            pyth_price_response_handler: None,
             token_factory_denom_total_supply_handler: None,
             token_factory_denom_creation_fee_handler: None,
             balance_query_handler: None,
