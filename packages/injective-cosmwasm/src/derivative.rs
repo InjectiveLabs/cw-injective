@@ -108,11 +108,11 @@ impl DerivativeOrder {
     pub fn get_price(&self) -> FPDecimal {
         self.order_info.price
     }
-    pub fn get_qty(&self) -> FPDecimal {
+    pub fn get_quantity(&self) -> FPDecimal {
         self.order_info.quantity
     }
     pub fn get_val(&self) -> FPDecimal {
-        self.get_price() * self.get_qty()
+        self.get_price() * self.get_quantity()
     }
     pub fn is_invalid(&self, is_reduce_only: bool) -> bool {
         if is_reduce_only && !self.margin.is_zero() {
@@ -123,7 +123,7 @@ impl DerivativeOrder {
             return true;
         }
 
-        self.get_price().is_zero() || self.get_qty().is_zero()
+        self.get_price().is_zero() || self.get_quantity().is_zero()
     }
 
     pub fn get_order_type(&self) -> OrderType {
@@ -132,6 +132,14 @@ impl DerivativeOrder {
 }
 
 impl GenericOrder for DerivativeOrder {
+    fn is_buy(&self) -> bool {
+        self.order_type == OrderType::Buy || self.order_type == OrderType::BuyPo || self.order_type == OrderType::BuyAtomic
+    }
+
+    fn is_sell(&self) -> bool {
+        self.order_type == OrderType::Sell || self.order_type == OrderType::SellPo || self.order_type == OrderType::SellAtomic
+    }
+
     fn get_order_type(&self) -> &OrderType {
         &self.order_type
     }
@@ -183,6 +191,14 @@ impl DerivativeLimitOrder {
 }
 
 impl GenericOrder for DerivativeLimitOrder {
+    fn is_buy(&self) -> bool {
+        self.order_type == OrderType::Buy || self.order_type == OrderType::BuyPo || self.order_type == OrderType::BuyAtomic
+    }
+
+    fn is_sell(&self) -> bool {
+        self.order_type == OrderType::Sell || self.order_type == OrderType::SellPo || self.order_type == OrderType::SellAtomic
+    }
+
     fn get_order_type(&self) -> &OrderType {
         &self.order_type
     }

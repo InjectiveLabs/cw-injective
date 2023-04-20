@@ -55,6 +55,11 @@ pub fn subaccount_id_to_injective_address(subaccount_id: &SubaccountId, deps: &D
     deps.api.addr_validate(addr_to_bech32(ethereum_address).as_str())
 }
 
+pub fn subaccount_id_to_unchecked_injective_address(subaccount_id: &SubaccountId) -> String {
+    let ethereum_address = subaccount_id_to_ethereum_address(subaccount_id);
+    addr_to_bech32(ethereum_address)
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{

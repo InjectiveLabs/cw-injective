@@ -16,11 +16,11 @@ use crate::query::{
 };
 use crate::volatility::TradeHistoryOptions;
 use crate::{
-    Deposit, DerivativeMarket, DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery,
-    InjectiveQueryWrapper, MarketVolatilityResponse, OracleInfo, OracleVolatilityResponse, PerpetualMarketFundingResponse,
-    PerpetualMarketInfoResponse, PythPriceResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse,
-    QueryDenomDecimalsResponse, SpotMarket, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse, SubaccountDepositResponse,
-    SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+    Deposit, DerivativeMarket, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse,
+    MarketVolatilityResponse, OracleInfo, OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PythPriceResponse,
+    QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse, SpotMarket,
+    SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse,
+    TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
 };
 use crate::{MarketId, SubaccountId};
 
@@ -154,7 +154,7 @@ fn default_market_volatility_response_handler() -> QuerierResult {
 }
 
 fn default_spot_market_mid_price_and_tob_response_handler() -> QuerierResult {
-    let response = SpotMarketMidPriceAndTOBResponse {
+    let response = MarketMidPriceAndTOBResponse {
         mid_price: Some(FPDecimal::from_str("200000").unwrap()),
         best_bid: None,
         best_ask: None,
@@ -163,7 +163,7 @@ fn default_spot_market_mid_price_and_tob_response_handler() -> QuerierResult {
 }
 
 fn default_derivative_market_mid_price_and_tob_response_handler() -> QuerierResult {
-    let response = DerivativeMarketMidPriceAndTOBResponse {
+    let response = MarketMidPriceAndTOBResponse {
         mid_price: Some(FPDecimal::from_str("200000").unwrap()),
         best_bid: None,
         best_ask: None,
@@ -666,11 +666,14 @@ pub mod handlers {
         exchange_mock_querier::TestCoin, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition, FullDerivativeMarket,
         FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery, HandlesSmartQuery,
         HandlesSubaccountAndDenomQuery, HandlesTraderSpotOrdersToCancelUpToAmountQuery, MarketId, MetadataStatistics, OracleVolatilityResponse,
-        Position, SpotMarket, SpotMarketMidPriceAndTOBResponse, SpotMarketResponse, SubaccountDepositResponse,
-        SubaccountEffectivePositionInMarketResponse, SubaccountId, SubaccountPositionInMarketResponse, TradeRecord, TraderDerivativeOrdersResponse,
-        TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder, TrimmedSpotLimitOrder,
+        Position, SpotMarket, SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountId,
+        SubaccountPositionInMarketResponse, TradeRecord, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder,
+        TrimmedSpotLimitOrder,
     };
-    use crate::{HandlesBankAllBalancesQuery, HandlesBankBalanceQuery, HandlesTraderDerivativeOrdersToCancelUpToAmountQuery, OracleType};
+    use crate::{
+        HandlesBankAllBalancesQuery, HandlesBankBalanceQuery, HandlesTraderDerivativeOrdersToCancelUpToAmountQuery, MarketMidPriceAndTOBResponse,
+        OracleType,
+    };
 
     use super::{HandlesOraclePriceQuery, TestDeposit};
 
@@ -904,13 +907,30 @@ pub mod handlers {
         Some(Box::new(Temp { position }))
     }
 
+    pub fn create_derivative_market_mid_price_and_tob_handler(mid_price: Option<FPDecimal>) -> Option<Box<dyn HandlesMarketIdQuery>> {
+        struct Temp {
+            mid_price: Option<FPDecimal>,
+        }
+        impl HandlesMarketIdQuery for Temp {
+            fn handle(&self, _: MarketId) -> QuerierResult {
+                let response = MarketMidPriceAndTOBResponse {
+                    mid_price: self.mid_price.to_owned(),
+                    best_bid: None,
+                    best_ask: None,
+                };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+        Some(Box::new(Temp { mid_price }))
+    }
+
     pub fn create_spot_market_mid_price_and_tob_handler(mid_price: Option<FPDecimal>) -> Option<Box<dyn HandlesMarketIdQuery>> {
         struct Temp {
             mid_price: Option<FPDecimal>,
         }
         impl HandlesMarketIdQuery for Temp {
             fn handle(&self, _: MarketId) -> QuerierResult {
-                let response = SpotMarketMidPriceAndTOBResponse {
+                let response = MarketMidPriceAndTOBResponse {
                     mid_price: self.mid_price.to_owned(),
                     best_bid: None,
                     best_ask: None,

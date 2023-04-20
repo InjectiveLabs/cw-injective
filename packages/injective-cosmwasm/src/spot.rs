@@ -30,6 +30,14 @@ impl SpotLimitOrder {
 }
 
 impl GenericOrder for SpotLimitOrder {
+    fn is_buy(&self) -> bool {
+        self.order_type == OrderType::Buy || self.order_type == OrderType::BuyPo || self.order_type == OrderType::BuyAtomic
+    }
+
+    fn is_sell(&self) -> bool {
+        self.order_type == OrderType::Sell || self.order_type == OrderType::SellPo || self.order_type == OrderType::SellAtomic
+    }
+
     fn get_order_type(&self) -> &OrderType {
         &self.order_type
     }
@@ -76,11 +84,11 @@ impl SpotOrder {
     pub fn get_price(&self) -> FPDecimal {
         self.order_info.price
     }
-    pub fn get_qty(&self) -> FPDecimal {
+    pub fn get_quantity(&self) -> FPDecimal {
         self.order_info.quantity
     }
     pub fn get_val(&self) -> FPDecimal {
-        self.get_price() * self.get_qty()
+        self.get_price() * self.get_quantity()
     }
     pub fn is_post_only(&self) -> bool {
         self.order_type == OrderType::BuyPo || self.order_type == OrderType::SellPo
@@ -91,6 +99,14 @@ impl SpotOrder {
 }
 
 impl GenericOrder for SpotOrder {
+    fn is_buy(&self) -> bool {
+        self.order_type == OrderType::Buy || self.order_type == OrderType::BuyPo || self.order_type == OrderType::BuyAtomic
+    }
+
+    fn is_sell(&self) -> bool {
+        self.order_type == OrderType::Sell || self.order_type == OrderType::SellPo || self.order_type == OrderType::SellAtomic
+    }
+
     fn get_order_type(&self) -> &OrderType {
         &self.order_type
     }
