@@ -84,11 +84,11 @@ impl SpotOrder {
     pub fn get_price(&self) -> FPDecimal {
         self.order_info.price
     }
-    pub fn get_qty(&self) -> FPDecimal {
+    pub fn get_quantity(&self) -> FPDecimal {
         self.order_info.quantity
     }
     pub fn get_val(&self) -> FPDecimal {
-        self.get_price() * self.get_qty()
+        self.get_price() * self.get_quantity()
     }
     pub fn is_post_only(&self) -> bool {
         self.order_type == OrderType::BuyPo || self.order_type == OrderType::SellPo

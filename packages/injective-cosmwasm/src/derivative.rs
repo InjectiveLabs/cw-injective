@@ -108,11 +108,11 @@ impl DerivativeOrder {
     pub fn get_price(&self) -> FPDecimal {
         self.order_info.price
     }
-    pub fn get_qty(&self) -> FPDecimal {
+    pub fn get_quantity(&self) -> FPDecimal {
         self.order_info.quantity
     }
     pub fn get_val(&self) -> FPDecimal {
-        self.get_price() * self.get_qty()
+        self.get_price() * self.get_quantity()
     }
     pub fn is_invalid(&self, is_reduce_only: bool) -> bool {
         if is_reduce_only && !self.margin.is_zero() {
@@ -123,7 +123,7 @@ impl DerivativeOrder {
             return true;
         }
 
-        self.get_price().is_zero() || self.get_qty().is_zero()
+        self.get_price().is_zero() || self.get_quantity().is_zero()
     }
 
     pub fn get_order_type(&self) -> OrderType {
