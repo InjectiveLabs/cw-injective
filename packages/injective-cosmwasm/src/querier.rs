@@ -5,7 +5,7 @@ use injective_math::FPDecimal;
 use crate::oracle::{OracleHistoryOptions, OracleInfo};
 use crate::query::{
     DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse, MarketVolatilityResponse, OraclePriceResponse,
-    OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, QueryAggregateVolumeResponse,
+    OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PythPriceResponse, QueryAggregateVolumeResponse,
     QueryContractRegistrationInfoResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse, SpotMarketResponse, SubaccountDepositResponse,
     SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TokenFactoryCreateDenomFeeResponse,
     TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
@@ -370,6 +370,18 @@ impl<'a> InjectiveQuerier<'a> {
         };
 
         let res: OraclePriceResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_pyth_price(&self, price_id: &str) -> StdResult<PythPriceResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Oracle,
+            query_data: InjectiveQuery::PythPrice {
+                price_id: price_id.to_string(),
+            },
+        };
+
+        let res: PythPriceResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 
