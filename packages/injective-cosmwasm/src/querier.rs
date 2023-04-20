@@ -4,11 +4,11 @@ use injective_math::FPDecimal;
 
 use crate::oracle::{OracleHistoryOptions, OracleInfo};
 use crate::query::{
-    DerivativeMarketMidPriceAndTOBResponse, DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketVolatilityResponse,
-    OraclePriceResponse, OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, QueryAggregateVolumeResponse,
-    QueryContractRegistrationInfoResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse, SpotMarketMidPriceAndTOBResponse,
-    SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse,
-    TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+    DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse, MarketVolatilityResponse, OraclePriceResponse,
+    OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PythPriceResponse, QueryAggregateVolumeResponse,
+    QueryContractRegistrationInfoResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse, SpotMarketResponse, SubaccountDepositResponse,
+    SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TokenFactoryCreateDenomFeeResponse,
+    TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
 };
 use crate::route::InjectiveRoute;
 use crate::volatility::TradeHistoryOptions;
@@ -264,10 +264,7 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_derivative_market_mid_price_and_tob<T: Into<MarketId> + Clone>(
-        &self,
-        market_id: &'a T,
-    ) -> StdResult<DerivativeMarketMidPriceAndTOBResponse> {
+    pub fn query_derivative_market_mid_price_and_tob<T: Into<MarketId> + Clone>(&self, market_id: &'a T) -> StdResult<MarketMidPriceAndTOBResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::DerivativeMarketMidPriceAndTob {
@@ -275,7 +272,7 @@ impl<'a> InjectiveQuerier<'a> {
             },
         };
 
-        let res: DerivativeMarketMidPriceAndTOBResponse = self.querier.query(&request.into())?;
+        let res: MarketMidPriceAndTOBResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 
@@ -325,7 +322,7 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_spot_market_mid_price_and_tob<T: Into<MarketId> + Clone>(&self, market_id: &'a T) -> StdResult<SpotMarketMidPriceAndTOBResponse> {
+    pub fn query_spot_market_mid_price_and_tob<T: Into<MarketId> + Clone>(&self, market_id: &'a T) -> StdResult<MarketMidPriceAndTOBResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::SpotMarketMidPriceAndTob {
@@ -333,7 +330,7 @@ impl<'a> InjectiveQuerier<'a> {
             },
         };
 
-        let res: SpotMarketMidPriceAndTOBResponse = self.querier.query(&request.into())?;
+        let res: MarketMidPriceAndTOBResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 
@@ -373,6 +370,18 @@ impl<'a> InjectiveQuerier<'a> {
         };
 
         let res: OraclePriceResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_pyth_price(&self, price_id: &str) -> StdResult<PythPriceResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Oracle,
+            query_data: InjectiveQuery::PythPrice {
+                price_id: price_id.to_string(),
+            },
+        };
+
+        let res: PythPriceResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 
