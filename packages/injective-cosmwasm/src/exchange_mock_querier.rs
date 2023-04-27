@@ -156,8 +156,8 @@ fn default_market_volatility_response_handler() -> QuerierResult {
 fn default_spot_market_mid_price_and_tob_response_handler() -> QuerierResult {
     let response = MarketMidPriceAndTOBResponse {
         mid_price: Some(FPDecimal::from_str("200000").unwrap()),
-        best_bid: None,
-        best_ask: None,
+        best_buy_price: None,
+        best_sell_price: None,
     };
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
@@ -165,8 +165,8 @@ fn default_spot_market_mid_price_and_tob_response_handler() -> QuerierResult {
 fn default_derivative_market_mid_price_and_tob_response_handler() -> QuerierResult {
     let response = MarketMidPriceAndTOBResponse {
         mid_price: Some(FPDecimal::from_str("200000").unwrap()),
-        best_bid: None,
-        best_ask: None,
+        best_buy_price: None,
+        best_sell_price: None,
     };
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
@@ -915,8 +915,8 @@ pub mod handlers {
             fn handle(&self, _: MarketId) -> QuerierResult {
                 let response = MarketMidPriceAndTOBResponse {
                     mid_price: self.mid_price.to_owned(),
-                    best_bid: None,
-                    best_ask: None,
+                    best_buy_price: None,
+                    best_sell_price: None,
                 };
                 SystemResult::Ok(ContractResult::from(to_binary(&response)))
             }
@@ -932,8 +932,8 @@ pub mod handlers {
             fn handle(&self, _: MarketId) -> QuerierResult {
                 let response = MarketMidPriceAndTOBResponse {
                     mid_price: self.mid_price.to_owned(),
-                    best_bid: None,
-                    best_ask: None,
+                    best_buy_price: None,
+                    best_sell_price: None,
                 };
                 SystemResult::Ok(ContractResult::from(to_binary(&response)))
             }
