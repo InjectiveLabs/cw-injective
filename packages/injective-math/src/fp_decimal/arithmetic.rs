@@ -55,13 +55,28 @@ impl FPDecimal {
         x1y1 = dec_x1y1;
         let x2y1 = x2 * y1;
         let x1y2 = x1 * y2;
+
+        if x > FPDecimal::NEGATIVE_ONE && x < FPDecimal::ONE && y > FPDecimal::NEGATIVE_ONE && y < FPDecimal::ONE {
+            let x2y2 = x2 * y2;
+            let mut result = x1y1;
+            result = result + x2y1;
+            result = result + x1y2;
+            result = result + x2y2;
+
+            result = result / FPDecimal::MUL_PRECISION.num / FPDecimal::MUL_PRECISION.num;
+
+            return FPDecimal { num: result, sign };
+        }
+
         x2 = x2 / FPDecimal::MUL_PRECISION.num;
         y2 = y2 / FPDecimal::MUL_PRECISION.num;
+
         let x2y2 = x2 * y2;
         let mut result = x1y1;
         result = result + x2y1;
         result = result + x1y2;
         result = result + x2y2;
+
         FPDecimal { num: result, sign }
     }
 
@@ -164,6 +179,7 @@ impl ops::Div for FPDecimal {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
 
     use crate::FPDecimal;
     use bigint::U256;
@@ -272,6 +288,66 @@ mod tests {
             sign: 1,
         };
         assert_eq!(FPDecimal::_mul(five, three), fifteen);
+    }
+
+    #[test]
+    fn test_mul_precisions() {
+        // 1.5 * 1.5 = 2.25
+        assert_eq!(
+            FPDecimal::from_str("1.5").unwrap() * FPDecimal::from_str("1.5").unwrap(),
+            FPDecimal::from_str("2.25").unwrap()
+        );
+
+        // 2.718281828459045235 * 2.718281828459045235 = 7.389056098271202524
+        assert_eq!(FPDecimal::E * FPDecimal::E, FPDecimal::from_str("7.389056098271202524").unwrap());
+
+        // 0.5 * 0.5 = 0.25
+        assert_eq!(
+            FPDecimal::from_str("0.5").unwrap() * FPDecimal::from_str("0.5").unwrap(),
+            FPDecimal::from_str("0.25").unwrap()
+        );
+
+        // 5 * 0.5 = 2.5
+        assert_eq!(FPDecimal::FIVE * FPDecimal::from_str("0.5").unwrap(), FPDecimal::from_str("2.5").unwrap());
+
+        // 0.5 * 5 = 2.5
+        assert_eq!(FPDecimal::from_str("0.5").unwrap() * FPDecimal::FIVE, FPDecimal::from_str("2.5").unwrap());
+
+        // 4 * 2.5 = 10
+        assert_eq!(FPDecimal::FOUR * FPDecimal::from_str("2.5").unwrap(), FPDecimal::from_str("10").unwrap());
+
+        // 2.5 * 4 = 10
+        assert_eq!(FPDecimal::from_str("2.5").unwrap() * FPDecimal::FOUR, FPDecimal::from_str("10").unwrap());
+
+        // 0.000000008 * 0.9 = 0.0000000072
+        assert_eq!(
+            FPDecimal::from_str("0.000000008").unwrap() * FPDecimal::from_str("0.9").unwrap(),
+            FPDecimal::from_str("0.0000000072").unwrap()
+        );
+
+        // 0.0000000008 * 0.9 = 0.00000000072
+        assert_eq!(
+            FPDecimal::from_str("0.0000000008").unwrap() * FPDecimal::from_str("0.9").unwrap(),
+            FPDecimal::from_str("0.00000000072").unwrap()
+        );
+
+        // -0.5 * 0.5 = -0.25
+        assert_eq!(
+            FPDecimal::from_str("-0.5").unwrap() * FPDecimal::from_str("0.5").unwrap(),
+            FPDecimal::from_str("-0.25").unwrap()
+        );
+
+        // -0.5 * -0.5 = 0.25
+        assert_eq!(
+            FPDecimal::from_str("-0.5").unwrap() * FPDecimal::from_str("-0.5").unwrap(),
+            FPDecimal::from_str("0.25").unwrap()
+        );
+
+        // -5 * -3 = 15
+        assert_eq!(
+            FPDecimal::from_str("-5").unwrap() * FPDecimal::from_str("-3").unwrap(),
+            FPDecimal::from_str("15").unwrap()
+        );
     }
 
     #[test]
