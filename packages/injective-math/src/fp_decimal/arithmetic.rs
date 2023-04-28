@@ -47,35 +47,20 @@ impl FPDecimal {
             sign = 0;
         }
         let x1: U256 = FPDecimal::_int(x).num / FPDecimal::ONE.num;
-        let mut x2: U256 = FPDecimal::_fraction(x).num;
+        let x2: U256 = FPDecimal::_fraction(x).num;
         let y1: U256 = FPDecimal::_int(y).num / FPDecimal::ONE.num;
-        let mut y2: U256 = FPDecimal::_fraction(y).num;
+        let y2: U256 = FPDecimal::_fraction(y).num;
         let mut x1y1 = x1 * y1;
         let dec_x1y1 = x1y1 * FPDecimal::ONE.num;
         x1y1 = dec_x1y1;
         let x2y1 = x2 * y1;
         let x1y2 = x1 * y2;
 
-        if x > FPDecimal::NEGATIVE_ONE && x < FPDecimal::ONE && y > FPDecimal::NEGATIVE_ONE && y < FPDecimal::ONE {
-            let x2y2 = x2 * y2;
-            let mut result = x1y1;
-            result = result + x2y1;
-            result = result + x1y2;
-            result = result + x2y2;
-
-            result = result / FPDecimal::MUL_PRECISION.num / FPDecimal::MUL_PRECISION.num;
-
-            return FPDecimal { num: result, sign };
-        }
-
-        x2 = x2 / FPDecimal::MUL_PRECISION.num;
-        y2 = y2 / FPDecimal::MUL_PRECISION.num;
-
         let x2y2 = x2 * y2;
         let mut result = x1y1;
         result = result + x2y1;
         result = result + x1y2;
-        result = result + x2y2;
+        result = result + x2y2 / FPDecimal::MUL_PRECISION.num / FPDecimal::MUL_PRECISION.num;
 
         FPDecimal { num: result, sign }
     }
@@ -292,14 +277,20 @@ mod tests {
 
     #[test]
     fn test_mul_precisions() {
+        // 8.33157469 * 0.000000000001 = 0.00000000000833157469
+        assert_eq!(
+            FPDecimal::from_str("8.33157469").unwrap() * FPDecimal::from_str("0.000000000001").unwrap(),
+            FPDecimal::from_str("0.000000000008331574").unwrap()
+        );
+
         // 1.5 * 1.5 = 2.25
         assert_eq!(
             FPDecimal::from_str("1.5").unwrap() * FPDecimal::from_str("1.5").unwrap(),
             FPDecimal::from_str("2.25").unwrap()
         );
 
-        // 2.718281828459045235 * 2.718281828459045235 = 7.389056098271202524
-        assert_eq!(FPDecimal::E * FPDecimal::E, FPDecimal::from_str("7.389056098271202524").unwrap());
+        // 2.718281828459045235 * 2.718281828459045235 = 7.389056098930650225
+        assert_eq!(FPDecimal::E * FPDecimal::E, FPDecimal::from_str("7.389056098930650225").unwrap());
 
         // 0.5 * 0.5 = 0.25
         assert_eq!(
