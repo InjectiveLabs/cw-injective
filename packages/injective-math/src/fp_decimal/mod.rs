@@ -137,13 +137,18 @@ impl FPDecimal {
         sign: 1,
     };
 
+    pub const SMALLEST_PRECISION: FPDecimal = FPDecimal {
+        num: U256([1, 0, 0, 0]),
+        sign: 1,
+    };
+
     pub const MUL_PRECISION: FPDecimal = FPDecimal {
         num: U256([1_000_000_000, 0, 0, 0]),
         sign: 1,
     };
 
     pub const E_10: FPDecimal = FPDecimal {
-        num: U256([1053360796277873851u64, 1194u64, 0, 0]),
+        num: U256([1053370797511854089u64, 1194u64, 0, 0]),
         sign: 1,
     }; // e^10
 
