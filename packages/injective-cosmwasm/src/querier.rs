@@ -440,4 +440,19 @@ impl<'a> InjectiveQuerier<'a> {
         let res: QueryContractRegistrationInfoResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
+
+    pub fn query_market_atomic_execution_fee_multiplier<T: Into<MarketId> + Clone>(
+        &self,
+        market_id: &'a T,
+    ) -> StdResult<QueryMarketAtomicExecutionFeeMultiplierResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::MarketAtomicExecutionFeeMultiplier {
+                market_id: market_id.clone().into(),
+            },
+        };
+
+        let res: QueryMarketAtomicExecutionFeeMultiplierResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
 }

@@ -16,13 +16,12 @@ use crate::query::{
     TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse,
 };
 use crate::volatility::TradeHistoryOptions;
-use crate::InjectiveQuery::SpotOrderbook;
 use crate::{
     Deposit, DerivativeMarket, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse,
     MarketVolatilityResponse, OracleInfo, OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PythPriceResponse,
-    QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse, SpotMarket,
-    SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse,
-    TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+    QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse,
+    QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarket, SpotMarketResponse, SubaccountDepositResponse,
+    SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
 };
 use crate::{MarketId, SubaccountId};
 
@@ -284,6 +283,13 @@ fn default_spot_market_orderbook_response_handler() -> QuerierResult {
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
 
+fn default_market_atomic_execution_fee_multiplier_response_handler() -> QuerierResult {
+    let response = QueryMarketAtomicExecutionFeeMultiplierResponse {
+        multiplier: FPDecimal::from_str("2.0").unwrap(),
+    };
+    SystemResult::Ok(ContractResult::from(to_binary(&response)))
+}
+
 pub trait HandlesSmartQuery {
     fn handle(&self, contract_addr: &str, msg: &Binary) -> QuerierResult;
 }
@@ -424,6 +430,7 @@ pub struct WasmMockQuerier {
     pub all_balances_query_handler: Option<Box<dyn HandlesBankAllBalancesQuery>>,
     pub registered_contract_info_query_handler: Option<Box<dyn HandlesByAddressQuery>>,
     pub spot_market_orderbook_response_handler: Option<Box<dyn HandlesPriceLevelsQuery>>,
+    pub market_atomic_execution_fee_multiplier_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
 }
 
 impl Querier for WasmMockQuerier {
@@ -601,9 +608,15 @@ impl WasmMockQuerier {
                     limit_cumulative_quantity,
                     ..
                 } => match &self.spot_market_orderbook_response_handler {
-                    Some(handler) => handler.hanle(order_side, limit_cumulative_notional, limit_cumulative_quantity ),
+                    Some(handler) => handler.hanle(order_side, limit_cumulative_notional, limit_cumulative_quantity),
                     None => default_spot_market_orderbook_response_handler(),
                 },
+                InjectiveQuery::MarketAtomicExecutionFeeMultiplier { market_id } => {
+                    match &self.market_atomic_execution_fee_multiplier_response_handler {
+                        Some(handler) => handler.handle(market_id),
+                        None => default_market_atomic_execution_fee_multiplier_response_handler(),
+                    }
+                }
             },
             _ => panic!("Unknown query"),
         }
@@ -650,6 +663,7 @@ impl WasmMockQuerier {
             registered_contract_info_query_handler: None,
             denom_decimals_handler: None,
             spot_market_orderbook_response_handler: None,
+            market_atomic_execution_fee_multiplier_response_handler: None,
         }
     }
 }
@@ -692,9 +706,9 @@ pub mod handlers {
         exchange_mock_querier::TestCoin, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition, FullDerivativeMarket,
         FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery, HandlesSmartQuery,
         HandlesSubaccountAndDenomQuery, HandlesTraderSpotOrdersToCancelUpToAmountQuery, MarketId, MetadataStatistics, OracleVolatilityResponse,
-        Position, SpotMarket, SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountId,
-        SubaccountPositionInMarketResponse, TradeRecord, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder,
-        TrimmedSpotLimitOrder,
+        Position, QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarket, SpotMarketResponse, SubaccountDepositResponse,
+        SubaccountEffectivePositionInMarketResponse, SubaccountId, SubaccountPositionInMarketResponse, TradeRecord, TraderDerivativeOrdersResponse,
+        TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder, TrimmedSpotLimitOrder,
     };
     use crate::{
         HandlesBankAllBalancesQuery, HandlesBankBalanceQuery, HandlesTraderDerivativeOrdersToCancelUpToAmountQuery, MarketMidPriceAndTOBResponse,
@@ -1109,6 +1123,19 @@ pub mod handlers {
             }
         }
         Some(Box::new(Temp { balances }))
+    }
+
+    pub fn create_atomic_order_fee_multiplier_handler(multiplier: FPDecimal) -> Option<Box<dyn HandlesMarketIdQuery>> {
+        struct Temp {
+            multiplier: FPDecimal,
+        }
+        impl HandlesMarketIdQuery for Temp {
+            fn handle(&self, _market_id: MarketId) -> QuerierResult {
+                let response = QueryMarketAtomicExecutionFeeMultiplierResponse { multiplier: self.multiplier };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+        Some(Box::new(Temp { multiplier }))
     }
 
     pub fn create_smart_query_handler(result: Result<Binary, SystemError>) -> Option<Box<dyn HandlesSmartQuery>> {

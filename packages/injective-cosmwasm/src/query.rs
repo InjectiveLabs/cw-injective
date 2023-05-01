@@ -127,6 +127,9 @@ pub enum InjectiveQuery {
     DenomDecimals {
         denoms: Vec<String>,
     },
+    MarketAtomicExecutionFeeMultiplier{
+        market_id: MarketId,
+    },
     OracleVolatility {
         base_info: Option<OracleInfo>,
         quote_info: Option<OracleInfo>,
@@ -355,4 +358,11 @@ pub struct QueryDenomDecimalResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct QueryDenomDecimalsResponse {
     pub denom_decimals: Vec<DenomDecimals>,
+}
+
+
+/// Response to query for fee multiplier for atomic order
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct QueryMarketAtomicExecutionFeeMultiplierResponse {
+    pub multiplier: FPDecimal,
 }
