@@ -12,9 +12,11 @@ use injective_math::FPDecimal;
 use crate::exchange::{MarketVolume, VolumeByType};
 use crate::oracle::{OracleHistoryOptions, OracleType};
 use crate::query::{
-    PriceState, PythPriceState, QueryContractRegistrationInfoResponse, TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse,
+    OrderSide, PriceLevel, PriceState, PythPriceState, QueryContractRegistrationInfoResponse, QueryOrderbookResponse,
+    TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse,
 };
 use crate::volatility::TradeHistoryOptions;
+use crate::InjectiveQuery::SpotOrderbook;
 use crate::{
     Deposit, DerivativeMarket, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse,
     MarketVolatilityResponse, OracleInfo, OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PythPriceResponse,
@@ -274,6 +276,14 @@ fn default_all_balances_bank_query_handler() -> QuerierResult {
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
 
+fn default_spot_market_orderbook_response_handler() -> QuerierResult {
+    let response = QueryOrderbookResponse {
+        buys_price_level: vec![PriceLevel::new(10u128.into(), 10u128.into())],
+        sells_price_level: vec![],
+    };
+    SystemResult::Ok(ContractResult::from(to_binary(&response)))
+}
+
 pub trait HandlesSmartQuery {
     fn handle(&self, contract_addr: &str, msg: &Binary) -> QuerierResult;
 }
@@ -378,6 +388,10 @@ pub trait HandlesDenomDecimalsQuery {
     fn handle(&self, denoms: Vec<String>) -> QuerierResult;
 }
 
+pub trait HandlesPriceLevelsQuery {
+    fn hanle(&self, order_side: OrderSide, limit_notional: Option<FPDecimal>, limit_quantity: Option<FPDecimal>) -> QuerierResult;
+}
+
 pub struct WasmMockQuerier {
     pub smart_query_handler: Option<Box<dyn HandlesSmartQuery>>,
     pub subaccount_deposit_response_handler: Option<Box<dyn HandlesSubaccountAndDenomQuery>>,
@@ -409,6 +423,7 @@ pub struct WasmMockQuerier {
     pub balance_query_handler: Option<Box<dyn HandlesBankBalanceQuery>>,
     pub all_balances_query_handler: Option<Box<dyn HandlesBankAllBalancesQuery>>,
     pub registered_contract_info_query_handler: Option<Box<dyn HandlesByAddressQuery>>,
+    pub spot_market_orderbook_response_handler: Option<Box<dyn HandlesPriceLevelsQuery>>,
 }
 
 impl Querier for WasmMockQuerier {
@@ -580,6 +595,15 @@ impl WasmMockQuerier {
                     Some(handler) => handler.handle(contract_address),
                     None => default_contract_registration_info_response_handler(),
                 },
+                InjectiveQuery::SpotOrderbook {
+                    order_side,
+                    limit_cumulative_notional,
+                    limit_cumulative_quantity,
+                    ..
+                } => match &self.spot_market_orderbook_response_handler {
+                    Some(handler) => handler.hanle(order_side, limit_cumulative_notional, limit_cumulative_quantity ),
+                    None => default_spot_market_orderbook_response_handler(),
+                },
             },
             _ => panic!("Unknown query"),
         }
@@ -625,6 +649,7 @@ impl WasmMockQuerier {
             all_balances_query_handler: None,
             registered_contract_info_query_handler: None,
             denom_decimals_handler: None,
+            spot_market_orderbook_response_handler: None,
         }
     }
 }

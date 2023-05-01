@@ -1,20 +1,18 @@
-#[cfg(not(feature = "library"))]
-use cosmwasm_std::entry_point;
-use cosmwasm_std::{BankMsg, Coin, DepsMut, Env, MessageInfo, Reply, Response, SubMsg, Uint128};
-use cw2::set_contract_version;
-use protobuf::Message;
 use std::str::FromStr;
 
-use injective_cosmwasm::{
-    create_spot_market_order_msg, get_default_subaccount_id_for_checked_address,
-    InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, OrderType, SpotOrder,
-};
+#[cfg(not(feature = "library"))]
+use cosmwasm_std::entry_point;
+use cosmwasm_std::{BankMsg, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult, SubMsg, Uint128};
+use cw2::set_contract_version;
+use protobuf::Message;
+
+use injective_cosmwasm::{create_spot_market_order_msg, get_default_subaccount_id_for_checked_address, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, MarketId, OrderType, SpotOrder};
 use injective_math::FPDecimal;
 use injective_protobuf::proto::tx;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg};
-use crate::state::{ContractConfigState, SwapCacheState, STATE, SWAP_OPERATION_STATE};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::state::{SwapCacheState, SwapRoute, SWAP_OPERATION_STATE};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:atomic-order-example";
@@ -29,28 +27,10 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
-    let querier = InjectiveQuerier::new(&deps.querier);
-    if let Some(market) = querier.query_spot_market(&msg.market_id)?.market {
-        let state = ContractConfigState {
-            market_id: msg.market_id,
-            base_denom: market.base_denom,
-            quote_denom: market.quote_denom,
-            owner: info.sender.clone(),
-            contract_subaccount_id: get_default_subaccount_id_for_checked_address(
-                &env.contract.address,
-            ),
-        };
-        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-        STATE.save(deps.storage, &state)?;
-
-        Ok(Response::new()
-            .add_attribute("method", "instantiate")
-            .add_attribute("owner", info.sender))
-    } else {
-        Err(ContractError::CustomError {
-            val: format!("Market with id: {} not found", msg.market_id.as_str()),
-        })
-    }
+    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    Ok(Response::new()
+        .add_attribute("method", "instantiate")
+        .add_attribute("owner", info.sender))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -72,9 +52,10 @@ pub fn try_swap(
     quantity: FPDecimal,
     price: FPDecimal,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
-    let config = STATE.load(deps.storage)?;
     let contract = env.contract.address;
-    let subaccount_id = config.contract_subaccount_id;
+    let subaccount_id = get_default_subaccount_id_for_checked_address(&contract);
+    // TOOO: fix
+    let market_id = MarketId::unchecked("some_market");
     let min_deposit = price * quantity;
     if info.funds.is_empty() {
         return Err(ContractError::CustomError {
@@ -91,7 +72,7 @@ pub fn try_swap(
         price,
         quantity,
         OrderType::BuyAtomic,
-        &config.market_id,
+        &market_id,
         subaccount_id.to_owned(),
         Some(contract.to_owned()),
     );
@@ -106,6 +87,11 @@ pub fn try_swap(
     let cache = SwapCacheState {
         sender_address: info.sender.to_string(),
         deposited_amount: coins.clone(),
+        route: SwapRoute {
+            steps: vec![market_id],
+            denom_1: "".to_string(),
+            denom_2: "".to_string(),
+        },
     };
     SWAP_OPERATION_STATE.save(deps.storage, &cache)?;
 
@@ -122,6 +108,12 @@ pub fn reply(
         ATOMIC_ORDER_REPLY_ID => handle_atomic_order_reply(deps, env, msg),
         _ => Err(ContractError::UnrecognisedReply(msg.id)),
     }
+}
+
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    unimplemented!()
 }
 
 fn handle_atomic_order_reply(
@@ -157,14 +149,17 @@ fn handle_atomic_order_reply(
     let price = FPDecimal::from_str(&trade_data.price)? / dec_scale_factor;
     let fee = FPDecimal::from_str(&trade_data.fee)? / dec_scale_factor;
 
-    let config = STATE.load(deps.storage)?;
+    // let config = STATE.load(deps.storage)?;
+    // TODO: fix
+    let base_denom = "BASE_DENOM";
+    let quote_denom = "QUITE_DENOM";
 
     let cache = SWAP_OPERATION_STATE.load(deps.storage)?;
 
-    let purchased_coins = Coin::new(u128::from(quantity), config.base_denom.clone());
+    let purchased_coins = Coin::new(u128::from(quantity), base_denom.clone());
     let paid = quantity * price + fee;
     let leftover = cache.deposited_amount.amount - Uint128::from(u128::from(paid));
-    let leftover_coins = Coin::new(u128::from(leftover), config.quote_denom);
+    let leftover_coins = Coin::new(u128::from(leftover), quote_denom);
 
     let send_message = BankMsg::Send {
         to_address: cache.sender_address,

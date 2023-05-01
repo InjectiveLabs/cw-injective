@@ -25,6 +25,15 @@ pub struct InjectiveQueryWrapper {
     pub query_data: InjectiveQuery,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[repr(u8)]
+pub enum OrderSide {
+    Both,
+    Buy,
+    Sell,
+}
+
+
 /// InjectiveQuery is an override of QueryRequest::Custom to access Injective-specific modules
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -95,6 +104,13 @@ pub enum InjectiveQuery {
     },
     SpotMarketMidPriceAndTob {
         market_id: MarketId,
+    },
+    SpotOrderbook {
+        market_id: MarketId,
+        limit :   u64,
+        order_side: OrderSide,
+        limit_cumulative_notional: Option<FPDecimal>,
+        limit_cumulative_quantity: Option<FPDecimal>,
     },
     DerivativeMarketMidPriceAndTob {
         market_id: MarketId,
@@ -258,6 +274,27 @@ pub struct MarketMidPriceAndTOBResponse {
     pub mid_price: Option<FPDecimal>,
     pub best_buy_price: Option<FPDecimal>,
     pub best_sell_price: Option<FPDecimal>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct PriceLevel {
+    pub p : FPDecimal,
+    pub q: FPDecimal,
+}
+
+impl PriceLevel {
+
+    // helper method for tests
+    pub fn new(p: FPDecimal , q: FPDecimal) -> PriceLevel {
+        PriceLevel { p: p.into(), q: q.into() }
+    }
+
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct QueryOrderbookResponse {
+    pub buys_price_level: Vec<PriceLevel>,
+    pub sells_price_level: Vec<PriceLevel>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]

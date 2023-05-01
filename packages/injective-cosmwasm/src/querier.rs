@@ -334,6 +334,27 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
+    pub fn query_spot_market_orderbook<T: Into<MarketId> + Clone>(
+        &self,
+        market_id: &'a T,
+        side: OrderSide,
+        limit_cumulative_quantity: Option<FPDecimal>,
+        limit_cumulative_notional: Option<FPDecimal>,
+    ) -> StdResult<QueryOrderbookResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::SpotOrderbook {
+                market_id: market_id.clone().into(),
+                order_side: side,
+                limit: 0,
+                limit_cumulative_notional,
+                limit_cumulative_quantity,
+            },
+        };
+        let res: QueryOrderbookResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
     pub fn query_oracle_volatility(
         &self,
         base_info: &'a Option<OracleInfo>,

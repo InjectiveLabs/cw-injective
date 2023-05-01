@@ -1,0 +1,47 @@
+[package]
+name = "helix-converter"
+version = "0.1.0"
+authors = ["Antoni Mysliborski <antoni@injectivelabs.org>"]
+edition = "2021"
+
+exclude = [
+  # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
+  "contract.wasm",
+  "hash.txt",
+]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+# for more explicit tests, cargo test --features=backtraces
+backtraces = ["cosmwasm-std/backtraces"]
+# use library feature to disable all instantiate/execute/query exports
+library = []
+
+[package.metadata.scripts]
+optimize = """docker run --rm -v "$(pwd)":/code \
+  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+  cosmwasm/workspace-optimizer-arm64:0.12.11
+"""
+
+[dependencies]
+cosmwasm-std = "1.0.0"
+cosmwasm-storage = "1.0.0"
+cw-storage-plus = "0.14.0"
+cw2 = "0.14.0"
+cw-utils = "0.14.0"
+schemars = "0.8.8"
+serde = { version = "1.0.137", default-features = false, features = ["derive"] }
+thiserror = { version = "1.0.31" }
+injective-cosmwasm = { version = "0.1.39", path = "../../packages/injective-cosmwasm" }
+injective-math = { path = "../../packages/injective-math", version = "0.1.4" }
+protobuf = { version = "2", features = ["with-bytes"] }
+injective-protobuf = { path = "../../packages/injective-protobuf", version = "0.1" }
+
+[dev-dependencies]
+cosmwasm-schema = "1.0.0"
+cw-multi-test = "0.16.2"

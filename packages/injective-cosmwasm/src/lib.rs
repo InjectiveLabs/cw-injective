@@ -24,7 +24,7 @@ pub use query::{
     OraclePriceResponse, OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PricePairState, PythPriceResponse,
     QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse, SpotMarketResponse,
     SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TokenFactoryDenomSupplyResponse,
-    TraderDerivativeOrdersResponse, TraderSpotOrdersResponse, FROM_WORST_TO_BEST_CANCELLATION_STRATEGY, UNSORTED_CANCELLATION_STRATEGY,
+    TraderDerivativeOrdersResponse, TraderSpotOrdersResponse, OrderSide, PriceLevel, FROM_WORST_TO_BEST_CANCELLATION_STRATEGY, UNSORTED_CANCELLATION_STRATEGY,
 };
 pub use route::InjectiveRoute;
 pub use spot::{MsgCreateSpotMarketOrderResponse, SpotLimitOrder, SpotMarketOrder, SpotOrder, TrimmedSpotLimitOrder};
