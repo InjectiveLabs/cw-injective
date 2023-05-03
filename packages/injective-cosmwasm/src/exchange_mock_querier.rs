@@ -38,8 +38,9 @@ pub fn mock_dependencies() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, I
 fn default_subaccount_deposit_response_handler() -> QuerierResult {
     let response = SubaccountDepositResponse {
         deposits: Deposit {
-            available_balance: FPDecimal::from(100u128),
-            total_balance: FPDecimal::from(100u128),
+            // NOTE: this is 100 with 8 decimal places
+            available_balance: FPDecimal::from(10_000_000_000u128),
+            total_balance: FPDecimal::from(10_000_000_000u128),
         },
     };
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
@@ -51,13 +52,13 @@ fn default_spot_market_response_handler(market_id: MarketId) -> QuerierResult {
             ticker: "INJ/USDT".to_string(),
             base_denom: "INJ".to_string(),
             quote_denom: "USDT".to_string(),
-            maker_fee_rate: FPDecimal::from_str("0.001").unwrap(),
-            taker_fee_rate: FPDecimal::from_str("0.002").unwrap(),
+            maker_fee_rate: FPDecimal::from_str("-0.0001").unwrap(),
+            taker_fee_rate: FPDecimal::from_str("0.001").unwrap(),
             relayer_fee_share_rate: FPDecimal::from_str("0.4").unwrap(),
             market_id,
-            status: 0,
-            min_price_tick_size: FPDecimal::from_str("0.1").unwrap(),
-            min_quantity_tick_size: FPDecimal::from_str("0.001").unwrap(),
+            status: 1,
+            min_price_tick_size: FPDecimal::from_str("0.01").unwrap(),
+            min_quantity_tick_size: FPDecimal::from_str("1000000000000000.0").unwrap(),
         }),
     };
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
@@ -95,8 +96,8 @@ fn default_derivative_market_response_handler(market_id: MarketId) -> QuerierRes
                 taker_fee_rate: FPDecimal::from_str("0.002").unwrap(),
                 isPerpetual: true,
                 status: 0,
-                min_price_tick_size: FPDecimal::from_str("0.1").unwrap(),
-                min_quantity_tick_size: FPDecimal::from_str("0.001").unwrap(),
+                min_price_tick_size: FPDecimal::from_str("100000.0").unwrap(),
+                min_quantity_tick_size: FPDecimal::from_str("0.0001").unwrap(),
             }),
             info: None,
             mark_price: FPDecimal::one(),
