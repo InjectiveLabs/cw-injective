@@ -908,38 +908,31 @@ pub mod handlers {
         Some(Box::new(Temp { position }))
     }
 
-    pub fn create_derivative_market_mid_price_and_tob_handler(mid_price: Option<FPDecimal>) -> Option<Box<dyn HandlesMarketIdQuery>> {
+    pub fn create_market_mid_price_and_tob_handler(
+        mid_price: Option<FPDecimal>,
+        best_buy_price: Option<FPDecimal>,
+        best_sell_price: Option<FPDecimal>,
+    ) -> Option<Box<dyn HandlesMarketIdQuery>> {
         struct Temp {
             mid_price: Option<FPDecimal>,
+            best_buy_price: Option<FPDecimal>,
+            best_sell_price: Option<FPDecimal>,
         }
         impl HandlesMarketIdQuery for Temp {
             fn handle(&self, _: MarketId) -> QuerierResult {
                 let response = MarketMidPriceAndTOBResponse {
                     mid_price: self.mid_price.to_owned(),
-                    best_buy_price: None,
-                    best_sell_price: None,
+                    best_buy_price: self.best_buy_price.to_owned(),
+                    best_sell_price: self.best_sell_price.to_owned(),
                 };
                 SystemResult::Ok(ContractResult::from(to_binary(&response)))
             }
         }
-        Some(Box::new(Temp { mid_price }))
-    }
-
-    pub fn create_spot_market_mid_price_and_tob_handler(mid_price: Option<FPDecimal>) -> Option<Box<dyn HandlesMarketIdQuery>> {
-        struct Temp {
-            mid_price: Option<FPDecimal>,
-        }
-        impl HandlesMarketIdQuery for Temp {
-            fn handle(&self, _: MarketId) -> QuerierResult {
-                let response = MarketMidPriceAndTOBResponse {
-                    mid_price: self.mid_price.to_owned(),
-                    best_buy_price: None,
-                    best_sell_price: None,
-                };
-                SystemResult::Ok(ContractResult::from(to_binary(&response)))
-            }
-        }
-        Some(Box::new(Temp { mid_price }))
+        Some(Box::new(Temp {
+            mid_price,
+            best_buy_price,
+            best_sell_price,
+        }))
     }
 
     pub fn create_oracle_volatility_handler(
