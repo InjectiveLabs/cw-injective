@@ -38,9 +38,9 @@ pub fn mock_dependencies() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, I
 fn default_subaccount_deposit_response_handler() -> QuerierResult {
     let response = SubaccountDepositResponse {
         deposits: Deposit {
-            // NOTE: this is 100 with 8 decimal places
-            available_balance: FPDecimal::from(10_000_000_000u128),
-            total_balance: FPDecimal::from(10_000_000_000u128),
+            // NOTE: this is 100 with 18 decimal places
+            available_balance: FPDecimal::from(10_000_000_000_000_000_000u128),
+            total_balance: FPDecimal::from(10_000_000_000_000_000_000u128),
         },
     };
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
