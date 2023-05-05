@@ -197,7 +197,7 @@ pub struct OraclePriceResponse {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PythPriceResponse {
-    pub pyth_price_state: Option<PythPriceState>,
+    pub price_state: Option<PythPriceState>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]

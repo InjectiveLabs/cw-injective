@@ -225,7 +225,7 @@ fn default_oracle_volatility_response_handler() -> QuerierResult {
 
 fn default_pyth_price_response_handler() -> QuerierResult {
     let response = PythPriceResponse {
-        pyth_price_state: Some(PythPriceState {
+        price_state: Some(PythPriceState {
             price_id: "0xff0ec26442c57d7456695b843694e7379b15cf1b250b27e0e47e657f1955aaff".to_string(),
             ema_price: FPDecimal::one(),
             ema_conf: FPDecimal::one(),

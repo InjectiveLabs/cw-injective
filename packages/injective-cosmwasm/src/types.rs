@@ -161,6 +161,12 @@ impl<'de> Deserialize<'de> for SubaccountId {
     }
 }
 
+impl fmt::Display for SubaccountId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 #[allow(clippy::from_over_into)]
 impl Into<String> for SubaccountId {
     fn into(self) -> String {
@@ -371,5 +377,11 @@ mod tests {
     fn subaccount_id_implements_as_ref_for_str() {
         let subaccount_id = SubaccountId::unchecked("literal-string");
         assert_eq!(subaccount_id.as_ref(), "literal-string");
+    }
+
+    #[test]
+    fn subaccount_id_implements_display() {
+        let subaccount_id = SubaccountId::unchecked("literal-string");
+        assert_eq!(format!("{}", subaccount_id), "literal-string");
     }
 }
