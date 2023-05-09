@@ -1,6 +1,7 @@
 use crate::FPDecimal;
 use cosmwasm_std::StdError;
 use std::{fmt::Display, str::FromStr};
+use bigint::U256;
 
 #[derive(Default)]
 pub enum RangeEnds {
@@ -64,4 +65,35 @@ pub fn ensure_band<T: Ord + Display>(v: &T, min: Option<&T>, max: Option<&T>, ra
 
 pub fn band_error_to_human(err: StdError, value_name: &str) -> StdError {
     StdError::generic_err(format!("Value '{value_name}' failed validation due to: '{err}'"))
+}
+
+
+pub fn div_dec(num: FPDecimal, denom: FPDecimal) -> FPDecimal {
+    if denom == FPDecimal::zero() {
+        denom
+    } else {
+        num / denom
+    }
+}
+
+pub fn round_to_min_tick(num: FPDecimal, min_tick: FPDecimal) -> FPDecimal {
+    if num < min_tick {
+        FPDecimal::zero()
+    } else {
+        let shifted = div_dec(num, min_tick).int();
+        shifted * min_tick
+    }
+}
+
+pub fn round_to_nearest_tick(num: FPDecimal, min_tick: FPDecimal) -> FPDecimal {
+    if num < min_tick {
+        return FPDecimal::zero();
+    }
+
+    let remainder = FPDecimal::from(num.num % min_tick.num);
+    if remainder.num > min_tick.num / U256::from(2u64) {
+        FPDecimal::from(num.num - remainder.num + min_tick.num)
+    } else {
+        FPDecimal::from(num.num - remainder.num)
+    }
 }

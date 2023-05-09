@@ -66,6 +66,20 @@ impl Into<String> for MarketId {
     }
 }
 
+impl<'a> From<&'a str> for MarketId {
+    fn from(s: &'a str) -> Self {
+        MarketId::new(s).unwrap()
+    }
+}
+
+// #[allow(clippy::from_over_into)]
+// impl<'a> From<&'a str> for MarketId {
+//     fn from(value: &'a str) -> Self {
+//         value.to_string().into()
+//     }
+// }
+
+
 impl<'de> Deserialize<'de> for MarketId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where

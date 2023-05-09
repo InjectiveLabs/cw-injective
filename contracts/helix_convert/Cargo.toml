@@ -38,7 +38,7 @@ schemars = "0.8.8"
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
 injective-cosmwasm = { version = "0.1.39", path = "../../packages/injective-cosmwasm" }
-injective-math = { path = "../../packages/injective-math", version = "0.1.4" }
+injective-math = { path = "../../packages/injective-math", version = "0.1.15" }
 protobuf = { version = "2", features = ["with-bytes"] }
 injective-protobuf = { path = "../../packages/injective-protobuf", version = "0.1" }
 

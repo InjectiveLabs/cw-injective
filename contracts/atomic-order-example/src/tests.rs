@@ -2,71 +2,68 @@ use std::marker::PhantomData;
 use std::str::FromStr;
 
 use cosmwasm_std::testing::{mock_info, MockApi, MockStorage};
-use cosmwasm_std::{
-    coins, to_binary, Addr, Api, BankMsg, Binary, BlockInfo, ContractInfo, ContractResult,
-    CosmosMsg, CustomQuery, DepsMut, Env, OwnedDeps, Querier, QuerierResult, QuerierWrapper, Reply,
-    Storage, SubMsgResponse, SubMsgResult, SystemResult, Timestamp, TransactionInfo, Uint128,
-};
+use cosmwasm_std::{coins, to_binary, Addr, Api, BankMsg, Binary, BlockInfo, ContractInfo, ContractResult, CosmosMsg, CustomQuery, DepsMut, Env, OwnedDeps, Querier, QuerierResult, QuerierWrapper, Reply, Storage, SubMsgResponse, SubMsgResult, SystemResult, Timestamp, TransactionInfo, Uint128, Deps};
 
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
-use injective_cosmwasm::{
-    HandlesMarketIdQuery, InjectiveQueryWrapper, InjectiveRoute, MarketId, OrderInfo, OrderType,
-    SpotMarket, SpotMarketResponse, SpotOrder, SubaccountId, WasmMockQuerier,
-};
+use injective_cosmwasm::{HandlesMarketIdQuery, inj_mock_deps, inj_mock_env, InjectiveQueryWrapper, InjectiveRoute, MarketId, OrderInfo, OrderType, OwnedDepsExt, SpotMarket, SpotMarketResponse, SpotOrder, SubaccountId, WasmMockQuerier};
 use injective_math::FPDecimal;
 
 use crate::contract::{execute, instantiate, reply, ATOMIC_ORDER_REPLY_ID};
 use crate::helpers::{get_message_data, i32_to_dec};
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 
-pub const TEST_CONTRACT_ADDR: &str = "inj14hj2tavq8fpesdwxxcu44rty3hh90vhujaxlnz";
+// pub const TEST_CONTRACT_ADDR: &str = "inj14hj2tavq8fpesdwxxcu44rty3hh90vhujaxlnz";
+//
+// pub fn inj_mock_env() -> Env {
+//     Env {
+//         block: BlockInfo {
+//             height: 12_345,
+//             time: Timestamp::from_nanos(1_571_797_419_879_305_533),
+//             chain_id: "cosmos-testnet-14002".to_string(),
+//         },
+//         transaction: Some(TransactionInfo { index: 3 }),
+//         contract: ContractInfo {
+//             address: Addr::unchecked(TEST_CONTRACT_ADDR),
+//         },
+//     }
+// }
+//
+// pub trait OwnedDepsExt<S, A, Q, C>
+// where
+//     C: CustomQuery,
+// {
+//     fn as_mut_deps(&mut self) -> DepsMut<C>;
+// }
+//
+// impl<S, A, Q, C> OwnedDepsExt<S, A, Q, C> for OwnedDeps<S, A, Q, C>
+// where
+//     S: Storage,
+//     A: Api,
+//     Q: Querier,
+//     C: CustomQuery,
+// {
+//     fn as_mut_deps(&mut self) -> DepsMut<C> {
+//         return DepsMut {
+//             storage: &mut self.storage,
+//             api: &self.api,
+//             querier: QuerierWrapper::new(&self.querier),
+//         };
+//     }
+// }
+//
+// pub fn inj_mock_deps() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQueryWrapper> {
+//     let mut custom_querier: WasmMockQuerier = WasmMockQuerier::new();
+//     custom_querier.spot_market_response_handler = Some(Box::new(create_spot_market_handler()));
+//     OwnedDeps {
+//         api: MockApi::default(),
+//         storage: MockStorage::default(),
+//         querier: custom_querier,
+//         custom_query_type: PhantomData::default(),
+//     }
+// }
 
-pub fn inj_mock_env() -> Env {
-    Env {
-        block: BlockInfo {
-            height: 12_345,
-            time: Timestamp::from_nanos(1_571_797_419_879_305_533),
-            chain_id: "cosmos-testnet-14002".to_string(),
-        },
-        transaction: Some(TransactionInfo { index: 3 }),
-        contract: ContractInfo {
-            address: Addr::unchecked(TEST_CONTRACT_ADDR),
-        },
-    }
-}
-
-pub trait OwnedDepsExt<S, A, Q, C>
-where
-    C: CustomQuery,
-{
-    fn as_mut_deps(&mut self) -> DepsMut<C>;
-}
-
-impl<S, A, Q, C> OwnedDepsExt<S, A, Q, C> for OwnedDeps<S, A, Q, C>
-where
-    S: Storage,
-    A: Api,
-    Q: Querier,
-    C: CustomQuery,
-{
-    fn as_mut_deps(&mut self) -> DepsMut<C> {
-        return DepsMut {
-            storage: &mut self.storage,
-            api: &self.api,
-            querier: QuerierWrapper::new(&self.querier),
-        };
-    }
-}
-
-pub fn inj_mock_deps() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQueryWrapper> {
-    let mut custom_querier: WasmMockQuerier = WasmMockQuerier::new();
-    custom_querier.spot_market_response_handler = Some(Box::new(create_spot_market_handler()));
-    OwnedDeps {
-        api: MockApi::default(),
-        storage: MockStorage::default(),
-        querier: custom_querier,
-        custom_query_type: PhantomData::default(),
-    }
+fn test_deps<'a>() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQueryWrapper> {
+    inj_mock_deps(|querier| querier.spot_market_response_handler = Some(Box::new(create_spot_market_handler())) )
 }
 
 #[test]
@@ -81,7 +78,7 @@ fn proper_initialization() {
     let info = mock_info(sender_addr, &coins(1000, "earth"));
 
     // we can just call .unwrap() to assert this was a success
-    let res = instantiate(inj_mock_deps().as_mut_deps(), inj_mock_env(), info, msg).unwrap();
+    let res = instantiate(test_deps().as_mut_deps(), inj_mock_env(), info, msg).unwrap();
     assert_eq!(0, res.messages.len());
 }
 
@@ -98,7 +95,7 @@ fn test_swap() {
         market_id: market_id.clone(),
     };
     let info = mock_info(contract_addr, &coins(1000, "earth"));
-    let mut deps = inj_mock_deps();
+    let mut deps = test_deps();
     let env = inj_mock_env();
     let _ = instantiate(deps.as_mut_deps(), env.clone(), info, msg);
 

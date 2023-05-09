@@ -277,8 +277,8 @@ fn default_all_balances_bank_query_handler() -> QuerierResult {
 
 fn default_spot_market_orderbook_response_handler() -> QuerierResult {
     let response = QueryOrderbookResponse {
-        buys_price_level: vec![PriceLevel::new(10u128.into(), 10u128.into())],
-        sells_price_level: vec![],
+        buys_price_level: vec![PriceLevel::new(9u128.into(), 10u128.into()), PriceLevel::new(8u128.into(), 10u128.into())],
+        sells_price_level: vec![PriceLevel::new(11u128.into(), 10u128.into()), PriceLevel::new(12u128.into(), 10u128.into())],
     };
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
@@ -395,7 +395,7 @@ pub trait HandlesDenomDecimalsQuery {
 }
 
 pub trait HandlesPriceLevelsQuery {
-    fn hanle(&self, order_side: OrderSide, limit_notional: Option<FPDecimal>, limit_quantity: Option<FPDecimal>) -> QuerierResult;
+    fn handle(&self, market_id: MarketId, order_side: OrderSide) -> QuerierResult;
 }
 
 pub struct WasmMockQuerier {
@@ -606,9 +606,10 @@ impl WasmMockQuerier {
                     order_side,
                     limit_cumulative_notional,
                     limit_cumulative_quantity,
+                    market_id,
                     ..
                 } => match &self.spot_market_orderbook_response_handler {
-                    Some(handler) => handler.hanle(order_side, limit_cumulative_notional, limit_cumulative_quantity),
+                    Some(handler) => handler.handle(market_id, order_side),
                     None => default_spot_market_orderbook_response_handler(),
                 },
                 InjectiveQuery::MarketAtomicExecutionFeeMultiplier { market_id } => {
@@ -691,6 +692,7 @@ impl TestDeposit {
 }
 
 pub mod handlers {
+    use std::collections::HashMap;
     use cosmwasm_std::{
         to_binary, AllBalanceResponse, BalanceResponse, Binary, Coin, ContractResult, QuerierResult, StdResult, SystemError, SystemResult, Uint128,
     };
@@ -698,18 +700,8 @@ pub mod handlers {
     use injective_math::FPDecimal;
 
     use crate::exchange_mock_querier::{HandlesByAddressQuery, HandlesDenomSupplyQuery, HandlesFeeQuery};
-    use crate::query::{
-        OraclePriceResponse, PricePairState, QueryContractRegistrationInfoResponse, RegisteredContract, TokenFactoryCreateDenomFeeResponse,
-        TokenFactoryDenomSupplyResponse,
-    };
-    use crate::{
-        exchange_mock_querier::TestCoin, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition, FullDerivativeMarket,
-        FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery, HandlesSmartQuery,
-        HandlesSubaccountAndDenomQuery, HandlesTraderSpotOrdersToCancelUpToAmountQuery, MarketId, MetadataStatistics, OracleVolatilityResponse,
-        Position, QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarket, SpotMarketResponse, SubaccountDepositResponse,
-        SubaccountEffectivePositionInMarketResponse, SubaccountId, SubaccountPositionInMarketResponse, TradeRecord, TraderDerivativeOrdersResponse,
-        TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder, TrimmedSpotLimitOrder,
-    };
+    use crate::query::{OraclePriceResponse, PricePairState, QueryContractRegistrationInfoResponse, QueryOrderbookResponse, RegisteredContract, TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
+    use crate::{exchange_mock_querier::TestCoin, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition, FullDerivativeMarket, FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery, HandlesSmartQuery, HandlesSubaccountAndDenomQuery, HandlesTraderSpotOrdersToCancelUpToAmountQuery, MarketId, MetadataStatistics, OracleVolatilityResponse, Position, QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarket, SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountId, SubaccountPositionInMarketResponse, TradeRecord, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder, TrimmedSpotLimitOrder, HandlesPriceLevelsQuery, OrderSide, PriceLevel};
     use crate::{
         HandlesBankAllBalancesQuery, HandlesBankBalanceQuery, HandlesTraderDerivativeOrdersToCancelUpToAmountQuery, MarketMidPriceAndTOBResponse,
         OracleType,
@@ -789,6 +781,44 @@ pub mod handlers {
             }
         }
         Some(Box::new(Temp { market }))
+    }
+
+    pub fn create_orderbook_response_handler(orderbooks: HashMap<MarketId, Vec<PriceLevel>>) -> Option<Box<dyn HandlesPriceLevelsQuery>> {
+        struct Temp {
+            orderbooks: HashMap<MarketId, Vec<PriceLevel>>
+        }
+        impl HandlesPriceLevelsQuery for Temp {
+            fn handle(&self, market_id: MarketId, order_side: OrderSide) -> QuerierResult {
+                let price_levels_opt = self.orderbooks.get(&market_id);
+                if price_levels_opt.is_none() {
+                    return SystemResult::Err(SystemError::Unknown {});
+                }
+                let price_levels = price_levels_opt.unwrap().clone();
+                let response = QueryOrderbookResponse {
+                    buys_price_level: if order_side != OrderSide::Sell { price_levels.clone() } else { vec![]},
+                    sells_price_level: if order_side != OrderSide::Buy { price_levels.clone() } else { vec![]},
+                };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+        Some(Box::new(Temp { orderbooks }))
+    }
+
+    pub fn create_spot_multi_market_handler(markets: HashMap<MarketId, SpotMarket>) -> Option<Box<dyn HandlesMarketIdQuery>> {
+        struct Temp {
+            markets: HashMap<MarketId, SpotMarket>,
+        }
+
+        impl HandlesMarketIdQuery for Temp {
+            fn handle(&self, market_id: MarketId) -> QuerierResult {
+                let response = SpotMarketResponse {
+                    market: self.markets.get(&market_id).cloned(),
+                };
+                SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            }
+        }
+
+        Some(Box::new(Temp { markets }))
     }
 
     pub type SpotUpToAmountConsumingFunction = fn(MarketId, SubaccountId, FPDecimal, FPDecimal, i32, Option<FPDecimal>);

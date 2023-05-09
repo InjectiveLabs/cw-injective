@@ -34,6 +34,10 @@ pub use subaccount::{
     addr_to_bech32, bech32_to_hex, checked_address_to_subaccount_id, get_default_subaccount_id_for_checked_address, is_default_subaccount,
     subaccount_id_to_ethereum_address, subaccount_id_to_injective_address, subaccount_id_to_unchecked_injective_address,
 };
+pub use test_helpers::{
+    inj_mock_deps, inj_mock_env, test_market_ids, create_mock_spot_market, OwnedDepsExt, TEST_MARKET_ID_1, TEST_MARKET_ID_10, TEST_MARKET_ID_2, TEST_MARKET_ID_3,
+    TEST_MARKET_ID_4, TEST_MARKET_ID_5, TEST_MARKET_ID_6, TEST_MARKET_ID_7, TEST_MARKET_ID_8, TEST_MARKET_ID_9,
+};
 pub use types::{Hash, MarketId, MarketType, SubaccountId};
 pub use volatility::{MetadataStatistics, PriceRecord, TradeHistoryOptions, TradeRecord};
 
@@ -55,6 +59,7 @@ mod volatility;
 
 #[cfg(not(target_arch = "wasm32"))]
 mod exchange_mock_querier;
+mod test_helpers;
 
 // This export is added to all contracts that import this package, signifying that they require
 // "injective" support on the chain they run on.

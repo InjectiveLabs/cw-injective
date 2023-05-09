@@ -13,7 +13,7 @@ pub struct Config {
     /// Any value above 0 requires the contract to have sufficient funds to provide for orders.
     pub fee_discount: FPDecimal,
 
-    pub fee_recipient: Addr, 
+    pub fee_recipient: Addr,
 }
 
 pub const ROUTES: Item<SwapRoute> = Item::new("routes");
@@ -47,12 +47,12 @@ pub struct SwapStep {
 
 pub const SWAP_ROUTES: Map<(&str, &str), SwapRoute> = Map::new("swap_routes");
 
-pub fn store_swap_route(deps: DepsMut, route: SwapRoute) -> StdResult<()> {
+pub fn store_swap_route(deps: &mut DepsMut<InjectiveQueryWrapper>, route: SwapRoute) -> StdResult<()> {
     let key = route_key(&route.denom_1, &route.denom_2);
     SWAP_ROUTES.save(deps.storage, key, &route)
 }
 
-pub fn read_swap_route(deps: Deps<InjectiveQueryWrapper>, denom1: &str, denom2: &str) -> StdResult<SwapRoute> {
+pub fn read_swap_route(deps: &Deps<InjectiveQueryWrapper>, denom1: &str, denom2: &str) -> StdResult<SwapRoute> {
     let key = route_key(denom1, denom2);
     SWAP_ROUTES.load(deps.storage, key).map_err(StdError::from)
 }
