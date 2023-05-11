@@ -20,7 +20,16 @@ pub struct Position {
 }
 
 impl Position {
-    pub fn get_position_value(&mut self, valuation_price: FPDecimal, cumulative_funding: FPDecimal) -> FPDecimal {
+    pub fn get_position_value_without_funding(&self, valuation_price: FPDecimal) -> FPDecimal {
+        let pnl = if self.isLong {
+            self.quantity * (valuation_price - self.entry_price)
+        } else {
+            self.quantity * (self.entry_price - valuation_price)
+        };
+        self.margin + pnl
+    }
+
+    pub fn get_position_value_with_funding(&self, valuation_price: FPDecimal, cumulative_funding: FPDecimal) -> FPDecimal {
         if self.isLong {
             let pnl = self.quantity * (valuation_price - self.entry_price);
             let unrealized_funding = self.quantity * (self.cumulative_funding_entry - cumulative_funding);
