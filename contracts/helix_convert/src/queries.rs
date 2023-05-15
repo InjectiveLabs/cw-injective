@@ -3,24 +3,15 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use injective_cosmwasm::{
-    InjectiveQuerier, InjectiveQueryWrapper, MarketId, OrderSide, PriceLevel,
+    InjectiveQuerier, InjectiveQueryWrapper, MarketId, OrderSide, OrderType, PriceLevel,
 };
-use injective_math::FPDecimal;
 use injective_math::utils::round_to_min_tick;
+use injective_math::FPDecimal;
+use crate::ContractError;
 
 use crate::helpers::counter_denom;
 use crate::state::read_swap_route;
-
-struct ExecutionPrice {
-    worst_price: FPDecimal,
-    average_price: FPDecimal,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-struct FPCoin {
-    amount: FPDecimal,
-    denom: String,
-}
+use crate::types::{FPCoin, StepExecutionEstimate};
 
 fn estimate_swap_result(
     deps: Deps<InjectiveQueryWrapper>,
@@ -53,16 +44,10 @@ fn estimate_swap_result(
     Ok(current_swap.amount)
 }
 
-struct StepExecutionEstimate {
-    worst_price: FPDecimal,
-    result_denom: String,
-    result_quantity: FPDecimal,
-}
-
-fn estimate_single_swap_execution(
+pub fn estimate_single_swap_execution(
     deps: &Deps<InjectiveQueryWrapper>,
     market_id: &MarketId,
-    swap: FPCoin,
+    balance_in: FPCoin,
 ) -> StdResult<StepExecutionEstimate> {
     let querier = InjectiveQuerier::new(&deps.querier);
 
@@ -70,29 +55,47 @@ fn estimate_single_swap_execution(
         .query_spot_market(market_id)?
         .market
         .expect("market should be available");
-    println!("Swapping {} {} on market: {}", swap.amount.clone(), swap.denom.clone(), market.ticker);
+    println!(
+        "Swapping {} {} on market: {}",
+        balance_in.amount.clone(),
+        balance_in.denom.clone(),
+        market.ticker
+    );
 
     let fee_multiplier = querier
         .query_market_atomic_execution_fee_multiplier(market_id)?
         .multiplier;
     let fee_percent = market.taker_fee_rate * fee_multiplier;
-
-    let (expected_quantity, worst_price) = if &swap.denom == &market.quote_denom {
-        estimate_execution_buy(&querier, market_id, swap.amount, fee_percent)?
-    } else if &swap.denom == &market.base_denom {
-        estimate_execution_sell(&querier, market_id, swap.amount, fee_percent)?
+    let is_buy = if &balance_in.denom == &market.quote_denom {
+        true
+    } else if &balance_in.denom == &market.base_denom {
+        false
     } else {
         return Err(StdError::generic_err(
             "Invalid swap denom - neither base or quote",
         ));
     };
-    let rounded = round_to_min_tick(expected_quantity, if &swap.denom == &market.quote_denom {market.min_quantity_tick_size} else {market.min_price_tick_size});
 
-    let new_denom = counter_denom(&market, &swap.denom)?;
+    let (expected_quantity, worst_price) = if is_buy {
+        estimate_execution_buy(&querier, market_id, balance_in.amount, fee_percent)?
+    } else {
+        estimate_execution_sell(&querier, market_id, balance_in.amount, fee_percent)?
+    };
+    let rounded = round_to_min_tick(
+        expected_quantity,
+        if is_buy {
+            market.min_quantity_tick_size
+        } else {
+            market.min_price_tick_size
+        },
+    );
+
+    let new_denom = counter_denom(&market, &balance_in.denom)?;
     Ok(StepExecutionEstimate {
         worst_price,
         result_denom: new_denom.to_string(),
         result_quantity: rounded,
+        is_buy_order: is_buy,
     })
 }
 
@@ -152,7 +155,11 @@ pub fn find_minimum_orders(
     let mut orders: Vec<PriceLevel> = Vec::new();
     for level in levels {
         let value = calc(level);
-        println!("Adding level {}x{} value: {value}, sum so far: {sum}", level.p.clone(), level.q.clone());
+        println!(
+            "Adding level {}x{} value: {value}, sum so far: {sum}",
+            level.p.clone(),
+            level.q.clone()
+        );
         let order_to_add = if sum + value > total {
             let excess = value + sum - total;
             println!("Value: {value}, excess value: {excess}, sum so far: {sum}");
@@ -163,7 +170,11 @@ pub fn find_minimum_orders(
         } else {
             level.clone() // take fully
         };
-        println!("Added level {}x{}", order_to_add.p.clone(), order_to_add.q.clone());
+        println!(
+            "Added level {}x{}",
+            order_to_add.p.clone(),
+            order_to_add.q.clone()
+        );
 
         sum += value;
         orders.push(order_to_add);
@@ -200,7 +211,7 @@ mod tests {
 
     use injective_cosmwasm::{
         create_mock_spot_market, create_orderbook_response_handler, create_spot_market_handler,
-        create_spot_multi_market_handler, Hash, inj_mock_deps, OwnedDepsExt, SpotMarket,
+        create_spot_multi_market_handler, inj_mock_deps, Hash, OwnedDepsExt, SpotMarket,
         TEST_MARKET_ID_1, TEST_MARKET_ID_2,
     };
 
@@ -394,7 +405,11 @@ mod tests {
             "inj".to_string(),
         )
         .unwrap();
-        assert_eq!(amount_inj, FPDecimal::from_str("287.97").unwrap(), "Wrong amount of INJ received"); // value rounded to min tick
+        assert_eq!(
+            amount_inj,
+            FPDecimal::from_str("287.97").unwrap(),
+            "Wrong amount of INJ received"
+        ); // value rounded to min tick
         println!("Got {amount_inj} inj");
     }
 }

@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use cosmwasm_std::{Addr, Coin, Deps, DepsMut, StdError, StdResult};
 use cw_storage_plus::{Item, Map};
 use injective_math::FPDecimal;
+use crate::types::{CurrentSwapOperation, CurrentSwapStep};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Config {
@@ -12,11 +13,8 @@ pub struct Config {
     /// The suggested default value for this field is 0.4 (the contract will return all trading fees it receives back from being designated as fee recipient)
     /// Any value above 0 requires the contract to have sufficient funds to provide for orders.
     pub fee_discount: FPDecimal,
-
     pub fee_recipient: Addr,
 }
-
-pub const ROUTES: Item<SwapRoute> = Item::new("routes");
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SwapRoute {
@@ -65,11 +63,5 @@ fn route_key<'a>(denom1: &'a str, denom2: &'a str) -> (&'a str, &'a str) {
     }
 }
 
-pub const SWAP_OPERATION_STATE: Item<SwapCacheState> = Item::new("cache");
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-pub struct SwapCacheState {
-    pub sender_address: String,
-    pub deposited_amount: Coin,
-    pub route: SwapRoute
-}
+pub const SWAP_OPERATION_STATE: Item<CurrentSwapOperation> = Item::new("current_swap_cache");
+pub const STEP_STATE: Item<CurrentSwapStep> = Item::new("current_step_cache");

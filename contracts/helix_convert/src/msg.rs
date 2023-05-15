@@ -10,9 +10,9 @@ pub struct InstantiateMsg {}
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    SwapSpot {
-        quantity: FPDecimal,
-        price: FPDecimal,
+    Swap {
+        target_denom: String,
+        min_quantity: FPDecimal,
     },
 }
 

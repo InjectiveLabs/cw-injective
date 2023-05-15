@@ -1,14 +1,12 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{BankMsg, Coin, DepsMut, Env, MessageInfo, Reply, Response, SubMsg, Uint128};
+use cosmwasm_std::{BankMsg, Coin, DepsMut, Env, from_binary, MessageInfo, Reply, Response, SubMsg, Uint128};
 use cw2::set_contract_version;
 use protobuf::Message;
 use std::str::FromStr;
+use cw_utils::parse_reply_execute_data;
 
-use injective_cosmwasm::{
-    create_spot_market_order_msg, get_default_subaccount_id_for_checked_address,
-    InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, OrderType, SpotOrder,
-};
+use injective_cosmwasm::{create_spot_market_order_msg, get_default_subaccount_id_for_checked_address, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, MsgCreateSpotMarketOrderResponse, OrderType, SpotOrder};
 use injective_math::FPDecimal;
 use injective_protobuf::proto::tx;
 
@@ -156,7 +154,7 @@ fn handle_atomic_order_reply(
     let quantity = FPDecimal::from_str(&trade_data.quantity)? / dec_scale_factor;
     let price = FPDecimal::from_str(&trade_data.price)? / dec_scale_factor;
     let fee = FPDecimal::from_str(&trade_data.fee)? / dec_scale_factor;
-
+   
     let config = STATE.load(deps.storage)?;
 
     let cache = SWAP_OPERATION_STATE.load(deps.storage)?;

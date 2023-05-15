@@ -28,7 +28,7 @@ pub struct InjectiveQueryWrapper {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[repr(u8)]
 pub enum OrderSide {
-    Both,
+    Unspecified,
     Buy,
     Sell,
 }
