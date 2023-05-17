@@ -112,10 +112,10 @@ fn execute_swap_step(
     deps: DepsMut<InjectiveQueryWrapper>,
     env: Env,
     swap_operation: CurrentSwapOperation,
-    step_idx: usize,
+    step_idx: u16,
     current_balance: FPCoin,
 ) -> StdResult<Response<InjectiveMsgWrapper>> {
-    let market_id = swap_operation.swap_steps[step_idx].clone();
+    let market_id = swap_operation.swap_steps[usize::from(step_idx)].clone();
     let contract = env.contract.address;
     let subaccount_id = get_default_subaccount_id_for_checked_address(&contract);
 
@@ -230,7 +230,7 @@ fn handle_atomic_order_reply(
     };
 
     let swap = SWAP_OPERATION_STATE.load(deps.storage)?;
-    if current_step.step_idx < swap.swap_steps.len() - 1 {
+    if current_step.step_idx < (swap.swap_steps.len() - 1) as u16 {
         execute_swap_step(deps, env, swap, current_step.step_idx + 1, new_balance)
             .map_err(ContractError::Std)
     } else {

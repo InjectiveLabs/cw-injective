@@ -51,7 +51,7 @@ pub struct CurrentSwapOperation {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct CurrentSwapStep {
     // current step
-    pub step_idx: u64,
+    pub step_idx: u16,
     pub current_balance: FPCoin,
     pub step_target_denom: String,
 }
