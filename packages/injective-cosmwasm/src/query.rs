@@ -289,7 +289,7 @@ impl PriceLevel {
 
     // helper method for tests
     pub fn new(p: FPDecimal , q: FPDecimal) -> PriceLevel {
-        PriceLevel { p: p.into(), q: q.into() }
+        PriceLevel { p, q }
     }
 
 }

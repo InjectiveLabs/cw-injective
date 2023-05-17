@@ -1,8 +1,9 @@
-use cosmwasm_std::{to_binary, Addr, CosmosMsg, StdResult, SubMsg, WasmMsg, StdError};
-use injective_cosmwasm::{InjectiveMsgWrapper, SpotMarket};
-use injective_math::FPDecimal;
+use cosmwasm_std::{Addr, CosmosMsg, StdError, StdResult, SubMsg, to_binary, WasmMsg};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+use injective_cosmwasm::{InjectiveMsgWrapper, SpotMarket};
+use injective_math::FPDecimal;
 
 use crate::msg::ExecuteMsg;
 
@@ -50,4 +51,8 @@ pub fn counter_denom<'a>(market:&'a SpotMarket, denom: &str) -> StdResult<&'a st
     } else {
         Err(StdError::generic_err("Denom must be either base or quote denom of this market!"))
     }
+}
+
+pub fn dec_scale_factor() -> FPDecimal {
+    FPDecimal::from(1000000000000000000_i128)
 }

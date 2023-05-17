@@ -7,19 +7,19 @@ use injective_cosmwasm::{
 };
 use injective_math::utils::round_to_min_tick;
 use injective_math::FPDecimal;
-use crate::ContractError;
 
 use crate::helpers::counter_denom;
 use crate::state::read_swap_route;
 use crate::types::{FPCoin, StepExecutionEstimate};
+use crate::ContractError;
 
-fn estimate_swap_result(
+pub fn estimate_swap_result(
     deps: Deps<InjectiveQueryWrapper>,
     from_denom: String,
     quantity: FPDecimal,
     to_denom: String,
 ) -> StdResult<FPDecimal> {
-    let route = read_swap_route(&deps, &from_denom, &to_denom)?;
+    let route = read_swap_route(deps.storage, &from_denom, &to_denom)?;
     let steps = route.steps_from(&from_denom);
     let mut current_swap = FPCoin {
         amount: quantity,
@@ -206,26 +206,8 @@ fn worst_price(levels: &Vec<PriceLevel>) -> FPDecimal {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
-    use std::str::FromStr;
-
-    use injective_cosmwasm::{
-        create_mock_spot_market, create_orderbook_response_handler, create_spot_market_handler,
-        create_spot_multi_market_handler, inj_mock_deps, Hash, OwnedDepsExt, SpotMarket,
-        TEST_MARKET_ID_1, TEST_MARKET_ID_2,
-    };
-
-    use crate::state::{store_swap_route, SwapRoute};
-
     use super::*;
-
-    // Helper function to create a PriceLevel
-    fn create_price_level(p: u128, q: u128) -> PriceLevel {
-        PriceLevel {
-            p: FPDecimal::from(p),
-            q: FPDecimal::from(q),
-        }
-    }
+    use crate::testing::test_utils::create_price_level;
 
     #[test]
     fn test_avg_price_simple() {
@@ -330,86 +312,5 @@ mod tests {
         assert_eq!(min_orders[1].q, FPDecimal::from(300u128));
         assert_eq!(min_orders[2].p, FPDecimal::from(1u128));
         assert_eq!(min_orders[2].q, FPDecimal::from(50u128));
-    }
-
-    /// In this test we swap 1000 INJ to ETH, we assume avg price of INJ at 8 usdt and avg price of eth 2000 usdt
-    #[test]
-    fn test_calculate_swap_price() {
-        let mut deps_binding = inj_mock_deps(|querier| {
-            let mut markets = HashMap::new();
-            markets.insert(
-                MarketId::new(TEST_MARKET_ID_1).unwrap(),
-                create_mock_spot_market("eth", 0),
-            );
-            markets.insert(
-                MarketId::new(TEST_MARKET_ID_2).unwrap(),
-                create_mock_spot_market("inj", 1),
-            );
-            querier.spot_market_response_handler = create_spot_multi_market_handler(markets);
-
-            let mut orderbooks = HashMap::new();
-            let eth_buy_orderbook = vec![
-                PriceLevel {
-                    p: 201000u128.into(),
-                    q: FPDecimal::from_str("0.5").unwrap(),
-                },
-                PriceLevel {
-                    p: 195000u128.into(),
-                    q: FPDecimal::from_str("0.4").unwrap(),
-                },
-                PriceLevel {
-                    p: 192000u128.into(),
-                    q: FPDecimal::from_str("0.3").unwrap(),
-                },
-            ];
-            orderbooks.insert(MarketId::new(TEST_MARKET_ID_1).unwrap(), eth_buy_orderbook);
-
-            let inj_sell_orderbook = vec![
-                PriceLevel {
-                    p: 800u128.into(),
-                    q: 80u128.into(),
-                },
-                PriceLevel {
-                    p: 810u128.into(),
-                    q: 80u128.into(),
-                },
-                PriceLevel {
-                    p: 820u128.into(),
-                    q: 80u128.into(),
-                },
-                PriceLevel {
-                    p: 830u128.into(),
-                    q: 80u128.into(),
-                },
-            ];
-            orderbooks.insert(MarketId::new(TEST_MARKET_ID_2).unwrap(), inj_sell_orderbook);
-
-            querier.spot_market_orderbook_response_handler =
-                create_orderbook_response_handler(orderbooks);
-        });
-
-        let mut deps = deps_binding.as_mut_deps();
-
-        let route = SwapRoute {
-            steps: vec![TEST_MARKET_ID_1.into(), TEST_MARKET_ID_2.into()],
-            denom_1: "eth".to_string(),
-            denom_2: "inj".to_string(),
-        };
-
-        store_swap_route(&mut deps, route).unwrap();
-
-        let amount_inj = estimate_swap_result(
-            deps.as_ref(),
-            "eth".to_string(),
-            FPDecimal::from_str("1.2").unwrap(),
-            "inj".to_string(),
-        )
-        .unwrap();
-        assert_eq!(
-            amount_inj,
-            FPDecimal::from_str("287.97").unwrap(),
-            "Wrong amount of INJ received"
-        ); // value rounded to min tick
-        println!("Got {amount_inj} inj");
     }
 }

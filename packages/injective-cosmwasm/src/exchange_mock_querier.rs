@@ -604,8 +604,8 @@ impl WasmMockQuerier {
                 },
                 InjectiveQuery::SpotOrderbook {
                     order_side,
-                    limit_cumulative_notional,
-                    limit_cumulative_quantity,
+                    
+                    
                     market_id,
                     ..
                 } => match &self.spot_market_orderbook_response_handler {
@@ -796,7 +796,7 @@ pub mod handlers {
                 let price_levels = price_levels_opt.unwrap().clone();
                 let response = QueryOrderbookResponse {
                     buys_price_level: if order_side != OrderSide::Sell { price_levels.clone() } else { vec![]},
-                    sells_price_level: if order_side != OrderSide::Buy { price_levels.clone() } else { vec![]},
+                    sells_price_level: if order_side != OrderSide::Buy { price_levels } else { vec![]},
                 };
                 SystemResult::Ok(ContractResult::from(to_binary(&response)))
             }

@@ -1,10 +1,11 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{BankMsg, Coin, DepsMut, Env, from_binary, MessageInfo, Reply, Response, SubMsg, Uint128};
+use cosmwasm_std::{BankMsg, Coin, DepsMut, Env, from_binary, MessageInfo, Reply, Response, SubMsg, to_binary, Uint128};
 use cw2::set_contract_version;
 use protobuf::Message;
 use std::str::FromStr;
 use cw_utils::parse_reply_execute_data;
+use serde::{Deserialize, Serialize};
 
 use injective_cosmwasm::{create_spot_market_order_msg, get_default_subaccount_id_for_checked_address, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, MsgCreateSpotMarketOrderResponse, OrderType, SpotOrder};
 use injective_math::FPDecimal;
@@ -110,6 +111,22 @@ pub fn try_swap(
     Ok(response)
 }
 
+#[derive(PartialEq,Clone,Default,Debug,Serialize,Deserialize)]
+pub struct SpotMarketOrderResults {
+    // message fields
+    pub quantity: String,
+    pub price: String,
+    pub fee: String,
+}
+
+#[derive(PartialEq,Clone,Default,Debug,Serialize,Deserialize)]
+pub struct MsgCreateSpotMarketOrderResponse2 {
+    // message fields
+    pub order_hash: String,
+    pub results: Vec<SpotMarketOrderResults>,
+}
+
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(
     deps: DepsMut<InjectiveQueryWrapper>,
@@ -144,6 +161,7 @@ fn handle_atomic_order_reply(
         id,
         err: err.to_string(),
     })?;
+
     // unwrap results into trade_data
     let trade_data = match order_response.results.into_option() {
         Some(trade_data) => Ok(trade_data),
@@ -154,7 +172,7 @@ fn handle_atomic_order_reply(
     let quantity = FPDecimal::from_str(&trade_data.quantity)? / dec_scale_factor;
     let price = FPDecimal::from_str(&trade_data.price)? / dec_scale_factor;
     let fee = FPDecimal::from_str(&trade_data.fee)? / dec_scale_factor;
-   
+
     let config = STATE.load(deps.storage)?;
 
     let cache = SWAP_OPERATION_STATE.load(deps.storage)?;

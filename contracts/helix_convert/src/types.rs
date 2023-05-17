@@ -55,3 +55,39 @@ pub struct CurrentSwapStep {
     pub current_balance: FPCoin,
     pub step_target_denom: String,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct Config {
+    /// The 'fee_discount' field specifies the percentage of the trading fee that the contract will cover.
+    /// The suggested default value for this field is 0.4 (the contract will return all trading fees it receives back from being designated as fee recipient)
+    /// Any value above 0 requires the contract to have sufficient funds to provide for orders.
+    pub fee_discount: FPDecimal,
+    pub fee_recipient: Addr,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct SwapRoute {
+    pub steps: Vec<MarketId>,
+    pub denom_1: String,
+    pub denom_2: String,
+}
+
+impl SwapRoute {
+
+    pub fn steps_from(&self, denom: &str) -> Vec<MarketId> {
+        if &self.denom_1 == denom {
+            self.steps.clone()
+        } else {
+            let mut mut_steps = self.steps.clone();
+            mut_steps.reverse();
+            mut_steps
+        }
+    }
+
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct SwapStep {
+    pub market_id : MarketId,
+    pub quote_denom: String, // quote for this step of swap, eg for swpa eth/inj using eth/usdt and inj/usdt markets, quotes will be eth in 1st step and usdt in 2nd
+}

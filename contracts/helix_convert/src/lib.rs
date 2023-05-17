@@ -7,3 +7,6 @@ pub mod queries;
 pub mod types;
 
 pub use crate::error::ContractError;
+
+#[cfg(test)]
+mod testing;

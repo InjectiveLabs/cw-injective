@@ -1,0 +1,135 @@
+use std::collections::HashMap;
+use std::marker::PhantomData;
+use std::str::FromStr;
+
+use cosmwasm_std::testing::{mock_info, MockApi, MockStorage};
+use cosmwasm_std::{
+    coins, to_binary, Addr, Api, BankMsg, Binary, BlockInfo, ContractInfo, ContractResult,
+    CosmosMsg, CustomQuery, DepsMut, Env, OwnedDeps, Querier, QuerierResult, QuerierWrapper, Reply,
+    Storage, SubMsgResponse, SubMsgResult, SystemResult, Timestamp, TransactionInfo, Uint128,
+};
+use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
+use injective_cosmwasm::{create_mock_spot_market, create_spot_multi_market_handler, get_default_subaccount_id_for_checked_address, HandlesMarketIdQuery, inj_mock_deps, inj_mock_env, InjectiveMsg, InjectiveQueryWrapper, InjectiveRoute, MarketId, OrderInfo, OrderType, OwnedDepsExt, SpotMarket, SpotMarketResponse, SpotOrder, SubaccountId, TEST_MARKET_ID_1, TEST_MARKET_ID_2, WasmMockQuerier};
+use injective_math::FPDecimal;
+use injective_protobuf::proto::tx::{MsgCreateSpotMarketOrderResponse, SpotMarketOrderResults};
+
+use crate::contract::{execute, instantiate, reply, ATOMIC_ORDER_REPLY_ID, set_route, start_swap_flow};
+use crate::helpers::{get_message_data, i32_to_dec};
+use crate::msg::{ExecuteMsg, InstantiateMsg};
+use crate::state::{store_swap_route};
+use crate::testing::test_utils::{mock_deps_eth_inj, TEST_CONTRACT_ADDR, TEST_USER_ADDR};
+use protobuf::Message;
+
+
+#[test]
+fn test_swap_2_markets() {
+    let mut deps_binding = mock_deps_eth_inj();
+
+    let mut deps = deps_binding;
+    set_route(deps.as_mut_deps(), "eth".to_string(), "inj".to_string(), vec![TEST_MARKET_ID_1.into(), TEST_MARKET_ID_2.into()]).unwrap();
+
+    let info = mock_info(TEST_USER_ADDR, &coins(12, "eth"));
+
+
+    let response_1 = start_swap_flow(deps.as_mut_deps(), inj_mock_env(), info, "inj".to_string(), FPDecimal::from(2879u128)).unwrap();
+    let subaccount_id = get_default_subaccount_id_for_checked_address(&Addr::unchecked(TEST_CONTRACT_ADDR));
+    let expected_atomic_sell_message = CreateSpotMarketOrder {
+            sender: inj_mock_env().contract.address,
+            order: SpotOrder {
+                market_id: TEST_MARKET_ID_1.into(),
+                order_info: OrderInfo {
+                    subaccount_id: subaccount_id.clone(),
+                    fee_recipient: Some(Addr::unchecked(TEST_CONTRACT_ADDR)),
+                    price: i32_to_dec(192000),
+                    quantity: i32_to_dec(12),
+                },
+                order_type: OrderType::SellAtomic,
+                trigger_price: None,
+            },
+        };
+    let order_message = get_message_data(&response_1.messages, 0);
+    assert_eq!(
+        InjectiveRoute::Exchange,
+        order_message.route,
+        "route was incorrect"
+    );
+    assert_eq!(
+        expected_atomic_sell_message, order_message.msg_data,
+        "spot create order had incorrect content"
+    );
+
+    let mut order_results = SpotMarketOrderResults::default();
+    order_results.set_price("196750000000000000000000".to_string());
+    order_results.set_quantity("2351556000000000000000000".to_string());
+    order_results.set_fee("9444000000000000000000".to_string());
+
+    let mut atomic_response = MsgCreateSpotMarketOrderResponse::default();
+    atomic_response.set_order_hash("ORDER_HASH1".to_string());
+    atomic_response.set_results(order_results);
+
+    let encoded: Binary = atomic_response.write_to_bytes().unwrap().into();
+    println!("Encoded: {encoded}");
+
+    let reply_msg = Reply {
+        id: ATOMIC_ORDER_REPLY_ID,
+        result: SubMsgResult::Ok(SubMsgResponse {
+            events: vec![],
+            data: Some(encoded),
+        }),
+    };
+
+    // simulate and handle results of eth->usdt exchange
+    let response_2 = reply(deps.as_mut_deps(), inj_mock_env(), reply_msg ).unwrap();
+    let expected_atomic_buy_message = CreateSpotMarketOrder {
+        sender: inj_mock_env().contract.address,
+        order: SpotOrder {
+            market_id: TEST_MARKET_ID_2.into(),
+            order_info: OrderInfo {
+                subaccount_id,
+                fee_recipient: Some(Addr::unchecked(TEST_CONTRACT_ADDR)),
+                price: i32_to_dec(830),
+                quantity: FPDecimal::from_str("2879.74").unwrap(),
+            },
+            order_type: OrderType::BuyAtomic,
+            trigger_price: None,
+        },
+    };
+    let order_message = get_message_data(&response_2.messages, 0);
+    assert_eq!(
+        InjectiveRoute::Exchange,
+        order_message.route,
+        "route was incorrect"
+    );
+    assert_eq!(
+        expected_atomic_buy_message, order_message.msg_data,
+        "spot create order had incorrect content"
+    );
+
+
+    // simulate usdt->inj exchange
+    let mut order_results = SpotMarketOrderResults::default();
+    order_results.set_quantity("2879740000000000000000".to_string());
+
+    let mut atomic_response = MsgCreateSpotMarketOrderResponse::default();
+    atomic_response.set_order_hash("ORDER_HASH2".to_string());
+    atomic_response.set_results(order_results);
+
+    let encoded: Binary = atomic_response.write_to_bytes().unwrap().into();
+    let reply_msg = Reply {
+        id: ATOMIC_ORDER_REPLY_ID,
+        result: SubMsgResult::Ok(SubMsgResponse {
+            events: vec![],
+            data: Some(encoded),
+        }),
+    };
+    let response_3 = reply(deps.as_mut_deps(), inj_mock_env(), reply_msg ).unwrap();
+    if let CosmosMsg::Bank(BankMsg::Send { to_address, amount }) = &response_3.messages[0].msg {
+        assert_eq!(to_address, TEST_USER_ADDR);
+        assert_eq!(1, amount.len());
+        assert_eq!(amount[0].denom, "inj");
+        assert_eq!(amount[0].amount, Uint128::from(2879u128));
+    } else {
+        panic!("Wrong message type!");
+    }
+}
+
