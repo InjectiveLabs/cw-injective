@@ -1,9 +1,9 @@
-use cosmwasm_std::{Coin, Deps, StdError, StdResult};
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use cosmwasm_std::{Deps, StdError, StdResult};
+
+
 
 use injective_cosmwasm::{
-    InjectiveQuerier, InjectiveQueryWrapper, MarketId, OrderSide, OrderType, PriceLevel,
+    InjectiveQuerier, InjectiveQueryWrapper, MarketId, OrderSide, PriceLevel,
 };
 use injective_math::utils::round_to_min_tick;
 use injective_math::FPDecimal;
@@ -11,7 +11,7 @@ use injective_math::FPDecimal;
 use crate::helpers::counter_denom;
 use crate::state::read_swap_route;
 use crate::types::{FPCoin, StepExecutionEstimate};
-use crate::ContractError;
+
 
 pub fn estimate_swap_result(
     deps: Deps<InjectiveQueryWrapper>,
@@ -58,7 +58,7 @@ pub fn estimate_single_swap_execution(
     println!(
         "Swapping {} {} on market: {}",
         balance_in.amount.clone(),
-        balance_in.denom.clone(),
+        balance_in.denom,
         market.ticker
     );
 

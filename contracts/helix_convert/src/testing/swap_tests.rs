@@ -1,29 +1,28 @@
-use std::collections::HashMap;
-use std::marker::PhantomData;
+
+
 use std::str::FromStr;
 
-use cosmwasm_std::testing::{mock_info, MockApi, MockStorage};
+use cosmwasm_std::testing::{mock_info};
 use cosmwasm_std::{
-    coins, to_binary, Addr, Api, BankMsg, Binary, BlockInfo, ContractInfo, ContractResult,
-    CosmosMsg, CustomQuery, DepsMut, Env, OwnedDeps, Querier, QuerierResult, QuerierWrapper, Reply,
-    Storage, SubMsgResponse, SubMsgResult, SystemResult, Timestamp, TransactionInfo, Uint128,
+    coins, Addr, BankMsg, Binary,
+    CosmosMsg, Reply, SubMsgResponse, SubMsgResult, Uint128,
 };
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
-use injective_cosmwasm::{create_mock_spot_market, create_spot_multi_market_handler, get_default_subaccount_id_for_checked_address, HandlesMarketIdQuery, inj_mock_deps, inj_mock_env, InjectiveMsg, InjectiveQueryWrapper, InjectiveRoute, MarketId, OrderInfo, OrderType, OwnedDepsExt, SpotMarket, SpotMarketResponse, SpotOrder, SubaccountId, TEST_MARKET_ID_1, TEST_MARKET_ID_2, WasmMockQuerier};
+use injective_cosmwasm::{get_default_subaccount_id_for_checked_address, inj_mock_env, InjectiveRoute, OrderInfo, OrderType, OwnedDepsExt, SpotOrder, TEST_MARKET_ID_1, TEST_MARKET_ID_2};
 use injective_math::FPDecimal;
 use injective_protobuf::proto::tx::{MsgCreateSpotMarketOrderResponse, SpotMarketOrderResults};
 
-use crate::contract::{execute, instantiate, reply, ATOMIC_ORDER_REPLY_ID, set_route, start_swap_flow};
+use crate::contract::{reply, ATOMIC_ORDER_REPLY_ID, set_route, start_swap_flow};
 use crate::helpers::{get_message_data, i32_to_dec};
-use crate::msg::{ExecuteMsg, InstantiateMsg};
-use crate::state::{store_swap_route};
+
+
 use crate::testing::test_utils::{mock_deps_eth_inj, TEST_CONTRACT_ADDR, TEST_USER_ADDR};
 use protobuf::Message;
 
 
 #[test]
 fn test_swap_2_markets() {
-    let mut deps_binding = mock_deps_eth_inj();
+    let deps_binding = mock_deps_eth_inj();
 
     let mut deps = deps_binding;
     set_route(deps.as_mut_deps(), "eth".to_string(), "inj".to_string(), vec![TEST_MARKET_ID_1.into(), TEST_MARKET_ID_2.into()]).unwrap();

@@ -1,8 +1,8 @@
-use std::marker::PhantomData;
+
 use std::str::FromStr;
 
 use cosmwasm_std::testing::{mock_info, MockApi, MockStorage};
-use cosmwasm_std::{coins, to_binary, Addr, Api, BankMsg, Binary, BlockInfo, ContractInfo, ContractResult, CosmosMsg, CustomQuery, DepsMut, Env, OwnedDeps, Querier, QuerierResult, QuerierWrapper, Reply, Storage, SubMsgResponse, SubMsgResult, SystemResult, Timestamp, TransactionInfo, Uint128, Deps};
+use cosmwasm_std::{coins, to_binary, BankMsg, Binary, ContractResult, CosmosMsg, OwnedDeps, QuerierResult, Reply, SubMsgResponse, SubMsgResult, SystemResult, Uint128};
 
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
 use injective_cosmwasm::{HandlesMarketIdQuery, inj_mock_deps, inj_mock_env, InjectiveQueryWrapper, InjectiveRoute, MarketId, OrderInfo, OrderType, OwnedDepsExt, SpotMarket, SpotMarketResponse, SpotOrder, SubaccountId, WasmMockQuerier};

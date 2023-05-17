@@ -2,6 +2,10 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use cosmwasm_std::OwnedDeps;
 use cosmwasm_std::testing::{MockApi, MockStorage};
+use injective_std::types::injective::exchange::v1beta1::{MsgInstantSpotMarketLaunch, QuerySpotMarketsRequest};
+use injective_test_tube::{Account, Exchange, InjectiveTestApp, SigningAccount, Wasm};
+// use injective_std::types::injective::exchange::v1beta1::{MsgInstantSpotMarketLaunch, QuerySpotMarketsRequest};
+// use injective_test_tube::{Account, Exchange, InjectiveTestApp, SigningAccount, Wasm};
 use injective_cosmwasm::{create_mock_spot_market, create_orderbook_response_handler, create_spot_multi_market_handler, inj_mock_deps, InjectiveQueryWrapper, MarketId, PriceLevel, TEST_MARKET_ID_1, TEST_MARKET_ID_2, WasmMockQuerier};
 use injective_math::FPDecimal;
 
@@ -70,4 +74,53 @@ pub fn mock_deps_eth_inj() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, I
         querier.spot_market_orderbook_response_handler =
             create_orderbook_response_handler(orderbooks);
     })
+}
+
+
+
+pub fn wasm_file(contract_name: String) -> String {
+    let arch = std::env::consts::ARCH;
+    let artifacts_dir = std::env::var("ARTIFACTS_DIR_PATH").unwrap_or_else(|_| "artifacts".to_string());
+    let snaked_name = contract_name.replace('-', "_");
+    format!("../../{artifacts_dir}/{snaked_name}-{arch}.wasm")
+}
+
+pub fn store_code(wasm: &Wasm<InjectiveTestApp>, owner: &SigningAccount, contract_name: String) -> u64 {
+    let wasm_byte_code = std::fs::read(wasm_file(contract_name)).unwrap();
+    wasm.store_code(&wasm_byte_code, None, owner).unwrap().data.code_id
+}
+
+
+
+pub fn launch_spot_market(exchange: &Exchange<InjectiveTestApp>, signer: &SigningAccount, base: String, quote: String) -> String {
+    let ticker = format!("{}/{}", base, quote);
+    exchange
+        .instant_spot_market_launch(
+            MsgInstantSpotMarketLaunch {
+                sender: signer.address(),
+                ticker: ticker.clone(),
+                base_denom: base,
+                quote_denom: quote,
+                min_price_tick_size: "10000".to_owned(),
+                min_quantity_tick_size: "100000".to_owned(),
+            },
+            signer,
+        )
+        .unwrap();
+
+    get_spot_market_id(exchange, ticker)
+}
+
+
+pub fn get_spot_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: String) -> String {
+    let spot_markets = exchange
+        .query_spot_markets(&QuerySpotMarketsRequest {
+            status: "Active".to_string(),
+        })
+        .unwrap()
+        .markets;
+
+    let market = spot_markets.iter().find(|m| m.ticker == ticker).unwrap();
+
+    market.market_id.to_string()
 }

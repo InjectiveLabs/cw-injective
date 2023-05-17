@@ -40,7 +40,7 @@ pub fn execute(
     env: Env,
     _info: MessageInfo,
     msg: ExecuteMsg,
-) -> Result<Response, ContractError> {
+) -> Result<Response<InjectiveMsgWrapper>, ContractError>  {
     match msg {
         ExecuteMsg::Ping { .. } => {
             let mut response = Response::new();

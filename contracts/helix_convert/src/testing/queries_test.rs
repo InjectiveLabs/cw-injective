@@ -1,11 +1,11 @@
-use std::collections::HashMap;
-use std::str::FromStr;
-use cosmwasm_std::StdError;
 
-use injective_cosmwasm::{create_mock_spot_market, create_orderbook_response_handler, create_spot_market_handler, create_spot_multi_market_handler, inj_mock_deps, Hash, OwnedDepsExt, SpotMarket, TEST_MARKET_ID_1, TEST_MARKET_ID_2, PriceLevel};
+use std::str::FromStr;
+
+
+use injective_cosmwasm::{OwnedDepsExt, TEST_MARKET_ID_1, TEST_MARKET_ID_2};
 use injective_math::FPDecimal;
 use crate::contract::set_route;
-use crate::queries::{estimate_swap_result, find_minimum_orders};
+use crate::queries::{estimate_swap_result};
 
 use crate::testing::test_utils::mock_deps_eth_inj;
 

@@ -1,6 +1,6 @@
-use cosmwasm_std::testing::{mock_dependencies, MockStorage};
-use cosmwasm_std::Api;
-use injective_cosmwasm::{inj_mock_deps, MarketId, TEST_MARKET_ID_1, TEST_MARKET_ID_2, WasmMockQuerier};
+
+
+use injective_cosmwasm::{inj_mock_deps, MarketId, TEST_MARKET_ID_1, TEST_MARKET_ID_2};
 use crate::contract::set_route;
 use crate::state::{read_swap_route, store_swap_route};
 use crate::types::SwapRoute;

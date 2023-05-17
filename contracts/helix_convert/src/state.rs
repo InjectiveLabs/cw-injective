@@ -1,10 +1,10 @@
-use injective_cosmwasm::{InjectiveMsgWrapper, InjectiveQueryWrapper, MarketId, SubaccountId};
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, Coin, Deps, DepsMut, StdError, StdResult, Storage};
+
+
+
+use cosmwasm_std::{StdError, StdResult, Storage};
 use cw_storage_plus::{Item, Map};
-use injective_math::FPDecimal;
+
 use crate::types::{Config, CurrentSwapOperation, CurrentSwapStep, SwapRoute};
 
 
@@ -17,7 +17,7 @@ pub const CONFIG: Item<Config> = Item::new("config");
 
 pub fn store_swap_route(storage: &mut dyn Storage, route: &SwapRoute) -> StdResult<()> {
     let key = route_key(&route.denom_1, &route.denom_2);
-    SWAP_ROUTES.save(storage, key, &route)
+    SWAP_ROUTES.save(storage, key, route)
 }
 
 pub fn read_swap_route(storage: &dyn Storage, denom1: &str, denom2: &str) -> StdResult<SwapRoute> {

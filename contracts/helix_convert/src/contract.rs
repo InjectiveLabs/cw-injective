@@ -3,16 +3,15 @@ use std::str::FromStr;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, BankMsg, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Reply, Response,
-    StdResult, SubMsg, Uint128,
+    BankMsg, Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response,
+    StdResult, SubMsg,
 };
 use cw2::set_contract_version;
 use protobuf::Message;
 
 use injective_cosmwasm::{
     create_spot_market_order_msg, get_default_subaccount_id_for_checked_address,
-    InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, MarketId,
-    MsgCreateSpotMarketOrderResponse, OrderType, SpotOrder,
+    InjectiveMsgWrapper, InjectiveQueryWrapper, MarketId, OrderType, SpotOrder,
 };
 use injective_math::FPDecimal;
 use injective_protobuf::proto::tx;
@@ -22,7 +21,7 @@ use crate::helpers::dec_scale_factor;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::queries::estimate_single_swap_execution;
 use crate::state::{read_swap_route, store_swap_route, STEP_STATE, SWAP_OPERATION_STATE};
-use crate::types::{CurrentSwapOperation, CurrentSwapStep, ExecutionPrice, FPCoin, SwapRoute};
+use crate::types::{CurrentSwapOperation, CurrentSwapStep, FPCoin, SwapRoute};
 
 // use injective_protobuf::proto::tx;
 
@@ -35,9 +34,9 @@ pub const DEPOSIT_REPLY_ID: u64 = 2u64;
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut<InjectiveQueryWrapper>,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
-    msg: InstantiateMsg,
+    _msg: InstantiateMsg,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     Ok(Response::new()
@@ -88,7 +87,7 @@ pub fn start_swap_flow(
     target_denom: String,
     min_target_quantity: FPDecimal,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
-    if (&info.funds).len() != 1 {
+    if info.funds.len() != 1 {
         return Err(ContractError::CustomError {
             val: "Wrong amount of funds deposited!".to_string(),
         });
@@ -106,7 +105,7 @@ pub fn start_swap_flow(
     };
     SWAP_OPERATION_STATE.save(deps.storage, &swap_operation)?;
     execute_swap_step(deps, env, swap_operation, 0, current_balance)
-        .map_err(|e| ContractError::Std(e))
+        .map_err(ContractError::Std)
 }
 
 fn execute_swap_step(
@@ -137,7 +136,7 @@ fn execute_swap_step(
             OrderType::SellAtomic
         },
         &market_id,
-        subaccount_id.to_owned(),
+        subaccount_id,
         Some(contract.to_owned()),
     );
 
@@ -224,7 +223,7 @@ fn handle_atomic_order_reply(
 
     let current_step = STEP_STATE
         .load(deps.storage)
-        .map_err(|e| ContractError::Std(e))?;
+        .map_err(ContractError::Std)?;
     let new_balance = FPCoin {
         amount: quantity,
         denom: current_step.step_target_denom,
@@ -233,7 +232,7 @@ fn handle_atomic_order_reply(
     let swap = SWAP_OPERATION_STATE.load(deps.storage)?;
     if current_step.step_idx < swap.swap_steps.len() - 1 {
         execute_swap_step(deps, env, swap, current_step.step_idx + 1, new_balance)
-            .map_err(|e| ContractError::Std(e))
+            .map_err(ContractError::Std)
     } else {
         // last step, finalise and send back funds to a caller
         if new_balance.amount < swap.min_target_quantity {
@@ -257,6 +256,6 @@ fn handle_atomic_order_reply(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
     unimplemented!()
 }
