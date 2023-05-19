@@ -9,3 +9,27 @@ Injective's proto-generated types and helpers built using [Buf](https://github.c
 ## Supported Version
 
 * Injective-Core@ec1275973bcf46297753535552a0cf5544a820ae
+
+## Build Instructions
+
+**Pre-requisites:**
+
+[Buf 1.17.0](https://github.com/bufbuild/buf)
+
+In order to generate an individual proto file run:
+
+```rust
+buf generate [/path/to/injective-core] --template [/path/to/buf.gen.yaml] --output [output-path] --path [/path/to/module/proto]
+```
+
+Example `buf.gen.yaml` file:
+
+```yaml
+plugins:
+  - plugin: buf.build/community/neoeinstein-prost
+    out: .
+    opt:
+      - extern_path=.google.protobuf.Timestamp=crate::shim::Timestamp
+      - extern_path=.google.protobuf.Duration=crate::shim::Duration
+      - extern_path=.google.protobuf.Any=crate::shim::Any
+```
