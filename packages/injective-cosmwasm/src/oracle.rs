@@ -30,11 +30,12 @@ pub struct OracleVolatilityResponse {
     pub raw_history: Vec<TradeRecord>,
 }
 
-#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema, Copy)]
+#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema, Copy, Default)]
 #[repr(i32)]
 pub enum OracleType {
     Unspecified = 0,
     Band = 1,
+    #[default]
     PriceFeed = 2,
     Coinbase = 3,
     Chainlink = 4,
@@ -45,12 +46,6 @@ pub enum OracleType {
     Pyth = 9,
     BandIBC = 10,
     Provider = 11,
-}
-
-impl Default for OracleType {
-    fn default() -> Self {
-        OracleType::Unspecified
-    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
