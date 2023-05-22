@@ -25,10 +25,9 @@ fn test_swap_2_markets() {
     let deps_binding = mock_deps_eth_inj();
 
     let mut deps = deps_binding;
-    set_route(deps.as_mut_deps(), "eth".to_string(), "inj".to_string(), vec![TEST_MARKET_ID_1.into(), TEST_MARKET_ID_2.into()]).unwrap();
+    set_route(deps.as_mut_deps(), &Addr::unchecked(TEST_USER_ADDR),"eth".to_string(), "inj".to_string(), vec![TEST_MARKET_ID_1.into(), TEST_MARKET_ID_2.into()]).unwrap();
 
     let info = mock_info(TEST_USER_ADDR, &coins(12, "eth"));
-
 
     let response_1 = start_swap_flow(deps.as_mut_deps(), inj_mock_env(), info, "inj".to_string(), FPDecimal::from(2879u128)).unwrap();
     let subaccount_id = get_default_subaccount_id_for_checked_address(&Addr::unchecked(TEST_CONTRACT_ADDR));

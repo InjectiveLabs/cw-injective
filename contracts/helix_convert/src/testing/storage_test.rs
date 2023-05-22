@@ -1,8 +1,8 @@
-
-
+use cosmwasm_std::Addr;
 use injective_cosmwasm::{inj_mock_deps, MarketId, TEST_MARKET_ID_1, TEST_MARKET_ID_2};
 use crate::contract::set_route;
 use crate::state::{read_swap_route, store_swap_route};
+use crate::testing::test_utils::TEST_USER_ADDR;
 use crate::types::SwapRoute;
 
 #[test]
@@ -46,7 +46,7 @@ fn test_set_route() {
         MarketId::unchecked(TEST_MARKET_ID_2),
     ];
 
-    let result = set_route(deps.as_mut(), base_denom.clone(), quote_denom.clone(), route.clone());
+    let result = set_route(deps.as_mut(), &Addr::unchecked(TEST_USER_ADDR), base_denom.clone(), quote_denom.clone(), route.clone());
 
     // Test that the function returned successfully
     assert!(result.is_ok());

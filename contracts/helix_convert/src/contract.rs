@@ -127,12 +127,11 @@ fn execute_swap_step(
     current_balance: FPCoin,
 ) -> StdResult<Response<InjectiveMsgWrapper>> {
     let market_id = swap_operation.swap_steps[usize::from(step_idx)].clone();
-    let contract = env.contract.address;
-    let config = CONFIG.load(deps.storage)?;
-    let subaccount_id = get_default_subaccount_id_for_checked_address(&contract);
+    let contract = &env.contract.address;
+    let subaccount_id = get_default_subaccount_id_for_checked_address(contract);
 
     let estimation =
-        estimate_single_swap_execution(&deps.as_ref(), config.fee_recipient == contract,  &market_id, current_balance.clone())?;
+        estimate_single_swap_execution(&deps.as_ref(),  &env,  &market_id, current_balance.clone())?;
     // TODO: add handling of supporting funds
 
     let order = SpotOrder::new(
@@ -153,7 +152,7 @@ fn execute_swap_step(
     );
 
     let order_message = SubMsg::reply_on_success(
-        create_spot_market_order_msg(contract, order),
+        create_spot_market_order_msg(contract.to_owned(), order),
         ATOMIC_ORDER_REPLY_ID,
     );
 
@@ -263,11 +262,9 @@ fn handle_atomic_order_reply(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps<InjectiveQueryWrapper>, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::GetRoute { .. } => unimplemented!("GetRoute not implemented"),
+        QueryMsg::GetRoute { denom_1, denom_2 } => Ok(to_binary(&read_swap_route(deps.storage, &denom_1, &denom_2)?)?),
         QueryMsg::GetExecutionQuantity { from_quantity, from_denom, to_denom } => {
-            deps.api.debug(&format!("--> Calling GetExecutionQuantity query: from_quantity: {}, from_denom: {}, to_denom: {}", from_quantity, from_denom, to_denom));
             let target_quantity = estimate_swap_result(deps, env, from_denom, from_quantity, to_denom)?;
-            deps.api.debug(&format!("--> GetExecutionQuantity query result: {}", target_quantity));
             Ok(to_binary(&target_quantity)?)
         }
     }

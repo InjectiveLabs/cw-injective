@@ -25,21 +25,3 @@ pub enum ContractError {
     #[error("Min expected swap amount ({0}) not reached")]
     MinExpectedSwapAmountNotReached(FPDecimal),
 }
-//
-// impl From<StdError> for ContractError {
-//     fn from(err: StdError) -> Self {
-//         ContractError::Std(err)
-//     }
-// }
-//
-// trait ContractErrorMapper<R> {
-//     fn mapToContractError(&self) -> Result<R, ContractError>;
-// }
-//
-// impl ContractErrorMapper<R> for Result<R, StdError> {
-//
-//     fn mapToContractError(&self) -> Result<R, ContractError> {
-//          self.map_err(|e| ContractError::Std(e))
-//     }
-// }
-

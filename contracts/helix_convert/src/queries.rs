@@ -4,6 +4,7 @@ use cosmwasm_std::{Addr, Deps, Env, StdError, StdResult};
 use injective_cosmwasm::{InjectiveQuerier, InjectiveQueryWrapper, MarketId, OrderSide, PriceLevel, SpotMarket};
 use injective_math::utils::round_to_min_tick;
 use injective_math::FPDecimal;
+use crate::ContractError;
 
 use crate::helpers::counter_denom;
 use crate::state::{CONFIG, read_swap_route};
@@ -16,7 +17,6 @@ pub fn estimate_swap_result(
     quantity: FPDecimal,
     to_denom: String,
 ) -> StdResult<FPDecimal> {
-    let config: Config = CONFIG.load(deps.storage)?;
     let route = read_swap_route(deps.storage, &from_denom, &to_denom)?;
     let steps = route.steps_from(&from_denom);
     let mut current_swap = FPCoin {
@@ -25,7 +25,7 @@ pub fn estimate_swap_result(
     };
     for step in steps {
         let cur_swap = current_swap.clone();
-        let swap_estimate = estimate_single_swap_execution(&deps, config.fee_recipient ==  &env.contract.address, &step,current_swap)?;
+        let swap_estimate = estimate_single_swap_execution(&deps, &env, &step,current_swap)?;
         let new_amount = swap_estimate.result_quantity;
         println!(
             "Exchanged {}{} into {}{}",
@@ -44,7 +44,7 @@ pub fn estimate_swap_result(
 
 pub fn estimate_single_swap_execution(
     deps: &Deps<InjectiveQueryWrapper>,
-    is_self_relayer: bool,
+    env: &Env,
     market_id: &MarketId,
     balance_in: FPCoin,
 ) -> StdResult<StepExecutionEstimate> {
@@ -62,6 +62,8 @@ pub fn estimate_single_swap_execution(
         market.base_denom,
         market.quote_denom,
     ));
+    let config = CONFIG.load(deps.storage)?;
+    let is_self_relayer = config.fee_recipient == env.contract.address;
     let fee_multiplier = querier
         .query_market_atomic_execution_fee_multiplier(market_id)?
         .multiplier;
@@ -81,7 +83,7 @@ pub fn estimate_single_swap_execution(
     };
 
     let (expected_quantity, worst_price) = if is_buy {
-        estimate_execution_buy(deps, &querier, market_id, balance_in.amount, fee_percent)?
+        estimate_execution_buy(deps, &env.contract.address, &market, balance_in.amount,fee_percent)?
     } else {
         estimate_execution_sell(deps, &querier, market_id, balance_in.amount, fee_percent)?
     };
@@ -105,27 +107,38 @@ pub fn estimate_single_swap_execution(
 
 fn estimate_execution_buy(
     deps: &Deps<InjectiveQueryWrapper>,
-    querier: &InjectiveQuerier,
-    market_id: &MarketId,
+    contract_address: &Addr,
+    market: &SpotMarket,
     amount: FPDecimal,
     fee: FPDecimal,
 ) -> StdResult<(FPDecimal, FPDecimal)> {
+    let inj_querier =  InjectiveQuerier::new(&deps.querier);
     let available_funds = amount / (FPDecimal::one() + fee); // keep reserve for fee
     println!("estimate_execution_buy: Fee: {fee}, To change: {amount}, available (after fee): {available_funds}");
     let top_orders = find_minimum_orders(
         deps,
-        &querier
-            .query_spot_market_orderbook(market_id, OrderSide::Sell, None, Some(available_funds))?
+        &inj_querier
+            .query_spot_market_orderbook(&market.market_id, OrderSide::Sell, None, Some(available_funds))?
             .sells_price_level,
         available_funds,
         |l| l.q * l.p,
     )?;
     let avg_price = avg_price(&top_orders);
-    let expected_quantity = available_funds / avg_price; // TODO check rounding
-
+    let expected_quantity = available_funds / avg_price;
     let worst_price = worst_price(&top_orders);
 
-    Ok((expected_quantity, worst_price))
+    // check if user funds + contract funds are enough to create order
+
+    let required_funds = worst_price * expected_quantity;
+    let funds_in_contract = deps.querier
+        .query_balance(contract_address, &market.quote_denom)
+        .expect("query own balance should not fail")
+        .amount.into();
+    if required_funds > funds_in_contract {
+        Err(StdError::generic_err("Swap amount too high"))
+    } else {
+        Ok((expected_quantity, worst_price))
+    }
 }
 
 fn estimate_execution_sell(
