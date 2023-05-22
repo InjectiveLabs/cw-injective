@@ -59,11 +59,10 @@ pub struct CurrentSwapStep {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Config {
-    /// The 'fee_discount' field specifies the percentage of the trading fee that the contract will cover.
-    /// The suggested default value for this field is 0.4 (the contract will return all trading fees it receives back from being designated as fee recipient)
-    /// Any value above 0 requires the contract to have sufficient funds to provide for orders.
-    pub fee_discount: FPDecimal,
+    // if fee_recipient is contract, fee discount is replayed to a sender (will not stay in the contract)
     pub fee_recipient: Addr,
+    // who can change routes
+    pub admin: Addr,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]

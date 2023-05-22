@@ -1,5 +1,6 @@
 
 use std::str::FromStr;
+use cosmwasm_std::testing::mock_env;
 
 
 use injective_cosmwasm::{OwnedDepsExt, TEST_MARKET_ID_1, TEST_MARKET_ID_2};
@@ -20,6 +21,7 @@ fn test_calculate_swap_price() {
 
     let amount_inj = estimate_swap_result(
         deps.as_ref(),
+        mock_env(),
         "eth".to_string(),
         FPDecimal::from_str("12").unwrap(),
         "inj".to_string(),

@@ -1,21 +1,22 @@
-use cosmwasm_std::{Deps, StdError, StdResult};
+use std::str::FromStr;
+use cosmwasm_std::{Addr, Deps, Env, StdError, StdResult};
 
-use injective_cosmwasm::{
-    InjectiveQuerier, InjectiveQueryWrapper, MarketId, OrderSide, PriceLevel,
-};
+use injective_cosmwasm::{InjectiveQuerier, InjectiveQueryWrapper, MarketId, OrderSide, PriceLevel, SpotMarket};
 use injective_math::utils::round_to_min_tick;
 use injective_math::FPDecimal;
 
 use crate::helpers::counter_denom;
-use crate::state::read_swap_route;
-use crate::types::{FPCoin, StepExecutionEstimate};
+use crate::state::{CONFIG, read_swap_route};
+use crate::types::{Config, FPCoin, StepExecutionEstimate};
 
 pub fn estimate_swap_result(
     deps: Deps<InjectiveQueryWrapper>,
+    env: Env,
     from_denom: String,
     quantity: FPDecimal,
     to_denom: String,
 ) -> StdResult<FPDecimal> {
+    let config: Config = CONFIG.load(deps.storage)?;
     let route = read_swap_route(deps.storage, &from_denom, &to_denom)?;
     let steps = route.steps_from(&from_denom);
     let mut current_swap = FPCoin {
@@ -24,7 +25,7 @@ pub fn estimate_swap_result(
     };
     for step in steps {
         let cur_swap = current_swap.clone();
-        let swap_estimate = estimate_single_swap_execution(&deps, &step, current_swap)?;
+        let swap_estimate = estimate_single_swap_execution(&deps, config.fee_recipient ==  &env.contract.address, &step,current_swap)?;
         let new_amount = swap_estimate.result_quantity;
         println!(
             "Exchanged {}{} into {}{}",
@@ -43,6 +44,7 @@ pub fn estimate_swap_result(
 
 pub fn estimate_single_swap_execution(
     deps: &Deps<InjectiveQueryWrapper>,
+    is_self_relayer: bool,
     market_id: &MarketId,
     balance_in: FPCoin,
 ) -> StdResult<StepExecutionEstimate> {
@@ -60,11 +62,10 @@ pub fn estimate_single_swap_execution(
         market.base_denom,
         market.quote_denom,
     ));
-
     let fee_multiplier = querier
         .query_market_atomic_execution_fee_multiplier(market_id)?
         .multiplier;
-    let fee_percent = market.taker_fee_rate * fee_multiplier;
+    let fee_percent = market.taker_fee_rate * fee_multiplier * (FPDecimal::one() - relayer_fee_share_rate(&market, is_self_relayer));
     deps.api.debug(&format!(
         "market.taker_fee_rate: {}, multiplier: {}, final Fee percent: {}",
         market.taker_fee_rate, fee_multiplier, fee_percent,
@@ -215,6 +216,14 @@ fn avg_price(levels: &Vec<PriceLevel>) -> FPDecimal {
 
 fn worst_price(levels: &Vec<PriceLevel>) -> FPDecimal {
     levels.last().unwrap().p // assume there's at least one element
+}
+
+fn relayer_fee_share_rate(market: &SpotMarket, is_self_relayer: bool) -> FPDecimal {
+    if !is_self_relayer {
+        FPDecimal::one()
+    } else {
+        market.relayer_fee_share_rate
+    }
 }
 
 #[cfg(test)]

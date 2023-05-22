@@ -15,10 +15,10 @@ use injective_protobuf::proto::tx;
 
 use crate::error::ContractError;
 use crate::helpers::dec_scale_factor;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, FeeRecipient, InstantiateMsg, QueryMsg};
 use crate::queries::{estimate_single_swap_execution, estimate_swap_result};
-use crate::state::{read_swap_route, store_swap_route, STEP_STATE, SWAP_OPERATION_STATE};
-use crate::types::{CurrentSwapOperation, CurrentSwapStep, FPCoin, SwapRoute};
+use crate::state::{read_swap_route, store_swap_route, STEP_STATE, SWAP_OPERATION_STATE, CONFIG};
+use crate::types::{Config, CurrentSwapOperation, CurrentSwapStep, FPCoin, SwapRoute};
 
 // use injective_protobuf::proto::tx;
 
@@ -31,11 +31,17 @@ pub const DEPOSIT_REPLY_ID: u64 = 2u64;
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut<InjectiveQueryWrapper>,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
-    _msg: InstantiateMsg,
+    msg: InstantiateMsg,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    let fee_recipient = match msg.fee_recipient {
+        FeeRecipient::Address( addr ) => addr,
+        FeeRecipient::SwapContract => env.contract.address,
+    };
+    let config = Config { fee_recipient, admin: msg.admin };
+    CONFIG.save(deps.storage, &config)?;
     Ok(Response::new()
         .add_attribute("method", "instantiate")
         .add_attribute("owner", info.sender))
@@ -119,10 +125,11 @@ fn execute_swap_step(
 ) -> StdResult<Response<InjectiveMsgWrapper>> {
     let market_id = swap_operation.swap_steps[usize::from(step_idx)].clone();
     let contract = env.contract.address;
+    let config = CONFIG.load(deps.storage)?;
     let subaccount_id = get_default_subaccount_id_for_checked_address(&contract);
 
     let estimation =
-        estimate_single_swap_execution(&deps.as_ref(), &market_id, current_balance.clone())?;
+        estimate_single_swap_execution(&deps.as_ref(), config.fee_recipient == contract,  &market_id, current_balance.clone())?;
     // TODO: add handling of supporting funds
 
     let order = SpotOrder::new(
@@ -234,7 +241,6 @@ fn handle_atomic_order_reply(
                 swap.min_target_quantity,
             ));
         }
-        deps.api.debug(&format!("New balance: {:?}", new_balance));
         let send_message = BankMsg::Send {
             to_address: swap.sender_address.to_string(),
             amount: vec![new_balance.clone().into()],
@@ -252,12 +258,12 @@ fn handle_atomic_order_reply(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps<InjectiveQueryWrapper>, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetRoute { .. } => unimplemented!("GetRoute not implemented"),
         QueryMsg::GetExecutionQuantity { from_quantity, from_denom, to_denom } => {
             deps.api.debug(&format!("--> Calling GetExecutionQuantity query: from_quantity: {}, from_denom: {}, to_denom: {}", from_quantity, from_denom, to_denom));
-            let target_quantity = estimate_swap_result(deps, from_denom, from_quantity, to_denom)?;
+            let target_quantity = estimate_swap_result(deps, env, from_denom, from_quantity, to_denom)?;
             deps.api.debug(&format!("--> GetExecutionQuantity query result: {}", target_quantity));
             Ok(to_binary(&target_quantity)?)
         }
