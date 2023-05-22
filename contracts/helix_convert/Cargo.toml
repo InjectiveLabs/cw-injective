@@ -46,7 +46,8 @@ injective-protobuf = { path = "../../packages/injective-protobuf", version = "0.
 cosmwasm-schema = "1.0.0"
 cw-multi-test = "0.16.2"
 prost= "0.11.9"
-injective-test-tube    = { version = "1.1.0", git = "https://github.com/maxrobot/test-tube.git", branch = "main" }
+#injective-test-tube    = { version = "1.1.0", git = "https://github.com/maxrobot/test-tube.git", branch = "main" }
+injective-test-tube    = { version = "1.1.1", path = "../../../test-tube/packages/injective-test-tube" }
 injective-std       = { version = "1.1.0", git = "https://github.com/maxrobot/injective-std.git", branch = "master" }
 #serde_json = "1.0.96"
 #json = "0.12.4"

@@ -39,8 +39,8 @@ fn store_and_read_swap_route() {
 #[test]
 fn test_set_route() {
     let mut deps = inj_mock_deps(|_| {});
-    let base_denom = "foo".to_string();
-    let quote_denom = "bar".to_string();
+    let base_denom = "eth".to_string();
+    let quote_denom = "inj".to_string();
     let route = vec![
         MarketId::unchecked(TEST_MARKET_ID_1),
         MarketId::unchecked(TEST_MARKET_ID_2),

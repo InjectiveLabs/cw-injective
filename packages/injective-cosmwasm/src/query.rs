@@ -1,6 +1,7 @@
 use cosmwasm_std::{Coin, CustomQuery, Uint128};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use injective_math::FPDecimal;
 
@@ -25,12 +26,12 @@ pub struct InjectiveQueryWrapper {
     pub query_data: InjectiveQuery,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[repr(u8)]
 pub enum OrderSide {
-    Unspecified,
-    Buy,
-    Sell,
+    Unspecified = 0,
+    Buy = 1,
+    Sell = 2,
 }
 
 
@@ -109,8 +110,8 @@ pub enum InjectiveQuery {
         market_id: MarketId,
         limit :   u64,
         order_side: OrderSide,
-        limit_cumulative_notional: Option<FPDecimal>,
         limit_cumulative_quantity: Option<FPDecimal>,
+        limit_cumulative_notional: Option<FPDecimal>,
     },
     DerivativeMarketMidPriceAndTob {
         market_id: MarketId,
@@ -296,7 +297,9 @@ impl PriceLevel {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct QueryOrderbookResponse {
+    #[serde(default)]
     pub buys_price_level: Vec<PriceLevel>,
+    #[serde(default)]
     pub sells_price_level: Vec<PriceLevel>,
 }
 

@@ -341,8 +341,8 @@ impl<'a> InjectiveQuerier<'a> {
                 market_id: market_id.clone().into(),
                 order_side: side,
                 limit: 0,
-                limit_cumulative_notional,
                 limit_cumulative_quantity,
+                limit_cumulative_notional,
             },
         };
         let res: QueryOrderbookResponse = self.querier.query(&request.into())?;

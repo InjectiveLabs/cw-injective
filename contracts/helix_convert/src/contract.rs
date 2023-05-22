@@ -2,10 +2,7 @@ use std::str::FromStr;
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{
-    BankMsg, Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response,
-    StdResult, SubMsg,
-};
+use cosmwasm_std::{BankMsg, Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult, SubMsg, to_binary};
 use cw2::set_contract_version;
 use protobuf::Message;
 
@@ -19,7 +16,7 @@ use injective_protobuf::proto::tx;
 use crate::error::ContractError;
 use crate::helpers::dec_scale_factor;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::queries::estimate_single_swap_execution;
+use crate::queries::{estimate_single_swap_execution, estimate_swap_result};
 use crate::state::{read_swap_route, store_swap_route, STEP_STATE, SWAP_OPERATION_STATE};
 use crate::types::{CurrentSwapOperation, CurrentSwapStep, FPCoin, SwapRoute};
 
@@ -53,7 +50,7 @@ pub fn execute(
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     match msg {
         ExecuteMsg::SetRoute {
-            denon_1,
+            denom_1: denon_1,
             denom_2,
             route,
         } => set_route(deps, denon_1, denom_2, route),
@@ -70,13 +67,14 @@ pub fn set_route(
     denom_2: String,
     route: Vec<MarketId>,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
-    // TODO: add checking ownership
+    // TODO: add checking access rights
     let route = SwapRoute {
         steps: route,
         denom_1,
         denom_2,
     };
     store_swap_route(deps.storage, &route)?;
+    deps.api.debug(&format!("Route set: {:?}", route));
     Ok(Response::new().add_attribute("method", "set_route"))
 }
 
@@ -94,7 +92,12 @@ pub fn start_swap_flow(
     }
     let coin_provided = info.funds[0].clone();
     let from_denom = coin_provided.denom;
+    let target_denom = target_denom;
     let route = read_swap_route(deps.storage, &from_denom, &target_denom)?;
+    deps.api.debug(&format!(
+        "Read a route {:?} {:?}: {:?}",
+        from_denom, target_denom, route
+    ));
     let steps = route.steps_from(&from_denom);
 
     let current_balance: FPCoin = info.funds.first().unwrap().clone().into();
@@ -104,8 +107,7 @@ pub fn start_swap_flow(
         min_target_quantity,
     };
     SWAP_OPERATION_STATE.save(deps.storage, &swap_operation)?;
-    execute_swap_step(deps, env, swap_operation, 0, current_balance)
-        .map_err(ContractError::Std)
+    execute_swap_step(deps, env, swap_operation, 0, current_balance).map_err(ContractError::Std)
 }
 
 fn execute_swap_step(
@@ -149,6 +151,7 @@ fn execute_swap_step(
         step_idx,
         current_balance,
         step_target_denom: estimation.result_denom,
+        is_buy: estimation.is_buy_order,
     };
     STEP_STATE.save(deps.storage, &current_step)?;
 
@@ -173,26 +176,6 @@ fn handle_atomic_order_reply(
     env: Env,
     msg: Reply,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
-    // let dec_scale_factor: FPDecimal = FPDecimal::from(1000000000000000000_i128);
-    // let order_response: MsgCreateSpotMarketOrderResponse = from_binary(
-    //     &msg.result
-    //         .into_result()
-    //         .map_err(ContractError::SubMsgFailure)?
-    //         .data
-    //         .ok_or_else(|| ContractError::ReplyParseFailure {
-    //             id: ATOMIC_ORDER_REPLY_ID,
-    //             err: "Missing reply data".to_owned(),
-    //         })?, // .as_slice(),
-    // )
-    // .map_err(|err| ContractError::ReplyParseFailure {
-    //     id: ATOMIC_ORDER_REPLY_ID,
-    //     err: err.to_string(),
-    // })?;
-    // // unwrap results into trade_data
-    // let trade_data = order_response.results;
-    // let quantity = trade_data.quantity / dec_scale_factor;
-    // // let price = trade_data.price / dec_scale_factor;
-    // // let fee = trade_data.fee / dec_scale_factor;
     let dec_scale_factor = dec_scale_factor();
     let id = msg.id;
     let order_response: tx::MsgCreateSpotMarketOrderResponse = Message::parse_from_bytes(
@@ -210,6 +193,8 @@ fn handle_atomic_order_reply(
         id,
         err: err.to_string(),
     })?;
+    deps.api
+        .debug(&format!("Order response: {:?}", order_response));
 
     // unwrap results into trade_data
     let trade_data = match order_response.results.into_option() {
@@ -219,15 +204,24 @@ fn handle_atomic_order_reply(
         }),
     }?;
     let quantity = FPDecimal::from_str(&trade_data.quantity)? / dec_scale_factor;
-    println!("Quantity: {}", quantity);
+    let avg_price = FPDecimal::from_str(&trade_data.price)? / dec_scale_factor;
+    let fee = FPDecimal::from_str(&trade_data.fee)? / dec_scale_factor;
+    deps.api
+        .debug(&format!("Quantity: {quantity}, price {avg_price}"));
 
-    let current_step = STEP_STATE
-        .load(deps.storage)
-        .map_err(ContractError::Std)?;
+    let current_step = STEP_STATE.load(deps.storage).map_err(ContractError::Std)?;
+    let new_quantity = if current_step.is_buy {
+        quantity
+    } else {
+        quantity * avg_price - fee
+    };
+
     let new_balance = FPCoin {
-        amount: quantity,
+        amount: new_quantity,
         denom: current_step.step_target_denom,
     };
+
+    deps.api.debug(&format!("New balance: {:?}", new_balance));
 
     let swap = SWAP_OPERATION_STATE.load(deps.storage)?;
     if current_step.step_idx < (swap.swap_steps.len() - 1) as u16 {
@@ -240,10 +234,12 @@ fn handle_atomic_order_reply(
                 swap.min_target_quantity,
             ));
         }
+        deps.api.debug(&format!("New balance: {:?}", new_balance));
         let send_message = BankMsg::Send {
             to_address: swap.sender_address.to_string(),
             amount: vec![new_balance.clone().into()],
         };
+        deps.api.debug(&format!("Send message: {:?}", send_message));
         SWAP_OPERATION_STATE.remove(deps.storage);
         STEP_STATE.remove(deps.storage);
         let response = Response::new()
@@ -256,6 +252,14 @@ fn handle_atomic_order_reply(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
-    unimplemented!()
+pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        QueryMsg::GetRoute { .. } => unimplemented!("GetRoute not implemented"),
+        QueryMsg::GetExecutionQuantity { from_quantity, from_denom, to_denom } => {
+            deps.api.debug(&format!("--> Calling GetExecutionQuantity query: from_quantity: {}, from_denom: {}, to_denom: {}", from_quantity, from_denom, to_denom));
+            let target_quantity = estimate_swap_result(deps, from_denom, from_quantity, to_denom)?;
+            deps.api.debug(&format!("--> GetExecutionQuantity query result: {}", target_quantity));
+            Ok(to_binary(&target_quantity)?)
+        }
+    }
 }

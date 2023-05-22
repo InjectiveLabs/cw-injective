@@ -11,7 +11,7 @@ pub struct InstantiateMsg {}
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
     SetRoute {
-        denon_1: String,
+        denom_1: String,
         denom_2: String,
         route: Vec<MarketId>,
     },
@@ -24,5 +24,13 @@ pub enum ExecuteMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
-    WorstAndAverageMarketPrice { market_id: MarketId },
+    GetRoute {
+        denom_1: String,
+        denom_2: String,
+    },
+    GetExecutionQuantity {
+        from_quantity: FPDecimal,
+        from_denom: String,
+        to_denom: String,
+    },
 }

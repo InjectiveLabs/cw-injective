@@ -1,17 +1,25 @@
 use std::collections::HashMap;
 use std::str::FromStr;
-use cosmwasm_std::OwnedDeps;
+
 use cosmwasm_std::testing::{MockApi, MockStorage};
-use injective_std::types::injective::exchange::v1beta1::{MsgInstantSpotMarketLaunch, QuerySpotMarketsRequest};
-use injective_test_tube::{Account, Exchange, InjectiveTestApp, SigningAccount, Wasm};
+use cosmwasm_std::{Addr, OwnedDeps};
+use injective_std::types::injective::exchange::v1beta1::{
+    MsgCreateSpotLimitOrder, MsgInstantSpotMarketLaunch, OrderInfo, OrderType,
+    QuerySpotMarketsRequest, SpotOrder,
+};
+use injective_test_tube::{Account, Exchange, InjectiveTestApp, Module, SigningAccount, Wasm};
+
 // use injective_std::types::injective::exchange::v1beta1::{MsgInstantSpotMarketLaunch, QuerySpotMarketsRequest};
 // use injective_test_tube::{Account, Exchange, InjectiveTestApp, SigningAccount, Wasm};
-use injective_cosmwasm::{create_mock_spot_market, create_orderbook_response_handler, create_spot_multi_market_handler, inj_mock_deps, InjectiveQueryWrapper, MarketId, PriceLevel, TEST_MARKET_ID_1, TEST_MARKET_ID_2, WasmMockQuerier};
+use injective_cosmwasm::{
+    create_mock_spot_market, create_orderbook_response_handler, create_spot_multi_market_handler,
+    get_default_subaccount_id_for_checked_address, inj_mock_deps, InjectiveQueryWrapper, MarketId,
+    PriceLevel, WasmMockQuerier, TEST_MARKET_ID_1, TEST_MARKET_ID_2,
+};
 use injective_math::FPDecimal;
 
 pub const TEST_CONTRACT_ADDR: &str = "inj14hj2tavq8fpesdwxxcu44rty3hh90vhujaxlnz";
 pub const TEST_USER_ADDR: &str = "inj1p7z8p649xspcey7wp5e4leqf7wa39kjjj6wja8";
-
 
 // Helper function to create a PriceLevel
 pub fn create_price_level(p: u128, q: u128) -> PriceLevel {
@@ -21,7 +29,8 @@ pub fn create_price_level(p: u128, q: u128) -> PriceLevel {
     }
 }
 
-pub fn mock_deps_eth_inj() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQueryWrapper> {
+pub fn mock_deps_eth_inj() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQueryWrapper>
+{
     inj_mock_deps(|querier| {
         let mut markets = HashMap::new();
         markets.insert(
@@ -76,23 +85,32 @@ pub fn mock_deps_eth_inj() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, I
     })
 }
 
-
-
 pub fn wasm_file(contract_name: String) -> String {
     let arch = std::env::consts::ARCH;
-    let artifacts_dir = std::env::var("ARTIFACTS_DIR_PATH").unwrap_or_else(|_| "artifacts".to_string());
+    let artifacts_dir =
+        std::env::var("ARTIFACTS_DIR_PATH").unwrap_or_else(|_| "artifacts".to_string());
     let snaked_name = contract_name.replace('-', "_");
     format!("../../{artifacts_dir}/{snaked_name}-{arch}.wasm")
 }
 
-pub fn store_code(wasm: &Wasm<InjectiveTestApp>, owner: &SigningAccount, contract_name: String) -> u64 {
+pub fn store_code(
+    wasm: &Wasm<InjectiveTestApp>,
+    owner: &SigningAccount,
+    contract_name: String,
+) -> u64 {
     let wasm_byte_code = std::fs::read(wasm_file(contract_name)).unwrap();
-    wasm.store_code(&wasm_byte_code, None, owner).unwrap().data.code_id
+    wasm.store_code(&wasm_byte_code, None, owner)
+        .unwrap()
+        .data
+        .code_id
 }
 
-
-
-pub fn launch_spot_market(exchange: &Exchange<InjectiveTestApp>, signer: &SigningAccount, base: String, quote: String) -> String {
+pub fn launch_spot_market(
+    exchange: &Exchange<InjectiveTestApp>,
+    signer: &SigningAccount,
+    base: String,
+    quote: String,
+) -> String {
     let ticker = format!("{}/{}", base, quote);
     exchange
         .instant_spot_market_launch(
@@ -101,8 +119,8 @@ pub fn launch_spot_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
                 ticker: ticker.clone(),
                 base_denom: base,
                 quote_denom: quote,
-                min_price_tick_size: "10000".to_owned(),
-                min_quantity_tick_size: "100000".to_owned(),
+                min_price_tick_size: "1_000_000_000_000_000".to_owned(),
+                min_quantity_tick_size: "1_000_000_000_000_000".to_owned(),
             },
             signer,
         )
@@ -110,7 +128,6 @@ pub fn launch_spot_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
 
     get_spot_market_id(exchange, ticker)
 }
-
 
 pub fn get_spot_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: String) -> String {
     let spot_markets = exchange
@@ -123,4 +140,41 @@ pub fn get_spot_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: String)
     let market = spot_markets.iter().find(|m| m.ticker == ticker).unwrap();
 
     market.market_id.to_string()
+}
+
+pub fn create_limit_order(
+    app: &InjectiveTestApp,
+    trader: &SigningAccount,
+    market_id: &String,
+    is_buy: bool,
+    price: u32,
+    quantity: u32,
+) {
+    let exchange = Exchange::new(app);
+    exchange
+        .create_spot_limit_order(
+            MsgCreateSpotLimitOrder {
+                sender: trader.address(),
+                order: Some(SpotOrder {
+                    market_id: market_id.clone(),
+                    order_info: Some(OrderInfo {
+                        subaccount_id: get_default_subaccount_id_for_checked_address(
+                            &Addr::unchecked(trader.address()),
+                        )
+                        .to_string(),
+                        fee_recipient: trader.address(),
+                        price: format!("{}000000000000000000", price),
+                        quantity: format!("{}000000000000000000", quantity),
+                    }),
+                    order_type: if is_buy {
+                        OrderType::BuyAtomic.into()
+                    } else {
+                        OrderType::SellAtomic.into()
+                    },
+                    trigger_price: "".to_string(),
+                }),
+            },
+            &trader,
+        )
+        .unwrap();
 }

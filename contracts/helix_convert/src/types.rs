@@ -54,6 +54,7 @@ pub struct CurrentSwapStep {
     pub step_idx: u16,
     pub current_balance: FPCoin,
     pub step_target_denom: String,
+    pub is_buy: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
