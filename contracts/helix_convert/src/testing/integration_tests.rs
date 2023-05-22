@@ -1,4 +1,6 @@
-use cosmwasm_std::{Addr, coin, from_binary};
+use std::str::FromStr;
+
+use cosmwasm_std::{coin, from_binary, Addr};
 use injective_std::types::cosmos::bank::v1beta1::{QueryAllBalancesRequest, QueryBalanceRequest};
 use injective_test_tube::{Account, Bank, Exchange, InjectiveTestApp, Module, Runner, Wasm};
 
@@ -45,7 +47,10 @@ fn basic_swap_test() {
     let contr_addr = wasm
         .instantiate(
             code_id,
-            &InstantiateMsg { fee_recipient: FeeRecipient::SwapContract, admin: Addr::unchecked(owner.address()) },
+            &InstantiateMsg {
+                fee_recipient: FeeRecipient::SwapContract,
+                admin: Addr::unchecked(owner.address()),
+            },
             Some(&owner.address()),
             Some("Swap"),
             &vec![coin(10_000_000_000, quote)],
@@ -125,27 +130,57 @@ fn basic_swap_test() {
             },
         )
         .unwrap();
+    assert_eq!(query_result, FPDecimal::from_str("2893.888").unwrap());
 
-    let contract_balances = bank.query_all_balances(&QueryAllBalancesRequest { address: contr_addr.clone(), pagination: None }).unwrap().balances;
+    let contract_balances = bank
+        .query_all_balances(&QueryAllBalancesRequest {
+            address: contr_addr.clone(),
+            pagination: None,
+        })
+        .unwrap()
+        .balances;
     println!("contract balances before: {:?}", contract_balances);
 
-    let result = wasm
-        .execute(
-            &contr_addr,
-            &ExecuteMsg::Swap {
-                target_denom: coin_to.to_string(),
-                min_quantity: FPDecimal::from(2800u128),
-            },
-            &vec![coin(12, coin_from)],
-            &swapper,
-        )
-        .unwrap();
+    wasm.execute(
+        &contr_addr,
+        &ExecuteMsg::Swap {
+            target_denom: coin_to.to_string(),
+            min_quantity: FPDecimal::from(2800u128),
+        },
+        &vec![coin(12, coin_from)],
+        &swapper,
+    )
+    .unwrap();
 
-    let from_balance = bank.query_balance(&QueryBalanceRequest { address: swapper.address(), denom: coin_from.to_string()}).unwrap().balance.unwrap().amount;
-    let to_balance = bank.query_balance(&QueryBalanceRequest { address: swapper.address(), denom: coin_to.to_string()}).unwrap().balance.unwrap().amount;
+    let from_balance = bank
+        .query_balance(&QueryBalanceRequest {
+            address: swapper.address(),
+            denom: coin_from.to_string(),
+        })
+        .unwrap()
+        .balance
+        .unwrap()
+        .amount;
+    let to_balance = bank
+        .query_balance(&QueryBalanceRequest {
+            address: swapper.address(),
+            denom: coin_to.to_string(),
+        })
+        .unwrap()
+        .balance
+        .unwrap()
+        .amount;
+    assert_eq!(from_balance, "0");
+    assert_eq!(to_balance, "2893");
 
-    println!("from balance: {}, to balance: {}", from_balance, to_balance);
+    let contract_balances = bank
+        .query_all_balances(&QueryAllBalancesRequest {
+            address: contr_addr.clone(),
+            pagination: None,
+        })
+        .unwrap()
+        .balances;
 
-    let contract_balances = bank.query_all_balances(&QueryAllBalancesRequest { address: contr_addr.clone(), pagination: None }).unwrap().balances;
-    println!("contract balances: {:?}", contract_balances);
+    assert_eq!(contract_balances.len(), 1);
+    assert_eq!(contract_balances[0].amount, "10000000000");
 }

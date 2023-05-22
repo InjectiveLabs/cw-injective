@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{BankMsg, Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult, SubMsg, to_binary};
+use cosmwasm_std::{Addr, BankMsg, Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult, SubMsg, to_binary};
 use cw2::set_contract_version;
 use protobuf::Message;
 
@@ -59,7 +59,7 @@ pub fn execute(
             denom_1: denon_1,
             denom_2,
             route,
-        } => set_route(deps, denon_1, denom_2, route),
+        } => set_route(deps, &info.sender, denon_1, denom_2, route),
         ExecuteMsg::Swap {
             target_denom,
             min_quantity,
@@ -69,18 +69,21 @@ pub fn execute(
 
 pub fn set_route(
     deps: DepsMut<InjectiveQueryWrapper>,
+    sender: &Addr,
     denom_1: String,
     denom_2: String,
     route: Vec<MarketId>,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
-    // TODO: add checking access rights
+    let config = CONFIG.load(deps.storage)?;
+    if config.admin != sender {
+        return Err(ContractError::Unauthorized {});
+    }
     let route = SwapRoute {
         steps: route,
         denom_1,
         denom_2,
     };
     store_swap_route(deps.storage, &route)?;
-    deps.api.debug(&format!("Route set: {:?}", route));
     Ok(Response::new().add_attribute("method", "set_route"))
 }
 
