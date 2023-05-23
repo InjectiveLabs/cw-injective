@@ -16,6 +16,7 @@ use injective_cosmwasm::{
     PriceLevel, WasmMockQuerier, TEST_MARKET_ID_1, TEST_MARKET_ID_2,
 };
 use injective_math::FPDecimal;
+use crate::helpers::dec_scale_factor;
 use crate::msg::{ExecuteMsg, FeeRecipient, InstantiateMsg};
 
 pub const TEST_CONTRACT_ADDR: &str = "inj14hj2tavq8fpesdwxxcu44rty3hh90vhujaxlnz";
@@ -153,7 +154,7 @@ pub fn create_limit_order(
     trader: &SigningAccount,
     market_id: &String,
     order_side: OrderSide,
-    price: u32,
+    price: u128,
     quantity: u32,
 ) {
     let exchange = Exchange::new(app);

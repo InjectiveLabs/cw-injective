@@ -81,6 +81,7 @@ pub fn estimate_single_swap_execution(
             "Invalid swap denom - neither base or quote",
         ));
     };
+    deps.api.debug(&format!("Is buy: {}", is_buy));
 
     let (expected_quantity, worst_price) = if is_buy {
         estimate_execution_buy(deps, &env.contract.address, &market, balance_in.amount,fee_percent)?
@@ -114,7 +115,7 @@ fn estimate_execution_buy(
 ) -> StdResult<(FPDecimal, FPDecimal)> {
     let inj_querier =  InjectiveQuerier::new(&deps.querier);
     let available_funds = amount / (FPDecimal::one() + fee); // keep reserve for fee
-    println!("estimate_execution_buy: Fee: {fee}, To change: {amount}, available (after fee): {available_funds}");
+    deps.api.debug(&format!("estimate_execution_buy: Fee: {fee}, To change: {amount}, available (after fee): {available_funds}"));
     let top_orders = find_minimum_orders(
         deps,
         &inj_querier
@@ -178,18 +179,22 @@ pub fn find_minimum_orders(
 ) -> StdResult<Vec<PriceLevel>> {
     deps.api
         .debug(&format!("find_minimum_orders, total: {total}"));
+    deps.api
+        .debug(&format!("levels: {:?}", levels));
     let mut sum = FPDecimal::zero();
     let mut orders: Vec<PriceLevel> = Vec::new();
     for level in levels {
         let value = calc(level);
-        println!(
+        deps.api
+            .debug(&format!(
             "Adding level {}x{} value: {value}, sum so far: {sum}",
             level.p.clone(),
             level.q.clone()
-        );
+        ));
         let order_to_add = if sum + value > total {
             let excess = value + sum - total;
-            println!("Value: {value}, excess value: {excess}, sum so far: {sum}");
+            deps.api
+                .debug(&format!("Value: {value}, excess value: {excess}, sum so far: {sum}"));
             PriceLevel {
                 p: level.p,
                 q: ((value - excess) / value) * level.q, // we only take a part of this price level
@@ -197,11 +202,12 @@ pub fn find_minimum_orders(
         } else {
             level.clone() // take fully
         };
-        println!(
+        deps.api
+            .debug(&format!(
             "Added level {}x{}",
             order_to_add.p.clone(),
             order_to_add.q.clone()
-        );
+        ));
 
         sum += value;
         orders.push(order_to_add);
@@ -210,6 +216,8 @@ pub fn find_minimum_orders(
         }
     }
     if sum < total {
+        deps.api
+            .debug(&format!("Wanted: {total}, got: {sum}"));
         Err(StdError::generic_err(
             "Not enough liquidity to fulfill order",
         ))

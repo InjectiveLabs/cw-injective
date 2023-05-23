@@ -6,7 +6,7 @@ use injective_test_tube::{Account, Bank, Exchange, InjectiveTestApp, Module, Run
 use injective_test_tube::RunnerError::{GenericError, QueryError};
 
 use injective_cosmwasm::MarketId;
-use injective_math::FPDecimal;
+use injective_math::{FPDecimal, round_to_min_tick};
 
 use crate::msg::{ExecuteMsg, FeeRecipient, InstantiateMsg, QueryMsg};
 use crate::testing::test_utils::{create_limit_order, launch_spot_market, OrderSide, store_code, init_contract_and_get_address, must_init_account_with_funds, query_all_bank_balances, query_bank_balance, set_route_and_assert_success};
@@ -246,28 +246,33 @@ fn happy_path_simple_buy_swap() {
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
-    create_limit_order(&app, &trader1, &spot_market_1_id, OrderSide::Sell, 201000, 5);
-    create_limit_order(&app, &trader2, &spot_market_1_id, OrderSide::Sell, 195000, 4);
-    create_limit_order(&app, &trader2, &spot_market_1_id, OrderSide::Sell, 192000, 3);
+    create_limit_order(&app, &trader1, &spot_market_1_id, OrderSide::Sell, 201_000, 5);
+    create_limit_order(&app, &trader2, &spot_market_1_id, OrderSide::Sell, 195_000, 4);
+    create_limit_order(&app, &trader2, &spot_market_1_id, OrderSide::Sell, 192_000, 3);
 
     app.increase_time(1);
 
-    let swapper_usdt: u128 = 2_360_995_000_000;
+    let swapper_usdt = 2_360_995_000_000;
+    let swapper_usdt_human_scale =  FPDecimal::from(swapper_usdt) / FPDecimal::from(1_000_000u128);
 
     let swapper = must_init_account_with_funds(&app,&[
         coin(swapper_usdt, USDT),
         coin(5_000_000_000_000_000_000_000_000_000, INJ),
     ]);
 
-    let swappeable = FPDecimal::from(swapper_usdt) * (FPDecimal::one() - FPDecimal::must_from_str(&format!("{}", DEFAULT_TAKER_FEE * DEFAULT_ATOMIC_MULTIPLIER * DEFAULT_SELF_RELAYING_FEE_PART)));
-    let left_for_most_expensive_order = swappeable - FPDecimal::from(195000u128) * FPDecimal::from(4u128) + FPDecimal::from(192000u128) * FPDecimal::from(3u128);
-    let most_expensive_order_quantity = left_for_most_expensive_order / FPDecimal::from(201000u128) * FPDecimal::from(5u128);
-    let expected_quantity = most_expensive_order_quantity + FPDecimal::from(7u128);
-
-    let orders_nominal_total_value = FPDecimal::from(201_000_000_000u128) * FPDecimal::from(5u128) + FPDecimal::from(195_000_000_000u128) * FPDecimal::from(4u128) + FPDecimal::from(192_000_000_000u128) * FPDecimal::from(3u128);
-    println!("orders_nominal_total_value: {}", orders_nominal_total_value);
-    // let max_that_can_be_swapped = orders_nominal_total_value * (FPDecimal::one() - FPDecimal::must_from_str(&format!("{}", DEFAULT_TAKER_FEE * DEFAULT_ATOMIC_MULTIPLIER * DEFAULT_SELF_RELAYING_FEE_PART)));
-    // let average_price = orders_nominal_total_value / FPDecimal::from(12u128);
+    let available_usdt_after_fee = FPDecimal::from(swapper_usdt_human_scale) * (FPDecimal::one() - FPDecimal::must_from_str(&format!("{}", DEFAULT_TAKER_FEE * DEFAULT_ATOMIC_MULTIPLIER * DEFAULT_SELF_RELAYING_FEE_PART)));
+    println!("available_usdt_after_fee: {}", available_usdt_after_fee);
+    let usdt_left_for_most_expensive_order = available_usdt_after_fee - (FPDecimal::from(195_000u128) * FPDecimal::from(4u128) + FPDecimal::from(192_000u128) * FPDecimal::from(3u128));
+    println!("usdt_left_for_most_expensive_order: {}", usdt_left_for_most_expensive_order);
+    let most_expensive_order_quantity = usdt_left_for_most_expensive_order / FPDecimal::from(201000u128);
+    println!("most_expensive_order_quantity: {}", most_expensive_order_quantity);
+    let mut expected_quantity = most_expensive_order_quantity + (FPDecimal::from(4u128) + FPDecimal::from(3u128));
+    println!("expected_quantity: {}", expected_quantity);
+    expected_quantity = round_to_min_tick(
+        expected_quantity,
+            FPDecimal::must_from_str("0.001"),
+    );
+    println!("expected_quantity: {}", expected_quantity);
 
     let query_result: RunnerResult<FPDecimal> = wasm
         .query(
@@ -275,10 +280,9 @@ fn happy_path_simple_buy_swap() {
             &QueryMsg::GetExecutionQuantity {
                 from_denom: USDT.to_string(),
                 to_denom: ETH.to_string(),
-                from_quantity: FPDecimal::from(swapper_usdt),
+                from_quantity: swapper_usdt_human_scale
             },
         );
-    // let expected_query_result = orders_nominal_total_value * (FPDecimal::one() - FPDecimal::must_from_str(&format!("{}", DEFAULT_TAKER_FEE * DEFAULT_ATOMIC_MULTIPLIER * DEFAULT_SELF_RELAYING_FEE_PART)));
     assert_eq!(query_result.unwrap(), expected_quantity, "incorrect swap result estimate returned by query");
 
     let contract_balances_before = query_all_bank_balances(&bank, &contr_addr);
@@ -287,16 +291,18 @@ fn happy_path_simple_buy_swap() {
     wasm.execute(
         &contr_addr,
         &ExecuteMsg::Swap {
-            target_denom: USDT.to_string(),
-            min_quantity: FPDecimal::from(2357458u128),
+            target_denom: ETH.to_string(),
+            min_quantity: FPDecimal::from(11u128),
         },
-        &vec![coin(12, ETH)],
+        &vec![coin(swapper_usdt, USDT)],
         &swapper,
     )
         .unwrap();
 
-    let from_balance = query_bank_balance(&bank, ETH, swapper.address().as_str());
-    let to_balance = query_bank_balance(&bank, USDT, swapper.address().as_str());
+    let from_balance = query_bank_balance(&bank, USDT, swapper.address().as_str());
+    println!("from_balance: {}", from_balance);
+    let to_balance = query_bank_balance(&bank, ETH, swapper.address().as_str());
+    println!("to_balance: {}", to_balance);
     let expected_execute_result = expected_quantity.int();
 
     assert_eq!(from_balance, FPDecimal::zero(), "some of the original amount wasn't swapped");
@@ -304,7 +310,7 @@ fn happy_path_simple_buy_swap() {
 
     let contract_balances_after = query_all_bank_balances(&bank, contr_addr.as_str());
     assert_eq!(contract_balances_after.len(), 1, "wrong number of denoms in contract balances");
-    assert_eq!(contract_balances_after, contract_balances_before, "contract balance has changed after swap");
+    assert_eq!(contract_balances_after, contract_balances_before, "contract balance has changed after swap"); //10000000076 -- dust from exchange?
 }
 
 #[test]
