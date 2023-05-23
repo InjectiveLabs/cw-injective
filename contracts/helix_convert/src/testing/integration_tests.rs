@@ -231,7 +231,7 @@ fn happy_path_simple_buy_swap() {
     let spot_market_1_id =
         launch_spot_market(&exchange, &owner, ETH, USDT);
 
-    let contr_addr = init_contract_and_get_address(&wasm, &owner, &[coin(10_000_000_000, USDT)]);
+    let contr_addr = init_contract_and_get_address(&wasm, &owner, &[coin(100_000_000, USDT)]);
     set_route_and_assert_success(&wasm, &owner, &contr_addr, ETH, USDT, vec![spot_market_1_id.as_str().into()]);
 
     let trader1 = must_init_account_with_funds(&app,&[
@@ -252,15 +252,13 @@ fn happy_path_simple_buy_swap() {
 
     app.increase_time(1);
 
-    let swapper_usdt = 2_360_995_000_000;
-    let swapper_usdt_human_scale =  FPDecimal::from(swapper_usdt) / FPDecimal::from(1_000_000u128);
-
+    let swapper_usdt = 2_360_995;
     let swapper = must_init_account_with_funds(&app,&[
         coin(swapper_usdt, USDT),
         coin(5_000_000_000_000_000_000_000_000_000, INJ),
     ]);
 
-    let available_usdt_after_fee = FPDecimal::from(swapper_usdt_human_scale) * (FPDecimal::one() - FPDecimal::must_from_str(&format!("{}", DEFAULT_TAKER_FEE * DEFAULT_ATOMIC_MULTIPLIER * DEFAULT_SELF_RELAYING_FEE_PART)));
+    let available_usdt_after_fee = FPDecimal::from(swapper_usdt) * (FPDecimal::one() - FPDecimal::must_from_str(&format!("{}", DEFAULT_TAKER_FEE * DEFAULT_ATOMIC_MULTIPLIER * DEFAULT_SELF_RELAYING_FEE_PART)));
     println!("available_usdt_after_fee: {}", available_usdt_after_fee);
     let usdt_left_for_most_expensive_order = available_usdt_after_fee - (FPDecimal::from(195_000u128) * FPDecimal::from(4u128) + FPDecimal::from(192_000u128) * FPDecimal::from(3u128));
     println!("usdt_left_for_most_expensive_order: {}", usdt_left_for_most_expensive_order);
@@ -280,7 +278,7 @@ fn happy_path_simple_buy_swap() {
             &QueryMsg::GetExecutionQuantity {
                 from_denom: USDT.to_string(),
                 to_denom: ETH.to_string(),
-                from_quantity: swapper_usdt_human_scale
+                from_quantity: FPDecimal::from(swapper_usdt)
             },
         );
     assert_eq!(query_result.unwrap(), expected_quantity, "incorrect swap result estimate returned by query");
@@ -310,7 +308,7 @@ fn happy_path_simple_buy_swap() {
 
     let contract_balances_after = query_all_bank_balances(&bank, contr_addr.as_str());
     assert_eq!(contract_balances_after.len(), 1, "wrong number of denoms in contract balances");
-    assert_eq!(contract_balances_after, contract_balances_before, "contract balance has changed after swap"); //10000000076 -- dust from exchange?
+    assert_eq!(contract_balances_after, contract_balances_before, "contract balance decreased changed after swap"); //76 diff comes from funds passed - available funds (without fee)
 }
 
 #[test]

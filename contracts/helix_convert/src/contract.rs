@@ -216,7 +216,7 @@ fn handle_atomic_order_reply(
     let avg_price = FPDecimal::from_str(&trade_data.price)? / dec_scale_factor;
     let fee = FPDecimal::from_str(&trade_data.fee)? / dec_scale_factor;
     deps.api
-        .debug(&format!("Quantity: {quantity}, price {avg_price}"));
+        .debug(&format!("Quantity: {quantity}, price {avg_price}, fee {fee}"));
 
     let current_step = STEP_STATE.load(deps.storage).map_err(ContractError::Std)?;
     let new_quantity = if current_step.is_buy {
