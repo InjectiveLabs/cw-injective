@@ -6,9 +6,8 @@ use protobuf::Message;
 use std::str::FromStr;
 
 use injective_cosmwasm::{
-    create_deposit_msg, create_spot_market_order_msg, create_withdraw_msg,
-    get_default_subaccount_id_for_checked_address, InjectiveMsgWrapper, InjectiveQuerier,
-    InjectiveQueryWrapper, OrderType, SpotOrder,
+    create_spot_market_order_msg, get_default_subaccount_id_for_checked_address,
+    InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, OrderType, SpotOrder,
 };
 use injective_math::FPDecimal;
 use injective_protobuf::proto::tx;
@@ -93,23 +92,16 @@ pub fn try_swap(
         quantity,
         OrderType::BuyAtomic,
         &config.market_id,
-        subaccount_id.to_owned(),
+        subaccount_id,
         Some(contract.to_owned()),
     );
 
     let coins = &info.funds[0];
-    let deposit_message = SubMsg::new(create_deposit_msg(
-        contract.clone(),
-        subaccount_id,
-        coins.clone(),
-    ));
     let order_message = SubMsg::reply_on_success(
         create_spot_market_order_msg(contract, order),
         ATOMIC_ORDER_REPLY_ID,
     );
-    let response = Response::new()
-        .add_submessage(deposit_message)
-        .add_submessage(order_message);
+    let response = Response::new().add_submessage(order_message);
 
     let cache = SwapCacheState {
         sender_address: info.sender.to_string(),
@@ -134,7 +126,7 @@ pub fn reply(
 
 fn handle_atomic_order_reply(
     deps: DepsMut<InjectiveQueryWrapper>,
-    env: Env,
+    _env: Env,
     msg: Reply,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let dec_scale_factor: FPDecimal = FPDecimal::from(1000000000000000000_i128);
@@ -166,8 +158,6 @@ fn handle_atomic_order_reply(
     let fee = FPDecimal::from_str(&trade_data.fee)? / dec_scale_factor;
 
     let config = STATE.load(deps.storage)?;
-    let contract_address = env.contract.address;
-    let subaccount_id = config.contract_subaccount_id;
 
     let cache = SWAP_OPERATION_STATE.load(deps.storage)?;
 
@@ -175,23 +165,13 @@ fn handle_atomic_order_reply(
     let paid = quantity * price + fee;
     let leftover = cache.deposited_amount.amount - Uint128::from(u128::from(paid));
     let leftover_coins = Coin::new(u128::from(leftover), config.quote_denom);
-    // we need to withdraw coins from subaccount to main account so we can transfer them back to a user
-    let withdraw_purchased_message = create_withdraw_msg(
-        contract_address.clone(),
-        subaccount_id.clone(),
-        purchased_coins.clone(),
-    );
-    let withdraw_leftover_message =
-        create_withdraw_msg(contract_address, subaccount_id, leftover_coins.clone());
 
     let send_message = BankMsg::Send {
         to_address: cache.sender_address,
         amount: vec![purchased_coins, leftover_coins],
     };
+    SWAP_OPERATION_STATE.remove(deps.storage);
 
-    let response = Response::new()
-        .add_message(withdraw_purchased_message)
-        .add_message(withdraw_leftover_message)
-        .add_message(send_message);
+    let response = Response::new().add_message(send_message);
     Ok(response)
 }

@@ -17,9 +17,13 @@ pub fn execute_trigger_pyth_update(
     let mut response = Response::new();
     let pa = PriceAttestation {
         product_id: "MOCK_PRODUCT_ID".to_string(),
+        // price_id: Hash::from_hex(
+        //     "f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b",
+        // )?,
         price_id: Hash::from_hex(
             "f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b",
-        )?,
+        )?
+        .to_string(),
         price,
         conf: 500,
         expo: -3,

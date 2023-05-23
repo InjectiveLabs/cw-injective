@@ -17,6 +17,7 @@ const CONTRACT_NAME: &str = "crates.io:injective:dummy";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub const COUNTER: Item<u32> = Item::new("counter");
+pub const ACTIVE: Item<bool> = Item::new("registered");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -27,6 +28,7 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     COUNTER.save(deps.storage, &0u32)?;
+    ACTIVE.save(deps.storage, &false)?;
     Ok(Response::new()
         .add_attribute("method", "instantiate")
         .add_attribute("owner", info.sender))
@@ -54,11 +56,13 @@ pub fn execute(
 pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
     match msg {
         SudoMsg::BeginBlocker {} => {
-            for i in 1..10000 {
-                let _r = i * 2 / i * i / 3 * 2 * 7 / 7;
-            }
             let runs = COUNTER.load(deps.storage)? + 1;
             COUNTER.save(deps.storage, &runs)?;
+            ACTIVE.save(deps.storage, &true)?;
+            Ok(Response::new())
+        }
+        SudoMsg::Deregister {} | SudoMsg::Deactivate {} => {
+            ACTIVE.save(deps.storage, &false)?;
             Ok(Response::new())
         }
     }
@@ -72,6 +76,10 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::Runs {} => {
             let runs_count = COUNTER.load(deps.storage)?;
             to_binary(&format!("{runs_count}"))
+        }
+        QueryMsg::Active {} => {
+            let is_active = ACTIVE.load(deps.storage)?;
+            to_binary(&format!("{is_active}"))
         }
     }
 }
