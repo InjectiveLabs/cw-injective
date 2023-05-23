@@ -79,7 +79,6 @@ impl<'a> From<&'a str> for MarketId {
 //     }
 // }
 
-
 impl<'de> Deserialize<'de> for MarketId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where

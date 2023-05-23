@@ -4,6 +4,8 @@
 
 use cosmwasm_std::{StdError, StdResult, Storage};
 use cw_storage_plus::{Item, Map};
+use crate::ContractError;
+use crate::ContractError::Std;
 
 use crate::types::{Config, CurrentSwapOperation, CurrentSwapStep, SwapRoute};
 
@@ -22,7 +24,7 @@ pub fn store_swap_route(storage: &mut dyn Storage, route: &SwapRoute) -> StdResu
 
 pub fn read_swap_route(storage: &dyn Storage, denom1: &str, denom2: &str) -> StdResult<SwapRoute> {
     let key = route_key(denom1, denom2);
-    SWAP_ROUTES.load(storage, key).map_err(StdError::from)
+    SWAP_ROUTES.load(storage, key).map_err(|_| StdError::generic_err(&format!("No swap route not found from {} to {}", denom1, denom2)))
 }
 
 fn route_key<'a>(denom1: &'a str, denom2: &'a str) -> (String, String) {

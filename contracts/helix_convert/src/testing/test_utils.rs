@@ -2,21 +2,21 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use cosmwasm_std::testing::{MockApi, MockStorage};
-use cosmwasm_std::{Addr, OwnedDeps};
+use cosmwasm_std::{Addr, Coin, OwnedDeps};
 use injective_std::types::injective::exchange::v1beta1::{
     MsgCreateSpotLimitOrder, MsgInstantSpotMarketLaunch, OrderInfo, OrderType,
     QuerySpotMarketsRequest, SpotOrder,
 };
-use injective_test_tube::{Account, Exchange, InjectiveTestApp, Module, SigningAccount, Wasm};
-
-// use injective_std::types::injective::exchange::v1beta1::{MsgInstantSpotMarketLaunch, QuerySpotMarketsRequest};
-// use injective_test_tube::{Account, Exchange, InjectiveTestApp, SigningAccount, Wasm};
+use injective_test_tube::{Account, Bank, Exchange, InjectiveTestApp, Module, RunnerExecuteResult, SigningAccount, Wasm};
+use injective_std::types::cosmos::bank::v1beta1::{QueryAllBalancesRequest, QueryBalanceRequest};
+use injective_test_tube::cosmrs::proto::cosmwasm::wasm::v1::MsgExecuteContractResponse;
 use injective_cosmwasm::{
     create_mock_spot_market, create_orderbook_response_handler, create_spot_multi_market_handler,
     get_default_subaccount_id_for_checked_address, inj_mock_deps, InjectiveQueryWrapper, MarketId,
     PriceLevel, WasmMockQuerier, TEST_MARKET_ID_1, TEST_MARKET_ID_2,
 };
 use injective_math::FPDecimal;
+use crate::msg::{ExecuteMsg, FeeRecipient, InstantiateMsg};
 
 pub const TEST_CONTRACT_ADDR: &str = "inj14hj2tavq8fpesdwxxcu44rty3hh90vhujaxlnz";
 pub const TEST_USER_ADDR: &str = "inj1p7z8p649xspcey7wp5e4leqf7wa39kjjj6wja8";
@@ -108,8 +108,8 @@ pub fn store_code(
 pub fn launch_spot_market(
     exchange: &Exchange<InjectiveTestApp>,
     signer: &SigningAccount,
-    base: String,
-    quote: String,
+    base: &str,
+    quote: &str,
 ) -> String {
     let ticker = format!("{}/{}", base, quote);
     exchange
@@ -117,8 +117,8 @@ pub fn launch_spot_market(
             MsgInstantSpotMarketLaunch {
                 sender: signer.address(),
                 ticker: ticker.clone(),
-                base_denom: base,
-                quote_denom: quote,
+                base_denom: base.to_string(),
+                quote_denom: quote.to_string(),
                 min_price_tick_size: "1_000_000_000_000_000".to_owned(),
                 min_quantity_tick_size: "1_000_000_000_000_000".to_owned(),
             },
@@ -142,11 +142,17 @@ pub fn get_spot_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: String)
     market.market_id.to_string()
 }
 
+#[derive(PartialEq)]
+pub enum OrderSide {
+    Buy,
+    Sell,
+}
+
 pub fn create_limit_order(
     app: &InjectiveTestApp,
     trader: &SigningAccount,
     market_id: &String,
-    is_buy: bool,
+    order_side: OrderSide,
     price: u32,
     quantity: u32,
 ) {
@@ -166,7 +172,7 @@ pub fn create_limit_order(
                         price: format!("{}000000000000000000", price),
                         quantity: format!("{}000000000000000000", quantity),
                     }),
-                    order_type: if is_buy {
+                    order_type: if order_side == OrderSide::Buy {
                         OrderType::BuyAtomic.into()
                     } else {
                         OrderType::SellAtomic.into()
@@ -177,4 +183,66 @@ pub fn create_limit_order(
             &trader,
         )
         .unwrap();
+}
+
+pub fn init_contract_and_get_address(wasm: &Wasm<InjectiveTestApp>, owner: &SigningAccount, initial_balance: &[Coin]) -> String {
+    let code_id = store_code(&wasm, &owner, "helix_converter".to_string());
+    wasm
+        .instantiate(
+            code_id,
+            &InstantiateMsg {
+                fee_recipient: FeeRecipient::SwapContract,
+                admin: Addr::unchecked(owner.address()),
+            },
+            Some(&owner.address()),
+            Some("Swap"),
+            initial_balance,
+            &owner,
+        )
+        .unwrap()
+        .data
+        .address
+}
+
+pub fn set_route_and_assert_success(wasm: &Wasm<InjectiveTestApp>, signer: &SigningAccount, contr_addr: &str, from_denom: &str, to_denom: &str, route: Vec<MarketId>) {
+    wasm.execute(
+        contr_addr,
+        &ExecuteMsg::SetRoute {
+            denom_1: from_denom.to_string(),
+            denom_2: to_denom.to_string(),
+            route,
+        },
+        &vec![],
+        signer,
+    ).unwrap();
+}
+
+pub fn must_init_account_with_funds(app: &InjectiveTestApp, initial_funds: &[Coin]) -> SigningAccount {
+    app
+        .init_account(initial_funds)
+        .unwrap()
+}
+
+pub fn query_all_bank_balances(bank: &Bank<InjectiveTestApp>, address: &str) -> Vec<injective_std::types::cosmos::base::v1beta1::Coin> {
+    bank
+        .query_all_balances(&QueryAllBalancesRequest {
+            address: address.to_string(),
+            pagination: None,
+        })
+        .unwrap()
+        .balances
+}
+
+
+pub fn query_bank_balance(bank: &Bank<InjectiveTestApp>, denom: &str, address: &str) -> FPDecimal {
+    FPDecimal::from_str(bank
+        .query_balance(&QueryBalanceRequest {
+            address: address.to_string(),
+            denom: denom.to_string(),
+        })
+        .unwrap()
+        .balance
+        .unwrap()
+        .amount.as_str())
+        .unwrap()
 }

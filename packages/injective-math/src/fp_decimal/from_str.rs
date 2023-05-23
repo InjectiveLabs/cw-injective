@@ -43,6 +43,12 @@ impl FromStr for FPDecimal {
     }
 }
 
+impl FPDecimal {
+    pub fn must_from_str(input: &str) -> Self {
+        Self::from_str(input).unwrap()
+    }
+}
+
 #[cfg(test)]
 mod tests {
 

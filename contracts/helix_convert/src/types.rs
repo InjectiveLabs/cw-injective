@@ -73,7 +73,6 @@ pub struct SwapRoute {
 }
 
 impl SwapRoute {
-
     pub fn steps_from(&self, denom: &str) -> Vec<MarketId> {
         if &self.denom_1 == denom {
             self.steps.clone()
