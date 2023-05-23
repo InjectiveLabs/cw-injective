@@ -258,7 +258,7 @@ fn happy_path_simple_buy_swap() {
         coin(5_000_000_000_000_000_000_000_000_000, INJ),
     ]);
 
-    let available_usdt_after_fee = FPDecimal::from(swapper_usdt) * (FPDecimal::one() - FPDecimal::must_from_str(&format!("{}", DEFAULT_TAKER_FEE * DEFAULT_ATOMIC_MULTIPLIER * DEFAULT_SELF_RELAYING_FEE_PART)));
+    let available_usdt_after_fee = FPDecimal::from(swapper_usdt) / (FPDecimal::one() + FPDecimal::must_from_str(&format!("{}", DEFAULT_TAKER_FEE * DEFAULT_ATOMIC_MULTIPLIER * DEFAULT_SELF_RELAYING_FEE_PART)));
     println!("available_usdt_after_fee: {}", available_usdt_after_fee);
     let usdt_left_for_most_expensive_order = available_usdt_after_fee - (FPDecimal::from(195_000u128) * FPDecimal::from(4u128) + FPDecimal::from(192_000u128) * FPDecimal::from(3u128));
     println!("usdt_left_for_most_expensive_order: {}", usdt_left_for_most_expensive_order);
@@ -266,11 +266,13 @@ fn happy_path_simple_buy_swap() {
     println!("most_expensive_order_quantity: {}", most_expensive_order_quantity);
     let mut expected_quantity = most_expensive_order_quantity + (FPDecimal::from(4u128) + FPDecimal::from(3u128));
     println!("expected_quantity: {}", expected_quantity);
-    expected_quantity = round_to_min_tick(
+    let expected_quantity_rounded = round_to_min_tick(
         expected_quantity,
             FPDecimal::must_from_str("0.001"),
     );
-    println!("expected_quantity: {}", expected_quantity);
+    println!("expected_quantity: {}", expected_quantity_rounded);
+    let dust = expected_quantity - expected_quantity_rounded;
+    println!("tick size-related dust: {}", dust);
 
     let query_result: RunnerResult<FPDecimal> = wasm
         .query(
@@ -281,7 +283,7 @@ fn happy_path_simple_buy_swap() {
                 from_quantity: FPDecimal::from(swapper_usdt)
             },
         );
-    assert_eq!(query_result.unwrap(), expected_quantity, "incorrect swap result estimate returned by query");
+    assert_eq!(query_result.unwrap(), expected_quantity_rounded, "incorrect swap result estimate returned by query");
 
     let contract_balances_before = query_all_bank_balances(&bank, &contr_addr);
     assert_eq!(contract_balances_before.len(), 1, "wrong number of denoms in contract balances");
@@ -306,9 +308,15 @@ fn happy_path_simple_buy_swap() {
     assert_eq!(from_balance, FPDecimal::zero(), "some of the original amount wasn't swapped");
     assert_eq!(to_balance, expected_execute_result, "swapper did not receive expected amount");
 
+    let dust_value = dust * FPDecimal::from(201_000u128);
+    println!("{}", &format!("dust_value: {dust_value}, before + dust_value: {}", FPDecimal::must_from_str(contract_balances_before[0].amount.as_str()) + dust_value));
+
     let contract_balances_after = query_all_bank_balances(&bank, contr_addr.as_str());
+    let mut expected_contract_balances_after = FPDecimal::must_from_str(contract_balances_before[0].amount.as_str()) + dust_value;
+    expected_contract_balances_after = expected_contract_balances_after.int();
+
     assert_eq!(contract_balances_after.len(), 1, "wrong number of denoms in contract balances");
-    assert_eq!(contract_balances_after, contract_balances_before, "contract balance decreased changed after swap"); //76 diff comes from funds passed - available funds (without fee)
+    assert_eq!(FPDecimal::must_from_str(contract_balances_after[0].amount.as_str()), expected_contract_balances_after, "contract balance changed unexpectedly after swap"); //76 diff comes from funds passed - available funds (without fee)
 }
 
 #[test]
