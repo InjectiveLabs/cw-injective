@@ -18,7 +18,7 @@ Injective's proto-generated types and helpers built using [Buf](https://github.c
 
 In order to generate an individual proto file run:
 
-```rust
+```shell
 buf generate [/path/to/injective-core] --template [/path/to/buf.gen.yaml] --output [output-path] --path [/path/to/module/proto]
 ```
 
