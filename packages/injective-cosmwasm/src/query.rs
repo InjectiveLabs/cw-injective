@@ -34,7 +34,6 @@ pub enum OrderSide {
     Sell = 2,
 }
 
-
 /// InjectiveQuery is an override of QueryRequest::Custom to access Injective-specific modules
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -108,7 +107,7 @@ pub enum InjectiveQuery {
     },
     SpotOrderbook {
         market_id: MarketId,
-        limit :   u64,
+        limit: u64,
         order_side: OrderSide,
         limit_cumulative_quantity: Option<FPDecimal>,
         limit_cumulative_notional: Option<FPDecimal>,
@@ -128,7 +127,7 @@ pub enum InjectiveQuery {
     DenomDecimals {
         denoms: Vec<String>,
     },
-    MarketAtomicExecutionFeeMultiplier{
+    MarketAtomicExecutionFeeMultiplier {
         market_id: MarketId,
     },
     OracleVolatility {
@@ -282,17 +281,15 @@ pub struct MarketMidPriceAndTOBResponse {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PriceLevel {
-    pub p : FPDecimal,
+    pub p: FPDecimal,
     pub q: FPDecimal,
 }
 
 impl PriceLevel {
-
     // helper method for tests
-    pub fn new(p: FPDecimal , q: FPDecimal) -> PriceLevel {
+    pub fn new(p: FPDecimal, q: FPDecimal) -> PriceLevel {
         PriceLevel { p, q }
     }
-
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -363,7 +360,6 @@ pub struct QueryDenomDecimalResponse {
 pub struct QueryDenomDecimalsResponse {
     pub denom_decimals: Vec<DenomDecimals>,
 }
-
 
 /// Response to query for fee multiplier for atomic order
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]

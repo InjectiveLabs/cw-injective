@@ -1,6 +1,6 @@
 use cosmwasm_std::StdError;
-use thiserror::Error;
 use injective_math::FPDecimal;
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum ContractError {

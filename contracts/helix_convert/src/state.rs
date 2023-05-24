@@ -3,8 +3,6 @@ use cw_storage_plus::{Item, Map};
 
 use crate::types::{Config, CurrentSwapOperation, CurrentSwapStep, SwapRoute};
 
-
-
 pub const SWAP_ROUTES: Map<(String, String), SwapRoute> = Map::new("swap_routes");
 pub const SWAP_OPERATION_STATE: Item<CurrentSwapOperation> = Item::new("current_swap_cache");
 pub const STEP_STATE: Item<CurrentSwapStep> = Item::new("current_step_cache");

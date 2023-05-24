@@ -1,14 +1,13 @@
-use std::str::FromStr;
 use cosmwasm_std::{Addr, Deps, Env, StdError, StdResult};
 
-use injective_cosmwasm::{InjectiveQuerier, InjectiveQueryWrapper, MarketId, OrderSide, PriceLevel, SpotMarket};
+use injective_cosmwasm::{
+    InjectiveQuerier, InjectiveQueryWrapper, MarketId, OrderSide, PriceLevel, SpotMarket,
+};
 use injective_math::utils::round_to_min_tick;
 use injective_math::FPDecimal;
-use crate::ContractError;
-use crate::ContractError::CustomError;
 
 use crate::helpers::counter_denom;
-use crate::state::{CONFIG, read_swap_route};
+use crate::state::{read_swap_route, CONFIG};
 use crate::types::{FPCoin, StepExecutionEstimate};
 
 pub fn estimate_swap_result(
@@ -29,7 +28,7 @@ pub fn estimate_swap_result(
     };
     for step in steps {
         let cur_swap = current_swap.clone();
-        let swap_estimate = estimate_single_swap_execution(&deps, &env, &step,current_swap)?;
+        let swap_estimate = estimate_single_swap_execution(&deps, &env, &step, current_swap)?;
         let new_amount = swap_estimate.result_quantity;
         println!(
             "Exchanged {}{} into {}{}",
@@ -71,14 +70,16 @@ pub fn estimate_single_swap_execution(
     let fee_multiplier = querier
         .query_market_atomic_execution_fee_multiplier(market_id)?
         .multiplier;
-    let fee_percent = market.taker_fee_rate * fee_multiplier * (FPDecimal::one() - effective_fee_discount_rate(&market, is_self_relayer));
+    let fee_percent = market.taker_fee_rate
+        * fee_multiplier
+        * (FPDecimal::one() - effective_fee_discount_rate(&market, is_self_relayer));
     deps.api.debug(&format!(
         "market.taker_fee_rate: {}, multiplier: {}, final Fee percent: {}",
         market.taker_fee_rate, fee_multiplier, fee_percent,
     ));
-    let is_buy = if &balance_in.denom == &market.quote_denom {
+    let is_buy = if balance_in.denom == market.quote_denom {
         true
-    } else if &balance_in.denom == &market.base_denom {
+    } else if balance_in.denom == market.base_denom {
         false
     } else {
         return Err(StdError::generic_err(
@@ -88,7 +89,13 @@ pub fn estimate_single_swap_execution(
     deps.api.debug(&format!("Is buy: {}", is_buy));
 
     let (expected_quantity, worst_price) = if is_buy {
-        estimate_execution_buy(deps, &env.contract.address, &market, balance_in.amount,fee_percent)?
+        estimate_execution_buy(
+            deps,
+            &env.contract.address,
+            &market,
+            balance_in.amount,
+            fee_percent,
+        )?
     } else {
         estimate_execution_sell(deps, &querier, market_id, balance_in.amount, fee_percent)?
     };
@@ -117,13 +124,18 @@ fn estimate_execution_buy(
     amount: FPDecimal,
     fee: FPDecimal,
 ) -> StdResult<(FPDecimal, FPDecimal)> {
-    let inj_querier =  InjectiveQuerier::new(&deps.querier);
+    let inj_querier = InjectiveQuerier::new(&deps.querier);
     let available_funds = amount / (FPDecimal::one() + fee); // keep reserve for fee
     deps.api.debug(&format!("estimate_execution_buy: Fee: {fee}, To change: {amount}, available (after fee): {available_funds}"));
     let top_orders = find_minimum_orders(
         deps,
         &inj_querier
-            .query_spot_market_orderbook(&market.market_id, OrderSide::Sell, None, Some(available_funds))?
+            .query_spot_market_orderbook(
+                &market.market_id,
+                OrderSide::Sell,
+                None,
+                Some(available_funds),
+            )?
             .sells_price_level,
         available_funds,
         |l| l.q * l.p,
@@ -135,10 +147,12 @@ fn estimate_execution_buy(
     // check if user funds + contract funds are enough to create order
 
     let required_funds = worst_price * expected_quantity;
-    let funds_in_contract = deps.querier
+    let funds_in_contract = deps
+        .querier
         .query_balance(contract_address, &market.quote_denom)
         .expect("query own balance should not fail")
-        .amount.into();
+        .amount
+        .into();
     if required_funds > funds_in_contract {
         Err(StdError::generic_err("Swap amount too high"))
     } else {
@@ -153,11 +167,16 @@ fn estimate_execution_sell(
     amount: FPDecimal,
     fee: FPDecimal,
 ) -> StdResult<(FPDecimal, FPDecimal)> {
-    deps.api
-        .debug(&format!("estimate_execution_sell: total: {amount}, will call query now"));
-    let orders = &querier
-        .query_spot_market_orderbook(market_id, OrderSide::Buy, Some(amount), None)?;
-    deps.api.debug(&format!("estimate_execution_sell: orders sells: {}, buys: {}", orders.sells_price_level.len(), orders.buys_price_level.len()));
+    deps.api.debug(&format!(
+        "estimate_execution_sell: total: {amount}, will call query now"
+    ));
+    let orders =
+        &querier.query_spot_market_orderbook(market_id, OrderSide::Buy, Some(amount), None)?;
+    deps.api.debug(&format!(
+        "estimate_execution_sell: orders sells: {}, buys: {}",
+        orders.sells_price_level.len(),
+        orders.buys_price_level.len()
+    ));
     let top_orders = find_minimum_orders(
         deps,
         &querier
@@ -183,22 +202,21 @@ pub fn find_minimum_orders(
 ) -> StdResult<Vec<PriceLevel>> {
     deps.api
         .debug(&format!("find_minimum_orders, total: {total}"));
-    deps.api
-        .debug(&format!("levels: {:?}", levels));
+    deps.api.debug(&format!("levels: {:?}", levels));
     let mut sum = FPDecimal::zero();
     let mut orders: Vec<PriceLevel> = Vec::new();
     for level in levels {
         let value = calc(level);
-        deps.api
-            .debug(&format!(
+        deps.api.debug(&format!(
             "Adding level {}x{} value: {value}, sum so far: {sum}",
             level.p.clone(),
             level.q.clone()
         ));
         let order_to_add = if sum + value > total {
             let excess = value + sum - total;
-            deps.api
-                .debug(&format!("Value: {value}, excess value: {excess}, sum so far: {sum}"));
+            deps.api.debug(&format!(
+                "Value: {value}, excess value: {excess}, sum so far: {sum}"
+            ));
             PriceLevel {
                 p: level.p,
                 q: ((value - excess) / value) * level.q, // we only take a part of this price level
@@ -206,8 +224,7 @@ pub fn find_minimum_orders(
         } else {
             level.clone() // take fully
         };
-        deps.api
-            .debug(&format!(
+        deps.api.debug(&format!(
             "Added level {}x{}",
             order_to_add.p.clone(),
             order_to_add.q.clone()
@@ -220,8 +237,7 @@ pub fn find_minimum_orders(
         }
     }
     if sum < total {
-        deps.api
-            .debug(&format!("Wanted: {total}, got: {sum}"));
+        deps.api.debug(&format!("Wanted: {total}, got: {sum}"));
         Err(StdError::generic_err(
             "Not enough liquidity to fulfill order",
         ))
@@ -230,7 +246,7 @@ pub fn find_minimum_orders(
     }
 }
 
-fn avg_price(levels: &Vec<PriceLevel>) -> FPDecimal {
+fn avg_price(levels: &[PriceLevel]) -> FPDecimal {
     let (total_quantity, total_notional) = levels
         .iter()
         .fold((FPDecimal::zero(), FPDecimal::zero()), |acc, pl| {
@@ -239,7 +255,7 @@ fn avg_price(levels: &Vec<PriceLevel>) -> FPDecimal {
     total_notional / total_quantity
 }
 
-fn worst_price(levels: &Vec<PriceLevel>) -> FPDecimal {
+fn worst_price(levels: &[PriceLevel]) -> FPDecimal {
     levels.last().unwrap().p // assume there's at least one element
 }
 
@@ -253,8 +269,8 @@ fn effective_fee_discount_rate(market: &SpotMarket, is_self_relayer: bool) -> FP
 
 #[cfg(test)]
 mod tests {
-    use injective_cosmwasm::inj_mock_deps;
     use crate::testing::test_utils::create_price_level;
+    use injective_cosmwasm::inj_mock_deps;
 
     use super::*;
 
@@ -298,7 +314,12 @@ mod tests {
     fn test_find_minimum_orders_not_enough_liquidity() {
         let levels = vec![create_price_level(1, 100), create_price_level(2, 200)];
 
-        let result = find_minimum_orders(&inj_mock_deps(|_|{}).as_ref(), &levels, FPDecimal::from(1000u128), |l| l.q);
+        let result = find_minimum_orders(
+            &inj_mock_deps(|_| {}).as_ref(),
+            &levels,
+            FPDecimal::from(1000u128),
+            |l| l.q,
+        );
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err(),
@@ -314,7 +335,12 @@ mod tests {
             create_price_level(5, 500),
         ];
 
-        let result = find_minimum_orders(&inj_mock_deps(|_|{}).as_ref(), &levels, FPDecimal::from(800u128), |l| l.q);
+        let result = find_minimum_orders(
+            &inj_mock_deps(|_| {}).as_ref(),
+            &levels,
+            FPDecimal::from(800u128),
+            |l| l.q,
+        );
         assert!(result.is_ok());
         let min_orders = result.unwrap();
         assert_eq!(min_orders.len(), 3);
@@ -331,7 +357,12 @@ mod tests {
             create_price_level(5, 500),
         ];
 
-        let result = find_minimum_orders(&inj_mock_deps(|_|{}).as_ref(), &levels, FPDecimal::from(450u128), |l| l.q);
+        let result = find_minimum_orders(
+            &inj_mock_deps(|_| {}).as_ref(),
+            &levels,
+            FPDecimal::from(450u128),
+            |l| l.q,
+        );
         assert!(result.is_ok());
         let min_orders = result.unwrap();
         assert_eq!(min_orders.len(), 3);
@@ -351,7 +382,12 @@ mod tests {
             create_price_level(1, 100),
         ];
 
-        let result = find_minimum_orders(&inj_mock_deps(|_|{}).as_ref(), &buy_levels, FPDecimal::from(3450u128), |l| l.q * l.p);
+        let result = find_minimum_orders(
+            &inj_mock_deps(|_| {}).as_ref(),
+            &buy_levels,
+            FPDecimal::from(3450u128),
+            |l| l.q * l.p,
+        );
         assert!(result.is_ok());
         let min_orders = result.unwrap();
         assert_eq!(min_orders.len(), 3);

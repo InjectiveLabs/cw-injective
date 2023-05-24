@@ -7,7 +7,10 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-use injective_cosmwasm::{create_spot_market_order_msg, get_default_subaccount_id_for_checked_address, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, OrderType, SpotOrder};
+use injective_cosmwasm::{
+    create_spot_market_order_msg, get_default_subaccount_id_for_checked_address,
+    InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, OrderType, SpotOrder,
+};
 use injective_math::FPDecimal;
 use injective_protobuf::proto::tx;
 
@@ -111,7 +114,7 @@ pub fn try_swap(
     Ok(response)
 }
 
-#[derive(PartialEq,Clone,Default,Debug,Serialize,Deserialize)]
+#[derive(PartialEq, Clone, Default, Debug, Serialize, Deserialize)]
 pub struct SpotMarketOrderResults {
     // message fields
     pub quantity: String,
@@ -119,13 +122,12 @@ pub struct SpotMarketOrderResults {
     pub fee: String,
 }
 
-#[derive(PartialEq,Clone,Default,Debug,Serialize,Deserialize)]
+#[derive(PartialEq, Clone, Default, Debug, Serialize, Deserialize)]
 pub struct MsgCreateSpotMarketOrderResponse2 {
     // message fields
     pub order_hash: String,
     pub results: Vec<SpotMarketOrderResults>,
 }
-
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(

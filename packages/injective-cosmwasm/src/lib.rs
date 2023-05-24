@@ -35,9 +35,9 @@ pub use subaccount::{
     subaccount_id_to_ethereum_address, subaccount_id_to_injective_address, subaccount_id_to_unchecked_injective_address,
 };
 #[cfg(not(target_arch = "wasm32"))]
-pub use test_helpers::test_helpers::{
-    inj_mock_deps, inj_mock_env, test_market_ids, create_mock_spot_market, OwnedDepsExt, TEST_MARKET_ID_1, TEST_MARKET_ID_10, TEST_MARKET_ID_2, TEST_MARKET_ID_3,
-    TEST_MARKET_ID_4, TEST_MARKET_ID_5, TEST_MARKET_ID_6, TEST_MARKET_ID_7, TEST_MARKET_ID_8, TEST_MARKET_ID_9,
+pub use test_helpers::testing_helpers::{
+    create_mock_spot_market, inj_mock_deps, inj_mock_env, test_market_ids, OwnedDepsExt, TEST_MARKET_ID_1, TEST_MARKET_ID_10, TEST_MARKET_ID_2,
+    TEST_MARKET_ID_3, TEST_MARKET_ID_4, TEST_MARKET_ID_5, TEST_MARKET_ID_6, TEST_MARKET_ID_7, TEST_MARKET_ID_8, TEST_MARKET_ID_9,
 };
 pub use types::{Hash, MarketId, MarketType, SubaccountId};
 pub use volatility::{MetadataStatistics, PriceRecord, TradeHistoryOptions, TradeRecord};

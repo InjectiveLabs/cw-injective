@@ -1,7 +1,7 @@
 use crate::FPDecimal;
+use bigint::U256;
 use cosmwasm_std::StdError;
 use std::{fmt::Display, str::FromStr};
-use bigint::U256;
 
 #[derive(Default)]
 pub enum RangeEnds {
@@ -66,7 +66,6 @@ pub fn ensure_band<T: Ord + Display>(v: &T, min: Option<&T>, max: Option<&T>, ra
 pub fn band_error_to_human(err: StdError, value_name: &str) -> StdError {
     StdError::generic_err(format!("Value '{value_name}' failed validation due to: '{err}'"))
 }
-
 
 pub fn div_dec(num: FPDecimal, denom: FPDecimal) -> FPDecimal {
     if denom == FPDecimal::zero() {

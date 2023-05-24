@@ -35,12 +35,12 @@ pub enum ExecuteMsg {
     },
     UpdateConfig {
         admin: Option<Addr>,
-        fee_recipient: Option<FeeRecipient>
+        fee_recipient: Option<FeeRecipient>,
     },
     WithdrawSupportFunds {
         coins: Vec<Coin>,
         target_address: Addr,
-    }
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]

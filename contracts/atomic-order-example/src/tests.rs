@@ -1,11 +1,17 @@
-
 use std::str::FromStr;
 
 use cosmwasm_std::testing::{mock_info, MockApi, MockStorage};
-use cosmwasm_std::{coins, to_binary, BankMsg, Binary, ContractResult, CosmosMsg, OwnedDeps, QuerierResult, Reply, SubMsgResponse, SubMsgResult, SystemResult, Uint128};
+use cosmwasm_std::{
+    coins, to_binary, BankMsg, Binary, ContractResult, CosmosMsg, OwnedDeps, QuerierResult, Reply,
+    SubMsgResponse, SubMsgResult, SystemResult, Uint128,
+};
 
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
-use injective_cosmwasm::{HandlesMarketIdQuery, inj_mock_deps, inj_mock_env, InjectiveQueryWrapper, InjectiveRoute, MarketId, OrderInfo, OrderType, OwnedDepsExt, SpotMarket, SpotMarketResponse, SpotOrder, SubaccountId, WasmMockQuerier};
+use injective_cosmwasm::{
+    inj_mock_deps, inj_mock_env, HandlesMarketIdQuery, InjectiveQueryWrapper, InjectiveRoute,
+    MarketId, OrderInfo, OrderType, OwnedDepsExt, SpotMarket, SpotMarketResponse, SpotOrder,
+    SubaccountId, WasmMockQuerier,
+};
 use injective_math::FPDecimal;
 
 use crate::contract::{execute, instantiate, reply, ATOMIC_ORDER_REPLY_ID};
@@ -63,7 +69,9 @@ use crate::msg::{ExecuteMsg, InstantiateMsg};
 // }
 
 fn test_deps<'a>() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQueryWrapper> {
-    inj_mock_deps(|querier| querier.spot_market_response_handler = Some(Box::new(create_spot_market_handler())) )
+    inj_mock_deps(|querier| {
+        querier.spot_market_response_handler = Some(Box::new(create_spot_market_handler()))
+    })
 }
 
 #[test]

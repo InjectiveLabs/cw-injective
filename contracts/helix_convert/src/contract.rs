@@ -2,7 +2,10 @@ use std::str::FromStr;
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Addr, BankMsg, Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult, SubMsg, Coin};
+use cosmwasm_std::{
+    to_binary, Addr, BankMsg, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Reply, Response,
+    StdResult, SubMsg,
+};
 use cw2::set_contract_version;
 use protobuf::Message;
 
@@ -68,11 +71,12 @@ pub fn execute(
             admin,
             fee_recipient,
         } => update_config(deps, env, info.sender, admin, fee_recipient),
-        ExecuteMsg::WithdrawSupportFunds { coins, target_address } => withdraw_support_funds(deps,  info.sender, coins, target_address),
+        ExecuteMsg::WithdrawSupportFunds {
+            coins,
+            target_address,
+        } => withdraw_support_funds(deps, info.sender, coins, target_address),
     }
 }
-
-
 
 pub fn set_route(
     deps: DepsMut<InjectiveQueryWrapper>,
@@ -149,7 +153,7 @@ fn execute_swap_step(
     env: Env,
     swap_operation: CurrentSwapOperation,
     step_idx: u16,
-    current_balance: FPCoin
+    current_balance: FPCoin,
 ) -> StdResult<Response<InjectiveMsgWrapper>> {
     let market_id = swap_operation.swap_steps[usize::from(step_idx)].clone();
     let contract = &env.contract.address;
@@ -304,7 +308,10 @@ fn save_config(
     CONFIG.save(deps.storage, &config)
 }
 
-fn verify_sender_is_admin(deps: Deps<InjectiveQueryWrapper>, sender: &Addr) -> Result<(), ContractError> {
+fn verify_sender_is_admin(
+    deps: Deps<InjectiveQueryWrapper>,
+    sender: &Addr,
+) -> Result<(), ContractError> {
     let config = CONFIG.load(deps.storage)?;
     if config.admin != sender {
         Err(ContractError::Unauthorized {})
@@ -348,7 +355,7 @@ fn withdraw_support_funds(
     };
     let response = Response::new()
         .add_message(send_message)
-        .add_attribute("method","withdraw_support_funds" )
+        .add_attribute("method", "withdraw_support_funds")
         .add_attribute("target_address", target_address.to_string());
     Ok(response)
 }

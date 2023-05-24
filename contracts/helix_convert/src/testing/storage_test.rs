@@ -1,9 +1,10 @@
-use cosmwasm_std::Addr;
-use injective_cosmwasm::{inj_mock_deps, MarketId, OwnedDepsExt, TEST_MARKET_ID_1, TEST_MARKET_ID_2, TEST_MARKET_ID_3};
 use crate::contract::set_route;
-use crate::ContractError;
-use crate::ContractError::Std;
-use crate::state::{CONFIG, read_swap_route, store_swap_route};
+use cosmwasm_std::Addr;
+use injective_cosmwasm::{
+    inj_mock_deps, MarketId, OwnedDepsExt, TEST_MARKET_ID_1, TEST_MARKET_ID_2, TEST_MARKET_ID_3,
+};
+
+use crate::state::{read_swap_route, store_swap_route, CONFIG};
 use crate::testing::test_utils::{TEST_CONTRACT_ADDR, TEST_USER_ADDR};
 use crate::types::{Config, SwapRoute};
 
@@ -86,10 +87,21 @@ fn test_set_route_as_owner() {
         MarketId::unchecked(TEST_MARKET_ID_2),
     ];
 
-    let config = Config { fee_recipient: Addr::unchecked(TEST_USER_ADDR), admin: Addr::unchecked(TEST_USER_ADDR) };
-    CONFIG.save(deps.as_mut_deps().storage, &config).expect("could not save config");
+    let config = Config {
+        fee_recipient: Addr::unchecked(TEST_USER_ADDR),
+        admin: Addr::unchecked(TEST_USER_ADDR),
+    };
+    CONFIG
+        .save(deps.as_mut_deps().storage, &config)
+        .expect("could not save config");
 
-    let result = set_route(deps.as_mut(), &Addr::unchecked(TEST_USER_ADDR), base_denom.clone(), quote_denom.clone(), route.clone());
+    let result = set_route(
+        deps.as_mut(),
+        &Addr::unchecked(TEST_USER_ADDR),
+        base_denom.clone(),
+        quote_denom.clone(),
+        route.clone(),
+    );
 
     // Test that the function returned successfully
     assert!(result.is_ok());
@@ -116,16 +128,35 @@ fn test_set_route_as_unauthorised() {
         MarketId::unchecked(TEST_MARKET_ID_2),
     ];
 
-    let config = Config { fee_recipient: Addr::unchecked(TEST_USER_ADDR), admin: Addr::unchecked(TEST_USER_ADDR) };
-    CONFIG.save(deps.as_mut_deps().storage, &config).expect("could not save config");
+    let config = Config {
+        fee_recipient: Addr::unchecked(TEST_USER_ADDR),
+        admin: Addr::unchecked(TEST_USER_ADDR),
+    };
+    CONFIG
+        .save(deps.as_mut_deps().storage, &config)
+        .expect("could not save config");
 
-    let result = set_route(deps.as_mut(), &Addr::unchecked(TEST_CONTRACT_ADDR), base_denom.clone(), quote_denom.clone(), route.clone());
+    let result = set_route(
+        deps.as_mut(),
+        &Addr::unchecked(TEST_CONTRACT_ADDR),
+        base_denom.clone(),
+        quote_denom.clone(),
+        route,
+    );
 
     // Test that the function returned error
-    assert!(result.is_err(), "expected error");;
-    assert!(result.unwrap_err().to_string().contains("Unauthorized"), "wrong error message");
+    assert!(result.is_err(), "expected error");
+    assert!(
+        result.unwrap_err().to_string().contains("Unauthorized"),
+        "wrong error message"
+    );
 
     // Test that the correct route was stored
     let stored_route = read_swap_route(&deps.storage, &base_denom, &quote_denom).unwrap_err();
-    assert!(stored_route.to_string().contains("No swap route not found from eth to inj"), "wrong error message");
+    assert!(
+        stored_route
+            .to_string()
+            .contains("No swap route not found from eth to inj"),
+        "wrong error message"
+    );
 }

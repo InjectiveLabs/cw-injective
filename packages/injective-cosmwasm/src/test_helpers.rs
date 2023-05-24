@@ -1,5 +1,5 @@
 #[cfg(debug_assertions)]
-pub(crate) mod test_helpers {
+pub(crate) mod testing_helpers {
 
     use std::marker::PhantomData;
     use std::str::FromStr;
@@ -42,7 +42,6 @@ pub(crate) mod test_helpers {
         ]
     }
 
-
     pub fn inj_mock_env() -> Env {
         Env {
             block: BlockInfo {
@@ -58,18 +57,18 @@ pub(crate) mod test_helpers {
     }
 
     pub trait OwnedDepsExt<S, A, Q, C>
-        where
-            C: CustomQuery,
+    where
+        C: CustomQuery,
     {
         fn as_mut_deps(&mut self) -> DepsMut<C>;
     }
 
     impl<S, A, Q, C> OwnedDepsExt<S, A, Q, C> for OwnedDeps<S, A, Q, C>
-        where
-            S: Storage,
-            A: Api,
-            Q: Querier,
-            C: CustomQuery,
+    where
+        S: Storage,
+        A: Api,
+        Q: Querier,
+        C: CustomQuery,
     {
         fn as_mut_deps(&mut self) -> DepsMut<C> {
             return DepsMut {
@@ -81,8 +80,8 @@ pub(crate) mod test_helpers {
     }
 
     pub fn inj_mock_deps<F>(handlers_callback: F) -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQueryWrapper>
-        where
-            F: FnOnce(&mut WasmMockQuerier),
+    where
+        F: FnOnce(&mut WasmMockQuerier),
     {
         let mut custom_querier: WasmMockQuerier = WasmMockQuerier::new();
         handlers_callback(&mut custom_querier);

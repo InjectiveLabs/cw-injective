@@ -278,7 +278,10 @@ fn default_all_balances_bank_query_handler() -> QuerierResult {
 fn default_spot_market_orderbook_response_handler() -> QuerierResult {
     let response = QueryOrderbookResponse {
         buys_price_level: vec![PriceLevel::new(9u128.into(), 10u128.into()), PriceLevel::new(8u128.into(), 10u128.into())],
-        sells_price_level: vec![PriceLevel::new(11u128.into(), 10u128.into()), PriceLevel::new(12u128.into(), 10u128.into())],
+        sells_price_level: vec![
+            PriceLevel::new(11u128.into(), 10u128.into()),
+            PriceLevel::new(12u128.into(), 10u128.into()),
+        ],
     };
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
@@ -602,13 +605,7 @@ impl WasmMockQuerier {
                     Some(handler) => handler.handle(contract_address),
                     None => default_contract_registration_info_response_handler(),
                 },
-                InjectiveQuery::SpotOrderbook {
-                    order_side,
-                    
-                    
-                    market_id,
-                    ..
-                } => match &self.spot_market_orderbook_response_handler {
+                InjectiveQuery::SpotOrderbook { order_side, market_id, .. } => match &self.spot_market_orderbook_response_handler {
                     Some(handler) => handler.handle(market_id, order_side),
                     None => default_spot_market_orderbook_response_handler(),
                 },
@@ -692,16 +689,26 @@ impl TestDeposit {
 }
 
 pub mod handlers {
-    use std::collections::HashMap;
     use cosmwasm_std::{
         to_binary, AllBalanceResponse, BalanceResponse, Binary, Coin, ContractResult, QuerierResult, StdResult, SystemError, SystemResult, Uint128,
     };
+    use std::collections::HashMap;
 
     use injective_math::FPDecimal;
 
     use crate::exchange_mock_querier::{HandlesByAddressQuery, HandlesDenomSupplyQuery, HandlesFeeQuery};
-    use crate::query::{OraclePriceResponse, PricePairState, QueryContractRegistrationInfoResponse, QueryOrderbookResponse, RegisteredContract, TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
-    use crate::{exchange_mock_querier::TestCoin, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition, FullDerivativeMarket, FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery, HandlesSmartQuery, HandlesSubaccountAndDenomQuery, HandlesTraderSpotOrdersToCancelUpToAmountQuery, MarketId, MetadataStatistics, OracleVolatilityResponse, Position, QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarket, SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountId, SubaccountPositionInMarketResponse, TradeRecord, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder, TrimmedSpotLimitOrder, HandlesPriceLevelsQuery, OrderSide, PriceLevel};
+    use crate::query::{
+        OraclePriceResponse, PricePairState, QueryContractRegistrationInfoResponse, QueryOrderbookResponse, RegisteredContract,
+        TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse,
+    };
+    use crate::{
+        exchange_mock_querier::TestCoin, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition, FullDerivativeMarket,
+        FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery,
+        HandlesPriceLevelsQuery, HandlesSmartQuery, HandlesSubaccountAndDenomQuery, HandlesTraderSpotOrdersToCancelUpToAmountQuery, MarketId,
+        MetadataStatistics, OracleVolatilityResponse, OrderSide, Position, PriceLevel, QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarket,
+        SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountId, SubaccountPositionInMarketResponse,
+        TradeRecord, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder, TrimmedSpotLimitOrder,
+    };
     use crate::{
         HandlesBankAllBalancesQuery, HandlesBankBalanceQuery, HandlesTraderDerivativeOrdersToCancelUpToAmountQuery, MarketMidPriceAndTOBResponse,
         OracleType,
@@ -785,7 +792,7 @@ pub mod handlers {
 
     pub fn create_orderbook_response_handler(orderbooks: HashMap<MarketId, Vec<PriceLevel>>) -> Option<Box<dyn HandlesPriceLevelsQuery>> {
         struct Temp {
-            orderbooks: HashMap<MarketId, Vec<PriceLevel>>
+            orderbooks: HashMap<MarketId, Vec<PriceLevel>>,
         }
         impl HandlesPriceLevelsQuery for Temp {
             fn handle(&self, market_id: MarketId, order_side: OrderSide) -> QuerierResult {
@@ -795,8 +802,8 @@ pub mod handlers {
                 }
                 let price_levels = price_levels_opt.unwrap().clone();
                 let response = QueryOrderbookResponse {
-                    buys_price_level: if order_side != OrderSide::Sell { price_levels.clone() } else { vec![]},
-                    sells_price_level: if order_side != OrderSide::Buy { price_levels } else { vec![]},
+                    buys_price_level: if order_side != OrderSide::Sell { price_levels.clone() } else { vec![] },
+                    sells_price_level: if order_side != OrderSide::Buy { price_levels } else { vec![] },
                 };
                 SystemResult::Ok(ContractResult::from(to_binary(&response)))
             }

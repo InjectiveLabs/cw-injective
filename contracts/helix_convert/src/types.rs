@@ -2,9 +2,7 @@ use cosmwasm_std::{Addr, Coin};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use injective_cosmwasm::{
-    MarketId,
-};
+use injective_cosmwasm::MarketId;
 use injective_math::FPDecimal;
 
 pub struct ExecutionPrice {
@@ -75,7 +73,7 @@ pub struct SwapRoute {
 
 impl SwapRoute {
     pub fn steps_from(&self, denom: &str) -> Vec<MarketId> {
-        if &self.denom_1 == denom {
+        if self.denom_1 == denom {
             self.steps.clone()
         } else {
             let mut mut_steps = self.steps.clone();
@@ -83,11 +81,10 @@ impl SwapRoute {
             mut_steps
         }
     }
-
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SwapStep {
-    pub market_id : MarketId,
+    pub market_id: MarketId,
     pub quote_denom: String, // quote for this step of swap, eg for swpa eth/inj using eth/usdt and inj/usdt markets, quotes will be eth in 1st step and usdt in 2nd
 }

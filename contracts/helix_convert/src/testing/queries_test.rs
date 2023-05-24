@@ -19,7 +19,6 @@ fn test_calculate_swap_price() {
     let mut deps = mock_deps_eth_inj(MultiplierQueryBehaviour::Success);
     let admin = &Addr::unchecked(TEST_USER_ADDR);
 
-
     instantiate(
         deps.as_mut_deps(),
         mock_env(),

@@ -3,11 +3,18 @@ use cosmwasm_std::{QuerierWrapper, StdResult};
 use injective_math::FPDecimal;
 
 use crate::oracle::{OracleHistoryOptions, OracleInfo};
-use crate::query::{DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse, MarketVolatilityResponse, OraclePriceResponse, OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PythPriceResponse, QueryAggregateVolumeResponse, QueryContractRegistrationInfoResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse, QueryMarketAtomicExecutionFeeMultiplierResponse, QueryOrderbookResponse, SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse};
+use crate::query::{
+    DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse, MarketVolatilityResponse, OraclePriceResponse,
+    OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PythPriceResponse, QueryAggregateVolumeResponse,
+    QueryContractRegistrationInfoResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse, QueryMarketAtomicExecutionFeeMultiplierResponse,
+    QueryOrderbookResponse, SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse,
+    SubaccountPositionInMarketResponse, TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse,
+    TraderSpotOrdersResponse,
+};
 use crate::route::InjectiveRoute;
 use crate::volatility::TradeHistoryOptions;
-use crate::{OracleType, OrderSide};
 use crate::{MarketId, SubaccountId};
+use crate::{OracleType, OrderSide};
 
 pub struct InjectiveQuerier<'a> {
     querier: &'a QuerierWrapper<'a, InjectiveQueryWrapper>,
