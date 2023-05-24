@@ -1,14 +1,14 @@
-use std::str::FromStr;
+
 use cosmwasm_std::{Addr, Deps, Env, StdError, StdResult};
 
 use injective_cosmwasm::{InjectiveQuerier, InjectiveQueryWrapper, MarketId, OrderSide, PriceLevel, SpotMarket};
 use injective_math::utils::round_to_min_tick;
 use injective_math::FPDecimal;
-use crate::ContractError;
+
 
 use crate::helpers::counter_denom;
 use crate::state::{CONFIG, read_swap_route};
-use crate::types::{Config, FPCoin, StepExecutionEstimate};
+use crate::types::{FPCoin, StepExecutionEstimate};
 
 pub fn estimate_swap_result(
     deps: Deps<InjectiveQueryWrapper>,

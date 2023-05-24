@@ -7,16 +7,16 @@ use injective_std::types::injective::exchange::v1beta1::{
     MsgCreateSpotLimitOrder, MsgInstantSpotMarketLaunch, OrderInfo, OrderType,
     QuerySpotMarketsRequest, SpotOrder,
 };
-use injective_test_tube::{Account, Bank, Exchange, InjectiveTestApp, Module, RunnerExecuteResult, SigningAccount, Wasm};
+use injective_test_tube::{Account, Bank, Exchange, InjectiveTestApp, Module, SigningAccount, Wasm};
 use injective_std::types::cosmos::bank::v1beta1::{QueryAllBalancesRequest, QueryBalanceRequest};
-use injective_test_tube::cosmrs::proto::cosmwasm::wasm::v1::MsgExecuteContractResponse;
+
 use injective_cosmwasm::{
     create_mock_spot_market, create_orderbook_response_handler, create_spot_multi_market_handler,
     get_default_subaccount_id_for_checked_address, inj_mock_deps, InjectiveQueryWrapper, MarketId,
     PriceLevel, WasmMockQuerier, TEST_MARKET_ID_1, TEST_MARKET_ID_2,
 };
 use injective_math::FPDecimal;
-use crate::helpers::dec_scale_factor;
+
 use crate::msg::{ExecuteMsg, FeeRecipient, InstantiateMsg};
 
 pub const TEST_CONTRACT_ADDR: &str = "inj14hj2tavq8fpesdwxxcu44rty3hh90vhujaxlnz";
@@ -181,13 +181,13 @@ pub fn create_limit_order(
                     trigger_price: "".to_string(),
                 }),
             },
-            &trader,
+            trader,
         )
         .unwrap();
 }
 
 pub fn init_contract_and_get_address(wasm: &Wasm<InjectiveTestApp>, owner: &SigningAccount, initial_balance: &[Coin]) -> String {
-    let code_id = store_code(&wasm, &owner, "helix_converter".to_string());
+    let code_id = store_code(wasm, owner, "helix_converter".to_string());
     wasm
         .instantiate(
             code_id,
@@ -198,7 +198,7 @@ pub fn init_contract_and_get_address(wasm: &Wasm<InjectiveTestApp>, owner: &Sign
             Some(&owner.address()),
             Some("Swap"),
             initial_balance,
-            &owner,
+            owner,
         )
         .unwrap()
         .data
@@ -213,7 +213,7 @@ pub fn set_route_and_assert_success(wasm: &Wasm<InjectiveTestApp>, signer: &Sign
             denom_2: to_denom.to_string(),
             route,
         },
-        &vec![],
+        &[],
         signer,
     ).unwrap();
 }

@@ -1,15 +1,15 @@
 use std::str::FromStr;
 
-use cosmwasm_std::{coin, from_binary, Addr, Coin};
-use injective_std::types::cosmos::bank::v1beta1::{QueryAllBalancesRequest, QueryBalanceRequest};
-use injective_test_tube::{Account, Bank, Exchange, InjectiveTestApp, Module, Runner, RunnerError, RunnerResult, SigningAccount, Wasm};
-use injective_test_tube::RunnerError::{GenericError, QueryError};
+use cosmwasm_std::{coin};
 
-use injective_cosmwasm::MarketId;
+use injective_test_tube::{Account, Bank, Exchange, InjectiveTestApp, Module, Runner, RunnerError, RunnerResult, Wasm};
+use injective_test_tube::RunnerError::{QueryError};
+
+
 use injective_math::{FPDecimal, round_to_min_tick};
 
-use crate::msg::{ExecuteMsg, FeeRecipient, InstantiateMsg, QueryMsg};
-use crate::testing::test_utils::{create_limit_order, launch_spot_market, OrderSide, store_code, init_contract_and_get_address, must_init_account_with_funds, query_all_bank_balances, query_bank_balance, set_route_and_assert_success};
+use crate::msg::{ExecuteMsg, QueryMsg};
+use crate::testing::test_utils::{create_limit_order, launch_spot_market, OrderSide, init_contract_and_get_address, must_init_account_with_funds, query_all_bank_balances, query_bank_balance, set_route_and_assert_success};
 
 
 const ETH: &str = "eth";
@@ -52,22 +52,22 @@ fn happy_path_two_hops_swap() {
 
     let trader1 =must_init_account_with_funds(&app,&[
             coin(10_000_000_000_000_000_000_000_000, ETH),
-            coin(123456_000_000_000_000_000_000_000_000, USDT),
-            coin(9999_000_000_000_000_000_000_000_000, ATOM),
+            coin(123_456_000_000_000_000_000_000_000_000, USDT),
+            coin(9_999_000_000_000_000_000_000_000_000, ATOM),
             coin(10_000_000_000_000_000_000_000_000, INJ),
         ]);
 
     let trader2 = must_init_account_with_funds(&app,&[
             coin(10_000_000_000_000_000_000_000_000, ETH),
-            coin(123456_000_000_000_000_000_000_000_000, USDT),
-            coin(9999_000_000_000_000_000_000_000_000, ATOM),
+            coin(123_456_000_000_000_000_000_000_000_000, USDT),
+            coin(9_999_000_000_000_000_000_000_000_000, ATOM),
             coin(10_000_000_000_000_000_000_000_000, INJ),
         ]);
 
     let trader3 = must_init_account_with_funds(&app,&[
             coin(10_000_000_000_000_000_000_000_000, ETH),
-            coin(123456_000_000_000_000_000_000_000_000, USDT),
-            coin(9999_000_000_000_000_000_000_000_000, ATOM),
+            coin(123_456_000_000_000_000_000_000_000_000, USDT),
+            coin(9_999_000_000_000_000_000_000_000_000, ATOM),
             coin(10_000_000_000_000_000_000_000_000, INJ),
         ]);
 
@@ -109,7 +109,7 @@ fn happy_path_two_hops_swap() {
             target_denom: ATOM.to_string(),
             min_quantity: FPDecimal::from(2800u128),
         },
-        &vec![coin(12, ETH)],
+        &[coin(12, ETH)],
         &swapper,
     )
     .unwrap();
@@ -150,13 +150,13 @@ fn happy_path_simple_sell_swap() {
 
     let trader1 =must_init_account_with_funds(&app,&[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
     let trader2 = must_init_account_with_funds(&app,&[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
@@ -193,7 +193,7 @@ fn happy_path_simple_sell_swap() {
             target_denom: USDT.to_string(),
             min_quantity: FPDecimal::from(2357458u128),
         },
-        &vec![coin(12, ETH)],
+        &[coin(12, ETH)],
         &swapper,
     )
         .unwrap();
@@ -236,23 +236,24 @@ fn happy_path_simple_buy_swap() {
 
     let trader1 = must_init_account_with_funds(&app,&[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
     let trader2 = must_init_account_with_funds(&app,&[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
-    create_limit_order(&app, &trader1, &spot_market_1_id, OrderSide::Sell, 201_000, 5);
+    create_limit_order(&app, &trader1, &spot_market_1_id, OrderSide::Sell, 201_000, 6);
     create_limit_order(&app, &trader2, &spot_market_1_id, OrderSide::Sell, 195_000, 4);
     create_limit_order(&app, &trader2, &spot_market_1_id, OrderSide::Sell, 192_000, 3);
 
     app.increase_time(1);
 
-    let swapper_usdt = 2_360_995;
+    // let swapper_usdt = 2_360_995;
+    let swapper_usdt : u128 = (FPDecimal::from(2_362_014u128) * FPDecimal::from_str("1.0015").unwrap()).into();
     let swapper = must_init_account_with_funds(&app,&[
         coin(swapper_usdt, USDT),
         coin(5_000_000_000_000_000_000_000_000_000, INJ),
@@ -264,7 +265,7 @@ fn happy_path_simple_buy_swap() {
     println!("usdt_left_for_most_expensive_order: {}", usdt_left_for_most_expensive_order);
     let most_expensive_order_quantity = usdt_left_for_most_expensive_order / FPDecimal::from(201000u128);
     println!("most_expensive_order_quantity: {}", most_expensive_order_quantity);
-    let mut expected_quantity = most_expensive_order_quantity + (FPDecimal::from(4u128) + FPDecimal::from(3u128));
+    let expected_quantity = most_expensive_order_quantity + (FPDecimal::from(4u128) + FPDecimal::from(3u128));
     println!("expected_quantity: {}", expected_quantity);
     let expected_quantity_rounded = round_to_min_tick(
         expected_quantity,
@@ -294,7 +295,7 @@ fn happy_path_simple_buy_swap() {
             target_denom: ETH.to_string(),
             min_quantity: FPDecimal::from(11u128),
         },
-        &vec![coin(swapper_usdt, USDT)],
+        &[coin(swapper_usdt, USDT)],
         &swapper,
     )
         .unwrap();
@@ -349,22 +350,22 @@ fn not_enough_buffer() {
 
     let trader1 = must_init_account_with_funds(&app, &[
             coin(10_000_000_000_000_000_000_000_000, ETH),
-            coin(123456_000_000_000_000_000_000_000_000, USDT),
-            coin(9999_000_000_000_000_000_000_000_000, ATOM),
+            coin(123_456_000_000_000_000_000_000_000_000, USDT),
+            coin(9_999_000_000_000_000_000_000_000_000, ATOM),
             coin(10_000_000_000_000_000_000_000_000, INJ),
         ]);
 
     let trader2 = must_init_account_with_funds(&app, &[
             coin(10_000_000_000_000_000_000_000_000, ETH),
-            coin(123456_000_000_000_000_000_000_000_000, USDT),
-            coin(9999_000_000_000_000_000_000_000_000, ATOM),
+            coin(123_456_000_000_000_000_000_000_000_000, USDT),
+            coin(9_999_000_000_000_000_000_000_000_000, ATOM),
             coin(10_000_000_000_000_000_000_000_000, INJ),
         ]);
 
     let trader3 = must_init_account_with_funds(&app, &[
             coin(10_000_000_000_000_000_000_000_000, ETH),
-            coin(123456_000_000_000_000_000_000_000_000, USDT),
-            coin(9999_000_000_000_000_000_000_000_000, ATOM),
+            coin(123_456_000_000_000_000_000_000_000_000, USDT),
+            coin(9_999_000_000_000_000_000_000_000_000, ATOM),
             coin(10_000_000_000_000_000_000_000_000, INJ),
         ]);
 
@@ -405,7 +406,7 @@ fn not_enough_buffer() {
             target_denom: ATOM.to_string(),
             min_quantity: FPDecimal::from(2800u128),
         },
-        &vec![coin(12, ETH)],
+        &[coin(12, ETH)],
         &swapper,
     );
     let expected_error = RunnerError::ExecuteError {msg: "failed to execute message; message index: 0: dispatch: submessages: reply: Generic error: Swap amount too high: execute wasm contract failed".to_string()};
@@ -451,22 +452,22 @@ fn no_funds_passed() {
 
     let trader1 = must_init_account_with_funds(&app, &[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
-        coin(9999_000_000_000_000_000_000_000_000, ATOM),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
+        coin(9_999_000_000_000_000_000_000_000_000, ATOM),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
     let trader2 = must_init_account_with_funds(&app, &[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
-        coin(9999_000_000_000_000_000_000_000_000, ATOM),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
+        coin(9_999_000_000_000_000_000_000_000_000, ATOM),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
     let trader3 = must_init_account_with_funds(&app, &[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
-        coin(9999_000_000_000_000_000_000_000_000, ATOM),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
+        coin(9_999_000_000_000_000_000_000_000_000, ATOM),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
@@ -507,7 +508,7 @@ fn no_funds_passed() {
             target_denom: ATOM.to_string(),
             min_quantity: FPDecimal::from(2800u128),
         },
-        &vec![],
+        &[],
         &swapper,
     );
     let expected_error = RunnerError::ExecuteError {msg: "failed to execute message; message index: 0: Custom Error val: \"Wrong amount of funds deposited!\": execute wasm contract failed".to_string()};
@@ -553,22 +554,22 @@ fn zero_minimum_amount_to_receive() {
 
     let trader1 = must_init_account_with_funds(&app, &[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
-        coin(9999_000_000_000_000_000_000_000_000, ATOM),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
+        coin(9_999_000_000_000_000_000_000_000_000, ATOM),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
     let trader2 = must_init_account_with_funds(&app, &[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
-        coin(9999_000_000_000_000_000_000_000_000, ATOM),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
+        coin(9_999_000_000_000_000_000_000_000_000, ATOM),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
     let trader3 = must_init_account_with_funds(&app, &[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
-        coin(9999_000_000_000_000_000_000_000_000, ATOM),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
+        coin(9_999_000_000_000_000_000_000_000_000, ATOM),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
@@ -609,7 +610,7 @@ fn zero_minimum_amount_to_receive() {
             target_denom: ATOM.to_string(),
             min_quantity: FPDecimal::zero(),
         },
-        &vec![coin(12, ETH)],
+        &[coin(12, ETH)],
         &swapper,
     )
         .unwrap();
@@ -654,22 +655,22 @@ fn not_enough_orders_to_satisfy_min_quantity() {
 
     let trader1 =must_init_account_with_funds(&app,&[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
-        coin(9999_000_000_000_000_000_000_000_000, ATOM),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
+        coin(9_999_000_000_000_000_000_000_000_000, ATOM),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
     let trader2 = must_init_account_with_funds(&app,&[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
-        coin(9999_000_000_000_000_000_000_000_000, ATOM),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
+        coin(9_999_000_000_000_000_000_000_000_000, ATOM),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
     let trader3 = must_init_account_with_funds(&app,&[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
-        coin(9999_000_000_000_000_000_000_000_000, ATOM),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
+        coin(9_999_000_000_000_000_000_000_000_000, ATOM),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
@@ -710,7 +711,7 @@ fn not_enough_orders_to_satisfy_min_quantity() {
             target_denom: ATOM.to_string(),
             min_quantity: FPDecimal::from(2800u128),
         },
-        &vec![coin(12, ETH)],
+        &[coin(12, ETH)],
         &swapper,
     );
 
@@ -756,22 +757,22 @@ fn no_known_route_exists() {
 
     let trader1 =must_init_account_with_funds(&app,&[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
-        coin(9999_000_000_000_000_000_000_000_000, ATOM),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
+        coin(9_999_000_000_000_000_000_000_000_000, ATOM),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
     let trader2 = must_init_account_with_funds(&app,&[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
-        coin(9999_000_000_000_000_000_000_000_000, ATOM),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
+        coin(9_999_000_000_000_000_000_000_000_000, ATOM),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
     let trader3 = must_init_account_with_funds(&app,&[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
-        coin(9999_000_000_000_000_000_000_000_000, ATOM),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
+        coin(9_999_000_000_000_000_000_000_000_000, ATOM),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
@@ -812,7 +813,7 @@ fn no_known_route_exists() {
             target_denom: ATOM.to_string(),
             min_quantity: FPDecimal::from(2800u128),
         },
-        &vec![coin(12, ETH)],
+        &[coin(12, ETH)],
         &swapper,
     );
 
@@ -858,22 +859,22 @@ fn route_exists_but_market_does_not() {
 
     let trader1 = must_init_account_with_funds(&app,&[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
-        coin(9999_000_000_000_000_000_000_000_000, ATOM),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
+        coin(9_999_000_000_000_000_000_000_000_000, ATOM),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
     let trader2 = must_init_account_with_funds(&app,&[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
-        coin(9999_000_000_000_000_000_000_000_000, ATOM),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
+        coin(9_999_000_000_000_000_000_000_000_000, ATOM),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
-    let trader3 = must_init_account_with_funds(&app,&[
+    let _trader3 = must_init_account_with_funds(&app,&[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
-        coin(9999_000_000_000_000_000_000_000_000, ATOM),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
+        coin(9_999_000_000_000_000_000_000_000_000, ATOM),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
@@ -909,7 +910,7 @@ fn route_exists_but_market_does_not() {
             target_denom: ATOM.to_string(),
             min_quantity: FPDecimal::from(2800u128),
         },
-        &vec![coin(12, ETH)],
+        &[coin(12, ETH)],
         &swapper,
     );
 
@@ -957,22 +958,22 @@ fn paused_market() {
 
     let trader1 =must_init_account_with_funds(&app,&[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
-        coin(9999_000_000_000_000_000_000_000_000, ATOM),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
+        coin(9_999_000_000_000_000_000_000_000_000, ATOM),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
     let trader2 = must_init_account_with_funds(&app,&[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
-        coin(9999_000_000_000_000_000_000_000_000, ATOM),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
+        coin(9_999_000_000_000_000_000_000_000_000, ATOM),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
     let trader3 = must_init_account_with_funds(&app,&[
         coin(10_000_000_000_000_000_000_000_000, ETH),
-        coin(123456_000_000_000_000_000_000_000_000, USDT),
-        coin(9999_000_000_000_000_000_000_000_000, ATOM),
+        coin(123_456_000_000_000_000_000_000_000_000, USDT),
+        coin(9_999_000_000_000_000_000_000_000_000, ATOM),
         coin(10_000_000_000_000_000_000_000_000, INJ),
     ]);
 
@@ -1014,7 +1015,7 @@ fn paused_market() {
             target_denom: ATOM.to_string(),
             min_quantity: FPDecimal::from(2800u128),
         },
-        &vec![coin(12, ETH)],
+        &[coin(12, ETH)],
         &swapper,
     )
         .unwrap();
