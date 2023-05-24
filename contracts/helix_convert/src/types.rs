@@ -33,6 +33,7 @@ impl From<Coin> for FPCoin {
     }
 }
 
+#[derive(Debug)]
 pub struct StepExecutionEstimate {
     pub worst_price: FPDecimal,
     pub result_denom: String,

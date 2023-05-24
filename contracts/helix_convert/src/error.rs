@@ -10,7 +10,7 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
-    #[error("Custom Error val: {val:?}")]
+    #[error("Custom Error: {val:?}")]
     CustomError { val: String },
 
     #[error("Failure response from submsg: {0}")]

@@ -116,7 +116,7 @@ pub fn start_swap_flow(
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     if info.funds.len() != 1 {
         return Err(ContractError::CustomError {
-            val: "Wrong amount of funds deposited!".to_string(),
+            val: "Only 1 denom can be passed in funds".to_string(),
         });
     }
     if min_target_quantity.is_negative() || min_target_quantity.is_zero() {
@@ -149,7 +149,7 @@ fn execute_swap_step(
     env: Env,
     swap_operation: CurrentSwapOperation,
     step_idx: u16,
-    current_balance: FPCoin,
+    current_balance: FPCoin
 ) -> StdResult<Response<InjectiveMsgWrapper>> {
     let market_id = swap_operation.swap_steps[usize::from(step_idx)].clone();
     let contract = &env.contract.address;
@@ -158,6 +158,8 @@ fn execute_swap_step(
     let estimation =
         estimate_single_swap_execution(&deps.as_ref(), &env, &market_id, current_balance.clone())?;
     // TODO: add handling of supporting funds
+
+    let fee_recipient = &CONFIG.load(deps.storage)?.fee_recipient;
 
     let order = SpotOrder::new(
         estimation.worst_price,
@@ -173,7 +175,7 @@ fn execute_swap_step(
         },
         &market_id,
         subaccount_id,
-        Some(contract.to_owned()),
+        Some(fee_recipient.to_owned()),
     );
 
     let order_message = SubMsg::reply_on_success(

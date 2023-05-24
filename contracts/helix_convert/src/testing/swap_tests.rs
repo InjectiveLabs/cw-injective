@@ -2,13 +2,11 @@
 
 use std::str::FromStr;
 
-use cosmwasm_std::testing::{mock_info};
-use cosmwasm_std::{
-    coins, Addr, BankMsg, Binary,
-    CosmosMsg, Reply, SubMsgResponse, SubMsgResult, Uint128,
-};
+use cosmwasm_std::testing::{mock_env, mock_info};
+use cosmwasm_std::{coins, Addr, BankMsg, Binary, CosmosMsg, Reply, SubMsgResponse, SubMsgResult, Uint128, Coin};
+use cosmwasm_std::StdError::GenericErr;
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
-use injective_cosmwasm::{get_default_subaccount_id_for_checked_address, inj_mock_env, InjectiveRoute, OrderInfo, OrderType, OwnedDepsExt, SpotOrder, TEST_MARKET_ID_1, TEST_MARKET_ID_2};
+use injective_cosmwasm::{get_default_subaccount_id_for_checked_address, inj_mock_env, InjectiveRoute, MarketId, OrderInfo, OrderType, OwnedDepsExt, SpotOrder, TEST_MARKET_ID_1, TEST_MARKET_ID_2};
 use injective_math::FPDecimal;
 use injective_protobuf::proto::tx::{MsgCreateSpotMarketOrderResponse, SpotMarketOrderResults};
 
@@ -16,15 +14,21 @@ use crate::contract::{reply, ATOMIC_ORDER_REPLY_ID, set_route, start_swap_flow};
 use crate::helpers::{get_message_data, i32_to_dec};
 
 
-use crate::testing::test_utils::{mock_deps_eth_inj, TEST_CONTRACT_ADDR, TEST_USER_ADDR};
+use crate::testing::test_utils::{mock_deps_eth_inj, MultiplierQueryBehaviour, TEST_CONTRACT_ADDR, TEST_USER_ADDR};
 use protobuf::Message;
+use crate::queries::{estimate_single_swap_execution, estimate_swap_result};
+use crate::state::CONFIG;
+use crate::types::{Config, FPCoin};
 
 
 #[test]
 fn test_swap_2_markets() {
-    let deps_binding = mock_deps_eth_inj();
-
+    let deps_binding = mock_deps_eth_inj(MultiplierQueryBehaviour::Success);
     let mut deps = deps_binding;
+
+    let config = Config{ fee_recipient: Addr::unchecked(TEST_CONTRACT_ADDR), admin: Addr::unchecked(TEST_USER_ADDR) };
+    CONFIG.save(deps.as_mut_deps().storage, &config).expect("could not save config");
+
     set_route(deps.as_mut_deps(), &Addr::unchecked(TEST_USER_ADDR),"eth".to_string(), "inj".to_string(), vec![TEST_MARKET_ID_1.into(), TEST_MARKET_ID_2.into()]).unwrap();
 
     let info = mock_info(TEST_USER_ADDR, &coins(12, "eth"));
@@ -129,5 +133,26 @@ fn test_swap_2_markets() {
     } else {
         panic!("Wrong message type!");
     }
+}
+
+#[test]
+fn failing_multiplier_query() {
+    let env = mock_env();
+    let deps_binding = mock_deps_eth_inj(MultiplierQueryBehaviour::Fail);
+    let mut deps = deps_binding;
+
+    let config = Config{ fee_recipient: Addr::unchecked(TEST_USER_ADDR), admin: Addr::unchecked(TEST_USER_ADDR) };
+    CONFIG.save(deps.as_mut_deps().storage, &config).expect("could not save config");
+
+    set_route(deps.as_mut_deps(), &Addr::unchecked(TEST_USER_ADDR),"eth".to_string(), "inj".to_string(), vec![TEST_MARKET_ID_1.into(), TEST_MARKET_ID_2.into()]).unwrap();
+
+    let response_1 = estimate_single_swap_execution(
+    &deps.as_mut_deps().as_ref(),
+        &env,
+        &MarketId::unchecked(TEST_MARKET_ID_1.to_string()),
+    FPCoin::from(Coin::new(1000000000000000000u128, "eth".to_string())));
+
+    assert!(response_1.is_err(), "should have failed");
+    assert!(response_1.unwrap_err().to_string().contains("Querier system error: Unknown system error"), "wrong error message");
 }
 
