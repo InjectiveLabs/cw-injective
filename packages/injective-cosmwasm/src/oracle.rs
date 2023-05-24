@@ -31,12 +31,10 @@ pub struct OracleVolatilityResponse {
 
 #[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema, Copy, Default)]
 #[repr(i32)]
-#[derive(Default)]
 pub enum OracleType {
     #[default]
     Unspecified = 0,
     Band = 1,
-    #[default]
     PriceFeed = 2,
     Coinbase = 3,
     Chainlink = 4,
