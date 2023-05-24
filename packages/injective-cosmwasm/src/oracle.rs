@@ -1,5 +1,4 @@
 use crate::volatility::{MetadataStatistics, TradeRecord};
-use crate::Hash;
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -32,6 +31,7 @@ pub struct OracleVolatilityResponse {
 
 #[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema, Copy, Default)]
 #[repr(i32)]
+#[derive(Default)]
 pub enum OracleType {
     #[default]
     Unspecified = 0,
@@ -52,7 +52,7 @@ pub enum OracleType {
 pub struct PriceAttestation {
     pub product_id: String,
     // pub price_id: Hash,
-    pub price_id: Hash,
+    pub price_id: String,
     pub price: i64,
     pub conf: u64,
     pub expo: i32,
