@@ -51,6 +51,7 @@ pub enum OracleType {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PriceAttestation {
     pub product_id: String,
+    // pub price_id: Hash,
     pub price_id: Hash,
     pub price: i64,
     pub conf: u64,
