@@ -3,8 +3,9 @@ use osmosis_std_derive::CosmwasmExt;
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.Params")]
 pub struct Params {
-    /// default_redemption_notice_period_duration defines the default minimum notice period duration that must pass after an underwriter sends
-    /// a redemption request before the underwriter can claim his tokens
+    /// default_redemption_notice_period_duration defines the default minimum
+    /// notice period duration that must pass after an underwriter sends a
+    /// redemption request before the underwriter can claim his tokens
     #[prost(message, optional, tag = "1")]
     pub default_redemption_notice_period_duration: ::core::option::Option<crate::shim::Duration>,
 }
@@ -18,8 +19,9 @@ pub struct InsuranceFund {
     /// insurance fund pool token denomination for the given insurance fund
     #[prost(string, tag = "2")]
     pub insurance_pool_token_denom: ::prost::alloc::string::String,
-    /// redemption_notice_period_duration defines the minimum notice period duration that must pass after an underwriter sends
-    /// a redemption request before the underwriter can claim his tokens
+    /// redemption_notice_period_duration defines the minimum notice period
+    /// duration that must pass after an underwriter sends a redemption request
+    /// before the underwriter can claim his tokens
     #[prost(message, optional, tag = "3")]
     pub redemption_notice_period_duration: ::core::option::Option<crate::shim::Duration>,
     /// balance of fund
@@ -35,10 +37,12 @@ pub struct InsuranceFund {
     /// ticker of the derivative market
     #[prost(string, tag = "7")]
     pub market_ticker: ::prost::alloc::string::String,
-    /// Oracle base currency of the derivative market OR the oracle symbol for the binary options market.
+    /// Oracle base currency of the derivative market OR the oracle symbol for the
+    /// binary options market.
     #[prost(string, tag = "8")]
     pub oracle_base: ::prost::alloc::string::String,
-    /// Oracle quote currency of the derivative market OR the oracle provider for the binary options market.
+    /// Oracle quote currency of the derivative market OR the oracle provider for
+    /// the binary options market.
     #[prost(string, tag = "9")]
     pub oracle_quote: ::prost::alloc::string::String,
     /// Oracle type of the binary options or derivative market
@@ -48,7 +52,8 @@ pub struct InsuranceFund {
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
     pub oracle_type: i32,
-    /// Expiration time of the derivative market. Should be -1 for perpetual or -2 for binary options markets.
+    /// Expiration time of the derivative market. Should be -1 for perpetual or -2
+    /// for binary options markets.
     #[prost(int64, tag = "11")]
     #[serde(
         serialize_with = "crate::serde::as_str::serialize",
@@ -133,14 +138,15 @@ pub struct GenesisState {
     /// params defines all the parameters of related to insurance.
     #[prost(message, optional, tag = "1")]
     pub params: ::core::option::Option<Params>,
-    /// insurance_funds describes the insurance funds available for derivative markets
+    /// insurance_funds describes the insurance funds available for derivative
+    /// markets
     #[prost(message, repeated, tag = "2")]
     pub insurance_funds: ::prost::alloc::vec::Vec<InsuranceFund>,
     /// redemption_schedule describes the redemption requests pending
     #[prost(message, repeated, tag = "3")]
     pub redemption_schedule: ::prost::alloc::vec::Vec<RedemptionSchedule>,
-    /// next_share_denom_id describes the next share denom id to be used for newly creating insurance fund
-    /// incremented by 1 per insurance fund creation
+    /// next_share_denom_id describes the next share denom id to be used for newly
+    /// creating insurance fund incremented by 1 per insurance fund creation
     #[prost(uint64, tag = "4")]
     #[serde(alias = "next_share_denomID")]
     #[serde(
@@ -148,8 +154,8 @@ pub struct GenesisState {
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
     pub next_share_denom_id: u64,
-    /// next_redemption_schedule_id describes next redemption schedule id to be used for next schedule
-    /// incremented by 1 per redemption request
+    /// next_redemption_schedule_id describes next redemption schedule id to be
+    /// used for next schedule incremented by 1 per redemption request
     #[prost(uint64, tag = "5")]
     #[serde(alias = "next_redemption_scheduleID")]
     #[serde(
@@ -158,7 +164,8 @@ pub struct GenesisState {
     )]
     pub next_redemption_schedule_id: u64,
 }
-/// QueryInsuranceParamsRequest is the request type for the Query/InsuranceParams RPC method.
+/// QueryInsuranceParamsRequest is the request type for the Query/InsuranceParams
+/// RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.QueryInsuranceParamsRequest")]
@@ -167,7 +174,8 @@ pub struct GenesisState {
     response_type = QueryInsuranceParamsResponse
 )]
 pub struct QueryInsuranceParamsRequest {}
-/// QueryInsuranceParamsRequest is the response type for the Query/InsuranceParams RPC method.
+/// QueryInsuranceParamsRequest is the response type for the
+/// Query/InsuranceParams RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.QueryInsuranceParamsResponse")]
@@ -175,7 +183,8 @@ pub struct QueryInsuranceParamsResponse {
     #[prost(message, optional, tag = "1")]
     pub params: ::core::option::Option<Params>,
 }
-/// QueryInsuranceFundRequest is the request type for the Query/InsuranceFunds RPC method.
+/// QueryInsuranceFundRequest is the request type for the Query/InsuranceFunds
+/// RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.QueryInsuranceFundRequest")]
@@ -189,7 +198,8 @@ pub struct QueryInsuranceFundRequest {
     #[serde(alias = "marketID")]
     pub market_id: ::prost::alloc::string::String,
 }
-/// QueryInsuranceFundResponse is the response type for the Query/InsuranceFund RPC method.
+/// QueryInsuranceFundResponse is the response type for the Query/InsuranceFund
+/// RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.QueryInsuranceFundResponse")]
@@ -197,7 +207,8 @@ pub struct QueryInsuranceFundResponse {
     #[prost(message, optional, tag = "1")]
     pub fund: ::core::option::Option<InsuranceFund>,
 }
-/// QueryInsuranceFundsRequest is the request type for the Query/InsuranceFunds RPC method.
+/// QueryInsuranceFundsRequest is the request type for the Query/InsuranceFunds
+/// RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.QueryInsuranceFundsRequest")]
@@ -206,7 +217,8 @@ pub struct QueryInsuranceFundResponse {
     response_type = QueryInsuranceFundsResponse
 )]
 pub struct QueryInsuranceFundsRequest {}
-/// QueryInsuranceFundsResponse is the response type for the Query/InsuranceFunds RPC method.
+/// QueryInsuranceFundsResponse is the response type for the Query/InsuranceFunds
+/// RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.QueryInsuranceFundsResponse")]
@@ -214,7 +226,8 @@ pub struct QueryInsuranceFundsResponse {
     #[prost(message, repeated, tag = "1")]
     pub funds: ::prost::alloc::vec::Vec<InsuranceFund>,
 }
-/// QueryEstimatedRedemptionsRequest is the request type for the Query/EstimatedRedemptions RPC method.
+/// QueryEstimatedRedemptionsRequest is the request type for the
+/// Query/EstimatedRedemptions RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.QueryEstimatedRedemptionsRequest")]
@@ -229,7 +242,8 @@ pub struct QueryEstimatedRedemptionsRequest {
     #[prost(string, tag = "2")]
     pub address: ::prost::alloc::string::String,
 }
-/// QueryEstimatedRedemptionsResponse is the response type for the Query/EstimatedRedemptions RPC method.
+/// QueryEstimatedRedemptionsResponse is the response type for the
+/// Query/EstimatedRedemptions RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.QueryEstimatedRedemptionsResponse")]
@@ -237,7 +251,8 @@ pub struct QueryEstimatedRedemptionsResponse {
     #[prost(message, repeated, tag = "1")]
     pub amount: ::prost::alloc::vec::Vec<super::super::super::cosmos::base::v1beta1::Coin>,
 }
-/// QueryPendingRedemptionsRequest is the request type for the Query/PendingRedemptions RPC method.
+/// QueryPendingRedemptionsRequest is the request type for the
+/// Query/PendingRedemptions RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.QueryPendingRedemptionsRequest")]
@@ -252,7 +267,8 @@ pub struct QueryPendingRedemptionsRequest {
     #[prost(string, tag = "2")]
     pub address: ::prost::alloc::string::String,
 }
-/// QueryPendingRedemptionsResponse is the response type for the Query/PendingRedemptions RPC method.
+/// QueryPendingRedemptionsResponse is the response type for the
+/// Query/PendingRedemptions RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.QueryPendingRedemptionsResponse")]
@@ -260,7 +276,8 @@ pub struct QueryPendingRedemptionsResponse {
     #[prost(message, repeated, tag = "1")]
     pub amount: ::prost::alloc::vec::Vec<super::super::super::cosmos::base::v1beta1::Coin>,
 }
-/// QueryModuleStateRequest is the request type for the Query/InsuranceModuleState RPC method.
+/// QueryModuleStateRequest is the request type for the
+/// Query/InsuranceModuleState RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.QueryModuleStateRequest")]
@@ -269,7 +286,8 @@ pub struct QueryPendingRedemptionsResponse {
     response_type = QueryModuleStateResponse
 )]
 pub struct QueryModuleStateRequest {}
-/// QueryModuleStateResponse is the response type for the Query/InsuranceModuleState RPC method.
+/// QueryModuleStateResponse is the response type for the
+/// Query/InsuranceModuleState RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.QueryModuleStateResponse")]
@@ -277,7 +295,8 @@ pub struct QueryModuleStateResponse {
     #[prost(message, optional, tag = "1")]
     pub state: ::core::option::Option<GenesisState>,
 }
-/// MsgCreateInsuranceFund a message to create an insurance fund for a derivative market.
+/// MsgCreateInsuranceFund a message to create an insurance fund for a derivative
+/// market.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.MsgCreateInsuranceFund")]
@@ -291,10 +310,12 @@ pub struct MsgCreateInsuranceFund {
     /// Coin denom to use for the market quote denom
     #[prost(string, tag = "3")]
     pub quote_denom: ::prost::alloc::string::String,
-    /// Oracle base currency of the derivative market OR the oracle symbol for the binary options market.
+    /// Oracle base currency of the derivative market OR the oracle symbol for the
+    /// binary options market.
     #[prost(string, tag = "4")]
     pub oracle_base: ::prost::alloc::string::String,
-    /// Oracle quote currency of the derivative market OR the oracle provider for the binary options market.
+    /// Oracle quote currency of the derivative market OR the oracle provider for
+    /// the binary options market.
     #[prost(string, tag = "5")]
     pub oracle_quote: ::prost::alloc::string::String,
     /// Oracle type of the binary options or derivative market
@@ -304,7 +325,8 @@ pub struct MsgCreateInsuranceFund {
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
     pub oracle_type: i32,
-    /// Expiration time of the derivative market. Should be -1 for perpetual or -2 for binary options markets.
+    /// Expiration time of the derivative market. Should be -1 for perpetual or -2
+    /// for binary options markets.
     #[prost(int64, tag = "7")]
     #[serde(
         serialize_with = "crate::serde::as_str::serialize",
@@ -319,7 +341,8 @@ pub struct MsgCreateInsuranceFund {
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.MsgCreateInsuranceFundResponse")]
 pub struct MsgCreateInsuranceFundResponse {}
-/// MsgUnderwrite defines a message for depositing coins to underwrite an insurance fund
+/// MsgUnderwrite defines a message for depositing coins to underwrite an
+/// insurance fund
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.MsgUnderwrite")]
@@ -339,7 +362,8 @@ pub struct MsgUnderwrite {
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.MsgUnderwriteResponse")]
 pub struct MsgUnderwriteResponse {}
-/// MsgRequestRedemption defines a message for requesting a redemption of the sender's insurance fund tokens
+/// MsgRequestRedemption defines a message for requesting a redemption of the
+/// sender's insurance fund tokens
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.MsgRequestRedemption")]
@@ -359,6 +383,23 @@ pub struct MsgRequestRedemption {
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.MsgRequestRedemptionResponse")]
 pub struct MsgRequestRedemptionResponse {}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.insurance.v1beta1.MsgUpdateParams")]
+pub struct MsgUpdateParams {
+    /// authority is the address of the governance account.
+    #[prost(string, tag = "1")]
+    pub authority: ::prost::alloc::string::String,
+    /// params defines the insurance parameters to update.
+    ///
+    /// NOTE: All parameters must be supplied.
+    #[prost(message, optional, tag = "2")]
+    pub params: ::core::option::Option<Params>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.insurance.v1beta1.MsgUpdateParamsResponse")]
+pub struct MsgUpdateParamsResponse {}
 pub struct InsuranceQuerier<'a, Q: cosmwasm_std::CustomQuery> {
     querier: &'a cosmwasm_std::QuerierWrapper<'a, Q>,
 }

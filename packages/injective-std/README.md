@@ -8,7 +8,7 @@ Injective's proto-generated types and helpers built using [Buf](https://github.c
 
 ## Supported Version
 
-* Injective-Core@ec1275973bcf46297753535552a0cf5544a820ae
+* Injective-Core@5a3be66a43c10675356aa6cace331da8a28990b2
 
 ## Build Instructions
 
