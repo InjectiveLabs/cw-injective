@@ -5,6 +5,7 @@ use injective_cosmwasm::{InjectiveQuerier, InjectiveQueryWrapper, MarketId, Orde
 use injective_math::utils::round_to_min_tick;
 use injective_math::FPDecimal;
 use crate::ContractError;
+use crate::ContractError::CustomError;
 
 use crate::helpers::counter_denom;
 use crate::state::{CONFIG, read_swap_route};
@@ -17,6 +18,9 @@ pub fn estimate_swap_result(
     quantity: FPDecimal,
     to_denom: String,
 ) -> StdResult<FPDecimal> {
+    if quantity.is_zero() || quantity.is_negative() {
+        return Err(StdError::generic_err("from_quantity must be positive"));
+    }
     let route = read_swap_route(deps.storage, &from_denom, &to_denom)?;
     let steps = route.steps_from(&from_denom);
     let mut current_swap = FPCoin {
@@ -67,7 +71,7 @@ pub fn estimate_single_swap_execution(
     let fee_multiplier = querier
         .query_market_atomic_execution_fee_multiplier(market_id)?
         .multiplier;
-    let fee_percent = market.taker_fee_rate * fee_multiplier * (FPDecimal::one() - relayer_fee_share_rate(&market, is_self_relayer));
+    let fee_percent = market.taker_fee_rate * fee_multiplier * (FPDecimal::one() - effective_fee_discount_rate(&market, is_self_relayer));
     deps.api.debug(&format!(
         "market.taker_fee_rate: {}, multiplier: {}, final Fee percent: {}",
         market.taker_fee_rate, fee_multiplier, fee_percent,
@@ -239,9 +243,9 @@ fn worst_price(levels: &Vec<PriceLevel>) -> FPDecimal {
     levels.last().unwrap().p // assume there's at least one element
 }
 
-fn relayer_fee_share_rate(market: &SpotMarket, is_self_relayer: bool) -> FPDecimal {
+fn effective_fee_discount_rate(market: &SpotMarket, is_self_relayer: bool) -> FPDecimal {
     if !is_self_relayer {
-        FPDecimal::one()
+        FPDecimal::zero()
     } else {
         market.relayer_fee_share_rate
     }

@@ -8,14 +8,14 @@ use injective_math::FPDecimal;
 
 use crate::contract::set_route;
 use crate::queries::estimate_swap_result;
-use crate::testing::test_utils::{mock_deps_eth_inj, TEST_USER_ADDR};
+use crate::testing::test_utils::{mock_deps_eth_inj, MultiplierQueryBehaviour, TEST_USER_ADDR};
 
 /// In this test we swap 1000 INJ to ETH, we assume avg price of INJ at 8 usdt and avg price of eth 2000 usdt
 #[test]
 fn test_calculate_swap_price() {
     // let mut deps_binding = mock_deps_eth_inj();
 
-    let mut deps = mock_deps_eth_inj();
+    let mut deps = mock_deps_eth_inj(MultiplierQueryBehaviour::Success);
 
     set_route(
         deps.as_mut_deps(),

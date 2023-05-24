@@ -2,22 +2,22 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use cosmwasm_std::testing::{MockApi, MockStorage};
-use cosmwasm_std::{Addr, Coin, OwnedDeps};
-use injective_std::types::injective::exchange::v1beta1::{
-    MsgCreateSpotLimitOrder, MsgInstantSpotMarketLaunch, OrderInfo, OrderType,
-    QuerySpotMarketsRequest, SpotOrder,
-};
-use injective_test_tube::{Account, Bank, Exchange, InjectiveTestApp, Module, RunnerExecuteResult, SigningAccount, Wasm};
-use injective_std::types::cosmos::bank::v1beta1::{QueryAllBalancesRequest, QueryBalanceRequest};
+use cosmwasm_std::{Addr, Coin, OwnedDeps, QuerierResult, SystemError, SystemResult};
+use injective_std::shim::Any;
+use injective_std::types::injective::exchange::v1beta1::{MsgCreateSpotLimitOrder, MsgInstantSpotMarketLaunch, OrderInfo, OrderType, QuerySpotMarketsRequest, SpotMarketParamUpdateProposal, SpotOrder};
+use injective_test_tube::{Account, Bank, Exchange, Gov, InjectiveTestApp, Module, RunnerExecuteResult, SigningAccount, Wasm};
+use injective_std::types::cosmos::bank::v1beta1::{MsgSend, QueryAllBalancesRequest, QueryBalanceRequest};
+use injective_std::types::cosmos::base::v1beta1::Coin as TubeCoin;
+use injective_std::types::cosmos::gov::v1beta1::{MsgSubmitProposal, MsgVote};
+use injective_std::types::injective::exchange;
 use injective_test_tube::cosmrs::proto::cosmwasm::wasm::v1::MsgExecuteContractResponse;
-use injective_cosmwasm::{
-    create_mock_spot_market, create_orderbook_response_handler, create_spot_multi_market_handler,
-    get_default_subaccount_id_for_checked_address, inj_mock_deps, InjectiveQueryWrapper, MarketId,
-    PriceLevel, WasmMockQuerier, TEST_MARKET_ID_1, TEST_MARKET_ID_2,
-};
+use prost::Message;
+use injective_cosmwasm::{create_mock_spot_market, create_orderbook_response_handler, create_spot_multi_market_handler, get_default_subaccount_id_for_checked_address, inj_mock_deps, InjectiveQueryWrapper, MarketId, PriceLevel, WasmMockQuerier, TEST_MARKET_ID_1, TEST_MARKET_ID_2, HandlesMarketIdQuery, SpotMarket};
 use injective_math::FPDecimal;
+use crate::ContractError;
 use crate::helpers::dec_scale_factor;
 use crate::msg::{ExecuteMsg, FeeRecipient, InstantiateMsg};
+use cosmwasm_std::ContractResult as CwContractResult;
 
 pub const TEST_CONTRACT_ADDR: &str = "inj14hj2tavq8fpesdwxxcu44rty3hh90vhujaxlnz";
 pub const TEST_USER_ADDR: &str = "inj1p7z8p649xspcey7wp5e4leqf7wa39kjjj6wja8";
@@ -30,7 +30,13 @@ pub fn create_price_level(p: u128, q: u128) -> PriceLevel {
     }
 }
 
-pub fn mock_deps_eth_inj() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQueryWrapper>
+#[derive(PartialEq)]
+pub enum MultiplierQueryBehaviour {
+    Success,
+    Fail,
+}
+
+pub fn mock_deps_eth_inj(multiplier_query_behaviour: MultiplierQueryBehaviour) -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQueryWrapper>
 {
     inj_mock_deps(|querier| {
         let mut markets = HashMap::new();
@@ -83,6 +89,22 @@ pub fn mock_deps_eth_inj() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, I
 
         querier.spot_market_orderbook_response_handler =
             create_orderbook_response_handler(orderbooks);
+
+        if multiplier_query_behaviour == MultiplierQueryBehaviour::Fail {
+            pub fn create_spot_error_multi_market_handler() -> Option<Box<dyn HandlesMarketIdQuery>> {
+                struct Temp {}
+
+                impl HandlesMarketIdQuery for Temp {
+                    fn handle(&self, _: MarketId) -> QuerierResult {
+                        SystemResult::Err(SystemError::Unknown {})
+                    }
+                }
+
+                Some(Box::new(Temp {}))
+            }
+
+            querier.market_atomic_execution_fee_multiplier_response_handler = create_spot_error_multi_market_handler()
+        }
     })
 }
 
@@ -205,6 +227,25 @@ pub fn init_contract_and_get_address(wasm: &Wasm<InjectiveTestApp>, owner: &Sign
         .address
 }
 
+pub fn init_contract_with_fee_recipient_and_get_address(wasm: &Wasm<InjectiveTestApp>, owner: &SigningAccount, initial_balance: &[Coin], fee_recipient: &SigningAccount) -> String {
+    let code_id = store_code(&wasm, &owner, "helix_converter".to_string());
+    wasm
+        .instantiate(
+            code_id,
+            &InstantiateMsg {
+                fee_recipient: FeeRecipient::Address(Addr::unchecked(fee_recipient.address())),
+                admin: Addr::unchecked(owner.address()),
+            },
+            Some(&owner.address()),
+            Some("Swap"),
+            initial_balance,
+            &owner,
+        )
+        .unwrap()
+        .data
+        .address
+}
+
 pub fn set_route_and_assert_success(wasm: &Wasm<InjectiveTestApp>, signer: &SigningAccount, contr_addr: &str, from_denom: &str, to_denom: &str, route: Vec<MarketId>) {
     wasm.execute(
         contr_addr,
@@ -246,4 +287,70 @@ pub fn query_bank_balance(bank: &Bank<InjectiveTestApp>, denom: &str, address: &
         .unwrap()
         .amount.as_str())
         .unwrap()
+}
+
+pub fn pause_spot_market(gov: &Gov<InjectiveTestApp>, market_id: &str, proposer: &SigningAccount, validator: &SigningAccount) {
+    pass_spot_market_params_update_proposal(gov, &SpotMarketParamUpdateProposal{
+        title: format!("Set market {market_id} status to paused").to_string(),
+        description: format!("Set market {market_id} status to paused").to_string(),
+        market_id: market_id.to_string(),
+        maker_fee_rate: "".to_string(),
+        taker_fee_rate: "".to_string(),
+        relayer_fee_share_rate: "".to_string(),
+        min_price_tick_size: "".to_string(),
+        min_quantity_tick_size: "".to_string(),
+        status: 2,
+    }, proposer, validator)
+}
+
+pub fn pass_spot_market_params_update_proposal(gov: &Gov<InjectiveTestApp>, proposal: &SpotMarketParamUpdateProposal, proposer: &SigningAccount, validator: &SigningAccount) {
+    let mut buf = vec![];
+    exchange::v1beta1::SpotMarketParamUpdateProposal::encode(proposal, &mut buf).unwrap();
+
+    println!("submitting proposal: {:?}", proposal);
+    let submit_response = gov
+        .submit_proposal(
+            MsgSubmitProposal {
+                content: Some(Any {
+                    type_url: "/injective.exchange.v1beta1.SpotMarketParamUpdateProposal"
+                        .to_string(),
+                    value: buf,
+                }),
+                initial_deposit: vec![TubeCoin {
+                    amount: "100000000000000000000".to_string(),
+                    denom: "inj".to_string(),
+                }],
+                proposer: proposer.address(),
+            },
+            &proposer,
+        );
+
+    assert!(submit_response.is_ok(), "failed to submit proposal");
+
+    let proposal_id = submit_response.unwrap().data.proposal_id;
+    println!("voting on proposal: {:?}", proposal_id);
+    let vote_response = gov.vote(
+        MsgVote {
+            proposal_id,
+            voter: validator.address(),
+            option: 1,
+        },
+        &validator,
+    );
+
+    assert!(vote_response.is_ok(), "failed to vote on proposal");
+}
+
+pub fn fund_account_with_some_inj(bank: &Bank<InjectiveTestApp>, from: &SigningAccount, to: &SigningAccount) {
+    bank.send(
+        MsgSend {
+            from_address: from.address(),
+            to_address: to.address(),
+            amount: vec![TubeCoin {
+                amount: "1000000000000000000000".to_string(),
+                denom: "inj".to_string(),
+            }],
+        },
+        from,
+    ).unwrap();
 }
