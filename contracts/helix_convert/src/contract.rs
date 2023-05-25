@@ -88,9 +88,22 @@ pub fn set_route(
     verify_sender_is_admin(deps.as_ref(), sender)?;
     if denom_1 == denom_2 {
         return Err(ContractError::CustomError {
-            val: "Cannot set a route for the same denom!".to_string(),
+            val: "Cannot set a route with the same denom being source and target".to_string(),
         });
     }
+
+    if route.len() < 1 {
+        return Err(ContractError::CustomError {
+            val: "Route must have at least 1 step".to_string(),
+        });
+    }
+
+    if route.len() > 1 && route.first() == route.last() {
+        return Err(ContractError::CustomError {
+            val: "Route cannot begin and end with the same market".to_string(),
+        });
+    }
+
     let route = SwapRoute {
         steps: route,
         denom_1,
