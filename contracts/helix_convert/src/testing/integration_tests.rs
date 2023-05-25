@@ -1,4 +1,4 @@
-use cosmwasm_std::coin;
+use cosmwasm_std::{Addr, coin};
 
 use injective_test_tube::RunnerError::{ExecuteError, QueryError};
 use injective_test_tube::{
@@ -149,7 +149,7 @@ fn happy_path_two_hops_swap() {
         &[coin(12, ETH)],
         &swapper,
     )
-    .unwrap();
+        .unwrap();
 
     let from_balance = query_bank_balance(&bank, ETH, swapper.address().as_str());
     let to_balance = query_bank_balance(&bank, ATOM, swapper.address().as_str());
@@ -296,7 +296,7 @@ fn happy_path_two_hops_single_price_level_swap() {
         &[coin(3, ETH)],
         &swapper,
     )
-    .unwrap();
+        .unwrap();
 
     let from_balance = query_bank_balance(&bank, ETH, swapper.address().as_str());
     let to_balance = query_bank_balance(&bank, ATOM, swapper.address().as_str());
@@ -464,7 +464,7 @@ fn happy_path_three_hops_quote_conversion_swap() {
         &[coin(12, ETH)],
         &swapper,
     )
-    .unwrap();
+        .unwrap();
 
     let from_balance = query_bank_balance(&bank, ETH, swapper.address().as_str());
     let to_balance = query_bank_balance(&bank, ATOM, swapper.address().as_str());
@@ -570,10 +570,10 @@ fn happy_path_simple_sell_swap() {
         + FPDecimal::from(192000u128) * FPDecimal::from(3u128);
     let expected_query_result = orders_nominal_total_value
         * (FPDecimal::one()
-            - FPDecimal::must_from_str(&format!(
-                "{}",
-                DEFAULT_TAKER_FEE * DEFAULT_ATOMIC_MULTIPLIER * DEFAULT_SELF_RELAYING_FEE_PART
-            )));
+        - FPDecimal::must_from_str(&format!(
+        "{}",
+        DEFAULT_TAKER_FEE * DEFAULT_ATOMIC_MULTIPLIER * DEFAULT_SELF_RELAYING_FEE_PART
+    )));
     assert_eq!(
         query_result.unwrap(),
         expected_query_result,
@@ -596,7 +596,7 @@ fn happy_path_simple_sell_swap() {
         &[coin(12, ETH)],
         &swapper,
     )
-    .unwrap();
+        .unwrap();
 
     let from_balance = query_bank_balance(&bank, ETH, swapper.address().as_str());
     let to_balance = query_bank_balance(&bank, USDT, swapper.address().as_str());
@@ -715,13 +715,13 @@ fn happy_path_simple_buy_swap() {
     // calculate how much ETH we can buy with USDT we have
     let available_usdt_after_fee = FPDecimal::from(swapper_usdt)
         / (FPDecimal::one()
-            + FPDecimal::must_from_str(&format!(
-                "{}",
-                DEFAULT_TAKER_FEE * DEFAULT_ATOMIC_MULTIPLIER * DEFAULT_SELF_RELAYING_FEE_PART
-            )));
+        + FPDecimal::must_from_str(&format!(
+        "{}",
+        DEFAULT_TAKER_FEE * DEFAULT_ATOMIC_MULTIPLIER * DEFAULT_SELF_RELAYING_FEE_PART
+    )));
     let usdt_left_for_most_expensive_order = available_usdt_after_fee
         - (FPDecimal::from(195_000u128) * FPDecimal::from(4u128)
-            + FPDecimal::from(192_000u128) * FPDecimal::from(3u128));
+        + FPDecimal::from(192_000u128) * FPDecimal::from(3u128));
     let most_expensive_order_quantity =
         usdt_left_for_most_expensive_order / FPDecimal::from(201000u128);
     let expected_quantity =
@@ -766,7 +766,7 @@ fn happy_path_simple_buy_swap() {
         &[coin(swapper_usdt, USDT)],
         &swapper,
     )
-    .unwrap();
+        .unwrap();
 
     let from_balance = query_bank_balance(&bank, USDT, swapper.address().as_str());
     let to_balance = query_bank_balance(&bank, ETH, swapper.address().as_str());
@@ -883,9 +883,9 @@ fn happy_path_external_fee_receiver() {
         + FPDecimal::from(192000u128) * FPDecimal::from(3u128);
     let relayer_sell_fee = buy_orders_nominal_total_value
         * FPDecimal::must_from_str(&format!(
-            "{}",
-            DEFAULT_TAKER_FEE * DEFAULT_ATOMIC_MULTIPLIER * DEFAULT_RELAYER_SHARE
-        ));
+        "{}",
+        DEFAULT_TAKER_FEE * DEFAULT_ATOMIC_MULTIPLIER * DEFAULT_RELAYER_SHARE
+    ));
 
     create_limit_order(&app, &trader1, &spot_market_2_id, OrderSide::Sell, 800, 800);
     create_limit_order(&app, &trader2, &spot_market_2_id, OrderSide::Sell, 810, 800);
@@ -900,9 +900,9 @@ fn happy_path_external_fee_receiver() {
         + FPDecimal::from(830u128) * expected_nominal_buy_most_expensive_match_quantity;
     let relayer_buy_fee = sell_orders_nominal_total_value
         * FPDecimal::must_from_str(&format!(
-            "{}",
-            DEFAULT_TAKER_FEE * DEFAULT_ATOMIC_MULTIPLIER * DEFAULT_RELAYER_SHARE
-        ));
+        "{}",
+        DEFAULT_TAKER_FEE * DEFAULT_ATOMIC_MULTIPLIER * DEFAULT_RELAYER_SHARE
+    ));
     let expected_fee_for_fee_recipient = relayer_buy_fee + relayer_sell_fee;
 
     app.increase_time(1);
@@ -947,7 +947,7 @@ fn happy_path_external_fee_receiver() {
         &[coin(12, ETH)],
         &swapper,
     )
-    .unwrap();
+        .unwrap();
 
     let from_balance = query_bank_balance(&bank, ETH, swapper.address().as_str());
     let to_balance = query_bank_balance(&bank, ATOM, swapper.address().as_str());
@@ -1112,7 +1112,7 @@ fn not_enough_buffer() {
         &[coin(12, ETH)],
         &swapper,
     );
-    let expected_error = RunnerError::ExecuteError {msg: "failed to execute message; message index: 0: dispatch: submessages: reply: Generic error: Swap amount too high: execute wasm contract failed".to_string()};
+    let expected_error = RunnerError::ExecuteError { msg: "failed to execute message; message index: 0: dispatch: submessages: reply: Generic error: Swap amount too high: execute wasm contract failed".to_string() };
     assert_eq!(
         execute_result.unwrap_err(),
         expected_error,
@@ -1204,7 +1204,7 @@ fn no_funds_passed() {
         &[],
         &swapper,
     );
-    let expected_error = RunnerError::ExecuteError {msg: "failed to execute message; message index: 0: Custom Error: \"Only 1 denom can be passed in funds, but 0 were found\": execute wasm contract failed".to_string()};
+    let expected_error = RunnerError::ExecuteError { msg: "failed to execute message; message index: 0: Custom Error: \"Only 1 denom can be passed in funds, but 0 were found\": execute wasm contract failed".to_string() };
     assert_eq!(
         execute_result.unwrap_err(),
         expected_error,
@@ -2418,7 +2418,7 @@ fn insufficient_gas() {
         &swapper,
     );
 
-    assert_eq!(execute_result.unwrap_err(), ExecuteError {msg: "spendable balance 10inj is smaller than 2500inj: insufficient funds: insufficient funds".to_string()}, "wrong error returned by execute");
+    assert_eq!(execute_result.unwrap_err(), ExecuteError { msg: "spendable balance 10inj is smaller than 2500inj: insufficient funds: insufficient funds".to_string() }, "wrong error returned by execute");
 
     let from_balance = query_bank_balance(&bank, ETH, swapper.address().as_str());
     let to_balance = query_bank_balance(&bank, ATOM, swapper.address().as_str());
@@ -2442,5 +2442,66 @@ fn insufficient_gas() {
     assert_eq!(
         contract_balances_after, contract_balances_before,
         "contract balance has changed after failed swap"
+    );
+}
+
+#[test]
+fn admin_can_withdraw_all_funds_from_contract() {
+    let app = InjectiveTestApp::new();
+    let wasm = Wasm::new(&app);
+    let bank = Bank::new(&app);
+
+    let owner = must_init_account_with_funds(
+        &app,
+        &[
+            coin(1_000_000_000_000_000_000_000_000, INJ),
+        ],
+    );
+
+    let initial_balance = &[coin(10_000_000_000, ETH), coin(10_000_000_000, USDT)];
+
+    let contr_addr = init_contract_and_get_address(
+        &wasm,
+        &owner,
+        initial_balance,
+    );
+
+    let contract_balances_before = query_all_bank_balances(&bank, &contr_addr);
+    assert_eq!(
+        contract_balances_before.len(),
+        2,
+        "wrong number of denoms in contract balances"
+    );
+
+    let execute_result = wasm.execute(
+        &contr_addr,
+        &ExecuteMsg::WithdrawSupportFunds {
+            coins: initial_balance.to_vec(),
+            target_address: Addr::unchecked(&owner.address()),
+        },
+        &[],
+        &owner,
+    );
+
+    assert!(execute_result.is_ok(), "failed to withdraw support funds");
+    let contract_balances_after = query_all_bank_balances(&bank, &contr_addr);
+    assert_eq!(
+        contract_balances_after.len(),
+        0,
+        "wrong number of denoms in contract balances after withdraw"
+    );
+
+    let owner_usdt_balance = query_bank_balance(&bank, USDT, owner.address().as_str());
+    assert_eq!(
+        owner_usdt_balance,
+        FPDecimal::from(initial_balance[0].amount),
+        "wrong owner usdt balance after withdraw"
+    );
+
+    let owner_eth_balance = query_bank_balance(&bank, ETH, owner.address().as_str());
+    assert_eq!(
+        owner_eth_balance,
+        FPDecimal::from(initial_balance[1].amount),
+        "wrong owner eth balance after withdraw"
     );
 }
