@@ -29,7 +29,7 @@ pub struct OracleVolatilityResponse {
     pub raw_history: Vec<TradeRecord>,
 }
 
-#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema, Copy, Default)]
+#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema, Copy)]
 #[repr(i32)]
 #[derive(Default)]
 pub enum OracleType {
