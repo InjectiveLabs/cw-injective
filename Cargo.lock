@@ -732,7 +732,7 @@ dependencies = [
 
 [[package]]
 name = "injective-cosmwasm"
-version = "0.1.100"
+version = "0.1.101"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -787,7 +787,7 @@ dependencies = [
  "prost 0.11.9",
  "prost-types",
  "schemars",
- "serde 1.0.152",
+ "serde 1.0.163",
  "serde-cw-value",
 ]
 
@@ -1014,7 +1014,7 @@ dependencies = [
  "itertools",
  "proc-macro2",
  "quote",
- "syn",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -1079,7 +1079,7 @@ dependencies = [
  "itertools",
  "proc-macro2",
  "quote",
- "syn",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -1324,7 +1324,7 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a75d32da6b8ed758b7d850b6c3c08f1d7df51a4df3cb201296e63e34a78e99d4"
 dependencies = [
- "serde 1.0.152",
+ "serde 1.0.163",
 ]
 
 [[package]]
@@ -1607,7 +1607,7 @@ dependencies = [
  "once_cell",
  "proc-macro2",
  "quote",
- "syn",
+ "syn 1.0.109",
  "wasm-bindgen-shared",
 ]
 
@@ -1629,7 +1629,7 @@ checksum = "2aff81306fcac3c7515ad4e177f521b5c9a15f2b08f4e32d823066102f35a5f6"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 1.0.109",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]
