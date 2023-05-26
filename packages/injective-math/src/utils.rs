@@ -96,3 +96,49 @@ pub fn round_to_nearest_tick(num: FPDecimal, min_tick: FPDecimal) -> FPDecimal {
         FPDecimal::from(num.num - remainder.num)
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_div_dec() {
+        assert_eq!(div_dec(FPDecimal::must_from_str("6"), FPDecimal::must_from_str("2")), FPDecimal::must_from_str("3"));
+        assert_eq!(div_dec(FPDecimal::must_from_str("7"), FPDecimal::must_from_str("0")), FPDecimal::must_from_str("0"));
+        assert_eq!(div_dec(FPDecimal::must_from_str("7.5"), FPDecimal::must_from_str("2.5")), FPDecimal::must_from_str("3.0"));
+    }
+
+    #[test]
+    fn test_round_to_min_tick() {
+        assert_eq!(round_to_min_tick(FPDecimal::must_from_str("7.7"), FPDecimal::must_from_str("2.0")), FPDecimal::must_from_str("6.0"));
+        assert_eq!(round_to_min_tick(FPDecimal::must_from_str("1.5"), FPDecimal::must_from_str("2.0")), FPDecimal::must_from_str("0.0"));
+        assert_eq!(round_to_min_tick(FPDecimal::must_from_str("10.0"), FPDecimal::must_from_str("3.0")), FPDecimal::must_from_str("9.0"));
+    }
+
+    #[test]
+    fn round_to_nearest_tick_test() {
+        assert_eq!(round_to_nearest_tick(FPDecimal::must_from_str("7.7"), FPDecimal::must_from_str("2.0")), FPDecimal::must_from_str("8.0"));
+        assert_eq!(round_to_nearest_tick(FPDecimal::must_from_str("1.5"), FPDecimal::must_from_str("2.0")), FPDecimal::must_from_str("0.0"));
+        assert_eq!(round_to_nearest_tick(FPDecimal::must_from_str("2.5"), FPDecimal::must_from_str("2.0")), FPDecimal::must_from_str("2.0"));
+        assert_eq!(round_to_nearest_tick(FPDecimal::must_from_str("10.0"), FPDecimal::must_from_str("3.0")), FPDecimal::must_from_str("9.0"));
+        // input, expected
+        let data = vec![
+            ["1.09932", "1.1"],
+            ["2.032", "2.03"],
+            ["1.0009932", "1"],
+            ["1.009932", "1.01"],
+            ["0.9932", "0.99"],
+        ];
+        let precision = FPDecimal::from_str("0.01").unwrap();
+
+        for item in &data {
+            let input = FPDecimal::from_str(item[0]).unwrap();
+            let expected = FPDecimal::from_str(item[1]).unwrap();
+
+            let output = round_to_nearest_tick(input, precision);
+            assert_eq!(expected, output);
+        }
+    }
+
+}
