@@ -6,14 +6,15 @@ use crate::oracle::{OracleHistoryOptions, OracleInfo};
 use crate::query::{
     DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse, MarketVolatilityResponse, OraclePriceResponse,
     OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PythPriceResponse, QueryAggregateVolumeResponse,
-    QueryContractRegistrationInfoResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse, SpotMarketResponse, SubaccountDepositResponse,
-    SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TokenFactoryCreateDenomFeeResponse,
-    TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+    QueryContractRegistrationInfoResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse, QueryMarketAtomicExecutionFeeMultiplierResponse,
+    QueryOrderbookResponse, SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse,
+    SubaccountPositionInMarketResponse, TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse,
+    TraderSpotOrdersResponse,
 };
 use crate::route::InjectiveRoute;
 use crate::volatility::TradeHistoryOptions;
-use crate::OracleType;
 use crate::{MarketId, SubaccountId};
+use crate::{OracleType, OrderSide};
 
 pub struct InjectiveQuerier<'a> {
     querier: &'a QuerierWrapper<'a, InjectiveQueryWrapper>,
@@ -334,6 +335,27 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
+    pub fn query_spot_market_orderbook<T: Into<MarketId> + Clone>(
+        &self,
+        market_id: &'a T,
+        side: OrderSide,
+        limit_cumulative_quantity: Option<FPDecimal>,
+        limit_cumulative_notional: Option<FPDecimal>,
+    ) -> StdResult<QueryOrderbookResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::SpotOrderbook {
+                market_id: market_id.clone().into(),
+                order_side: side,
+                limit: 0,
+                limit_cumulative_quantity,
+                limit_cumulative_notional,
+            },
+        };
+        let res: QueryOrderbookResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
     pub fn query_oracle_volatility(
         &self,
         base_info: &'a Option<OracleInfo>,
@@ -417,6 +439,21 @@ impl<'a> InjectiveQuerier<'a> {
         };
 
         let res: QueryContractRegistrationInfoResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_market_atomic_execution_fee_multiplier<T: Into<MarketId> + Clone>(
+        &self,
+        market_id: &'a T,
+    ) -> StdResult<QueryMarketAtomicExecutionFeeMultiplierResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::MarketAtomicExecutionFeeMultiplier {
+                market_id: market_id.clone().into(),
+            },
+        };
+
+        let res: QueryMarketAtomicExecutionFeeMultiplierResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 }

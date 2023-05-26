@@ -1,6 +1,7 @@
 use cosmwasm_std::{Coin, CustomQuery, Uint128};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use injective_math::FPDecimal;
 
@@ -23,6 +24,14 @@ use crate::{MarketId, SubaccountId};
 pub struct InjectiveQueryWrapper {
     pub route: InjectiveRoute,
     pub query_data: InjectiveQuery,
+}
+
+#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[repr(u8)]
+pub enum OrderSide {
+    Unspecified = 0,
+    Buy = 1,
+    Sell = 2,
 }
 
 /// InjectiveQuery is an override of QueryRequest::Custom to access Injective-specific modules
@@ -96,6 +105,13 @@ pub enum InjectiveQuery {
     SpotMarketMidPriceAndTob {
         market_id: MarketId,
     },
+    SpotOrderbook {
+        market_id: MarketId,
+        limit: u64,
+        order_side: OrderSide,
+        limit_cumulative_quantity: Option<FPDecimal>,
+        limit_cumulative_notional: Option<FPDecimal>,
+    },
     DerivativeMarketMidPriceAndTob {
         market_id: MarketId,
     },
@@ -110,6 +126,9 @@ pub enum InjectiveQuery {
     },
     DenomDecimals {
         denoms: Vec<String>,
+    },
+    MarketAtomicExecutionFeeMultiplier {
+        market_id: MarketId,
     },
     OracleVolatility {
         base_info: Option<OracleInfo>,
@@ -261,6 +280,27 @@ pub struct MarketMidPriceAndTOBResponse {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct PriceLevel {
+    pub p: FPDecimal,
+    pub q: FPDecimal,
+}
+
+impl PriceLevel {
+    // helper method for tests
+    pub fn new(p: FPDecimal, q: FPDecimal) -> PriceLevel {
+        PriceLevel { p, q }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct QueryOrderbookResponse {
+    #[serde(default)]
+    pub buys_price_level: Vec<PriceLevel>,
+    #[serde(default)]
+    pub sells_price_level: Vec<PriceLevel>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct TokenFactoryDenomSupplyResponse {
     pub total_supply: Uint128,
 }
@@ -319,4 +359,10 @@ pub struct QueryDenomDecimalResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct QueryDenomDecimalsResponse {
     pub denom_decimals: Vec<DenomDecimals>,
+}
+
+/// Response to query for fee multiplier for atomic order
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct QueryMarketAtomicExecutionFeeMultiplierResponse {
+    pub multiplier: FPDecimal,
 }

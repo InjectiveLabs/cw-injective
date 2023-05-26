@@ -17,6 +17,8 @@ jobs:
         uses: srt32/git-actions@v0.0.3
         with:
           args: git submodule update --init --recursive
+      - name: Fix protobuf output dir error
+        run: echo >packages/injective-protobuf/src/proto/mod.rs
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1

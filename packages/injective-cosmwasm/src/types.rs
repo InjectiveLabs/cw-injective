@@ -66,6 +66,12 @@ impl Into<String> for MarketId {
     }
 }
 
+impl<'a> From<&'a str> for MarketId {
+    fn from(s: &'a str) -> Self {
+        MarketId::new(s).unwrap()
+    }
+}
+
 impl<'de> Deserialize<'de> for MarketId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where

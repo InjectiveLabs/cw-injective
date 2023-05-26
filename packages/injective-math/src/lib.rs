@@ -1,5 +1,5 @@
 pub mod fp_decimal;
-mod utils;
+pub mod utils;
 pub mod vector;
 
 use cosmwasm_std::{StdResult, Uint128};

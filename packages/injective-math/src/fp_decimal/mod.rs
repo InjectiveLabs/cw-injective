@@ -245,4 +245,4 @@ mod from_str;
 mod hyper;
 mod log;
 mod serde;
-mod trigonometry; // cosmwasm serialization
+mod trigonometry;

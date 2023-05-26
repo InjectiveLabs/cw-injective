@@ -1,4 +1,5 @@
 use crate::FPDecimal;
+use bigint::U256;
 use cosmwasm_std::StdError;
 use std::{fmt::Display, str::FromStr};
 
@@ -64,4 +65,108 @@ pub fn ensure_band<T: Ord + Display>(v: &T, min: Option<&T>, max: Option<&T>, ra
 
 pub fn band_error_to_human(err: StdError, value_name: &str) -> StdError {
     StdError::generic_err(format!("Value '{value_name}' failed validation due to: '{err}'"))
+}
+
+pub fn div_dec(num: FPDecimal, denom: FPDecimal) -> FPDecimal {
+    if denom == FPDecimal::zero() {
+        denom
+    } else {
+        num / denom
+    }
+}
+
+pub fn round_to_min_tick(num: FPDecimal, min_tick: FPDecimal) -> FPDecimal {
+    if num < min_tick {
+        FPDecimal::zero()
+    } else {
+        let shifted = div_dec(num, min_tick).int();
+        shifted * min_tick
+    }
+}
+
+pub fn round_to_nearest_tick(num: FPDecimal, min_tick: FPDecimal) -> FPDecimal {
+    if num < min_tick {
+        return FPDecimal::zero();
+    }
+
+    let remainder = FPDecimal::from(num.num % min_tick.num);
+    if remainder.num > min_tick.num / U256::from(2u64) {
+        FPDecimal::from(num.num - remainder.num + min_tick.num)
+    } else {
+        FPDecimal::from(num.num - remainder.num)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_div_dec() {
+        assert_eq!(
+            div_dec(FPDecimal::must_from_str("6"), FPDecimal::must_from_str("2")),
+            FPDecimal::must_from_str("3")
+        );
+        assert_eq!(
+            div_dec(FPDecimal::must_from_str("7"), FPDecimal::must_from_str("0")),
+            FPDecimal::must_from_str("0")
+        );
+        assert_eq!(
+            div_dec(FPDecimal::must_from_str("7.5"), FPDecimal::must_from_str("2.5")),
+            FPDecimal::must_from_str("3.0")
+        );
+    }
+
+    #[test]
+    fn test_round_to_min_tick() {
+        assert_eq!(
+            round_to_min_tick(FPDecimal::must_from_str("7.7"), FPDecimal::must_from_str("2.0")),
+            FPDecimal::must_from_str("6.0")
+        );
+        assert_eq!(
+            round_to_min_tick(FPDecimal::must_from_str("1.5"), FPDecimal::must_from_str("2.0")),
+            FPDecimal::must_from_str("0.0")
+        );
+        assert_eq!(
+            round_to_min_tick(FPDecimal::must_from_str("10.0"), FPDecimal::must_from_str("3.0")),
+            FPDecimal::must_from_str("9.0")
+        );
+    }
+
+    #[test]
+    fn round_to_nearest_tick_test() {
+        assert_eq!(
+            round_to_nearest_tick(FPDecimal::must_from_str("7.7"), FPDecimal::must_from_str("2.0")),
+            FPDecimal::must_from_str("8.0")
+        );
+        assert_eq!(
+            round_to_nearest_tick(FPDecimal::must_from_str("1.5"), FPDecimal::must_from_str("2.0")),
+            FPDecimal::must_from_str("0.0")
+        );
+        assert_eq!(
+            round_to_nearest_tick(FPDecimal::must_from_str("2.5"), FPDecimal::must_from_str("2.0")),
+            FPDecimal::must_from_str("2.0")
+        );
+        assert_eq!(
+            round_to_nearest_tick(FPDecimal::must_from_str("10.0"), FPDecimal::must_from_str("3.0")),
+            FPDecimal::must_from_str("9.0")
+        );
+        // input, expected
+        let data = vec![
+            ["1.09932", "1.1"],
+            ["2.032", "2.03"],
+            ["1.0009932", "1"],
+            ["1.009932", "1.01"],
+            ["0.9932", "0.99"],
+        ];
+        let precision = FPDecimal::from_str("0.01").unwrap();
+
+        for item in &data {
+            let input = FPDecimal::from_str(item[0]).unwrap();
+            let expected = FPDecimal::from_str(item[1]).unwrap();
+
+            let output = round_to_nearest_tick(input, precision);
+            assert_eq!(expected, output);
+        }
+    }
 }
