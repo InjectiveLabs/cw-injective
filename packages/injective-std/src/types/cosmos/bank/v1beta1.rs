@@ -67,16 +67,7 @@ pub struct Output {
 /// amounts in the network.
 /// This message is deprecated now that supply is indexed by denom.
 // #[allow(clippy::derive_partial_eq_without_eq)]
-// #[derive(
-//     Clone,
-//     PartialEq,
-//     Eq,
-//     ::prost::Message,
-//     ::serde::Serialize,
-//     ::serde::Deserialize,
-//     ::schemars::JsonSchema,
-//     CosmwasmExt,
-// )]
+// #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 // #[proto_message(type_url = "/cosmos.bank.v1beta1.SupplySupply")]
 // #[deprecated]
 // pub struct Supply {

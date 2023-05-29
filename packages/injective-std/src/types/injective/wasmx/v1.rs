@@ -85,8 +85,7 @@ pub struct ContractRegistrationRequest {
     pub funding_mode: i32,
 }
 // #[allow(clippy::derive_partial_eq_without_eq)]
-// #[derive(Clone, PartialEq, Eq, ::prost::Message)]
-// #[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+// #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 // #[proto_message(type_url = "/injective.wasmx.v1.BatchStoreCodeProposal")]
 // pub struct BatchStoreCodeProposal {
 //     #[prost(string, tag = "1")]
@@ -94,9 +93,7 @@ pub struct ContractRegistrationRequest {
 //     #[prost(string, tag = "2")]
 //     pub description: ::prost::alloc::string::String,
 //     #[prost(message, repeated, tag = "3")]
-//     pub proposals: ::prost::alloc::vec::Vec<
-//         super::super::super::cosmwasm::wasm::v1::StoreCodeProposal,
-//     >,
+//     pub proposals: ::prost::alloc::vec::Vec<super::super::super::cosmwasm::wasm::v1::StoreCodeProposal>,
 // }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
@@ -284,6 +281,10 @@ pub struct QueryModuleStateResponse {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.wasmx.v1.QueryContractRegistrationInfoRequest")]
+#[proto_query(
+    path = "/injective.wasmx.v1.Query/ContractRegistrationInfo",
+    response_type = QueryContractRegistrationInfoResponse
+)]
 pub struct QueryContractRegistrationInfoRequest {
     #[prost(string, tag = "1")]
     pub contract_address: ::prost::alloc::string::String,
@@ -421,6 +422,12 @@ impl<'a, Q: cosmwasm_std::CustomQuery> WasmxQuerier<'a, Q> {
     }
     pub fn wasmx_params(&self) -> Result<QueryWasmxParamsResponse, cosmwasm_std::StdError> {
         QueryWasmxParamsRequest {}.query(self.querier)
+    }
+    pub fn contract_registration_info(
+        &self,
+        contract_address: ::prost::alloc::string::String,
+    ) -> Result<QueryContractRegistrationInfoResponse, cosmwasm_std::StdError> {
+        QueryContractRegistrationInfoRequest { contract_address }.query(self.querier)
     }
     pub fn wasmx_module_state(&self) -> Result<QueryModuleStateResponse, cosmwasm_std::StdError> {
         QueryModuleStateRequest {}.query(self.querier)
