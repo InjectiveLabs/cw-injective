@@ -779,7 +779,7 @@ dependencies = [
 
 [[package]]
 name = "injective-std"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "cosmwasm-std",
