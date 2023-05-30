@@ -34,6 +34,15 @@ pub enum OrderSide {
     Sell = 2,
 }
 
+#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[repr(i32)]
+pub enum FundingMode {
+    Unspecified = 0,
+    SelfFunded = 1,
+    GrantOnly = 2,
+    Dual = 3,
+}
+
 /// InjectiveQuery is an override of QueryRequest::Custom to access Injective-specific modules
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -317,12 +326,16 @@ pub struct RegisteredContract {
     // gas price that contract is willing to pay for execution in BeginBlocker
     pub gas_price: u64,
     // is contract currently active
-    #[serde(default)]
     pub is_executable: bool,
     // code_id that is allowed to be executed (to prevent malicious updates) - if nil/0 any code_id can be executed
-    pub code_id: u64,
+    pub code_id: Option<u64>,
     // optional - admin addr that is allowed to update contract data
-    pub admin_address: String,
+    pub admin_address: Option<String>,
+    // optional -  address of the contract granting fee
+    // must be set if fund_mode is GrantOnly
+    pub granter_address: Option<String>,
+    /// funding mode
+    pub fund_mode: FundingMode,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]

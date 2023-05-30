@@ -20,12 +20,13 @@ pub use oracle::{OracleInfo, OracleType, PriceAttestation, PythStatus};
 pub use order::{GenericOrder, OrderData, OrderInfo, OrderType};
 pub use querier::InjectiveQuerier;
 pub use query::{
-    DenomDecimals, DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse, MarketVolatilityResponse,
-    OraclePriceResponse, OracleVolatilityResponse, OrderSide, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PriceLevel,
-    PricePairState, PythPriceResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse,
-    QueryDenomDecimalsResponse, QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarketResponse, SubaccountDepositResponse,
-    SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse,
-    TraderSpotOrdersResponse, FROM_WORST_TO_BEST_CANCELLATION_STRATEGY, UNSORTED_CANCELLATION_STRATEGY,
+    DenomDecimals, DerivativeMarketResponse, FundingMode, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse,
+    MarketVolatilityResponse, OraclePriceResponse, OracleVolatilityResponse, OrderSide, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse,
+    PriceLevel, PricePairState, PythPriceResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse,
+    QueryContractRegistrationInfoResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse, QueryMarketAtomicExecutionFeeMultiplierResponse,
+    RegisteredContract, SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse,
+    SubaccountPositionInMarketResponse, TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+    FROM_WORST_TO_BEST_CANCELLATION_STRATEGY, UNSORTED_CANCELLATION_STRATEGY,
 };
 pub use route::InjectiveRoute;
 pub use spot::{MsgCreateSpotMarketOrderResponse, SpotLimitOrder, SpotMarketOrder, SpotOrder, TrimmedSpotLimitOrder};
