@@ -438,7 +438,8 @@ impl<'a> InjectiveQuerier<'a> {
             },
         };
 
-        let res: QueryContractRegistrationInfoResponse = self.querier.query(&request.into())?;
+        let res = self.querier.query(&request.into())?;
+
         Ok(res)
     }
 
