@@ -6,13 +6,22 @@ pub use exchange::{
         DerivativeMarket, FullDerivativeMarket, FullDerivativeMarketPerpetualInfo, PerpetualMarketFunding, PerpetualMarketInfo, PerpetualMarketState,
     },
     order::{GenericOrder, OrderData, OrderInfo, OrderSide, OrderType},
+    response::{
+        DerivativeMarketResponse, MarketMidPriceAndTOBResponse, MarketVolatilityResponse, OracleVolatilityResponse, PerpetualMarketFundingResponse,
+        PerpetualMarketInfoResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse,
+        QueryDenomDecimalsResponse, QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarketResponse, SubaccountDepositResponse,
+        SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+    },
     spot::{MsgCreateSpotMarketOrderResponse, SpotLimitOrder, SpotMarketOrder, SpotOrder, TrimmedSpotLimitOrder},
     spot_market::SpotMarket,
     subaccount::{
         addr_to_bech32, bech32_to_hex, checked_address_to_subaccount_id, get_default_subaccount_id_for_checked_address, is_default_subaccount,
         subaccount_id_to_ethereum_address, subaccount_id_to_injective_address, subaccount_id_to_unchecked_injective_address,
     },
-    types::{Deposit, Hash, MarketId, MarketType, SubaccountId},
+    types::{
+        DenomDecimals, Deposit, Hash, MarketId, MarketType, PriceLevel, SubaccountId, FROM_WORST_TO_BEST_CANCELLATION_STRATEGY,
+        UNSORTED_CANCELLATION_STRATEGY,
+    },
 };
 pub use oracle::{
     response::{OraclePriceResponse, PythPriceResponse},
@@ -36,14 +45,7 @@ pub use msg::{
 };
 
 pub use querier::InjectiveQuerier;
-pub use query::{
-    DenomDecimals, DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse, MarketVolatilityResponse,
-    OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PriceLevel, QueryAggregateMarketVolumeResponse,
-    QueryAggregateVolumeResponse, QueryContractRegistrationInfoResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse,
-    QueryMarketAtomicExecutionFeeMultiplierResponse, RegisteredContract, SpotMarketResponse, SubaccountDepositResponse,
-    SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse,
-    TraderSpotOrdersResponse, FROM_WORST_TO_BEST_CANCELLATION_STRATEGY, UNSORTED_CANCELLATION_STRATEGY,
-};
+pub use query::{InjectiveQuery, InjectiveQueryWrapper};
 pub use route::InjectiveRoute;
 #[cfg(not(target_arch = "wasm32"))]
 pub use test_helpers::testing_helpers::{
@@ -58,6 +60,7 @@ mod oracle;
 mod querier;
 mod query;
 mod route;
+mod tokenfactory;
 mod wasmx;
 
 #[cfg(not(target_arch = "wasm32"))]

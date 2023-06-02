@@ -5,6 +5,12 @@ use injective_math::FPDecimal;
 use crate::authz::response::{GranteeGrantsResponse, GranterGrantsResponse, GrantsResponse};
 use crate::exchange::{
     order::OrderSide,
+    response::{
+        DerivativeMarketResponse, MarketMidPriceAndTOBResponse, MarketVolatilityResponse, OracleVolatilityResponse, PerpetualMarketFundingResponse,
+        PerpetualMarketInfoResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse,
+        QueryMarketAtomicExecutionFeeMultiplierResponse, QueryOrderbookResponse, SpotMarketResponse, SubaccountDepositResponse,
+        SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+    },
     types::{MarketId, SubaccountId},
 };
 use crate::oracle::{
@@ -12,15 +18,10 @@ use crate::oracle::{
     types::{OracleHistoryOptions, OracleInfo, OracleType},
     volatility::TradeHistoryOptions,
 };
-use crate::query::{
-    DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse, MarketVolatilityResponse,
-    OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, QueryAggregateVolumeResponse,
-    QueryContractRegistrationInfoResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse, QueryMarketAtomicExecutionFeeMultiplierResponse,
-    QueryOrderbookResponse, SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse,
-    SubaccountPositionInMarketResponse, TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse,
-    TraderSpotOrdersResponse,
-};
+use crate::query::{InjectiveQuery, InjectiveQueryWrapper};
 use crate::route::InjectiveRoute;
+use crate::tokenfactory::response::{TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
+use crate::wasmx::response::QueryContractRegistrationInfoResponse;
 
 pub struct InjectiveQuerier<'a> {
     querier: &'a QuerierWrapper<'a, InjectiveQueryWrapper>,

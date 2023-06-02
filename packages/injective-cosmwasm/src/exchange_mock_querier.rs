@@ -11,15 +11,15 @@ use injective_math::FPDecimal;
 
 use crate::exchange::{
     derivative_market::DerivativeMarket,
-    types::{MarketVolume, VolumeByType},
+    response::QueryOrderbookResponse,
+    types::{MarketVolume, PriceLevel, VolumeByType},
 };
 use crate::oracle::{
     types::{OracleHistoryOptions, OracleType, PriceState, PythPriceState},
     volatility::TradeHistoryOptions,
 };
-use crate::query::{
-    PriceLevel, QueryContractRegistrationInfoResponse, QueryOrderbookResponse, TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse,
-};
+use crate::tokenfactory::response::{TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
+use crate::wasmx::response::QueryContractRegistrationInfoResponse;
 use crate::{
     Deposit, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse,
     MarketVolatilityResponse, OracleInfo, OracleVolatilityResponse, OrderSide, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse,
@@ -708,12 +708,11 @@ pub mod handlers {
 
     use injective_math::FPDecimal;
 
+    use crate::exchange::response::QueryOrderbookResponse;
     use crate::exchange_mock_querier::{HandlesByAddressQuery, HandlesDenomSupplyQuery, HandlesFeeQuery};
     use crate::oracle::{response::OraclePriceResponse, types::PricePairState};
-    use crate::query::{
-        QueryContractRegistrationInfoResponse, QueryOrderbookResponse, RegisteredContract, TokenFactoryCreateDenomFeeResponse,
-        TokenFactoryDenomSupplyResponse,
-    };
+    use crate::tokenfactory::response::{TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
+    use crate::wasmx::{response::QueryContractRegistrationInfoResponse, types::RegisteredContract};
     use crate::{
         exchange_mock_querier::TestCoin, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition, FullDerivativeMarket,
         FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery,
