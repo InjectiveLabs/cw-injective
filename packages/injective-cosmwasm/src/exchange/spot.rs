@@ -4,9 +4,8 @@ use serde::{Deserialize, Serialize};
 
 use injective_math::FPDecimal;
 
-use crate::order::{GenericOrder, OrderInfo};
-use crate::OrderType;
-use crate::{MarketId, SubaccountId};
+use crate::exchange::order::{GenericOrder, OrderInfo, OrderType};
+use crate::exchange::types::{MarketId, SubaccountId};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SpotLimitOrder {

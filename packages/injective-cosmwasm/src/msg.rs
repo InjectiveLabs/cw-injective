@@ -2,9 +2,14 @@ use cosmwasm_std::{Addr, BankMsg, Coin, CosmosMsg, CustomMsg, Deps, StdError, St
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::subaccount::is_default_subaccount;
-use crate::{derivative::DerivativeOrder, oracle::PriceAttestation, order::OrderData, route::InjectiveRoute, spot::SpotOrder};
-use crate::{subaccount_id_to_injective_address, InjectiveQueryWrapper, MarketId, SubaccountId};
+use crate::exchange::{
+    order::OrderData,
+    spot::SpotOrder,
+    subaccount::{is_default_subaccount, subaccount_id_to_injective_address},
+    types::{MarketId, SubaccountId},
+};
+use crate::InjectiveQueryWrapper;
+use crate::{exchange::derivative::DerivativeOrder, oracle::types::PriceAttestation, route::InjectiveRoute};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -235,8 +240,6 @@ pub fn create_external_transfer_msg(
     }
     .into()])
 }
-
-// return create_subaccount_transfer_msg(sender, subaccount_id, amount);
 
 pub fn create_spot_market_order_msg(sender: Addr, order: SpotOrder) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {

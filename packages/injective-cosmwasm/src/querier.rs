@@ -2,19 +2,25 @@ use cosmwasm_std::{QuerierWrapper, StdResult};
 
 use injective_math::FPDecimal;
 
-use crate::oracle::{OracleHistoryOptions, OracleInfo};
+use crate::authz::response::{GranteeGrantsResponse, GranterGrantsResponse, GrantsResponse};
+use crate::exchange::{
+    order::OrderSide,
+    types::{MarketId, SubaccountId},
+};
+use crate::oracle::{
+    response::{OraclePriceResponse, PythPriceResponse},
+    types::{OracleHistoryOptions, OracleInfo, OracleType},
+    volatility::TradeHistoryOptions,
+};
 use crate::query::{
-    DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse, MarketVolatilityResponse, OraclePriceResponse,
-    OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PythPriceResponse, QueryAggregateVolumeResponse,
+    DerivativeMarketResponse, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse, MarketVolatilityResponse,
+    OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, QueryAggregateVolumeResponse,
     QueryContractRegistrationInfoResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse, QueryMarketAtomicExecutionFeeMultiplierResponse,
     QueryOrderbookResponse, SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse,
     SubaccountPositionInMarketResponse, TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse, TraderDerivativeOrdersResponse,
     TraderSpotOrdersResponse,
 };
 use crate::route::InjectiveRoute;
-use crate::volatility::TradeHistoryOptions;
-use crate::{MarketId, SubaccountId};
-use crate::{OracleType, OrderSide};
 
 pub struct InjectiveQuerier<'a> {
     querier: &'a QuerierWrapper<'a, InjectiveQueryWrapper>,
@@ -25,6 +31,49 @@ impl<'a> InjectiveQuerier<'a> {
         InjectiveQuerier { querier }
     }
 
+    // Authz
+    pub fn query_grants(&self, grantee: &str, granter: &str, msg_type_url: &str, pagination: &Option<u32>) -> StdResult<GrantsResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Authz,
+            query_data: InjectiveQuery::Grants {
+                grantee: grantee.to_string(),
+                granter: granter.to_string(),
+                msg_type_url: msg_type_url.to_string(),
+                pagination: *pagination,
+            },
+        };
+
+        let res: GrantsResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_grantee_grants(&self, grantee: &str, pagination: &Option<u32>) -> StdResult<GranteeGrantsResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Authz,
+            query_data: InjectiveQuery::GranteeGrants {
+                grantee: grantee.to_string(),
+                pagination: *pagination,
+            },
+        };
+
+        let res: GranteeGrantsResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    pub fn query_granter_grants(&self, granter: &str, pagination: &Option<u32>) -> StdResult<GranterGrantsResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Authz,
+            query_data: InjectiveQuery::GranterGrants {
+                granter: granter.to_string(),
+                pagination: *pagination,
+            },
+        };
+
+        let res: GranterGrantsResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    // Exchange
     pub fn query_subaccount_deposit<T: Into<SubaccountId> + Clone, P: Into<String> + Clone>(
         &self,
         subaccount_id: &'a T,
@@ -356,6 +405,22 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
+    pub fn query_market_atomic_execution_fee_multiplier<T: Into<MarketId> + Clone>(
+        &self,
+        market_id: &'a T,
+    ) -> StdResult<QueryMarketAtomicExecutionFeeMultiplierResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::MarketAtomicExecutionFeeMultiplier {
+                market_id: market_id.clone().into(),
+            },
+        };
+
+        let res: QueryMarketAtomicExecutionFeeMultiplierResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    // Oracle
     pub fn query_oracle_volatility(
         &self,
         base_info: &'a Option<OracleInfo>,
@@ -407,6 +472,7 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
+    // Tokenfactory
     pub fn query_token_factory_denom_total_supply<T: Into<String> + Clone>(&self, denom: &'a T) -> StdResult<TokenFactoryDenomSupplyResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Tokenfactory,
@@ -427,6 +493,7 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
+    // Wasmx
     pub fn query_contract_registration_info<A: Into<String> + Clone>(
         &self,
         contract_address: &'a A,
@@ -440,21 +507,6 @@ impl<'a> InjectiveQuerier<'a> {
 
         let res = self.querier.query(&request.into())?;
 
-        Ok(res)
-    }
-
-    pub fn query_market_atomic_execution_fee_multiplier<T: Into<MarketId> + Clone>(
-        &self,
-        market_id: &'a T,
-    ) -> StdResult<QueryMarketAtomicExecutionFeeMultiplierResponse> {
-        let request = InjectiveQueryWrapper {
-            route: InjectiveRoute::Exchange,
-            query_data: InjectiveQuery::MarketAtomicExecutionFeeMultiplier {
-                market_id: market_id.clone().into(),
-            },
-        };
-
-        let res: QueryMarketAtomicExecutionFeeMultiplierResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 }

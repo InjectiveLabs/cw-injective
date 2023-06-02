@@ -1,4 +1,4 @@
-use crate::volatility::{MetadataStatistics, TradeRecord};
+use crate::oracle::volatility::{MetadataStatistics, TradeRecord};
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -72,4 +72,47 @@ pub enum PythStatus {
     Trading = 1,
     Halted = 2,
     Auction = 3,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct PricePairState {
+    #[serde(default)]
+    pub pair_price: FPDecimal,
+    #[serde(default)]
+    pub base_price: FPDecimal,
+    #[serde(default)]
+    pub quote_price: FPDecimal,
+    #[serde(default)]
+    pub base_cumulative_price: FPDecimal,
+    #[serde(default)]
+    pub quote_cumulative_price: FPDecimal,
+    #[serde(default)]
+    pub base_timestamp: i64,
+    #[serde(default)]
+    pub quote_timestamp: i64,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct PriceState {
+    #[serde(default)]
+    pub price: FPDecimal,
+    #[serde(default)]
+    pub cumulative_price: FPDecimal,
+    #[serde(default)]
+    pub timestamp: i64,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct PythPriceState {
+    #[serde(default)]
+    pub price_id: String,
+    #[serde(default)]
+    pub ema_price: FPDecimal,
+    #[serde(default)]
+    pub ema_conf: FPDecimal,
+    #[serde(default)]
+    pub conf: FPDecimal,
+    #[serde(default)]
+    pub publish_time: i64,
+    pub price_state: PriceState,
 }

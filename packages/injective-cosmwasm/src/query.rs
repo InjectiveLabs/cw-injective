@@ -1,23 +1,23 @@
 use cosmwasm_std::{Coin, CustomQuery, Uint128};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use injective_math::FPDecimal;
 
-use crate::exchange::{MarketVolume, VolumeByType};
-use crate::{
-    derivative::EffectivePosition,
-    derivative::TrimmedDerivativeLimitOrder,
+use crate::exchange::{
+    derivative::{EffectivePosition, Position, TrimmedDerivativeLimitOrder},
     derivative_market::{FullDerivativeMarket, PerpetualMarketFunding, PerpetualMarketInfo},
-    exchange::Deposit,
-    oracle::{OracleHistoryOptions, OracleInfo},
-    route::InjectiveRoute,
+    order::OrderSide,
     spot::TrimmedSpotLimitOrder,
-    volatility::{MetadataStatistics, TradeHistoryOptions, TradeRecord},
-    OracleType, Position, SpotMarket,
+    spot_market::SpotMarket,
+    types::{Deposit, MarketId, MarketVolume, SubaccountId, VolumeByType},
 };
-use crate::{MarketId, SubaccountId};
+use crate::oracle::{
+    types::{OracleHistoryOptions, OracleInfo, OracleType},
+    volatility::{MetadataStatistics, TradeHistoryOptions, TradeRecord},
+};
+use crate::route::InjectiveRoute;
+use crate::wasmx::types::FundingMode;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -26,28 +26,26 @@ pub struct InjectiveQueryWrapper {
     pub query_data: InjectiveQuery,
 }
 
-#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema)]
-#[repr(u8)]
-pub enum OrderSide {
-    Unspecified = 0,
-    Buy = 1,
-    Sell = 2,
-}
-
-#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema)]
-#[repr(i32)]
-pub enum FundingMode {
-    Unspecified = 0,
-    SelfFunded = 1,
-    GrantOnly = 2,
-    Dual = 3,
-}
-
 /// InjectiveQuery is an override of QueryRequest::Custom to access Injective-specific modules
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum InjectiveQuery {
-    // SubaccountDeposit will return the subaccount deposits for a given subaccount_id and denom
+    // Authz
+    Grants {
+        granter: String,
+        grantee: String,
+        msg_type_url: String,
+        pagination: Option<u32>,
+    },
+    GranteeGrants {
+        grantee: String,
+        pagination: Option<u32>,
+    },
+    GranterGrants {
+        granter: String,
+        pagination: Option<u32>,
+    },
+    // Exchange
     SubaccountDeposit {
         subaccount_id: SubaccountId,
         denom: String,
@@ -74,7 +72,6 @@ pub enum InjectiveQuery {
         strategy: i32,
         reference_price: Option<FPDecimal>,
     },
-    // DerivativeMarket will return the derivative market for a given id
     DerivativeMarket {
         market_id: MarketId,
     },
@@ -139,6 +136,7 @@ pub enum InjectiveQuery {
     MarketAtomicExecutionFeeMultiplier {
         market_id: MarketId,
     },
+    // Oracle
     OracleVolatility {
         base_info: Option<OracleInfo>,
         quote_info: Option<OracleInfo>,
@@ -156,7 +154,7 @@ pub enum InjectiveQuery {
         denom: String,
     },
     TokenFactoryDenomCreationFee {},
-    // wasmx
+    // Wasmx
     WasmxRegisteredContractInfo {
         contract_address: String,
     },
@@ -205,73 +203,6 @@ pub struct TraderSpotOrdersResponse {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-pub struct MarketVolatilityResponse {
-    pub volatility: Option<FPDecimal>,
-    pub history_metadata: Option<MetadataStatistics>,
-    pub raw_history: Option<Vec<TradeRecord>>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-pub struct OracleVolatilityResponse {
-    pub volatility: Option<FPDecimal>,
-    pub history_metadata: Option<MetadataStatistics>,
-    pub raw_history: Option<Vec<TradeRecord>>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-pub struct OraclePriceResponse {
-    pub price_pair_state: Option<PricePairState>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-pub struct PythPriceResponse {
-    pub price_state: Option<PythPriceState>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-pub struct PricePairState {
-    #[serde(default)]
-    pub pair_price: FPDecimal,
-    #[serde(default)]
-    pub base_price: FPDecimal,
-    #[serde(default)]
-    pub quote_price: FPDecimal,
-    #[serde(default)]
-    pub base_cumulative_price: FPDecimal,
-    #[serde(default)]
-    pub quote_cumulative_price: FPDecimal,
-    #[serde(default)]
-    pub base_timestamp: i64,
-    #[serde(default)]
-    pub quote_timestamp: i64,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-pub struct PriceState {
-    #[serde(default)]
-    pub price: FPDecimal,
-    #[serde(default)]
-    pub cumulative_price: FPDecimal,
-    #[serde(default)]
-    pub timestamp: i64,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-pub struct PythPriceState {
-    #[serde(default)]
-    pub price_id: String,
-    #[serde(default)]
-    pub ema_price: FPDecimal,
-    #[serde(default)]
-    pub ema_conf: FPDecimal,
-    #[serde(default)]
-    pub conf: FPDecimal,
-    #[serde(default)]
-    pub publish_time: i64,
-    pub price_state: PriceState,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct DerivativeMarketResponse {
     pub market: FullDerivativeMarket,
 }
@@ -299,6 +230,20 @@ impl PriceLevel {
     pub fn new(p: FPDecimal, q: FPDecimal) -> PriceLevel {
         PriceLevel { p, q }
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct MarketVolatilityResponse {
+    pub volatility: Option<FPDecimal>,
+    pub history_metadata: Option<MetadataStatistics>,
+    pub raw_history: Option<Vec<TradeRecord>>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct OracleVolatilityResponse {
+    pub volatility: Option<FPDecimal>,
+    pub history_metadata: Option<MetadataStatistics>,
+    pub raw_history: Option<Vec<TradeRecord>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]

@@ -5,7 +5,7 @@ use subtle_encoding::bech32;
 
 use ethereum_types::H160;
 
-use crate::{InjectiveQueryWrapper, SubaccountId};
+use crate::{exchange::types::SubaccountId, InjectiveQueryWrapper};
 
 pub fn get_default_subaccount_id_for_checked_address(addr: &Addr) -> SubaccountId {
     checked_address_to_subaccount_id(addr, 0)
@@ -63,9 +63,11 @@ pub fn subaccount_id_to_unchecked_injective_address(subaccount_id: &SubaccountId
 #[cfg(test)]
 mod tests {
     use crate::{
+        exchange::subaccount::{
+            bech32_to_hex, checked_address_to_subaccount_id, get_default_subaccount_id_for_checked_address, subaccount_id_to_injective_address,
+            SubaccountId,
+        },
         mock_dependencies,
-        subaccount::{bech32_to_hex, checked_address_to_subaccount_id, get_default_subaccount_id_for_checked_address},
-        subaccount_id_to_injective_address, SubaccountId,
     };
     use cosmwasm_std::Addr;
 

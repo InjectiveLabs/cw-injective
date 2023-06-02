@@ -1,5 +1,5 @@
-use crate::oracle::OracleType;
-use crate::MarketId;
+use crate::exchange::types::MarketId;
+use crate::oracle::types::OracleType;
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};

@@ -12,7 +12,10 @@ pub(crate) mod testing_helpers {
 
     use injective_math::FPDecimal;
 
-    use crate::{InjectiveQueryWrapper, MarketId, SpotMarket, WasmMockQuerier};
+    use crate::{
+        exchange::{spot_market::SpotMarket, types::MarketId},
+        InjectiveQueryWrapper, WasmMockQuerier,
+    };
 
     pub const TEST_CONTRACT_ADDR: &str = "inj14hj2tavq8fpesdwxxcu44rty3hh90vhujaxlnz";
 
