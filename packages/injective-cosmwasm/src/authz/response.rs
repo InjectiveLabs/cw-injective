@@ -26,14 +26,14 @@ pub struct PageResponse {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct GrantsResponse {
-    pub grants: Vec<Grant>,
-    pub pagination: PageResponse,
+    pub grants: Option<Vec<Grant>>,
+    pub pagination: Option<PageResponse>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct GranteeGrantsResponse {
-    pub grants: Vec<GrantAuthorization>,
-    pub pagination: PageResponse,
+    pub grants: Option<Vec<GrantAuthorization>>,
+    pub pagination: Option<PageResponse>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
