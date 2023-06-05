@@ -8,7 +8,6 @@ use std::fmt;
 use crate::InjectiveQuerier;
 
 pub const UNSORTED_CANCELLATION_STRATEGY: i32 = 0;
-
 pub const FROM_WORST_TO_BEST_CANCELLATION_STRATEGY: i32 = 1;
 
 /// Deposit is data format for the subaccount deposit
