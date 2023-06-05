@@ -5,16 +5,12 @@ use serde::{Deserialize, Serialize};
 use injective_math::FPDecimal;
 
 use crate::exchange::{
-    derivative::{EffectivePosition, Position, TrimmedDerivativeLimitOrder},
-    derivative_market::{FullDerivativeMarket, PerpetualMarketFunding, PerpetualMarketInfo},
     order::OrderSide,
-    spot::TrimmedSpotLimitOrder,
-    spot_market::SpotMarket,
-    types::{Deposit, MarketId, MarketVolume, SubaccountId, VolumeByType},
+    types::{MarketId, SubaccountId},
 };
 use crate::oracle::{
     types::{OracleHistoryOptions, OracleInfo, OracleType},
-    volatility::{MetadataStatistics, TradeHistoryOptions, TradeRecord},
+    volatility::TradeHistoryOptions,
 };
 use crate::route::InjectiveRoute;
 
