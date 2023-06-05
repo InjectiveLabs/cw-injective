@@ -53,15 +53,15 @@ pub use test_helpers::testing_helpers::{
     TEST_MARKET_ID_3, TEST_MARKET_ID_4, TEST_MARKET_ID_5, TEST_MARKET_ID_6, TEST_MARKET_ID_7, TEST_MARKET_ID_8, TEST_MARKET_ID_9,
 };
 
-mod authz;
-mod exchange;
-mod msg;
-mod oracle;
-mod querier;
-mod query;
-mod route;
-mod tokenfactory;
-mod wasmx;
+pub mod authz;
+pub mod exchange;
+pub mod msg;
+pub mod oracle;
+pub mod querier;
+pub mod query;
+pub mod route;
+pub mod tokenfactory;
+pub mod wasmx;
 
 #[cfg(not(target_arch = "wasm32"))]
 mod exchange_mock_querier;
