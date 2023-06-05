@@ -9,7 +9,7 @@ license = "Apache-2.0"
 
 [dependencies]
 cosmwasm-std = { version = "1.1.1", features = ["iterator", "abort"] }
-injective-cosmwasm = { version = "0.1.96", path = "../injective-cosmwasm" }
+injective-cosmwasm = { version = "0.1.103", path = "../injective-cosmwasm" }
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 base64 = "0.13.1"
 cw-multi-test = "0.16.2"

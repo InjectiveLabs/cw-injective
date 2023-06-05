@@ -4,7 +4,15 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-use crate::{MarketId, SubaccountId};
+use crate::exchange::types::{MarketId, SubaccountId};
+
+#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[repr(u8)]
+pub enum OrderSide {
+    Unspecified = 0,
+    Buy = 1,
+    Sell = 2,
+}
 
 #[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[repr(u8)]
@@ -44,7 +52,7 @@ pub trait GenericOrder {
 
 #[cfg(test)]
 mod tests {
-    use crate::OrderType;
+    use crate::exchange::order::OrderType;
 
     #[test]
     fn order_type_serialization() {

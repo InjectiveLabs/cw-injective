@@ -5,11 +5,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum InjectiveRoute {
-    // Auction,
+    Authz,
     Exchange,
-    // Insurance,
     Tokenfactory,
     Oracle,
     Wasmx,
-    // Peggy,
 }

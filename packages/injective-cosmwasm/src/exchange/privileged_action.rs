@@ -1,4 +1,4 @@
-use crate::{MarketId, SubaccountId};
+use crate::exchange::types::{MarketId, SubaccountId};
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};

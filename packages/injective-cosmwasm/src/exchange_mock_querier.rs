@@ -9,17 +9,21 @@ use cosmwasm_std::{
 
 use injective_math::FPDecimal;
 
-use crate::exchange::{MarketVolume, VolumeByType};
-use crate::oracle::{OracleHistoryOptions, OracleType};
-use crate::query::{
-    OrderSide, PriceLevel, PriceState, PythPriceState, QueryContractRegistrationInfoResponse, QueryOrderbookResponse,
-    TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse,
+use crate::exchange::{
+    derivative_market::DerivativeMarket,
+    response::QueryOrderbookResponse,
+    types::{MarketVolume, PriceLevel, VolumeByType},
 };
-use crate::volatility::TradeHistoryOptions;
+use crate::oracle::{
+    types::{OracleHistoryOptions, OracleType, PriceState, PythPriceState},
+    volatility::TradeHistoryOptions,
+};
+use crate::tokenfactory::response::{TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
+use crate::wasmx::response::QueryContractRegistrationInfoResponse;
 use crate::{
-    Deposit, DerivativeMarket, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse,
-    MarketVolatilityResponse, OracleInfo, OracleVolatilityResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PythPriceResponse,
-    QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse,
+    Deposit, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse,
+    MarketVolatilityResponse, OracleInfo, OracleVolatilityResponse, OrderSide, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse,
+    PythPriceResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse,
     QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarket, SpotMarketResponse, SubaccountDepositResponse,
     SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
 };
@@ -471,6 +475,14 @@ impl WasmMockQuerier {
                 _ => panic!("unsupported"),
             },
             QueryRequest::Custom(query) => match query.query_data.clone() {
+                InjectiveQuery::Grants {
+                    granter: _,
+                    grantee: _,
+                    msg_type_url: _,
+                    pagination: _,
+                } => todo!(),
+                InjectiveQuery::GranteeGrants { grantee: _, pagination: _ } => todo!(),
+                InjectiveQuery::GranterGrants { granter: _, pagination: _ } => todo!(),
                 InjectiveQuery::SubaccountDeposit { subaccount_id, denom } => match &self.subaccount_deposit_response_handler {
                     Some(handler) => handler.handle(subaccount_id, denom),
                     None => default_subaccount_deposit_response_handler(),
@@ -696,11 +708,11 @@ pub mod handlers {
 
     use injective_math::FPDecimal;
 
+    use crate::exchange::response::QueryOrderbookResponse;
     use crate::exchange_mock_querier::{HandlesByAddressQuery, HandlesDenomSupplyQuery, HandlesFeeQuery};
-    use crate::query::{
-        OraclePriceResponse, PricePairState, QueryContractRegistrationInfoResponse, QueryOrderbookResponse, RegisteredContract,
-        TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse,
-    };
+    use crate::oracle::{response::OraclePriceResponse, types::PricePairState};
+    use crate::tokenfactory::response::{TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
+    use crate::wasmx::{response::QueryContractRegistrationInfoResponse, types::RegisteredContract};
     use crate::{
         exchange_mock_querier::TestCoin, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition, FullDerivativeMarket,
         FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery,
@@ -1026,7 +1038,7 @@ pub mod handlers {
                 &self,
                 _: Option<crate::OracleInfo>,
                 _: Option<crate::OracleInfo>,
-                _: Option<crate::oracle::OracleHistoryOptions>,
+                _: Option<crate::oracle::types::OracleHistoryOptions>,
             ) -> QuerierResult {
                 let response = OracleVolatilityResponse {
                     volatility: self.volatility.to_owned(),

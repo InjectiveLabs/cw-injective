@@ -1,10 +1,55 @@
 use cosmwasm_std::{Empty, StdError, StdResult};
 use cw_storage_plus::{Key, KeyDeserialize, Prefixer, PrimaryKey};
+use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{de::Error, Deserialize, Deserializer, Serialize};
 use std::fmt;
 
 use crate::InjectiveQuerier;
+
+pub const UNSORTED_CANCELLATION_STRATEGY: i32 = 0;
+pub const FROM_WORST_TO_BEST_CANCELLATION_STRATEGY: i32 = 1;
+
+/// Deposit is data format for the subaccount deposit
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct Deposit {
+    pub available_balance: FPDecimal,
+    pub total_balance: FPDecimal,
+}
+
+/// Response to query for aggregate volume for a given market
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct DenomDecimals {
+    pub denom: String,
+    pub decimals: u64,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct PriceLevel {
+    pub p: FPDecimal,
+    pub q: FPDecimal,
+}
+
+impl PriceLevel {
+    // helper method for tests
+    pub fn new(p: FPDecimal, q: FPDecimal) -> PriceLevel {
+        PriceLevel { p, q }
+    }
+}
+
+/// Volume values divided by type (maker or taker volume)
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct VolumeByType {
+    pub maker_volume: FPDecimal,
+    pub taker_volume: FPDecimal,
+}
+
+/// Total volume on a given market
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct MarketVolume {
+    pub market_id: MarketId,
+    pub volume: VolumeByType,
+}
 
 pub enum MarketType {
     Spot,
