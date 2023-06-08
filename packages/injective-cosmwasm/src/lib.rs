@@ -39,8 +39,8 @@ pub use exchange_mock_querier::*;
 pub use msg::{
     cancel_derivative_order_msg, cancel_spot_order_msg, create_activate_contract_msg, create_batch_update_orders_msg, create_burn_tokens_msg,
     create_deactivate_contract_msg, create_deposit_msg, create_derivative_market_order_msg, create_external_transfer_msg,
-    create_increase_position_margin_msg, create_liquidate_position_msg, create_mint_tokens_msg, create_new_denom_msg, create_rewards_opt_out_msg,
-    create_relay_pyth_prices_msg, create_set_token_metadata_msg, create_spot_market_order_msg, create_subaccount_transfer_msg,
+    create_increase_position_margin_msg, create_liquidate_position_msg, create_mint_tokens_msg, create_new_denom_msg, create_relay_pyth_prices_msg,
+    create_rewards_opt_out_msg, create_set_token_metadata_msg, create_spot_market_order_msg, create_subaccount_transfer_msg,
     create_update_contract_msg, create_withdraw_msg, InjectiveMsg, InjectiveMsgWrapper,
 };
 
