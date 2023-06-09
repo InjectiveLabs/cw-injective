@@ -114,7 +114,7 @@ pub fn try_swap(
     Ok(response)
 }
 
-#[derive(PartialEq, Clone, Default, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Clone, Default, Debug, Serialize, Deserialize)]
 pub struct SpotMarketOrderResults {
     // message fields
     pub quantity: String,
@@ -122,7 +122,7 @@ pub struct SpotMarketOrderResults {
     pub fee: String,
 }
 
-#[derive(PartialEq, Clone, Default, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Clone, Default, Debug, Serialize, Deserialize)]
 pub struct MsgCreateSpotMarketOrderResponse2 {
     // message fields
     pub order_hash: String,

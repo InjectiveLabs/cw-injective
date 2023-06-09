@@ -18,7 +18,7 @@ use crate::contract::{execute, instantiate, reply, ATOMIC_ORDER_REPLY_ID};
 use crate::helpers::{get_message_data, i32_to_dec};
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 
-fn test_deps<'a>() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQueryWrapper> {
+fn test_deps() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQueryWrapper> {
     inj_mock_deps(|querier| {
         querier.spot_market_response_handler = Some(Box::new(create_spot_market_handler()))
     })

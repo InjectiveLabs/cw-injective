@@ -86,9 +86,8 @@ pub enum InjectiveMsg {
         market_id: MarketId,
         order: Option<DerivativeOrder>,
     },
-    RegisterAsDMM {
+    RewardsOptOut {
         sender: Addr,
-        dmm_account: String,
     },
     BatchUpdateOrders {
         sender: Addr,
@@ -328,10 +327,10 @@ pub fn create_liquidate_position_msg(
     .into()
 }
 
-pub fn create_register_as_dmm_msg(sender: Addr, dmm_account: String) -> CosmosMsg<InjectiveMsgWrapper> {
+pub fn create_rewards_opt_out_msg(sender: Addr) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,
-        msg_data: InjectiveMsg::RegisterAsDMM { sender, dmm_account },
+        msg_data: InjectiveMsg::RewardsOptOut { sender },
     }
     .into()
 }
