@@ -35,4 +35,4 @@ cw2 = "0.14.0"
 serde = { version = "1.0.136", default-features = false, features = ["derive"] }
 schemars = "0.8.8"
 thiserror = { version = "1.0.30" }
-injective-cosmwasm = { version = "0.1.96" }
+injective-cosmwasm = { version = "0.1.104" }

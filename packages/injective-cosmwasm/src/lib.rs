@@ -19,7 +19,7 @@ pub use exchange::{
         subaccount_id_to_ethereum_address, subaccount_id_to_injective_address, subaccount_id_to_unchecked_injective_address,
     },
     types::{
-        DenomDecimals, Deposit, Hash, MarketId, MarketType, PriceLevel, SubaccountId, FROM_WORST_TO_BEST_CANCELLATION_STRATEGY,
+        DenomDecimals, Deposit, Hash, MarketId, MarketType, PriceLevel, ShortSubaccountId, SubaccountId, FROM_WORST_TO_BEST_CANCELLATION_STRATEGY,
         UNSORTED_CANCELLATION_STRATEGY,
     },
 };

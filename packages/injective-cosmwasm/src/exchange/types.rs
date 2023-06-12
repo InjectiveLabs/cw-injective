@@ -122,26 +122,27 @@ impl<'de> Deserialize<'de> for MarketId {
     where
         D: Deserializer<'de>,
     {
-        let s = String::deserialize(deserializer)?;
+        let market_id = String::deserialize(deserializer)?;
 
-        if !s.starts_with("0x") {
-            let error_message = "Invalid prefix in deserialization: market_id must start with 0x";
+        if !market_id.starts_with("0x") {
+            let error_message = format!("Invalid prefix in deserialization: market_id must start with 0x, received {}", market_id);
             return Err(D::Error::custom(error_message));
         }
 
-        if s.len() != 66 {
-            let error_message = "Invalid length in deserialization: market_id must be exactly 66 characters";
+        if market_id.len() != 66 {
+            let error_message = format!(
+                "Invalid length in deserialization: market_id must be exactly 66 characters, received {}",
+                market_id
+            );
             return Err(D::Error::custom(error_message));
         }
 
-        Ok(MarketId::unchecked(s))
+        Ok(MarketId::unchecked(market_id))
     }
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
 pub struct SubaccountId(String);
-
-const MAX_SUBACCOUNT_NONE_LENGTH: usize = 3;
 
 impl SubaccountId {
     pub fn new<S>(subaccount_id_s: S) -> std::result::Result<SubaccountId, cosmwasm_std::StdError>
@@ -150,18 +151,11 @@ impl SubaccountId {
     {
         let subaccount_id = subaccount_id_s.into();
 
-        let is_nonce_derived = subaccount_id.len() <= MAX_SUBACCOUNT_NONE_LENGTH;
-        if is_nonce_derived && (subaccount_id.is_empty() || subaccount_id.parse::<u64>().is_err()) {
-            return Err(StdError::generic_err(
-                "Invalid nonce: when subaccount_id is derived from nonce, it must be a valid u64",
-            ));
-        }
-
-        if !is_nonce_derived && !subaccount_id.starts_with("0x") {
+        if !subaccount_id.starts_with("0x") {
             return Err(StdError::generic_err("Invalid prefix: subaccount_id must start with 0x"));
         }
 
-        if !is_nonce_derived && subaccount_id.len() != 66 {
+        if subaccount_id.len() != 66 {
             return Err(StdError::generic_err("Invalid length: subaccount_id must be exactly 66 characters"));
         }
 
@@ -192,23 +186,82 @@ impl<'de> Deserialize<'de> for SubaccountId {
     {
         let subaccount_id = String::deserialize(deserializer)?;
 
-        let is_nonce_derived = subaccount_id.len() <= MAX_SUBACCOUNT_NONE_LENGTH;
-        if is_nonce_derived && (subaccount_id.is_empty() || subaccount_id.parse::<u64>().is_err()) {
-            let error_message = "Invalid nonce: when subaccount_id is derived from nonce, it must be a valid u64";
+        if !subaccount_id.starts_with("0x") {
+            let error_message = format!(
+                "Invalid prefix in deserialization: subaccount_id must start with 0x, received {}",
+                subaccount_id
+            );
             return Err(D::Error::custom(error_message));
         }
 
-        if !is_nonce_derived && !subaccount_id.starts_with("0x") {
-            let error_message = "Invalid prefix in deserialization: subaccount_id must start with 0x";
-            return Err(D::Error::custom(error_message));
-        }
-
-        if !is_nonce_derived && subaccount_id.len() != 66 {
-            let error_message = "Invalid length in deserialization: subaccount_id must be exactly 66 characters";
+        if subaccount_id.len() != 66 {
+            let error_message = format!(
+                "Invalid length in deserialization: subaccount_id must be exactly 66 characters, received {}",
+                subaccount_id
+            );
             return Err(D::Error::custom(error_message));
         }
 
         Ok(SubaccountId::unchecked(subaccount_id))
+    }
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
+pub struct ShortSubaccountId(String);
+
+const MAX_SHORT_SUBACCOUNT_NONCE: u16 = 999;
+
+impl ShortSubaccountId {
+    pub fn new<S>(id_s: S) -> Result<ShortSubaccountId, StdError>
+    where
+        S: Into<String>,
+    {
+        let id = id_s.into();
+
+        match id.parse::<u16>() {
+            Ok(value) if value <= MAX_SHORT_SUBACCOUNT_NONCE => Ok(Self(id)),
+            _ => Err(StdError::generic_err("Invalid value: ShortSubaccountId must be a number between 0-999")),
+        }
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+
+    pub fn unchecked<S>(id_s: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Self(id_s.into())
+    }
+
+    #[inline]
+    pub fn as_bytes(&self) -> &[u8] {
+        self.0.as_bytes()
+    }
+}
+
+impl<'de> Deserialize<'de> for ShortSubaccountId {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let id = String::deserialize(deserializer)?;
+
+        match id.parse::<u16>() {
+            Ok(value) if value <= MAX_SHORT_SUBACCOUNT_NONCE => Ok(ShortSubaccountId::unchecked(id)),
+            _ => Err(D::Error::custom(format!(
+                "Invalid value in deserialization: ShortSubaccountId must be a number between 0-999, received {}",
+                id
+            ))),
+        }
+    }
+}
+
+impl From<SubaccountId> for ShortSubaccountId {
+    fn from(subaccount_id: SubaccountId) -> Self {
+        let last_three_chars = &subaccount_id.as_str()[subaccount_id.as_str().len() - 3..];
+        ShortSubaccountId::unchecked(last_three_chars.to_string())
     }
 }
 

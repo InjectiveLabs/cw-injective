@@ -6,6 +6,8 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::exchange::types::{MarketId, SubaccountId};
 
+use super::types::ShortSubaccountId;
+
 #[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[repr(u8)]
 pub enum OrderSide {
@@ -34,12 +36,53 @@ pub struct OrderData {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct ShortOrderData {
+    pub market_id: MarketId,
+    pub subaccount_id: ShortSubaccountId,
+    pub order_hash: String,
+}
+
+impl From<OrderData> for ShortOrderData {
+    fn from(order: OrderData) -> Self {
+        ShortOrderData {
+            market_id: order.market_id,
+            subaccount_id: order.subaccount_id.into(),
+            order_hash: order.order_hash,
+        }
+    }
+}
+
+pub fn order_data_to_short(order_data: Vec<OrderData>) -> Vec<ShortOrderData> {
+    order_data.into_iter().map(|item| item.into()).collect()
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct OrderInfo {
     pub subaccount_id: SubaccountId,
     #[serde(default)]
     pub fee_recipient: Option<Addr>,
     pub price: FPDecimal,
     pub quantity: FPDecimal,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct ShortOrderInfo {
+    pub subaccount_id: ShortSubaccountId,
+    #[serde(default)]
+    pub fee_recipient: Option<Addr>,
+    pub price: FPDecimal,
+    pub quantity: FPDecimal,
+}
+
+impl From<OrderInfo> for ShortOrderInfo {
+    fn from(order_info: OrderInfo) -> Self {
+        ShortOrderInfo {
+            subaccount_id: order_info.subaccount_id.into(),
+            fee_recipient: order_info.fee_recipient,
+            price: order_info.price,
+            quantity: order_info.quantity,
+        }
+    }
 }
 
 pub trait GenericOrder {
