@@ -6,6 +6,9 @@ use injective_math::FPDecimal;
 
 use crate::exchange::order::{GenericOrder, OrderInfo, OrderType};
 use crate::exchange::types::{MarketId, SubaccountId};
+use crate::ShortSubaccountId;
+
+use super::order::ShortOrderInfo;
 
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -159,6 +162,92 @@ impl GenericOrder for DerivativeOrder {
 
     fn get_trigger_price(&self) -> Option<FPDecimal> {
         self.trigger_price
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct ShortDerivativeOrder {
+    pub market_id: MarketId,
+    pub order_info: ShortOrderInfo,
+    pub order_type: OrderType,
+    pub margin: FPDecimal,
+    pub trigger_price: Option<FPDecimal>,
+}
+
+impl From<DerivativeOrder> for ShortDerivativeOrder {
+    fn from(derivative_order: DerivativeOrder) -> Self {
+        ShortDerivativeOrder {
+            market_id: derivative_order.market_id,
+            order_info: derivative_order.order_info.into(),
+            order_type: derivative_order.order_type,
+            trigger_price: derivative_order.trigger_price,
+            margin: derivative_order.margin,
+        }
+    }
+}
+
+pub fn derivative_order_to_short(derivative_order: Vec<DerivativeOrder>) -> Vec<ShortDerivativeOrder> {
+    derivative_order.into_iter().map(|item| item.into()).collect()
+}
+
+impl ShortDerivativeOrder {
+    pub fn new(
+        price: FPDecimal,
+        quantity: FPDecimal,
+        margin: FPDecimal,
+        order_type: OrderType,
+        market_id: MarketId,
+        subaccount_id: ShortSubaccountId,
+        fee_recipient: Option<Addr>,
+    ) -> Self {
+        ShortDerivativeOrder {
+            market_id,
+            order_info: ShortOrderInfo {
+                subaccount_id,
+                fee_recipient,
+                price,
+                quantity,
+            },
+            order_type,
+            margin,
+            trigger_price: None,
+        }
+    }
+    pub fn is_reduce_only(&self) -> bool {
+        self.margin.is_zero()
+    }
+    pub fn is_post_only(&self) -> bool {
+        self.order_type == OrderType::BuyPo || self.order_type == OrderType::SellPo
+    }
+    pub fn is_atomic(&self) -> bool {
+        self.order_type == OrderType::BuyAtomic || self.order_type == OrderType::SellAtomic
+    }
+    pub fn get_price(&self) -> FPDecimal {
+        self.order_info.price
+    }
+    pub fn get_quantity(&self) -> FPDecimal {
+        self.order_info.quantity
+    }
+    pub fn get_val(&self) -> FPDecimal {
+        self.get_price() * self.get_quantity()
+    }
+    pub fn is_invalid(&self, is_reduce_only: bool) -> bool {
+        if is_reduce_only && !self.margin.is_zero() {
+            return true;
+        }
+
+        if !is_reduce_only && self.margin.is_zero() {
+            return true;
+        }
+
+        self.get_price().is_zero() || self.get_quantity().is_zero()
+    }
+
+    pub fn get_order_type(&self) -> OrderType {
+        self.order_type.to_owned()
+    }
+    pub fn is_buy(&self) -> bool {
+        self.order_type == OrderType::Buy || self.order_type == OrderType::BuyPo || self.order_type == OrderType::BuyAtomic
     }
 }
 

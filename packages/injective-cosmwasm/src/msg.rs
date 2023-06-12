@@ -3,8 +3,9 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::exchange::{
-    order::OrderData,
-    spot::SpotOrder,
+    derivative::{derivative_order_to_short, ShortDerivativeOrder},
+    order::{order_data_to_short, OrderData, ShortOrderData},
+    spot::{spot_order_to_short, ShortSpotOrder, SpotOrder},
     subaccount::{is_default_subaccount, subaccount_id_to_injective_address},
     types::{MarketId, SubaccountId},
 };
@@ -94,10 +95,10 @@ pub enum InjectiveMsg {
         subaccount_id: Option<SubaccountId>,
         spot_market_ids_to_cancel_all: Vec<MarketId>,
         derivative_market_ids_to_cancel_all: Vec<MarketId>,
-        spot_orders_to_cancel: Vec<OrderData>,
-        derivative_orders_to_cancel: Vec<OrderData>,
-        spot_orders_to_create: Vec<SpotOrder>,
-        derivative_orders_to_create: Vec<DerivativeOrder>,
+        spot_orders_to_cancel: Vec<ShortOrderData>,
+        derivative_orders_to_cancel: Vec<ShortOrderData>,
+        spot_orders_to_create: Vec<ShortSpotOrder>,
+        derivative_orders_to_create: Vec<ShortDerivativeOrder>,
     },
     RelayPythPrices {
         sender: Addr,
@@ -352,10 +353,10 @@ pub fn create_batch_update_orders_msg(
             subaccount_id,
             spot_market_ids_to_cancel_all,
             derivative_market_ids_to_cancel_all,
-            spot_orders_to_cancel,
-            derivative_orders_to_cancel,
-            spot_orders_to_create,
-            derivative_orders_to_create,
+            spot_orders_to_cancel: order_data_to_short(spot_orders_to_cancel),
+            derivative_orders_to_cancel: order_data_to_short(derivative_orders_to_cancel),
+            spot_orders_to_create: spot_order_to_short(spot_orders_to_create),
+            derivative_orders_to_create: derivative_order_to_short(derivative_orders_to_create),
         },
     }
     .into()
