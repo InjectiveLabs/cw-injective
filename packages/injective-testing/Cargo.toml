@@ -2,7 +2,7 @@
 name = "injective-testing"
 authors = ["Bartek Tofel <bartek@injectivelabs.org>"]
 edition = "2021"
-version = "0.1.1"
+version = "0.1.2"
 description = "Testing utils for Injective Cosmwasm and core modules"
 repository = "https://github.com/InjectiveLabs/cw-injective/tree/master/packages/injective-testing"
 license = "Apache-2.0"
