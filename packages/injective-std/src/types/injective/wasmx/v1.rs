@@ -84,17 +84,17 @@ pub struct ContractRegistrationRequest {
     )]
     pub funding_mode: i32,
 }
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.wasmx.v1.BatchStoreCodeProposal")]
-pub struct BatchStoreCodeProposal {
-    #[prost(string, tag = "1")]
-    pub title: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub description: ::prost::alloc::string::String,
-    #[prost(message, repeated, tag = "3")]
-    pub proposals: ::prost::alloc::vec::Vec<super::super::super::cosmwasm::wasm::v1::StoreCodeProposal>,
-}
+// #[allow(clippy::derive_partial_eq_without_eq)]
+// #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+// #[proto_message(type_url = "/injective.wasmx.v1.BatchStoreCodeProposal")]
+// pub struct BatchStoreCodeProposal {
+//     #[prost(string, tag = "1")]
+//     pub title: ::prost::alloc::string::String,
+//     #[prost(string, tag = "2")]
+//     pub description: ::prost::alloc::string::String,
+//     #[prost(message, repeated, tag = "3")]
+//     pub proposals: ::prost::alloc::vec::Vec<super::super::super::cosmwasm::wasm::v1::StoreCodeProposal>,
+// }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
 #[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema)]

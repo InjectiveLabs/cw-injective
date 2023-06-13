@@ -388,9 +388,9 @@ impl<'a, Q: cosmwasm_std::CustomQuery> AuthQuerier<'a, Q> {
     pub fn account(&self, address: ::prost::alloc::string::String) -> Result<QueryAccountResponse, cosmwasm_std::StdError> {
         QueryAccountRequest { address }.query(self.querier)
     }
-    pub fn account_address_by_id(&self, id: i64, account_id: u64) -> Result<QueryAccountAddressByIdResponse, cosmwasm_std::StdError> {
-        QueryAccountAddressByIdRequest { id, account_id }.query(self.querier)
-    }
+    // pub fn account_address_by_id(&self, id: i64, account_id: u64) -> Result<QueryAccountAddressByIdResponse, cosmwasm_std::StdError> {
+    //     QueryAccountAddressByIdRequest { id, account_id }.query(self.querier)
+    // }
     pub fn params(&self) -> Result<QueryParamsResponse, cosmwasm_std::StdError> {
         QueryParamsRequest {}.query(self.querier)
     }
