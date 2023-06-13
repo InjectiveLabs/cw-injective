@@ -93,6 +93,14 @@ pub trait GenericOrder {
     fn is_sell(&self) -> bool;
 }
 
+pub trait GenericTrimmedOrder {
+    fn get_price(&self) -> FPDecimal;
+    fn get_fillable_quantity(&self) -> FPDecimal;
+    fn is_buy(&self) -> bool;
+    fn is_sell(&self) -> bool;
+    fn get_order_hash(&self) -> String;
+}
+
 #[cfg(test)]
 mod tests {
     use crate::exchange::order::OrderType;
