@@ -5,7 +5,7 @@ pub use exchange::{
     derivative_market::{
         DerivativeMarket, FullDerivativeMarket, FullDerivativeMarketPerpetualInfo, PerpetualMarketFunding, PerpetualMarketInfo, PerpetualMarketState,
     },
-    order::{GenericOrder, OrderData, OrderInfo, OrderSide, OrderType},
+    order::{GenericOrder, GenericTrimmedOrder, OrderData, OrderInfo, OrderSide, OrderType},
     response::{
         DerivativeMarketResponse, MarketMidPriceAndTOBResponse, MarketVolatilityResponse, OracleVolatilityResponse, PerpetualMarketFundingResponse,
         PerpetualMarketInfoResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse,

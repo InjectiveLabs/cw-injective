@@ -7,6 +7,7 @@ use injective_math::FPDecimal;
 use crate::exchange::order::{GenericOrder, OrderInfo, OrderType};
 use crate::exchange::types::{MarketId, SubaccountId};
 
+use super::order::GenericTrimmedOrder;
 use super::types::ShortSubaccountId;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -236,6 +237,28 @@ pub struct TrimmedSpotLimitOrder {
     #[serde(default)]
     pub isBuy: bool,
     pub order_hash: String,
+}
+
+impl GenericTrimmedOrder for TrimmedSpotLimitOrder {
+    fn is_buy(&self) -> bool {
+        self.isBuy
+    }
+
+    fn is_sell(&self) -> bool {
+        !self.isBuy
+    }
+
+    fn get_price(&self) -> FPDecimal {
+        self.price
+    }
+
+    fn get_fillable_quantity(&self) -> FPDecimal {
+        self.fillable
+    }
+
+    fn get_order_hash(&self) -> String {
+        self.order_hash.to_owned()
+    }
 }
 
 #[allow(non_snake_case)]
