@@ -14,7 +14,7 @@ impl FromStr for FPDecimal {
     /// This never performs any kind of rounding.
     /// More than 18 fractional digits, even zeros, result in an error.
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let sign = if input.starts_with('-') { 0 } else { 1 };
+        let sign = i8::from(!input.starts_with('-'));
         let parts: Vec<&str> = input.trim_start_matches('-').split('.').collect();
         match parts.len() {
             1 => {
