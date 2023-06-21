@@ -1,4 +1,5 @@
 use cosmwasm_std::{Addr, BankMsg, Coin, CosmosMsg, CustomMsg, Deps, StdError, StdResult};
+use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -79,7 +80,7 @@ pub enum InjectiveMsg {
         source_subaccount_id: SubaccountId,
         destination_subaccount_id: SubaccountId,
         market_id: MarketId,
-        amount: Coin,
+        amount: FPDecimal,
     },
     LiquidatePosition {
         sender: Addr,
@@ -295,7 +296,7 @@ pub fn create_increase_position_margin_msg(
     source_subaccount_id: SubaccountId,
     destination_subaccount_id: SubaccountId,
     market_id: MarketId,
-    amount: Coin,
+    amount: FPDecimal,
 ) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,
