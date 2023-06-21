@@ -244,5 +244,6 @@ mod factorial;
 mod from_str;
 mod hyper;
 mod log;
+pub mod scale;
 mod serde;
 mod trigonometry;
