@@ -1,22 +1,33 @@
-# Injective Cosmwasm Contracts
+# Injective Cosmwasm
 
-This repository contains the full source code for the core smart contracts deployed
-on [Injective](https://injective.com).
+This repository contains packages and examples for how to use CosmWasm with [Injective](https://injective.com).
 
-## Contracts
+## Packages
 
-These contracts hold the core logic of the system.
+These packages can be used to integrate CosmWasm and Injective.
 
-| Contract                                                    | Description                                                                                |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| [`dummy`](./contracts/dummy/)                               | A simply template for starting a new contract                                              |
-| [`atomic-order-example`](./contracts/atomic-order-example/) | Example contract on how to do atomic market orders on Injective incl handling the response |
+| Contract                                                          | Description                                                                                                                                                                      |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`injective-cosmwasm`](./packages/injective-cosmwasm/)            | Package for Injective-specific queries and messages.                                                                                                                             |
+| [`injective-math`](./packages/injective-math/)                    | Math utility library including custom FPDecimal type.                                                                                                                            |
+| [`injective-protobuf`](./packages/injective-protobuf/)            | Rust protobuf files generation for Injective messages.                                                                                                                           |
+| [`injective-std`](./packages/injective-std/)                      | Injective's proto-generated types and helpers built using [Buf](https://github.com/bufbuild/buf). Enables interaction with both custom and standard modules.                     |
+
+## Example Contracts
+
+These contracts can be used as examples for CosmWasm and Injective.
+
+| Contract                                                          | Description                                                                                 |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| [`dummy`](./contracts/dummy/)                                     | A simply template for starting a new contract.                                              |
+| [`atomic-order-example`](./contracts/atomic-order-example/)       | Example contract on how to do atomic market orders on Injective incl handling the response. |
+| [`swap-contract`](https://github.com/InjectiveLabs/swap-contract) | More complex atomic swaps over multiple market hops.                                        |
 
 ## Development
 
 ### Environment Setup
 
-- Rust v1.67.0
+- Rust v1.69.0
 - `wasm32-unknown-unknown` target
 - Docker
 
@@ -24,7 +35,7 @@ These contracts hold the core logic of the system.
 2. Run the following
 
 ```shell
-rustup default 1.67.0
+rustup default 1.69.0
 rustup target add wasm32-unknown-unknown
 ```
 
@@ -57,7 +68,7 @@ For production builds, run the following:
 docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/workspace-optimizer-arm64:0.12.11
+  cosmwasm/workspace-optimizer:0.13.0
 ```
 
 This performs several optimizations which can significantly reduce the final size of the contract binaries, which will
