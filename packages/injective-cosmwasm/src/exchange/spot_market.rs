@@ -3,6 +3,8 @@ use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use super::market::MarketStatus;
+
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SpotMarket {
@@ -14,7 +16,7 @@ pub struct SpotMarket {
     pub relayer_fee_share_rate: FPDecimal,
     pub market_id: MarketId,
     #[serde(default)]
-    pub status: i32,
+    pub status: MarketStatus,
     pub min_price_tick_size: FPDecimal,
     pub min_quantity_tick_size: FPDecimal,
 }

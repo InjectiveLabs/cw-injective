@@ -12,6 +12,7 @@ pub(crate) mod testing_helpers {
 
     use injective_math::FPDecimal;
 
+    use crate::MarketStatus;
     use crate::{
         exchange::{spot_market::SpotMarket, types::MarketId},
         InjectiveQueryWrapper, WasmMockQuerier,
@@ -105,7 +106,7 @@ pub(crate) mod testing_helpers {
             taker_fee_rate: FPDecimal::from_str("0.002").unwrap(),
             relayer_fee_share_rate: FPDecimal::from_str("0.4").unwrap(),
             market_id: test_market_ids()[idx as usize].clone(),
-            status: 1,
+            status: MarketStatus::Active,
             min_price_tick_size: FPDecimal::from_str("0.01").unwrap(),
             min_quantity_tick_size: FPDecimal::from_str("0.01").unwrap(),
         }
