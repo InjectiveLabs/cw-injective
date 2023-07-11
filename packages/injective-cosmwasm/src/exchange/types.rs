@@ -2,7 +2,8 @@ use cosmwasm_std::{Empty, StdError, StdResult};
 use cw_storage_plus::{Key, KeyDeserialize, Prefixer, PrimaryKey};
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
-use serde::{de::Error, Deserialize, Deserializer, Serialize};
+use serde::ser::Error as SerError;
+use serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
 
 use crate::InjectiveQuerier;
@@ -206,7 +207,7 @@ impl<'de> Deserialize<'de> for SubaccountId {
     }
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
 pub struct ShortSubaccountId(String);
 
 const MAX_SHORT_SUBACCOUNT_NONCE: u16 = 999;
@@ -232,7 +233,7 @@ impl ShortSubaccountId {
 
         // check if resulting number isn't bigger than chain limit
         match number_to_use.parse::<u16>() {
-            Ok(value) if value <= MAX_SHORT_SUBACCOUNT_NONCE => Ok(Self(number_to_use)),
+            Ok(value) if value <= MAX_SHORT_SUBACCOUNT_NONCE => Ok(Self(id)),
             _ => Err(StdError::generic_err("Invalid value: ShortSubaccountId must be a number between 0-999")),
         }
     }
@@ -245,20 +246,7 @@ impl ShortSubaccountId {
         where
             S: Into<String>,
     {
-        let id = id_s.into();
-
-        // let's check first if it's a hexadecimal number and parse to decimal (expected by the chain)
-        let as_decimal = match u32::from_str_radix(id.as_str(), 16) {
-            Ok(dec) => Ok(dec),
-            Err(_) => Err(StdError::generic_err("Invalid value: ShortSubaccountId was not a hexadecimal number")),
-        };
-
-        // if it is a hexadecimal number, let's pad it with left zeros, if not return the original string
-        if as_decimal.is_err() {
-            Self(id)
-        } else {
-            Self(format!("{:0>3}", as_decimal.unwrap().to_string()))
-        }
+        Self(id_s.into())
     }
 
     #[inline]
@@ -281,6 +269,22 @@ impl<'de> Deserialize<'de> for ShortSubaccountId {
                 id
             ))),
         }
+    }
+}
+
+impl Serialize for ShortSubaccountId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+    {
+        // let's check first check again if it's a hexadecimal number and parse to decimal (expected by the chain)
+        let as_decimal = match u32::from_str_radix(self.0.as_str(), 16) {
+            Ok(dec) => Ok(dec),
+            Err(_) => Err(S::Error::custom("Invalid value: ShortSubaccountId was not a hexadecimal number")),
+        };
+
+        // if the string cannot be parsed to a decimal return error otherwise let's pad it with left zeros
+        serializer.serialize_str(&format!("{:0>3}", as_decimal?.to_string()))
     }
 }
 
@@ -397,6 +401,8 @@ impl fmt::Display for Hash {
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::StdError;
+    use serde_test::{assert_ser_tokens, Token};
+    use std::panic::catch_unwind;
 
     use crate::{MarketId, ShortSubaccountId, SubaccountId};
 
@@ -526,28 +532,28 @@ mod tests {
     fn hex_shortsubaccount_id_works() {
         let as_short = ShortSubaccountId::new("00a");
         assert!(as_short.is_ok(), "00a should be a valid short subaccount id");
-        assert_eq!(as_short.unwrap().as_str(), "010", "short subaccount id should be 010");
+        assert_eq!(as_short.unwrap().as_str(), "00a", "short subaccount id should be 00a");
     }
 
     #[test]
     fn hex_shortsubaccount_id_works_2() {
         let as_short = ShortSubaccountId::new("a");
         assert!(as_short.is_ok(), "a should be a valid short subaccount id");
-        assert_eq!(as_short.unwrap().as_str(), "010", "short subaccount id should be 010");
+        assert_eq!(as_short.unwrap().as_str(), "a", "short subaccount id should be a");
     }
 
     #[test]
     fn hex_shortsubaccount_id_works_3() {
         let as_short = ShortSubaccountId::new("010");
         assert!(as_short.is_ok(), "010 should be a valid short subaccount id");
-        assert_eq!(as_short.unwrap().as_str(), "016", "short subaccount id should be 016");
+        assert_eq!(as_short.unwrap().as_str(), "010", "short subaccount id should be 010");
     }
 
     #[test]
     fn biggest_hex_shortsubaccount_id_works() {
         let as_short = ShortSubaccountId::new("3E7");
         assert!(as_short.is_ok(), "3E7 should be a valid short subaccount id");
-        assert_eq!(as_short.unwrap().as_str(), "999", "short subaccount id should be 999");
+        assert_eq!(as_short.unwrap().as_str(), "3E7", "short subaccount id should be 3E7");
     }
 
     #[test]
@@ -602,5 +608,48 @@ mod tests {
     fn random_string_shortsubaccount_id_returns_unchecked_input() {
         let as_short = ShortSubaccountId::unchecked("1ag");
         assert_eq!(as_short.as_str(), "1ag", "unchecked short subaccount id should be 1ag");
+    }
+
+    #[test]
+    fn smallest_hex_shortsubaccount_is_correctly_serialized() {
+        let shortsubaccount = ShortSubaccountId::unchecked("001");
+        assert_ser_tokens(&shortsubaccount, &[Token::Str("001")]);
+    }
+
+    #[test]
+    fn hex_shortsubaccount_is_correctly_serialized_as_decimal() {
+        let shortsubaccount = ShortSubaccountId::unchecked("00a");
+        assert_ser_tokens(&shortsubaccount, &[Token::Str("010")]);
+    }
+
+    #[test]
+    fn hex_shortsubaccount_is_correctly_serialized_as_decimal_2() {
+        let shortsubaccount = ShortSubaccountId::unchecked("a");
+        assert_ser_tokens(&shortsubaccount, &[Token::Str("010")]);
+    }
+
+    #[test]
+    fn hex_shortsubaccount_is_correctly_serialized_as_decimal_3() {
+        let shortsubaccount = ShortSubaccountId::unchecked("010");
+        assert_ser_tokens(&shortsubaccount, &[Token::Str("016")]);
+    }
+
+    #[test]
+    fn biggest_hex_shortsubaccount_is_correctly_serialized_as_decimal() {
+        let shortsubaccount = ShortSubaccountId::unchecked("3E7");
+        assert_ser_tokens(&shortsubaccount, &[Token::Str("999")]);
+    }
+
+    #[test]
+    fn too_big_hex_shortsubaccount_is_correctly_serialized_as_decimal() {
+        let shortsubaccount = ShortSubaccountId::unchecked("3E8");
+        assert_ser_tokens(&shortsubaccount, &[Token::Str("1000")]);
+    }
+
+    #[test]
+    fn random_string_shortsubaccount_returns_error_when_serialized() {
+        let shortsubaccount = ShortSubaccountId::unchecked("ah7");
+        let result = catch_unwind(|| assert_ser_tokens(&shortsubaccount, &[Token::Str("1000")]));
+        assert!(result.is_err(), "serializing invalid short subaccount id should fail");
     }
 }
