@@ -1,4 +1,4 @@
-#[cfg(debug_assertions)]
+#[cfg(not(target_arch = "wasm32"))]
 pub(crate) mod testing_helpers {
 
     use std::marker::PhantomData;
