@@ -6,7 +6,7 @@ This repository contains packages and examples for how to use CosmWasm with [Inj
 
 These packages can be used to integrate CosmWasm and Injective.
 
-| Contract                                                          | Description                                                                                                                                                                      |
+| Package                                                           | Description                                                                                                                                                                      |
 | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`injective-cosmwasm`](./packages/injective-cosmwasm/)            | Package for Injective-specific queries and messages.                                                                                                                             |
 | [`injective-math`](./packages/injective-math/)                    | Math utility library including custom FPDecimal type.                                                                                                                            |
