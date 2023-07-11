@@ -21,7 +21,7 @@ use crate::oracle::{
 use crate::tokenfactory::response::{TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
 use crate::wasmx::response::QueryContractRegistrationInfoResponse;
 use crate::{
-    Deposit, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse,
+    Deposit, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse, MarketStatus,
     MarketVolatilityResponse, OracleInfo, OracleVolatilityResponse, OrderSide, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse,
     PythPriceResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse,
     QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarket, SpotMarketResponse, SubaccountDepositResponse,
@@ -61,7 +61,7 @@ fn default_spot_market_response_handler(market_id: MarketId) -> QuerierResult {
             taker_fee_rate: FPDecimal::from_str("0.001").unwrap(),
             relayer_fee_share_rate: FPDecimal::from_str("0.4").unwrap(),
             market_id,
-            status: 1,
+            status: MarketStatus::Active,
             min_price_tick_size: FPDecimal::from_str("0.01").unwrap(),
             min_quantity_tick_size: FPDecimal::from_str("1000000000000000.0").unwrap(),
         }),
@@ -100,7 +100,7 @@ fn default_derivative_market_response_handler(market_id: MarketId) -> QuerierRes
                 maker_fee_rate: FPDecimal::from_str("0.001").unwrap(),
                 taker_fee_rate: FPDecimal::from_str("0.002").unwrap(),
                 isPerpetual: true,
-                status: 0,
+                status: MarketStatus::Active,
                 min_price_tick_size: FPDecimal::from_str("100000.0").unwrap(),
                 min_quantity_tick_size: FPDecimal::from_str("0.0001").unwrap(),
             }),
