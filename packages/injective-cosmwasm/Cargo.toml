@@ -1,6 +1,6 @@
 [package]
 name = "injective-cosmwasm"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Albert Chon <albert@injectivelabs.org>", "Markus Waas <markus@injectivelabs.org>", "F Grabner <friedrich@injectivelabs.org>", "Bartek Tofel <bartek@injectivelabs.org>"]
 edition = "2018"
 description = "Bindings for CosmWasm contracts to call into custom modules of Injective Core"
