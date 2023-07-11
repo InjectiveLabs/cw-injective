@@ -225,14 +225,10 @@ impl ShortSubaccountId {
         };
 
         // if the string cannot be parsed to a decimal return error
-        if as_decimal.is_err() {
-            return Err(as_decimal.unwrap_err());
-        }
+        let decimal_u32 = as_decimal?;
 
         // if it is a hexadecimal number, let's pad it with left zeros
-        let number_to_use = format!("{:0>3}", as_decimal.unwrap().to_string());
-
-        println!("number_to_use: {}", &number_to_use);
+        let number_to_use = format!("{:0>3}", decimal_u32.to_string());
 
         // check if resulting number isn't bigger than chain limit
         match number_to_use.parse::<u16>() {
@@ -259,7 +255,7 @@ impl ShortSubaccountId {
 
         // if it is a hexadecimal number, let's pad it with left zeros, if not return the original string
         if as_decimal.is_err() {
-            Self(id.to_string())
+            Self(id)
         } else {
             Self(format!("{:0>3}", as_decimal.unwrap().to_string()))
         }
@@ -601,7 +597,6 @@ mod tests {
         let as_short = ShortSubaccountId::unchecked("3E8");
         assert_eq!(as_short.as_str(), "1000", "unchecked short subaccount id should be 1000");
     }
-
 
     #[test]
     fn random_string_shortsubaccount_id_returns_unchecked_input() {

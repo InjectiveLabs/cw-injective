@@ -756,7 +756,7 @@ dependencies = [
 
 [[package]]
 name = "injective-cosmwasm"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -838,7 +838,7 @@ dependencies = [
  "base64",
  "cosmwasm-std",
  "cw-multi-test",
- "injective-cosmwasm 0.2.2",
+ "injective-cosmwasm 0.2.3",
  "rand 0.4.6",
  "secp256k1",
  "serde 1.0.164",
