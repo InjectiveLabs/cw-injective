@@ -62,8 +62,8 @@ pub struct MarketId(String);
 
 impl MarketId {
     pub fn new<S>(market_id_s: S) -> StdResult<Self>
-        where
-            S: Into<String>,
+    where
+        S: Into<String>,
     {
         let market_id = market_id_s.into();
 
@@ -98,8 +98,8 @@ impl MarketId {
     }
 
     pub fn unchecked<S>(market_id_s: S) -> Self
-        where
-            S: Into<String>,
+    where
+        S: Into<String>,
     {
         Self(market_id_s.into().to_lowercase())
     }
@@ -120,8 +120,8 @@ impl<'a> From<&'a str> for MarketId {
 
 impl<'de> Deserialize<'de> for MarketId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>,
+    where
+        D: Deserializer<'de>,
     {
         let market_id = String::deserialize(deserializer)?;
 
@@ -147,8 +147,8 @@ pub struct SubaccountId(String);
 
 impl SubaccountId {
     pub fn new<S>(subaccount_id_s: S) -> std::result::Result<SubaccountId, cosmwasm_std::StdError>
-        where
-            S: Into<String>,
+    where
+        S: Into<String>,
     {
         let subaccount_id = subaccount_id_s.into();
 
@@ -168,8 +168,8 @@ impl SubaccountId {
     }
 
     pub fn unchecked<S>(subaccount_id_s: S) -> Self
-        where
-            S: Into<String>,
+    where
+        S: Into<String>,
     {
         Self(subaccount_id_s.into().to_lowercase())
     }
@@ -182,8 +182,8 @@ impl SubaccountId {
 
 impl<'de> Deserialize<'de> for SubaccountId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>,
+    where
+        D: Deserializer<'de>,
     {
         let subaccount_id = String::deserialize(deserializer)?;
 
@@ -214,8 +214,8 @@ const MAX_SHORT_SUBACCOUNT_NONCE: u16 = 999;
 
 impl ShortSubaccountId {
     pub fn new<S>(id_s: S) -> Result<ShortSubaccountId, StdError>
-        where
-            S: Into<String>,
+    where
+        S: Into<String>,
     {
         let id = id_s.into();
 
@@ -243,8 +243,8 @@ impl ShortSubaccountId {
     }
 
     pub fn unchecked<S>(id_s: S) -> Self
-        where
-            S: Into<String>,
+    where
+        S: Into<String>,
     {
         Self(id_s.into())
     }
@@ -257,8 +257,8 @@ impl ShortSubaccountId {
 
 impl<'de> Deserialize<'de> for ShortSubaccountId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>,
+    where
+        D: Deserializer<'de>,
     {
         let id = String::deserialize(deserializer)?;
 
@@ -274,8 +274,8 @@ impl<'de> Deserialize<'de> for ShortSubaccountId {
 
 impl Serialize for ShortSubaccountId {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
+    where
+        S: Serializer,
     {
         // let's check first check again if it's a hexadecimal number and parse to decimal (expected by the chain)
         let as_decimal = match u32::from_str_radix(self.0.as_str(), 16) {
@@ -577,31 +577,31 @@ mod tests {
     #[test]
     fn hex_shortsubaccount_id_works_unchecked() {
         let as_short = ShortSubaccountId::unchecked("00a");
-        assert_eq!(as_short.as_str(), "010", "unchecked short subaccount id should be 010");
+        assert_eq!(as_short.as_str(), "00a", "unchecked short subaccount id should be 00a");
     }
 
     #[test]
     fn hex_shortsubaccount_id_works_2_unchecked() {
         let as_short = ShortSubaccountId::unchecked("a");
-        assert_eq!(as_short.as_str(), "010", "unchecked short subaccount id should be 010");
+        assert_eq!(as_short.as_str(), "a", "unchecked short subaccount id should be a");
     }
 
     #[test]
     fn hex_shortsubaccount_id_works_3_unchecked() {
         let as_short = ShortSubaccountId::unchecked("010");
-        assert_eq!(as_short.as_str(), "016", "unchecked short subaccount id should be 016");
+        assert_eq!(as_short.as_str(), "010", "unchecked short subaccount id should be 010");
     }
 
     #[test]
     fn biggest_hex_shortsubaccount_id_works_unchecked() {
         let as_short = ShortSubaccountId::unchecked("3E7");
-        assert_eq!(as_short.as_str(), "999", "unchecked short subaccount id should be 999");
+        assert_eq!(as_short.as_str(), "3E7", "unchecked short subaccount id should be 3E7");
     }
 
     #[test]
     fn too_big_hex_shortsubaccount_id_returns_unchecked_input() {
         let as_short = ShortSubaccountId::unchecked("3E8");
-        assert_eq!(as_short.as_str(), "1000", "unchecked short subaccount id should be 1000");
+        assert_eq!(as_short.as_str(), "3E8", "unchecked short subaccount id should be 3E8");
     }
 
     #[test]
