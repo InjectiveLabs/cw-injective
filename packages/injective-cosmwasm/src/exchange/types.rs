@@ -277,7 +277,7 @@ impl Serialize for ShortSubaccountId {
     where
         S: Serializer,
     {
-        // let's check first check again if it's a hexadecimal number and parse to decimal (expected by the chain)
+        // chain expects decimal number, but ShortSubaccountId stores hexadecimal string
         let as_decimal = match u32::from_str_radix(self.0.as_str(), 16) {
             Ok(dec) => Ok(dec),
             Err(_) => Err(S::Error::custom("Invalid value: ShortSubaccountId was not a hexadecimal number")),
