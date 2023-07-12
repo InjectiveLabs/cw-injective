@@ -222,20 +222,39 @@ impl ShortSubaccountId {
         // let's check first if it's a hexadecimal number and parse to decimal (expected by the chain)
         let as_decimal = match u32::from_str_radix(id.as_str(), 16) {
             Ok(dec) => Ok(dec),
-            Err(_) => Err(StdError::generic_err("Invalid value: ShortSubaccountId was not a hexadecimal number")),
+            Err(_) => Err(StdError::generic_err(format!(
+                "Invalid value: ShortSubaccountId was not a hexadecimal number: {}",
+                &id
+            ))),
         };
 
-        // if the string cannot be parsed to a decimal return error
-        let decimal_u32 = as_decimal?;
-
-        // if it is a hexadecimal number, let's pad it with left zeros
-        let number_to_use = format!("{:0>3}", decimal_u32.to_string());
-
-        // check if resulting number isn't bigger than chain limit
-        match number_to_use.parse::<u16>() {
+        match as_decimal?.to_string().parse::<u16>() {
             Ok(value) if value <= MAX_SHORT_SUBACCOUNT_NONCE => Ok(Self(id)),
             _ => Err(StdError::generic_err("Invalid value: ShortSubaccountId must be a number between 0-999")),
         }
+    }
+
+    pub fn must_new<S>(id_s: S) -> ShortSubaccountId
+    where
+        S: Into<String>,
+    {
+        let id = id_s.into();
+
+        // let's check first if it's a hexadecimal number and parse to decimal (expected by the chain)
+        let as_decimal = match u32::from_str_radix(id.as_str(), 16) {
+            Ok(dec) => Ok(dec),
+            Err(_) => Err(StdError::generic_err(format!(
+                "Invalid value: ShortSubaccountId was not a hexadecimal number: {}",
+                &id
+            ))),
+        };
+
+        match as_decimal.unwrap().to_string().parse::<u16>() {
+            Ok(value) if value <= MAX_SHORT_SUBACCOUNT_NONCE => Ok(value),
+            _ => Err(StdError::generic_err("Invalid value: ShortSubaccountId must be a number between 0-999")),
+        }
+        .unwrap();
+        Self(id)
     }
 
     pub fn as_str(&self) -> &str {
@@ -283,7 +302,6 @@ impl Serialize for ShortSubaccountId {
             Err(_) => Err(S::Error::custom("Invalid value: ShortSubaccountId was not a hexadecimal number")),
         };
 
-        // if the string cannot be parsed to a decimal return error otherwise let's pad it with left zeros
         serializer.serialize_str(&format!("{:0>3}", as_decimal?.to_string()))
     }
 }
@@ -536,6 +554,12 @@ mod tests {
     }
 
     #[test]
+    fn must_new_hex_shortsubaccount_id_works() {
+        let as_short = ShortSubaccountId::must_new("00a");
+        assert_eq!(as_short.as_str(), "00a", "short subaccount id should be 00a");
+    }
+
+    #[test]
     fn hex_shortsubaccount_id_works_2() {
         let as_short = ShortSubaccountId::new("a");
         assert!(as_short.is_ok(), "a should be a valid short subaccount id");
@@ -560,6 +584,12 @@ mod tests {
     fn too_big_hex_shortsubaccount_id_returns_err() {
         let as_short = ShortSubaccountId::new("3E8");
         assert!(as_short.is_err(), "3E8 should not be a valid short subaccount id");
+    }
+
+    #[test]
+    #[should_panic]
+    fn must_new_too_big_hex_shortsubaccount_id_panics() {
+        ShortSubaccountId::must_new("3E8");
     }
 
     #[test]
