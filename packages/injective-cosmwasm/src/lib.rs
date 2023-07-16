@@ -67,8 +67,3 @@ pub mod wasmx;
 #[cfg(not(target_arch = "wasm32"))]
 mod exchange_mock_querier;
 mod test_helpers;
-
-// This export is added to all contracts that import this package, signifying that they require
-// "injective" support on the chain they run on.
-#[no_mangle]
-extern "C" fn requires_injective() {}
