@@ -254,7 +254,7 @@ impl ShortSubaccountId {
         match as_decimal?.to_string().parse::<u16>() {
             Ok(value) if value <= MAX_SHORT_SUBACCOUNT_NONCE => Ok(self.clone()),
             _ => Err(StdError::generic_err(format!(
-                "Invalid value: ShortSubaccountId must be a number between 0-999, but {}[] was received",
+                "Invalid value: ShortSubaccountId must be a number between 0-999, but {} was received",
                 &self.0
             ))),
         }
@@ -289,10 +289,14 @@ impl Serialize for ShortSubaccountId {
     where
         S: Serializer,
     {
-        // chain expects decimal number, but ShortSubaccountId stores hexadecimal string
+        self.validate().map_err(|e| S::Error::custom(e.to_string()))?;
+
         let as_decimal = match u32::from_str_radix(self.0.as_str(), 16) {
             Ok(dec) => Ok(dec),
-            Err(_) => Err(S::Error::custom("Invalid value: ShortSubaccountId was not a hexadecimal number")),
+            Err(_) => Err(S::Error::custom(format!(
+                "Invalid value: ShortSubaccountId was not a hexadecimal number: {}",
+                &self.0
+            ))),
         };
 
         serializer.serialize_str(&format!("{:0>3}", as_decimal?.to_string()))
@@ -664,7 +668,8 @@ mod tests {
     }
 
     #[test]
-    fn too_big_hex_short_subaccount_is_correctly_serialized_as_decimal() {
+    #[should_panic]
+    fn too_big_hex_short_subaccount_returns_error_when_serialized() {
         let short_subaccount = ShortSubaccountId::unchecked("3E8");
         assert_ser_tokens(&short_subaccount, &[Token::Str("1000")]);
     }
