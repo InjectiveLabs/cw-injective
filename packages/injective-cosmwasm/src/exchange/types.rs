@@ -1,4 +1,4 @@
-use cosmwasm_std::{Empty, StdError, StdResult};
+use cosmwasm_std::{StdError, StdResult};
 use cw_storage_plus::{Key, KeyDeserialize, Prefixer, PrimaryKey};
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
@@ -6,7 +6,7 @@ use serde::ser::Error as SerError;
 use serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
 
-use crate::InjectiveQuerier;
+use crate::{DerivativeMarket, InjectiveQuerier, MarketStatus, SpotMarket};
 
 pub const UNSORTED_CANCELLATION_STRATEGY: i32 = 0;
 pub const FROM_WORST_TO_BEST_CANCELLATION_STRATEGY: i32 = 1;
@@ -60,10 +60,26 @@ pub enum MarketType {
 #[derive(Serialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
 pub struct MarketId(String);
 
+trait MarketWithStatus {
+    fn get_status(&self) -> MarketStatus;
+}
+
+impl MarketWithStatus for SpotMarket {
+    fn get_status(&self) -> MarketStatus {
+        self.status
+    }
+}
+
+impl MarketWithStatus for DerivativeMarket {
+    fn get_status(&self) -> MarketStatus {
+        self.status
+    }
+}
+
 impl MarketId {
     pub fn new<S>(market_id_s: S) -> StdResult<Self>
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         let market_id = market_id_s.into();
 
@@ -85,21 +101,39 @@ impl MarketId {
     pub fn validate(self, querier: &InjectiveQuerier, market_type: MarketType) -> StdResult<Self> {
         match market_type {
             MarketType::Spot => {
-                let _spot_market = querier.query_spot_market(&self)?;
-                Empty {}
+                match querier.query_spot_market(&self)?.market {
+                    Some(m) => {
+                        Self::validate_market_has_status(MarketStatus::Active, Box::new(m))?;
+                        Ok(self)
+                    }
+                    None => Err(StdError::generic_err(format!("Market {} does not exist", self.0)))
+                }
             }
             MarketType::Derivative => {
-                let _derivative_market = querier.query_derivative_market(&self)?;
-                Empty {}
+                match querier.query_derivative_market(&self)?.market.market {
+                    Some(m) => {
+                        Self::validate_market_has_status(MarketStatus::Active, Box::new(m))?;
+                        Ok(self)
+                    }
+                    None => Err(StdError::generic_err(format!("Market {} does not exist", self.0)))
+                }
             }
-        };
+        }
+    }
 
-        Ok(self)
+    fn validate_market_has_status(expected_status: MarketStatus, market: Box<dyn MarketWithStatus>) -> StdResult<Box<dyn MarketWithStatus>> {
+        if market.get_status() == expected_status {
+            Ok(market)
+        } else {
+            Err(StdError::generic_err(
+                "Market is not active",
+            ))
+        }
     }
 
     pub fn unchecked<S>(market_id_s: S) -> Self
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         Self(market_id_s.into().to_lowercase())
     }
@@ -120,8 +154,8 @@ impl<'a> From<&'a str> for MarketId {
 
 impl<'de> Deserialize<'de> for MarketId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
+        where
+            D: Deserializer<'de>,
     {
         let market_id = String::deserialize(deserializer)?;
 
@@ -147,8 +181,8 @@ pub struct SubaccountId(String);
 
 impl SubaccountId {
     pub fn new<S>(subaccount_id_s: S) -> Result<SubaccountId, StdError>
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         let subaccount_id = subaccount_id_s.into();
 
@@ -168,8 +202,8 @@ impl SubaccountId {
     }
 
     pub fn unchecked<S>(subaccount_id_s: S) -> Self
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         Self(subaccount_id_s.into().to_lowercase())
     }
@@ -182,8 +216,8 @@ impl SubaccountId {
 
 impl<'de> Deserialize<'de> for SubaccountId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
+        where
+            D: Deserializer<'de>,
     {
         let subaccount_id = String::deserialize(deserializer)?;
 
@@ -214,8 +248,8 @@ const MAX_SHORT_SUBACCOUNT_NONCE: u16 = 999;
 
 impl ShortSubaccountId {
     pub fn new<S>(id_s: S) -> Result<ShortSubaccountId, StdError>
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         let id = id_s.into();
         let as_short = Self(id);
@@ -223,8 +257,8 @@ impl ShortSubaccountId {
     }
 
     pub fn must_new<S>(id_s: S) -> ShortSubaccountId
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         let id = id_s.into();
         let as_short = Self(id);
@@ -236,8 +270,8 @@ impl ShortSubaccountId {
     }
 
     pub fn unchecked<S>(id_s: S) -> Self
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         Self(id_s.into())
     }
@@ -268,8 +302,8 @@ impl ShortSubaccountId {
 
 impl<'de> Deserialize<'de> for ShortSubaccountId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
+        where
+            D: Deserializer<'de>,
     {
         let id = String::deserialize(deserializer)?;
 
@@ -286,8 +320,8 @@ impl<'de> Deserialize<'de> for ShortSubaccountId {
 
 impl Serialize for ShortSubaccountId {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
+        where
+            S: Serializer,
     {
         self.validate().map_err(|e| S::Error::custom(e.to_string()))?;
 
