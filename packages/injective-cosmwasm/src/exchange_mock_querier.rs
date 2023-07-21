@@ -86,7 +86,7 @@ fn default_trader_derivative_orders_to_cancel_up_to_amount_response_handler() ->
 
 fn default_derivative_market_response_handler(market_id: MarketId) -> QuerierResult {
     let response = DerivativeMarketResponse {
-        market: FullDerivativeMarket {
+        market: Some(FullDerivativeMarket {
             market: Some(DerivativeMarket {
                 ticker: "ticker".to_string(),
                 oracle_base: "oracle_base".to_string(),
@@ -106,7 +106,7 @@ fn default_derivative_market_response_handler(market_id: MarketId) -> QuerierRes
             }),
             info: None,
             mark_price: FPDecimal::one(),
-        },
+        }),
     };
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
@@ -916,11 +916,11 @@ pub mod handlers {
         impl HandlesMarketIdQuery for Temp {
             fn handle(&self, _: MarketId) -> QuerierResult {
                 let response = DerivativeMarketResponse {
-                    market: FullDerivativeMarket {
+                    market: Some(FullDerivativeMarket {
                         market: self.market.to_owned(),
                         info: self.info.to_owned(),
                         mark_price: self.mark_price.to_owned(),
-                    },
+                    }),
                 };
                 SystemResult::Ok(ContractResult::from(to_binary(&response)))
             }
