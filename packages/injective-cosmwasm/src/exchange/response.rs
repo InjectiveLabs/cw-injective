@@ -48,7 +48,7 @@ pub struct TraderSpotOrdersResponse {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct DerivativeMarketResponse {
-    pub market: FullDerivativeMarket,
+    pub market: Option<FullDerivativeMarket>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
