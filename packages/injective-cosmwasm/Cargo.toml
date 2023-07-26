@@ -11,7 +11,7 @@ license = "Apache-2.0"
 name = "injective-cosmwasm"
 readme = "README.md"
 repository = "https://github.com/InjectiveLabs/cw-injective/tree/master/packages/bindings"
-version = "0.2.5"
+version = "0.2.6"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -25,8 +25,9 @@ schemars        = "0.8.8"
 serde           = { version = "1.0.136", default-features = false, features = [ "derive" ] }
 serde_repr      = "0.1"
 subtle-encoding = { version = "0.5.1", features = [ "bech32-preview" ] }
+tiny-keccak     = "1.2.1"
 
 [dev-dependencies]
 cosmwasm-schema = { version = "1.1.1" }
 serde-json-wasm = { version = "0.4.1" }
-serde_test = { version = "1.0.166" }
+serde_test      = { version = "1.0.166" }
