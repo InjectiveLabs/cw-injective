@@ -274,7 +274,7 @@ impl<'de> Deserialize<'de> for ShortSubaccountId {
         let id = String::deserialize(deserializer)?;
 
         match id.parse::<u16>() {
-            Ok(value) if value <= MAX_SHORT_SUBACCOUNT_NONCE => Ok(ShortSubaccountId::unchecked(format!("{:x}", value))),
+            Ok(value) if value <= MAX_SHORT_SUBACCOUNT_NONCE => Ok(ShortSubaccountId::unchecked(format!("{:03x}", value))),
             _ => {
                 let maybe_long = SubaccountId::unchecked(id);
                 let maybe_short: ShortSubaccountId = ShortSubaccountId::from(maybe_long);
