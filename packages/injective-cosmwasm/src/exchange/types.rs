@@ -684,7 +684,7 @@ mod tests {
     #[test]
     fn short_subaccount_id_can_be_deserialized_from_valid_short_decimal() {
         let short_subaccount = ShortSubaccountId::unchecked("1");
-        assert_de_tokens(&short_subaccount, &[Token::Str("1")]);
+        assert_de_tokens(&short_subaccount, &[Token::Str("001")]);
     }
 
     #[test]
