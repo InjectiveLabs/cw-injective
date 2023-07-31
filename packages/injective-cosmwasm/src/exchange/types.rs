@@ -274,7 +274,7 @@ impl<'de> Deserialize<'de> for ShortSubaccountId {
         let id = String::deserialize(deserializer)?;
 
         match id.parse::<u16>() {
-            Ok(value) if value <= MAX_SHORT_SUBACCOUNT_NONCE => Ok(ShortSubaccountId::unchecked(id)),
+            Ok(value) if value <= MAX_SHORT_SUBACCOUNT_NONCE => Ok(ShortSubaccountId::unchecked(format!("{:03x}", value))),
             _ => {
                 let maybe_long = SubaccountId::unchecked(id);
                 let maybe_short: ShortSubaccountId = ShortSubaccountId::from(maybe_long);
@@ -683,13 +683,13 @@ mod tests {
 
     #[test]
     fn short_subaccount_id_can_be_deserialized_from_valid_short_decimal() {
-        let short_subaccount = ShortSubaccountId::unchecked("1");
+        let short_subaccount = ShortSubaccountId::unchecked("001");
         assert_de_tokens(&short_subaccount, &[Token::Str("1")]);
     }
 
     #[test]
     fn short_subaccount_id_can_be_deserialized_from_valid_long_decimal() {
-        let short_subaccount = ShortSubaccountId::unchecked("010");
+        let short_subaccount = ShortSubaccountId::unchecked("00a");
         assert_de_tokens(&short_subaccount, &[Token::Str("010")]);
     }
 
@@ -728,7 +728,7 @@ mod tests {
 
     #[test]
     fn short_subaccount_id_can_be_deserialized_from_valid_highest_decimal_short_subaccount_id() {
-        let short_subaccount = ShortSubaccountId::unchecked("999");
+        let short_subaccount = ShortSubaccountId::unchecked("3e7");
         assert_de_tokens(&short_subaccount, &[Token::Str("999")]);
     }
 
