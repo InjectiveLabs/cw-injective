@@ -85,7 +85,7 @@ pub enum InjectiveMsg {
     },
     PrivilegedExecuteContract {
         sender: Addr,
-        funds: String,
+        funds: String, // TODO consider adding custom Vec<Coin> type with custom serializer using coins_to_string
         contract_address: Addr,
         data: String,
     },
