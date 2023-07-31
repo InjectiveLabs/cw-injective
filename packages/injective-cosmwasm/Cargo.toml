@@ -11,8 +11,7 @@ license = "Apache-2.0"
 name = "injective-cosmwasm"
 readme = "README.md"
 repository = "https://github.com/InjectiveLabs/cw-injective/tree/master/packages/bindings"
-version = "0.2.9"
-
+version = "0.2.8"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
