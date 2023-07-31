@@ -690,7 +690,7 @@ mod tests {
     #[test]
     fn short_subaccount_id_can_be_deserialized_from_valid_long_decimal() {
         let short_subaccount = ShortSubaccountId::unchecked("010");
-        assert_de_tokens(&short_subaccount, &[Token::Str("010")]);
+        assert_de_tokens(&short_subaccount, &[Token::Str("00a")]);
     }
 
     #[test]
@@ -729,7 +729,7 @@ mod tests {
     #[test]
     fn short_subaccount_id_can_be_deserialized_from_valid_highest_decimal_short_subaccount_id() {
         let short_subaccount = ShortSubaccountId::unchecked("999");
-        assert_de_tokens(&short_subaccount, &[Token::Str("999")]);
+        assert_de_tokens(&short_subaccount, &[Token::Str("3e7")]);
     }
 
     #[test]
