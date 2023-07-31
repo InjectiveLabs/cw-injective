@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::exchange::{
     derivative::{derivative_order_to_short, ShortDerivativeOrder},
     order::{order_data_to_short, OrderData, ShortOrderData},
+    privileged_action::coins_to_string,
     spot::{spot_order_to_short, ShortSpotOrder, SpotOrder},
     subaccount::{is_default_subaccount, subaccount_id_to_injective_address},
     types::{MarketId, SubaccountId},
@@ -81,6 +82,12 @@ pub enum InjectiveMsg {
         destination_subaccount_id: SubaccountId,
         market_id: MarketId,
         amount: FPDecimal,
+    },
+    PrivilegedExecuteContract {
+        sender: Addr,
+        funds: String, // TODO consider adding custom Vec<Coin> type with custom serializer using coins_to_string
+        contract_address: Addr,
+        data: String,
     },
     LiquidatePosition {
         sender: Addr,
@@ -306,6 +313,24 @@ pub fn create_increase_position_margin_msg(
             destination_subaccount_id,
             market_id,
             amount,
+        },
+    }
+    .into()
+}
+
+pub fn create_privileged_execute_contract_msg(
+    sender: Addr,
+    funds: Vec<Coin>,
+    contract_address: Addr,
+    data: String,
+) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Exchange,
+        msg_data: InjectiveMsg::PrivilegedExecuteContract {
+            sender,
+            funds: coins_to_string(funds),
+            contract_address,
+            data,
         },
     }
     .into()
