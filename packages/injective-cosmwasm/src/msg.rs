@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, BankMsg, Binary, Coin, CosmosMsg, CustomMsg, Deps, StdError, StdResult};
+use cosmwasm_std::{Addr, BankMsg, Coin, CosmosMsg, CustomMsg, Deps, StdError, StdResult};
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -87,7 +87,7 @@ pub enum InjectiveMsg {
         sender: Addr,
         funds: String,
         contract_address: Addr,
-        data: Binary,
+        data: String,
     },
     LiquidatePosition {
         sender: Addr,
@@ -322,7 +322,7 @@ pub fn create_privileged_execute_contract_msg(
     sender: Addr,
     funds: Vec<Coin>,
     contract_address: Addr,
-    data: Binary,
+    data: String,
 ) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: InjectiveRoute::Exchange,
