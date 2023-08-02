@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use cosmwasm_std::testing::{MockApi, MockStorage};
 use cosmwasm_std::{
-    from_slice, to_binary, AllBalanceResponse, BalanceResponse, BankQuery, Binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult,
+    from_slice, to_binary, Addr, AllBalanceResponse, BalanceResponse, BankQuery, Binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult,
     QueryRequest, SystemError, SystemResult, Uint128, WasmQuery,
 };
 
@@ -344,6 +344,10 @@ pub trait HandlesSubaccountAndDenomQuery {
     fn handle(&self, subaccount_id: SubaccountId, denom: String) -> QuerierResult;
 }
 
+pub trait HandlesStakedAmountQuery {
+    fn handle(&self, delegator_address: Addr, max_delegations: u16) -> QuerierResult;
+}
+
 pub trait HandlesOracleVolatilityQuery {
     fn handle(
         &self,
@@ -428,6 +432,7 @@ pub struct WasmMockQuerier {
     pub aggregate_account_volume_handler: Option<Box<dyn HandlesAccountVolumeQuery>>,
     pub denom_decimal_handler: Option<Box<dyn HandlesDenomDecimalQuery>>,
     pub denom_decimals_handler: Option<Box<dyn HandlesDenomDecimalsQuery>>,
+    pub staked_amount_handler: Option<Box<dyn HandlesStakedAmountQuery>>,
     pub oracle_volatility_response_handler: Option<Box<dyn HandlesOracleVolatilityQuery>>,
     pub oracle_price_response_handler: Option<Box<dyn HandlesOraclePriceQuery>>,
     pub pyth_price_response_handler: Option<Box<dyn HandlesPythPriceQuery>>,
@@ -589,6 +594,13 @@ impl WasmMockQuerier {
                     Some(handler) => handler.handle(denoms),
                     None => default_denom_decimals_handler(),
                 },
+                InjectiveQuery::StakedAmount {
+                    delegator_address,
+                    max_delegations,
+                } => match &self.staked_amount_handler {
+                    Some(handler) => handler.handle(delegator_address, max_delegations),
+                    None => default_oracle_volatility_response_handler(),
+                },
                 InjectiveQuery::OracleVolatility {
                     base_info,
                     quote_info,
@@ -663,6 +675,7 @@ impl WasmMockQuerier {
             aggregate_account_volume_handler: None,
             denom_decimal_handler: None,
             aggregate_market_volume_handler: None,
+            staked_amount_handler: None,
             oracle_volatility_response_handler: None,
             oracle_price_response_handler: None,
             pyth_price_response_handler: None,
