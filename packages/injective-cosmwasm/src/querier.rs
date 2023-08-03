@@ -425,7 +425,7 @@ impl<'a> InjectiveQuerier<'a> {
     // Staking
     pub fn query_staked_amount(&self, delegator_address: Addr, max_delegations: u16) -> StdResult<StakedAmountResponse> {
         let request = InjectiveQueryWrapper {
-            route: InjectiveRoute::Oracle,
+            route: InjectiveRoute::Staking,
             query_data: InjectiveQuery::StakedAmount {
                 delegator_address,
                 max_delegations,
