@@ -73,7 +73,7 @@ pub struct MarketVolatilityResponse {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct StakedAmountResponse {
-    pub amount: Uint128,
+    pub staked_amount: Uint128,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
