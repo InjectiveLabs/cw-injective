@@ -806,7 +806,6 @@ dependencies = [
 name = "injective-protobuf"
 version = "0.1.0"
 dependencies = [
- "bigint",
  "cosmwasm-schema",
  "cosmwasm-std",
  "ethereum-types",

@@ -9,6 +9,7 @@ fn main() {
 
     protobuf_codegen_pure::Codegen::new()
         .out_dir("src/proto")
+        // TODO: Add more inputs as needed
         .inputs([
             "third_party/proto/cosmos/auth/v1beta1/auth.proto",
             "third_party/proto/cosmos/base/v1beta1/coin.proto",

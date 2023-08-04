@@ -23,7 +23,6 @@ schemars = "0.8.8"
 serde = { version = "1.0.136", default-features = false, features = ["derive"] }
 ethereum-types = "0.5.2"
 subtle-encoding = { version = "0.5.1", features = ["bech32-preview"] }
-bigint = "4"
 num = "0.4.0"
 protobuf = { version = "2", features = ["with-bytes"] }
 
