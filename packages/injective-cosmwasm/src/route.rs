@@ -8,6 +8,7 @@ pub enum InjectiveRoute {
     Authz,
     Exchange,
     Tokenfactory,
+    Staking,
     Oracle,
     Wasmx,
 }

@@ -97,6 +97,20 @@ pub fn round_to_nearest_tick(num: FPDecimal, min_tick: FPDecimal) -> FPDecimal {
     }
 }
 
+pub fn round_up_to_min_tick(num: FPDecimal, min_tick: FPDecimal) -> FPDecimal {
+    if num < min_tick {
+        return min_tick;
+    }
+
+    let remainder = FPDecimal::from(num.num % min_tick.num);
+
+    if remainder.num.is_zero() {
+        return num;
+    }
+
+    FPDecimal::from(num.num - remainder.num + min_tick.num)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -168,5 +182,32 @@ mod tests {
             let output = round_to_nearest_tick(input, precision);
             assert_eq!(expected, output);
         }
+    }
+
+    #[test]
+    fn test_round_up_to_min_tick() {
+        let num = FPDecimal::from(37u128);
+        let min_tick = FPDecimal::from(10u128);
+
+        let result = round_up_to_min_tick(num, min_tick);
+        assert_eq!(result, FPDecimal::from(40u128));
+
+        let num = FPDecimal::from_str("0.00000153").unwrap();
+        let min_tick = FPDecimal::from_str("0.000001").unwrap();
+
+        let result = round_up_to_min_tick(num, min_tick);
+        assert_eq!(result, FPDecimal::from_str("0.000002").unwrap());
+
+        let num = FPDecimal::from_str("0.000001").unwrap();
+        let min_tick = FPDecimal::from_str("0.000001").unwrap();
+
+        let result = round_up_to_min_tick(num, min_tick);
+        assert_eq!(result, FPDecimal::from_str("0.000001").unwrap());
+
+        let num = FPDecimal::from_str("0.0000001").unwrap();
+        let min_tick = FPDecimal::from_str("0.000001").unwrap();
+
+        let result = round_up_to_min_tick(num, min_tick);
+        assert_eq!(result, FPDecimal::from_str("0.000001").unwrap());
     }
 }

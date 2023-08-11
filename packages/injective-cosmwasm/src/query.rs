@@ -1,4 +1,4 @@
-use cosmwasm_std::CustomQuery;
+use cosmwasm_std::{Addr, CustomQuery};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -130,6 +130,11 @@ pub enum InjectiveQuery {
     },
     MarketAtomicExecutionFeeMultiplier {
         market_id: MarketId,
+    },
+    // Staking
+    StakedAmount {
+        delegator_address: Addr,
+        max_delegations: u16,
     },
     // Oracle
     OracleVolatility {

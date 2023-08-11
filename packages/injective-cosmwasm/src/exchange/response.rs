@@ -1,3 +1,4 @@
+use cosmwasm_std::Uint128;
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -48,7 +49,7 @@ pub struct TraderSpotOrdersResponse {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct DerivativeMarketResponse {
-    pub market: FullDerivativeMarket,
+    pub market: Option<FullDerivativeMarket>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -68,6 +69,11 @@ pub struct MarketVolatilityResponse {
     pub volatility: Option<FPDecimal>,
     pub history_metadata: Option<MetadataStatistics>,
     pub raw_history: Option<Vec<TradeRecord>>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct StakedAmountResponse {
+    pub staked_amount: Uint128,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]

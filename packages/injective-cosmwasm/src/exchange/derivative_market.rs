@@ -4,6 +4,8 @@ use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use super::market::MarketStatus;
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PerpetualMarketInfo {
     pub market_id: MarketId,
@@ -63,7 +65,7 @@ pub struct DerivativeMarket {
     #[serde(default)]
     pub isPerpetual: bool,
     #[serde(default)]
-    pub status: i32,
+    pub status: MarketStatus,
     pub min_price_tick_size: FPDecimal,
     pub min_quantity_tick_size: FPDecimal,
 }

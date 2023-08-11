@@ -32,6 +32,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: unit-test
+          toolchain: 1.69.0
           args: --locked
         env:
           RUST_BACKTRACE: 1
@@ -63,10 +64,12 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: fmt
+          toolchain: 1.69.0
           args: --all -- --check
 
       - name: Run cargo clippy
         uses: actions-rs/cargo@v1
         with:
           command: clippy
+          toolchain: 1.69.0
           args: -- -D warnings

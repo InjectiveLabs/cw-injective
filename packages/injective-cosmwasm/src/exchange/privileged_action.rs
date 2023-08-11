@@ -1,4 +1,5 @@
 use crate::exchange::types::{MarketId, SubaccountId};
+use cosmwasm_std::Coin;
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -38,4 +39,8 @@ pub struct PositionTransferAction {
 pub struct PrivilegedAction {
     pub synthetic_trade: Option<SyntheticTradeAction>,
     pub position_transfer: Option<PositionTransferAction>,
+}
+
+pub fn coins_to_string(coins: Vec<Coin>) -> String {
+    coins.into_iter().map(|coin| format!("{}", coin)).collect::<Vec<String>>().join(", ")
 }

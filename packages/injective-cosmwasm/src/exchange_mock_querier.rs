@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use cosmwasm_std::testing::{MockApi, MockStorage};
 use cosmwasm_std::{
-    from_slice, to_binary, AllBalanceResponse, BalanceResponse, BankQuery, Binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult,
+    from_slice, to_binary, Addr, AllBalanceResponse, BalanceResponse, BankQuery, Binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult,
     QueryRequest, SystemError, SystemResult, Uint128, WasmQuery,
 };
 
@@ -21,7 +21,7 @@ use crate::oracle::{
 use crate::tokenfactory::response::{TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
 use crate::wasmx::response::QueryContractRegistrationInfoResponse;
 use crate::{
-    Deposit, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse,
+    Deposit, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse, MarketStatus,
     MarketVolatilityResponse, OracleInfo, OracleVolatilityResponse, OrderSide, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse,
     PythPriceResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse,
     QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarket, SpotMarketResponse, SubaccountDepositResponse,
@@ -61,7 +61,7 @@ fn default_spot_market_response_handler(market_id: MarketId) -> QuerierResult {
             taker_fee_rate: FPDecimal::from_str("0.001").unwrap(),
             relayer_fee_share_rate: FPDecimal::from_str("0.4").unwrap(),
             market_id,
-            status: 1,
+            status: MarketStatus::Active,
             min_price_tick_size: FPDecimal::from_str("0.01").unwrap(),
             min_quantity_tick_size: FPDecimal::from_str("1000000000000000.0").unwrap(),
         }),
@@ -86,7 +86,7 @@ fn default_trader_derivative_orders_to_cancel_up_to_amount_response_handler() ->
 
 fn default_derivative_market_response_handler(market_id: MarketId) -> QuerierResult {
     let response = DerivativeMarketResponse {
-        market: FullDerivativeMarket {
+        market: Some(FullDerivativeMarket {
             market: Some(DerivativeMarket {
                 ticker: "ticker".to_string(),
                 oracle_base: "oracle_base".to_string(),
@@ -100,13 +100,13 @@ fn default_derivative_market_response_handler(market_id: MarketId) -> QuerierRes
                 maker_fee_rate: FPDecimal::from_str("0.001").unwrap(),
                 taker_fee_rate: FPDecimal::from_str("0.002").unwrap(),
                 isPerpetual: true,
-                status: 0,
+                status: MarketStatus::Active,
                 min_price_tick_size: FPDecimal::from_str("100000.0").unwrap(),
                 min_quantity_tick_size: FPDecimal::from_str("0.0001").unwrap(),
             }),
             info: None,
             mark_price: FPDecimal::one(),
-        },
+        }),
     };
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
@@ -344,6 +344,10 @@ pub trait HandlesSubaccountAndDenomQuery {
     fn handle(&self, subaccount_id: SubaccountId, denom: String) -> QuerierResult;
 }
 
+pub trait HandlesStakedAmountQuery {
+    fn handle(&self, delegator_address: Addr, max_delegations: u16) -> QuerierResult;
+}
+
 pub trait HandlesOracleVolatilityQuery {
     fn handle(
         &self,
@@ -428,6 +432,7 @@ pub struct WasmMockQuerier {
     pub aggregate_account_volume_handler: Option<Box<dyn HandlesAccountVolumeQuery>>,
     pub denom_decimal_handler: Option<Box<dyn HandlesDenomDecimalQuery>>,
     pub denom_decimals_handler: Option<Box<dyn HandlesDenomDecimalsQuery>>,
+    pub staked_amount_handler: Option<Box<dyn HandlesStakedAmountQuery>>,
     pub oracle_volatility_response_handler: Option<Box<dyn HandlesOracleVolatilityQuery>>,
     pub oracle_price_response_handler: Option<Box<dyn HandlesOraclePriceQuery>>,
     pub pyth_price_response_handler: Option<Box<dyn HandlesPythPriceQuery>>,
@@ -589,6 +594,13 @@ impl WasmMockQuerier {
                     Some(handler) => handler.handle(denoms),
                     None => default_denom_decimals_handler(),
                 },
+                InjectiveQuery::StakedAmount {
+                    delegator_address,
+                    max_delegations,
+                } => match &self.staked_amount_handler {
+                    Some(handler) => handler.handle(delegator_address, max_delegations),
+                    None => default_oracle_volatility_response_handler(),
+                },
                 InjectiveQuery::OracleVolatility {
                     base_info,
                     quote_info,
@@ -663,6 +675,7 @@ impl WasmMockQuerier {
             aggregate_account_volume_handler: None,
             denom_decimal_handler: None,
             aggregate_market_volume_handler: None,
+            staked_amount_handler: None,
             oracle_volatility_response_handler: None,
             oracle_price_response_handler: None,
             pyth_price_response_handler: None,
@@ -916,11 +929,11 @@ pub mod handlers {
         impl HandlesMarketIdQuery for Temp {
             fn handle(&self, _: MarketId) -> QuerierResult {
                 let response = DerivativeMarketResponse {
-                    market: FullDerivativeMarket {
+                    market: Some(FullDerivativeMarket {
                         market: self.market.to_owned(),
                         info: self.info.to_owned(),
                         mark_price: self.mark_price.to_owned(),
-                    },
+                    }),
                 };
                 SystemResult::Ok(ContractResult::from(to_binary(&response)))
             }

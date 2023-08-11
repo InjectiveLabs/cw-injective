@@ -1,8 +1,9 @@
-use cosmwasm_std::{QuerierWrapper, StdResult};
+use cosmwasm_std::{Addr, QuerierWrapper, StdResult};
 
 use injective_math::FPDecimal;
 
 use crate::authz::response::{GranteeGrantsResponse, GranterGrantsResponse, GrantsResponse};
+use crate::exchange::response::StakedAmountResponse;
 use crate::exchange::{
     order::OrderSide,
     response::{
@@ -418,6 +419,20 @@ impl<'a> InjectiveQuerier<'a> {
         };
 
         let res: QueryMarketAtomicExecutionFeeMultiplierResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
+    // Staking
+    pub fn query_staked_amount(&self, delegator_address: Addr, max_delegations: u16) -> StdResult<StakedAmountResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Staking,
+            query_data: InjectiveQuery::StakedAmount {
+                delegator_address,
+                max_delegations,
+            },
+        };
+
+        let res: StakedAmountResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 
