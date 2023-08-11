@@ -2,5 +2,5 @@ pub mod exchange;
 pub mod insurance;
 pub mod oracle;
 pub mod tokenfactory;
-pub mod wasmx;
 pub mod types;
+pub mod wasmx;
