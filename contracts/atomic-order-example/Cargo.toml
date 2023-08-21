@@ -40,7 +40,7 @@ thiserror = { version = "1.0.31" }
 injective-cosmwasm = { version = "0.1.104" }
 injective-math = { version = "0.1.4" }
 protobuf = { version = "2", features = ["with-bytes"] }
-injective-protobuf = { path = "../../packages/injective-protobuf", version = "0.1" }
+injective-protobuf = { path = "../../packages/injective-protobuf", version = "0.2" }
 
 [dev-dependencies]
 cosmwasm-schema = "1.0.0"

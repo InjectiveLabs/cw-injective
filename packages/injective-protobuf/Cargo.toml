@@ -1,6 +1,6 @@
 [package]
 name = "injective-protobuf"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Mauro Lacy <mauro@lacy.com.es>"]
 edition = "2018"
 description = "Protobug parsing for Injective Protocol"
