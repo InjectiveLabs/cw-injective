@@ -1,3 +1,4 @@
+use std::ops::Neg;
 use std::str::FromStr;
 
 use bigint::U256;
@@ -77,12 +78,23 @@ impl From<Uint256> for FPDecimal {
     }
 }
 
-// #[cfg(not(target_arch = "wasm32"))]
-// impl convert::From<FPDecimal> for f32 {
-//     fn from(x: FPDecimal) -> f32 {
-//         f32::from_str(&x.to_string()).unwrap()
-//     }
-// }
+impl Neg for FPDecimal {
+    type Output = FPDecimal;
+    fn neg(mut self) -> Self::Output {
+        if self.is_zero() {
+            return self;
+        }
+        match self.sign {
+            0 => {
+                self.sign = 1;
+            }
+            _ => {
+                self.sign = 0;
+            }
+        }
+        self
+    }
+}
 
 impl FPDecimal {
     pub const MAX: FPDecimal = FPDecimal { num: U256::MAX, sign: 1 };
@@ -247,3 +259,21 @@ mod log;
 pub mod scale;
 mod serde;
 mod trigonometry;
+
+#[cfg(test)]
+mod tests {
+    use crate::FPDecimal;
+    #[test]
+    fn test_neg_sign() {
+        let lhs = FPDecimal::ZERO - FPDecimal::ONE;
+        let rhs = -FPDecimal::ONE;
+        assert_eq!(lhs, rhs);
+    }
+
+    #[test]
+    fn test_neg_zero() {
+        let lhs = FPDecimal::ZERO;
+        let rhs = -FPDecimal::ZERO;
+        assert_eq!(lhs, rhs);
+    }
+}

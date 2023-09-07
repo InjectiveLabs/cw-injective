@@ -1,5 +1,6 @@
 /// Arithmetic operators for FPDecimal
 use crate::fp_decimal::{FPDecimal, U256};
+use std::iter;
 use std::ops;
 
 impl FPDecimal {
@@ -159,6 +160,15 @@ impl ops::Div for FPDecimal {
 
     fn div(self, rhs: Self) -> Self {
         FPDecimal::_div(self, rhs)
+    }
+}
+
+impl<'a> iter::Sum<&'a Self> for FPDecimal {
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = &'a Self>,
+    {
+        iter.fold(FPDecimal::ZERO, |a, b| a + *b)
     }
 }
 
@@ -577,5 +587,15 @@ mod tests {
         let rhs = FPDecimal::TWO;
         let ans = lhs.abs_diff(&rhs);
         assert_eq!(FPDecimal::from(3u128), ans);
+    }
+    #[test]
+    fn test_chain_sum() {
+        let vector = vec![FPDecimal::ZERO, FPDecimal::ONE, FPDecimal::TWO, FPDecimal::THREE];
+        assert_eq!(FPDecimal::SIX, vector.iter().sum());
+    }
+    #[test]
+    fn test_chain_sum_equal_zero() {
+        let vector = vec![FPDecimal::ZERO, FPDecimal::ONE, FPDecimal::TWO, -FPDecimal::THREE];
+        assert_eq!(FPDecimal::ZERO, vector.iter().sum());
     }
 }
