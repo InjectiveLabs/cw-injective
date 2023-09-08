@@ -198,7 +198,7 @@ impl ops::Rem for FPDecimal {
 #[allow(clippy::suspicious_arithmetic_impl)]
 impl ops::RemAssign for FPDecimal {
     fn rem_assign(&mut self, b: FPDecimal) {
-        *self /= b;
+        *self = *self % b;
     }
 }
 
@@ -656,9 +656,9 @@ mod tests {
 
     #[test]
     fn test_reminder_assign() {
-        let x = FPDecimal::NINE;
-        let y = x % FPDecimal::FIVE;
-        assert_eq!(FPDecimal::FOUR, y);
+        let mut x = FPDecimal::NINE;
+        x %= FPDecimal::FIVE;
+        assert_eq!(FPDecimal::FOUR, x);
     }
 
     #[test]
