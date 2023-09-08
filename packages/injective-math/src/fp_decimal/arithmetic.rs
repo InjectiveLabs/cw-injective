@@ -197,7 +197,7 @@ impl ops::Rem for FPDecimal {
 
 impl ops::RemAssign for FPDecimal {
     fn rem_assign(&mut self, b: FPDecimal) {
-        *self = *self / b;
+        *self /= b;
     }
 }
 
