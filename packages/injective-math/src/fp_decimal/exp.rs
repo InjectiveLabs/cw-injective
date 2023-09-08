@@ -341,7 +341,7 @@ impl FPDecimal {
                 while n > FPDecimal::one() {
                     if n.num % FPDecimal::TWO.num == FPDecimal::zero().num {
                         x = x * x;
-                        n = n / FPDecimal::TWO;
+                        n /= FPDecimal::TWO;
                     } else {
                         y = x * y;
                         x = x * x;
