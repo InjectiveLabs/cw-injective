@@ -173,12 +173,9 @@ impl ops::Rem for FPDecimal {
     type Output = Self;
 
     fn rem(self, b: FPDecimal) -> Self::Output {
-        // if b == FPDecimal::ZERO {
-        //     return self;
-        // }
         assert_ne!(b, FPDecimal::ZERO);
 
-        let mut r = self.clone();
+        let mut r = self;
         let mut n = FPDecimal::ZERO;
 
         if self < FPDecimal::ZERO {
@@ -190,17 +187,17 @@ impl ops::Rem for FPDecimal {
                 return self;
             }
             while r >= b {
-                n = n + FPDecimal::ONE;
+                n += FPDecimal::ONE;
                 r -= b;
             }
         }
-        return r;
+        r
     }
 }
 
 impl ops::RemAssign for FPDecimal {
     fn rem_assign(&mut self, b: FPDecimal) {
-        *self = *self / b;
+        *self /= b;
     }
 }
 
