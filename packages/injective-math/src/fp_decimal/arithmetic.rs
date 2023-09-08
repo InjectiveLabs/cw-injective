@@ -195,6 +195,7 @@ impl ops::Rem for FPDecimal {
     }
 }
 
+#[allow(clippy::suspicious_arithmetic_impl)]
 impl ops::RemAssign for FPDecimal {
     fn rem_assign(&mut self, b: FPDecimal) {
         *self /= b;
