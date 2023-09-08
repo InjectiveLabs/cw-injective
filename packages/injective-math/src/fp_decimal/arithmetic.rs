@@ -172,26 +172,52 @@ impl ops::DivAssign for FPDecimal {
 impl ops::Rem for FPDecimal {
     type Output = Self;
 
-    fn rem(self, b: FPDecimal) -> Self::Output {
-        assert_ne!(b, FPDecimal::ZERO);
+    fn rem(self, divisor: FPDecimal) -> Self::Output {
+        assert_ne!(divisor, FPDecimal::ZERO);
 
-        let mut r = self;
-        let mut n = FPDecimal::ZERO;
-
-        if self < FPDecimal::ZERO {
-            while r < FPDecimal::ZERO {
-                r += b;
-            }
-        } else {
-            if self < b {
-                return self;
-            }
-            while r >= b {
-                n += FPDecimal::ONE;
-                r -= b;
-            }
+        if divisor.is_negative() {
+            return self.calculate_negative_remainder(divisor);
         }
-        r
+
+        self.calculate_positive_remainder(divisor)
+    }
+}
+
+impl FPDecimal {
+    fn calculate_positive_remainder(&self, divisor: FPDecimal) -> FPDecimal {
+        let mut remainder = *self;
+
+        if self.is_negative() {
+            while remainder < FPDecimal::ZERO {
+                remainder += divisor;
+            }
+
+            return remainder;
+        }
+
+        while remainder >= divisor {
+            remainder -= divisor;
+        }
+
+        remainder
+    }
+
+    fn calculate_negative_remainder(&self, divisor: FPDecimal) -> FPDecimal {
+        let mut remainder = *self;
+
+        if self.is_negative() {
+            while remainder < divisor {
+                remainder -= divisor;
+            }
+
+            return remainder;
+        }
+
+        while remainder >= -divisor {
+            remainder += divisor;
+        }
+
+        remainder
     }
 }
 
@@ -640,7 +666,7 @@ mod tests {
     }
 
     #[test]
-    fn test_reminder() {
+    fn test_remainder() {
         let x = FPDecimal::FIVE;
         let y = x % FPDecimal::TWO;
         assert_eq!(FPDecimal::ONE, y);
@@ -652,10 +678,22 @@ mod tests {
         let x = -FPDecimal::SEVEN;
         let y = x % FPDecimal::SEVEN;
         assert_eq!(FPDecimal::ZERO, y);
+
+        let x = FPDecimal::must_from_str("3.5");
+        let y = x % FPDecimal::must_from_str("0.8");
+        assert_eq!(FPDecimal::must_from_str("0.3"), y);
+
+        let x = FPDecimal::must_from_str("-3.5");
+        let y = x % FPDecimal::must_from_str("0.8");
+        assert_eq!(FPDecimal::must_from_str("0.5"), y);
+
+        let x = FPDecimal::must_from_str("-3.5");
+        let y = x % FPDecimal::must_from_str("-0.8");
+        assert_eq!(FPDecimal::must_from_str("-0.3"), y);
     }
 
     #[test]
-    fn test_reminder_assign() {
+    fn test_remainder_assign() {
         let mut x = FPDecimal::NINE;
         x %= FPDecimal::FIVE;
         assert_eq!(FPDecimal::FOUR, x);
