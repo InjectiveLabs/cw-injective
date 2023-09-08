@@ -163,6 +163,47 @@ impl ops::Div for FPDecimal {
     }
 }
 
+impl ops::DivAssign for FPDecimal {
+    fn div_assign(&mut self, rhs: FPDecimal) {
+        *self = *self / rhs;
+    }
+}
+
+impl ops::Rem for FPDecimal {
+    type Output = Self;
+
+    fn rem(self, b: FPDecimal) -> Self::Output {
+        // if b == FPDecimal::ZERO {
+        //     return self;
+        // }
+        assert_ne!(b, FPDecimal::ZERO);
+
+        let mut r = self.clone();
+        let mut n = FPDecimal::ZERO;
+
+        if self < FPDecimal::ZERO {
+            while r < FPDecimal::ZERO {
+                r += b;
+            }
+        } else {
+            if self < b {
+                return self;
+            }
+            while r >= b {
+                n = n + FPDecimal::ONE;
+                r -= b;
+            }
+        }
+        return r;
+    }
+}
+
+impl ops::RemAssign for FPDecimal {
+    fn rem_assign(&mut self, b: FPDecimal) {
+        *self = *self / b;
+    }
+}
+
 impl<'a> iter::Sum<&'a Self> for FPDecimal {
     fn sum<I>(iter: I) -> Self
     where
@@ -553,6 +594,17 @@ mod tests {
     }
 
     #[test]
+    fn test_div_assign() {
+        let mut x = FPDecimal::EIGHT;
+        x /= FPDecimal::TWO;
+        assert_eq!(FPDecimal::FOUR, x);
+
+        let mut y = FPDecimal::FIVE;
+        y /= FPDecimal::TWO;
+        assert_eq!(FPDecimal::must_from_str("2.5"), y);
+    }
+
+    #[test]
     fn test_is_negative() {
         let val = FPDecimal::TWO;
         assert!(!val.is_negative());
@@ -588,6 +640,29 @@ mod tests {
         let ans = lhs.abs_diff(&rhs);
         assert_eq!(FPDecimal::from(3u128), ans);
     }
+
+    #[test]
+    fn test_reminder() {
+        let x = FPDecimal::FIVE;
+        let y = x % FPDecimal::TWO;
+        assert_eq!(FPDecimal::ONE, y);
+
+        let x = -FPDecimal::SEVEN;
+        let y = x % FPDecimal::THREE;
+        assert_eq!(FPDecimal::TWO, y);
+
+        let x = -FPDecimal::SEVEN;
+        let y = x % FPDecimal::SEVEN;
+        assert_eq!(FPDecimal::ZERO, y);
+    }
+
+    #[test]
+    fn test_reminder_assign() {
+        let x = FPDecimal::NINE;
+        let y = x % FPDecimal::FIVE;
+        assert_eq!(FPDecimal::FOUR, y);
+    }
+
     #[test]
     fn test_chain_sum() {
         let vector = vec![FPDecimal::ZERO, FPDecimal::ONE, FPDecimal::TWO, FPDecimal::THREE];
