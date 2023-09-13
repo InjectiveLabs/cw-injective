@@ -102,16 +102,6 @@ pub fn round(num: FPDecimal, min_tick: FPDecimal) -> FPDecimal {
         }
         Ordering::Greater => num_floor + min_tick,
     }
-    // if diff < (min_tick / FPDecimal::TWO) {
-    //     num_floor
-    // } else if diff > (min_tick / FPDecimal::TWO) {
-    //     num_floor + min_tick
-    // } else {
-    //     if num_floor / (min_tick * FPDecimal::TWO) == FPDecimal::ZERO {
-    //         return num_floor;
-    //     }
-    //     return num_floor + min_tick;
-    // }
 }
 
 pub fn round_to_min_tick(num: FPDecimal, min_tick: FPDecimal) -> FPDecimal {
