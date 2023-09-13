@@ -1,6 +1,7 @@
 use crate::FPDecimal;
 use bigint::U256;
 use cosmwasm_std::StdError;
+use std::cmp::Ordering;
 use std::{fmt::Display, str::FromStr};
 
 #[derive(Default)]
@@ -90,15 +91,27 @@ pub fn round(num: FPDecimal, min_tick: FPDecimal) -> FPDecimal {
     //FIXME min_tick has to be 1, 0.1,0.01, etc
     let num_floor = floor(num, min_tick);
     let diff = num - num_floor;
-    if diff < (min_tick / FPDecimal::TWO) {
-        return num_floor;
-    } else if diff > (min_tick / FPDecimal::TWO) {
-        return num_floor + min_tick;
+    match diff.cmp(&(min_tick / FPDecimal::TWO)) {
+        Ordering::Less => num_floor,
+        Ordering::Equal => {
+            if num_floor / (min_tick * FPDecimal::TWO) == FPDecimal::ZERO {
+                num_floor
+            } else {
+                num_floor + min_tick
+            }
+        }
+        Ordering::Greater => num_floor + min_tick,
     }
-    if num_floor / (min_tick * FPDecimal::TWO) == FPDecimal::ZERO {
-        return num_floor;
-    }
-    return num_floor + min_tick;
+    // if diff < (min_tick / FPDecimal::TWO) {
+    //     num_floor
+    // } else if diff > (min_tick / FPDecimal::TWO) {
+    //     num_floor + min_tick
+    // } else {
+    //     if num_floor / (min_tick * FPDecimal::TWO) == FPDecimal::ZERO {
+    //         return num_floor;
+    //     }
+    //     return num_floor + min_tick;
+    // }
 }
 
 pub fn round_to_min_tick(num: FPDecimal, min_tick: FPDecimal) -> FPDecimal {
