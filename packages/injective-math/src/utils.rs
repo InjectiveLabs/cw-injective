@@ -143,6 +143,7 @@ pub fn round_up_to_min_tick(num: FPDecimal, min_tick: FPDecimal) -> FPDecimal {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::fp_decimal::scale::Scaled;
 
     #[test]
     fn test_floor() {
@@ -184,15 +185,25 @@ mod tests {
 
     #[test]
     fn test_round() {
+        assert_eq!(round(FPDecimal::must_from_str("0.13"), FPDecimal::ONE), FPDecimal::ZERO);
+        assert_eq!(round(FPDecimal::must_from_str("0.49"), FPDecimal::ONE), FPDecimal::ZERO);
+        assert_eq!(round(FPDecimal::must_from_str("0.5"), FPDecimal::ONE), FPDecimal::ZERO);
+        assert_eq!(round(FPDecimal::must_from_str("0.50009"), FPDecimal::ONE), FPDecimal::ONE);
+
+        assert_eq!(round(FPDecimal::must_from_str("-0.13"), FPDecimal::ONE), FPDecimal::ZERO);
+        assert_eq!(round(FPDecimal::must_from_str("-0.49"), FPDecimal::ONE), FPDecimal::ZERO);
+        assert_eq!(round(FPDecimal::must_from_str("-0.5"), FPDecimal::ONE), FPDecimal::ZERO);
+        assert_eq!(round(FPDecimal::must_from_str("-0.51"), FPDecimal::ONE), -FPDecimal::ONE);
+        assert_eq!(round(FPDecimal::must_from_str("-1.50009"), FPDecimal::ONE), -FPDecimal::TWO);
+    }
+
+    #[test]
+    fn test_round_with_scaled_numbers() {
         assert_eq!(round(FPDecimal::must_from_str("0"), FPDecimal::must_from_str("0.1")), FPDecimal::ZERO);
         assert_eq!(
             round(FPDecimal::must_from_str("0.13"), FPDecimal::must_from_str("0.1")),
             FPDecimal::must_from_str("0.1")
         );
-        assert_eq!(round(FPDecimal::must_from_str("0.13"), FPDecimal::ONE), FPDecimal::ZERO);
-        assert_eq!(round(FPDecimal::must_from_str("0.49"), FPDecimal::ONE), FPDecimal::ZERO);
-        assert_eq!(round(FPDecimal::must_from_str("0.5"), FPDecimal::ONE), FPDecimal::ZERO);
-        assert_eq!(round(FPDecimal::must_from_str("0.50009"), FPDecimal::ONE), FPDecimal::ONE);
         assert_eq!(
             round(FPDecimal::must_from_str("0.50009"), FPDecimal::must_from_str("0.0001")),
             FPDecimal::must_from_str("0.5001")
@@ -203,15 +214,21 @@ mod tests {
             round(FPDecimal::must_from_str("-0.13"), FPDecimal::must_from_str("0.1")),
             FPDecimal::must_from_str("-0.1")
         );
-        assert_eq!(round(FPDecimal::must_from_str("-0.13"), FPDecimal::ONE), FPDecimal::ZERO);
-        assert_eq!(round(FPDecimal::must_from_str("-0.49"), FPDecimal::ONE), FPDecimal::ZERO);
-        assert_eq!(round(FPDecimal::must_from_str("-0.5"), FPDecimal::ONE), FPDecimal::ZERO);
-        assert_eq!(round(FPDecimal::must_from_str("-0.51"), FPDecimal::ONE), -FPDecimal::ONE);
         assert_eq!(
             round(FPDecimal::must_from_str("-0.50009"), FPDecimal::must_from_str("0.0001")),
             FPDecimal::must_from_str("-0.5001")
         );
-        assert_eq!(round(FPDecimal::must_from_str("-1.50009"), FPDecimal::ONE), -FPDecimal::TWO);
+
+        assert_eq!(round(FPDecimal::must_from_str("-1.50009"), FPDecimal::ONE.scaled(1)), FPDecimal::ZERO);
+        assert_eq!(
+            round(FPDecimal::must_from_str("-1.50009").scaled(1), FPDecimal::ONE.scaled(1)),
+            -FPDecimal::TWO.scaled(1)
+        );
+        assert_eq!(round(FPDecimal::must_from_str("-1.50009"), FPDecimal::ONE.scaled(1)), FPDecimal::ZERO);
+        assert_eq!(
+            round(FPDecimal::must_from_str("-1.50009").scaled(1), FPDecimal::ONE.scaled(1)),
+            -FPDecimal::TWO.scaled(1)
+        );
     }
 
     #[test]
