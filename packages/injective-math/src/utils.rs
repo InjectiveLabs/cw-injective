@@ -78,7 +78,6 @@ pub fn div_dec(num: FPDecimal, denom: FPDecimal) -> FPDecimal {
 
 pub fn floor(num: FPDecimal, min_tick: FPDecimal) -> FPDecimal {
     // min_tick has to be a positive number
-    //FIXME min_tick has to be 1, 0.1,0.01, etc
     assert!(min_tick >= FPDecimal::ZERO);
     if num.is_zero() {
         return num;
@@ -88,7 +87,6 @@ pub fn floor(num: FPDecimal, min_tick: FPDecimal) -> FPDecimal {
 }
 
 pub fn round(num: FPDecimal, min_tick: FPDecimal) -> FPDecimal {
-    //FIXME min_tick has to be 1, 0.1,0.01, etc
     let num_floor = floor(num, min_tick);
     let diff = num - num_floor;
     match diff.cmp(&(min_tick / FPDecimal::TWO)) {
