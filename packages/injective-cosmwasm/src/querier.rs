@@ -7,10 +7,11 @@ use crate::exchange::response::StakedAmountResponse;
 use crate::exchange::{
     order::OrderSide,
     response::{
-        DerivativeMarketResponse, MarketMidPriceAndTOBResponse, MarketVolatilityResponse, OracleVolatilityResponse, PerpetualMarketFundingResponse,
-        PerpetualMarketInfoResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse,
-        QueryMarketAtomicExecutionFeeMultiplierResponse, QueryOrderbookResponse, SpotMarketResponse, SubaccountDepositResponse,
-        SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+        DerivativeMarketResponse, ExchangeParamsResponse, MarketMidPriceAndTOBResponse, MarketVolatilityResponse, OracleVolatilityResponse,
+        PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse,
+        QueryDenomDecimalsResponse, QueryMarketAtomicExecutionFeeMultiplierResponse, QueryOrderbookResponse, SpotMarketResponse,
+        SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse,
+        TraderSpotOrdersResponse,
     },
     types::{MarketId, SubaccountId},
 };
@@ -76,6 +77,17 @@ impl<'a> InjectiveQuerier<'a> {
     }
 
     // Exchange
+    pub fn query_exchange_params(&self) -> StdResult<ExchangeParamsResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::ExchangeParams {},
+        };
+
+        println!("request: {:?}", request);
+        let res: ExchangeParamsResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
     pub fn query_subaccount_deposit<T: Into<SubaccountId> + Clone, P: Into<String> + Clone>(
         &self,
         subaccount_id: &'a T,

@@ -41,6 +41,7 @@ pub enum InjectiveQuery {
         pagination: Option<u32>,
     },
     // Exchange
+    ExchangeParams {},
     SubaccountDeposit {
         subaccount_id: SubaccountId,
         denom: String,

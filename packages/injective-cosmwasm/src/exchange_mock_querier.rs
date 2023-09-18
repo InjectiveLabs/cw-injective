@@ -12,7 +12,7 @@ use injective_math::FPDecimal;
 use crate::exchange::{
     derivative_market::DerivativeMarket,
     response::QueryOrderbookResponse,
-    types::{MarketVolume, PriceLevel, VolumeByType},
+    types::{AtomicMarketOrderAccessLevel, MarketVolume, Params, PriceLevel, VolumeByType},
 };
 use crate::oracle::{
     types::{OracleHistoryOptions, OracleType, PriceState, PythPriceState},
@@ -21,11 +21,12 @@ use crate::oracle::{
 use crate::tokenfactory::response::{TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
 use crate::wasmx::response::QueryContractRegistrationInfoResponse;
 use crate::{
-    Deposit, DerivativeMarketResponse, FullDerivativeMarket, InjectiveQuery, InjectiveQueryWrapper, MarketMidPriceAndTOBResponse, MarketStatus,
-    MarketVolatilityResponse, OracleInfo, OracleVolatilityResponse, OrderSide, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse,
-    PythPriceResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse, QueryDenomDecimalsResponse,
-    QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarket, SpotMarketResponse, SubaccountDepositResponse,
-    SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+    Deposit, DerivativeMarketResponse, ExchangeParamsResponse, FullDerivativeMarket, InjectiveQuery, InjectiveQueryWrapper,
+    MarketMidPriceAndTOBResponse, MarketStatus, MarketVolatilityResponse, OracleInfo, OracleVolatilityResponse, OrderSide,
+    PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PythPriceResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse,
+    QueryDenomDecimalResponse, QueryDenomDecimalsResponse, QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarket, SpotMarketResponse,
+    SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse,
+    TraderSpotOrdersResponse,
 };
 use crate::{MarketId, SubaccountId};
 
@@ -279,6 +280,40 @@ fn default_all_balances_bank_query_handler() -> QuerierResult {
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
 
+fn default_exchange_params_response_handler() -> QuerierResult {
+    let denom = "inj";
+
+    let response = ExchangeParamsResponse {
+        params: Some(Params {
+            spot_market_instant_listing_fee: Coin::new(100000000000000000000, denom),
+            derivative_market_instant_listing_fee: Coin::new(1000000000000000000000, denom),
+            default_spot_maker_fee_rate: FPDecimal::must_from_str("-0.0001"),
+            default_spot_taker_fee_rate: FPDecimal::must_from_str("0.001"),
+            default_derivative_maker_fee_rate: FPDecimal::must_from_str("-0.0001"),
+            default_derivative_taker_fee_rate: FPDecimal::must_from_str("0.001"),
+            default_initial_margin_ratio: FPDecimal::must_from_str("0.05"),
+            default_maintenance_margin_ratio: FPDecimal::must_from_str("0.02"),
+            default_funding_interval: 3600i64,
+            // default_multiple: 3600i64,
+            relayer_fee_share_rate: FPDecimal::must_from_str("0.4"),
+            default_hourly_funding_rate_cap: FPDecimal::must_from_str("0.000625"),
+            default_hourly_interest_rate: FPDecimal::must_from_str("0.00000416666"),
+            max_derivative_order_side_count: 20u32,
+            inj_reward_staked_requirement_threshold: FPDecimal::must_from_str("25000000000000000000"),
+            trading_rewards_vesting_duration: 1209600i64,
+            liquidator_reward_share_rate: FPDecimal::must_from_str("0.05"),
+            binary_options_market_instant_listing_fee: Coin::new(10000000000000000000, denom),
+            atomic_market_order_access_level: AtomicMarketOrderAccessLevel::SmartContractsOnly,
+            spot_atomic_market_order_fee_multiplier: FPDecimal::must_from_str("2.0"),
+            derivative_atomic_market_order_fee_multiplier: FPDecimal::must_from_str("2.0"),
+            binary_options_atomic_market_order_fee_multiplier: FPDecimal::must_from_str("2.0"),
+            minimal_protocol_fee_rate: FPDecimal::must_from_str("0.00001"),
+            is_instant_derivative_market_launch_enabled: true,
+        }),
+    };
+    SystemResult::Ok(ContractResult::from(to_binary(&response)))
+}
+
 fn default_spot_market_orderbook_response_handler() -> QuerierResult {
     let response = QueryOrderbookResponse {
         buys_price_level: vec![PriceLevel::new(9u128.into(), 10u128.into()), PriceLevel::new(8u128.into(), 10u128.into())],
@@ -409,9 +444,14 @@ pub trait HandlesPriceLevelsQuery {
     fn handle(&self, market_id: MarketId, order_side: OrderSide) -> QuerierResult;
 }
 
+pub trait HandlesExchangeParamsQuery {
+    fn handle(&self) -> QuerierResult;
+}
+
 pub struct WasmMockQuerier {
     pub smart_query_handler: Option<Box<dyn HandlesSmartQuery>>,
     pub subaccount_deposit_response_handler: Option<Box<dyn HandlesSubaccountAndDenomQuery>>,
+    pub exchange_params_response_handler: Option<Box<dyn HandlesExchangeParamsQuery>>,
     pub spot_market_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
     pub trader_spot_orders_response_handler: Option<Box<dyn HandlesMarketAndSubaccountQuery>>,
     pub trader_spot_orders_to_cancel_up_to_amount_response_handler: Option<Box<dyn HandlesTraderSpotOrdersToCancelUpToAmountQuery>>,
@@ -491,6 +531,10 @@ impl WasmMockQuerier {
                 InjectiveQuery::SubaccountDeposit { subaccount_id, denom } => match &self.subaccount_deposit_response_handler {
                     Some(handler) => handler.handle(subaccount_id, denom),
                     None => default_subaccount_deposit_response_handler(),
+                },
+                InjectiveQuery::ExchangeParams {} => match &self.exchange_params_response_handler {
+                    Some(handler) => handler.handle(),
+                    None => default_exchange_params_response_handler(),
                 },
                 InjectiveQuery::SpotMarket { market_id } => match &self.spot_market_response_handler {
                     Some(handler) => handler.handle(market_id),
@@ -656,6 +700,7 @@ impl WasmMockQuerier {
         WasmMockQuerier {
             smart_query_handler: None,
             subaccount_deposit_response_handler: None,
+            exchange_params_response_handler: None,
             spot_market_response_handler: None,
             trader_spot_orders_response_handler: None,
             trader_spot_orders_to_cancel_up_to_amount_response_handler: None,
