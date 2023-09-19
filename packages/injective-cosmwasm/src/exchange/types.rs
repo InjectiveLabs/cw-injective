@@ -9,9 +9,6 @@ use std::fmt;
 
 use crate::InjectiveQuerier;
 
-pub const UNSORTED_CANCELLATION_STRATEGY: i32 = 0;
-pub const FROM_WORST_TO_BEST_CANCELLATION_STRATEGY: i32 = 1;
-
 /// Params is the response type for the exchange params
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
