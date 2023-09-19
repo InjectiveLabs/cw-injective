@@ -10,9 +10,9 @@ impl FPDecimal {
     #[allow(clippy::many_single_char_names)]
     pub fn _exp_taylor_expansion(a: FPDecimal, b: FPDecimal, n: u128) -> FPDecimal {
         //a^b n+1 terms taylor expansion
-        assert_eq!(n <= 13u128, true);
+        assert!(n <= 13u128);
         if n == 0 {
-            return FPDecimal::ONE;
+            FPDecimal::ONE
         } else {
             let base = a.ln() * b;
             let mut x = FPDecimal::ONE + base;
@@ -20,10 +20,10 @@ impl FPDecimal {
             let mut denominator = FPDecimal::ONE;
             for i in 2..n + 1 {
                 numerator *= base;
-                denominator = denominator * FPDecimal::from(i);
+                denominator *= FPDecimal::from(i);
                 x += numerator / denominator;
             }
-            return x;
+            x
         }
     }
     // a^b
@@ -356,19 +356,13 @@ impl FPDecimal {
                 // 14 terms taylor expansion provides a good enough approximation
                 let n_terms = 13u128;
                 match b.cmp(&FPDecimal::ZERO) {
-                    Ordering::Equal => {
-                        return Ok(FPDecimal::one());
-                    }
+                    Ordering::Equal => Ok(FPDecimal::one()),
                     Ordering::Less => {
                         a = FPDecimal::ONE / a;
                         b = -b;
                         match b.cmp(&(FPDecimal::ONE)) {
-                            Ordering::Equal => {
-                                return Ok(a);
-                            }
-                            Ordering::Less => {
-                                return Ok(FPDecimal::_exp_taylor_expansion(a, b, n_terms));
-                            }
+                            Ordering::Equal => Ok(a),
+                            Ordering::Less => Ok(FPDecimal::_exp_taylor_expansion(a, b, n_terms)),
                             Ordering::Greater => {
                                 let mut int_b = b.int();
                                 let rem_b = b - int_b;
@@ -387,17 +381,15 @@ impl FPDecimal {
                                 }
                                 a *= tmp_a;
                                 a *= float_exp;
-                                return Ok(a);
+                                Ok(a)
                             }
                         }
                     }
                     Ordering::Greater => match b.cmp(&FPDecimal::ONE) {
-                        Ordering::Equal => {
-                            return Ok(a);
-                        }
+                        Ordering::Equal => Ok(a),
                         Ordering::Less => {
                             // taylor expansion approximation of exponentation compuation with float number exponent
-                            return Ok(FPDecimal::_exp_taylor_expansion(a, b, n_terms));
+                            Ok(FPDecimal::_exp_taylor_expansion(a, b, n_terms))
                         }
                         Ordering::Greater => {
                             let mut int_b = b.int();
@@ -417,7 +409,7 @@ impl FPDecimal {
                             }
                             a *= tmp_a;
                             a *= float_exp;
-                            return Ok(a);
+                            Ok(a)
                         }
                     },
                 }
