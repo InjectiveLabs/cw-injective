@@ -8,9 +8,14 @@ use crate::exchange::{
     derivative_market::{FullDerivativeMarket, PerpetualMarketFunding, PerpetualMarketInfo},
     spot::TrimmedSpotLimitOrder,
     spot_market::SpotMarket,
-    types::{DenomDecimals, Deposit, MarketVolume, PriceLevel, VolumeByType},
+    types::{DenomDecimals, Deposit, MarketVolume, Params, PriceLevel, VolumeByType},
 };
 use crate::oracle::volatility::{MetadataStatistics, TradeRecord};
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct ExchangeParamsResponse {
+    pub params: Option<Params>,
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SubaccountDepositResponse {

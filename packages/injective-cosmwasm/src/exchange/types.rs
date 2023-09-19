@@ -1,15 +1,46 @@
-use cosmwasm_std::{Empty, StdError, StdResult};
+use cosmwasm_std::{Coin, Empty, StdError, StdResult};
 use cw_storage_plus::{Key, KeyDeserialize, Prefixer, PrimaryKey};
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::ser::Error as SerError;
 use serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer};
+use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::fmt;
 
 use crate::InjectiveQuerier;
 
 pub const UNSORTED_CANCELLATION_STRATEGY: i32 = 0;
 pub const FROM_WORST_TO_BEST_CANCELLATION_STRATEGY: i32 = 1;
+
+/// Params is the response type for the exchange params
+#[allow(non_snake_case)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct Params {
+    pub spot_market_instant_listing_fee: Coin,
+    pub derivative_market_instant_listing_fee: Coin,
+    pub default_spot_maker_fee_rate: FPDecimal,
+    pub default_spot_taker_fee_rate: FPDecimal,
+    pub default_derivative_maker_fee_rate: FPDecimal,
+    pub default_derivative_taker_fee_rate: FPDecimal,
+    pub default_initial_margin_ratio: FPDecimal,
+    pub default_maintenance_margin_ratio: FPDecimal,
+    pub default_funding_interval: i64,
+    pub relayer_fee_share_rate: FPDecimal,
+    pub default_hourly_funding_rate_cap: FPDecimal,
+    pub default_hourly_interest_rate: FPDecimal,
+    pub max_derivative_order_side_count: u32,
+    pub inj_reward_staked_requirement_threshold: FPDecimal,
+    pub trading_rewards_vesting_duration: i64,
+    pub liquidator_reward_share_rate: FPDecimal,
+    pub binary_options_market_instant_listing_fee: Coin,
+    #[serde(default)]
+    pub atomic_market_order_access_level: AtomicMarketOrderAccessLevel,
+    pub spot_atomic_market_order_fee_multiplier: FPDecimal,
+    pub derivative_atomic_market_order_fee_multiplier: FPDecimal,
+    pub binary_options_atomic_market_order_fee_multiplier: FPDecimal,
+    pub minimal_protocol_fee_rate: FPDecimal,
+    pub is_instant_derivative_market_launch_enabled: bool,
+}
 
 /// Deposit is data format for the subaccount deposit
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -55,6 +86,16 @@ pub struct MarketVolume {
 pub enum MarketType {
     Spot,
     Derivative,
+}
+
+#[derive(Serialize_repr, Deserialize_repr, Default, Clone, Debug, PartialEq, Eq, JsonSchema, Copy)]
+#[repr(i32)]
+pub enum AtomicMarketOrderAccessLevel {
+    #[default]
+    Nobody = 0,
+    BeginBlockerSmartContractsOnly = 1,
+    SmartContractsOnly = 2,
+    Everyone = 3,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
