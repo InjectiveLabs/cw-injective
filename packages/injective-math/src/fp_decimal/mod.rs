@@ -276,4 +276,15 @@ mod tests {
         let rhs = -FPDecimal::ZERO;
         assert_eq!(lhs, rhs);
     }
+
+    #[test]
+    fn test_is_int() {
+        assert_eq!(FPDecimal::TWO.is_int(), true);
+    }
+
+    #[test]
+    fn test_is_not_int() {
+        assert_eq!(FPDecimal::must_from_str("2.1").is_int(), false);
+        assert_eq!(FPDecimal::must_from_str("2.1") % FPDecimal::ONE, FPDecimal::must_from_str("0.1"));
+    }
 }

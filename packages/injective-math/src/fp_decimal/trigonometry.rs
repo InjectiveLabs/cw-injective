@@ -8,7 +8,7 @@ impl FPDecimal {
         FPDecimal::_sin(FPDecimal::PI / FPDecimal::TWO - x)
     }
 
-    fn _taylor_expansion(x: FPDecimal) -> FPDecimal {
+    fn _sine_taylor_expansion(x: FPDecimal) -> FPDecimal {
         x - (x.pow(FPDecimal::THREE) / FPDecimal::THREE.factorial()) + (x.pow(FPDecimal::FIVE) / FPDecimal::FIVE.factorial())
             - (x.pow(FPDecimal::SEVEN) / FPDecimal::SEVEN.factorial())
             + (x.pow(FPDecimal::NINE) / FPDecimal::NINE.factorial())
@@ -34,20 +34,20 @@ impl FPDecimal {
         }
 
         if FPDecimal::ZERO < x && x < pi_by_2 {
-            return FPDecimal::_taylor_expansion(x);
+            return FPDecimal::_sine_taylor_expansion(x);
         }
 
         if pi_by_2 < x && x < FPDecimal::PI {
-            return FPDecimal::_taylor_expansion(FPDecimal::PI - x);
+            return FPDecimal::_sine_taylor_expansion(FPDecimal::PI - x);
         }
 
         if FPDecimal::PI < x && x < pi_plus_pi_by_2 {
-            let mut output = FPDecimal::_taylor_expansion(x - FPDecimal::PI);
+            let mut output = FPDecimal::_sine_taylor_expansion(x - FPDecimal::PI);
             output.sign = 0;
             return output;
         }
 
-        let mut output = FPDecimal::_taylor_expansion(FPDecimal::PI * FPDecimal::TWO - x);
+        let mut output = FPDecimal::_sine_taylor_expansion(FPDecimal::PI * FPDecimal::TWO - x);
         output.sign = 0;
         output
     }
