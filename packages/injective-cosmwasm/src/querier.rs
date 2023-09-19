@@ -83,7 +83,6 @@ impl<'a> InjectiveQuerier<'a> {
             query_data: InjectiveQuery::ExchangeParams {},
         };
 
-        println!("request: {:?}", request);
         let res: ExchangeParamsResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
