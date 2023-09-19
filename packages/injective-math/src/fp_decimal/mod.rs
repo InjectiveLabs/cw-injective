@@ -403,4 +403,15 @@ mod tests {
         let fp_decimal_negative = FPDecimal::must_from_str("-1.2345");
         assert!(Decimal256::try_from(fp_decimal_negative).is_err());
     }
+
+    #[test]
+    fn test_is_int() {
+        assert_eq!(FPDecimal::TWO.is_int(), true);
+    }
+
+    #[test]
+    fn test_is_not_int() {
+        assert_eq!(FPDecimal::must_from_str("2.1").is_int(), false);
+        assert_eq!(FPDecimal::must_from_str("2.1") % FPDecimal::ONE, FPDecimal::must_from_str("0.1"));
+    }
 }

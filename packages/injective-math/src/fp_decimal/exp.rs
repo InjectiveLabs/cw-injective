@@ -1451,6 +1451,12 @@ mod tests {
         );
     }
 
+    // #[test]
+    // fn test_exp10_eq() {
+    //     // assert_eq!(FPDecimal::must_from_str("22026.465794806718"), FPDecimal::E_10);
+    //     assert_eq!(FPDecimal::E.checked_pow(FPDecimal::must_from_str("10")), FPDecimal::E_10);
+    // }
+
     #[test]
     fn test_pow_zero_2() {
         FPDecimal::ZERO.pow(FPDecimal::one().div(2i128));
