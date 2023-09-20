@@ -463,10 +463,10 @@ impl FPDecimal {
                 if dbase == nbase {
                     return n / d;
                 }
-                return FPDecimal::_log(*self, base);
+                FPDecimal::_log(*self, base)
             }
-            (_, _) => return FPDecimal::_log(*self, base),
-        };
+            (_, _) => FPDecimal::_log(*self, base),
+        }
     }
 }
 
