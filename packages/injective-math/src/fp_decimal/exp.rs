@@ -440,6 +440,7 @@ impl FPDecimal {
                             }
 
                             if a.log5().is_some() {
+                                println!("here");
                                 if ((FPDecimal::reciprocal(b) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001")
                                 {
                                     let mut tmp_b = FPDecimal::reciprocal(b).int();
