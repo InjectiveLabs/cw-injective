@@ -72,7 +72,7 @@ impl FPDecimal {
     }
 
     // a^(0.5)
-    pub fn sqrt(a: FPDecimal) -> Option<FPDecimal> {
+    pub fn _sqrt(a: FPDecimal) -> Option<FPDecimal> {
         const MAX_ITERATIONS: i64 = 300;
 
         if a < FPDecimal::zero() {
@@ -98,6 +98,12 @@ impl FPDecimal {
 
         Some(r)
     }
+    pub fn sqrt(self) -> FPDecimal {
+        match FPDecimal::_sqrt(self) {
+            Some(value) => value,
+            None => panic!("Undefined behavior"),
+        }
+    }
 
     pub fn checked_pow(self, exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
         {
@@ -112,6 +118,9 @@ impl FPDecimal {
             }
             if self.is_negative() && exponent == FPDecimal::zero() {
                 return Ok(FPDecimal::NEGATIVE_ONE);
+            }
+            if exponent > FPDecimal::from(60u128) {
+                return Err(OverflowError::new(OverflowOperation::Pow, self.to_string(), exponent.to_string()));
             }
 
             if self == FPDecimal::from(10u128) {
@@ -389,8 +398,110 @@ impl FPDecimal {
                         Ordering::Equal => Ok(a),
                         Ordering::Less => {
                             // taylor expansion approximation of exponentation compuation with float number exponent
+                            // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
+                            if let Some(_) = a.log2() {
+                                if ((FPDecimal::reciprocal(b) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001")
+                                {
+                                    let mut tmp_b = FPDecimal::reciprocal(b).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a /= FPDecimal::TWO;
+                                        tmp_b -= FPDecimal::ONE;
+                                    }
+                                    return Ok(a);
+                                };
+                                if FPDecimal::reciprocal(b) % FPDecimal::TWO == FPDecimal::ZERO {
+                                    let mut tmp_b = FPDecimal::reciprocal(b).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a = a.sqrt();
+                                        tmp_b /= FPDecimal::TWO;
+                                    }
+                                    return Ok(a);
+                                };
+                            }
+
+                            if let Some(_) = a.log3() {
+                                if ((FPDecimal::reciprocal(b) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001")
+                                {
+                                    let mut tmp_b = FPDecimal::reciprocal(b).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a /= FPDecimal::THREE;
+                                        tmp_b -= FPDecimal::ONE;
+                                    }
+                                    return Ok(a);
+                                };
+                                if FPDecimal::reciprocal(b) % FPDecimal::TWO == FPDecimal::ZERO {
+                                    let mut tmp_b = FPDecimal::reciprocal(b).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a = a.sqrt();
+                                        tmp_b /= FPDecimal::TWO;
+                                    }
+                                    return Ok(a);
+                                };
+                            }
+
+                            if let Some(_) = a.log5() {
+                                if ((FPDecimal::reciprocal(b) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001")
+                                {
+                                    let mut tmp_b = FPDecimal::reciprocal(b).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a /= FPDecimal::FIVE;
+                                        tmp_b -= FPDecimal::ONE;
+                                    }
+                                    return Ok(a);
+                                };
+                                if FPDecimal::reciprocal(b) % FPDecimal::TWO == FPDecimal::ZERO {
+                                    let mut tmp_b = FPDecimal::reciprocal(b).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a = a.sqrt();
+                                        tmp_b /= FPDecimal::TWO;
+                                    }
+                                    return Ok(a);
+                                };
+                            }
+
+                            if let Some(_) = a.log7() {
+                                if ((FPDecimal::reciprocal(b) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001")
+                                {
+                                    let mut tmp_b = FPDecimal::reciprocal(b).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a /= FPDecimal::SEVEN;
+                                        tmp_b -= FPDecimal::ONE;
+                                    }
+                                    return Ok(a);
+                                };
+                                if FPDecimal::reciprocal(b) % FPDecimal::TWO == FPDecimal::ZERO {
+                                    let mut tmp_b = FPDecimal::reciprocal(b).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a = a.sqrt();
+                                        tmp_b /= FPDecimal::TWO;
+                                    }
+                                    return Ok(a);
+                                };
+                            }
+
+                            if let Some(_) = a.log11() {
+                                if ((FPDecimal::reciprocal(b) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001")
+                                {
+                                    let mut tmp_b = FPDecimal::reciprocal(b).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a /= FPDecimal::from(11u128);
+                                        tmp_b -= FPDecimal::ONE;
+                                    }
+                                    return Ok(a);
+                                };
+                                if FPDecimal::reciprocal(b) % FPDecimal::TWO == FPDecimal::ZERO {
+                                    let mut tmp_b = FPDecimal::reciprocal(b).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a = a.sqrt();
+                                        tmp_b /= FPDecimal::TWO;
+                                    }
+                                    return Ok(a);
+                                };
+                            }
+
                             Ok(FPDecimal::_exp_taylor_expansion(a, b, n_terms))
                         }
+
                         Ordering::Greater => {
                             let mut int_b = b.int();
                             let rem_b = b - int_b;
@@ -473,9 +584,151 @@ mod tests {
     }
 
     #[test]
-    fn test_pow_four() {
+    fn test_4_pow_0_5() {
+        assert_eq!(FPDecimal::pow(FPDecimal::FOUR, FPDecimal::must_from_str("0.5")), FPDecimal::TWO);
+    }
+
+    #[test]
+    fn test_128_pow_0_5() {
         // NOTE: this test is not correct, but is an example of why we need a square root
-        assert!(FPDecimal::pow(FPDecimal::FOUR, FPDecimal::one().div(2i128)) != FPDecimal::TWO);
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::from(128u128), FPDecimal::must_from_str("0.5")),
+            FPDecimal::must_from_str("11.313708498984760390")
+        );
+    }
+
+    #[test]
+    fn test_128_pow_1_7() {
+        // NOTE: this test is not correct, but is an example of why we need a square root
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::from(128u128), FPDecimal::ONE / FPDecimal::SEVEN),
+            FPDecimal::TWO
+        );
+    }
+
+    #[test]
+    fn test_9_pow_0_5() {
+        assert_eq!(FPDecimal::pow(FPDecimal::NINE, FPDecimal::must_from_str("0.5")), FPDecimal::THREE);
+    }
+
+    #[test]
+    fn test_27_pow_0_5() {
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::from(27u128), FPDecimal::must_from_str("0.5")),
+            FPDecimal::must_from_str("5.196152422706631880")
+        );
+    }
+    #[test]
+    fn test_27_pow_1_over_3() {
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::from(27u128), FPDecimal::ONE / FPDecimal::THREE),
+            FPDecimal::THREE
+        );
+    }
+
+    #[test]
+    fn test_81_pow_0_25() {
+        // NOTE: this test is not correct, but is an example of why we need a square root
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::from(81u128), FPDecimal::ONE / FPDecimal::FOUR),
+            FPDecimal::THREE
+        );
+    }
+
+    #[test]
+    fn test_81_pow_0_5() {
+        // NOTE: this test is not correct, but is an example of why we need a square root
+        assert_eq!(FPDecimal::pow(FPDecimal::from(81u128), FPDecimal::ONE / FPDecimal::TWO), FPDecimal::NINE);
+    }
+
+    #[test]
+    fn test_25_pow_0_5() {
+        assert_eq!(FPDecimal::pow(FPDecimal::from(25u128), FPDecimal::must_from_str("0.5")), FPDecimal::FIVE);
+    }
+
+    #[test]
+    fn test_125_pow_0_5() {
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::from(125u128), FPDecimal::must_from_str("0.5")),
+            FPDecimal::must_from_str("11.180339887498948482")
+        );
+    }
+    #[test]
+    fn test_125_pow_1_over_3() {
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::from(125u128), FPDecimal::ONE / FPDecimal::THREE),
+            FPDecimal::FIVE
+        );
+    }
+
+    #[test]
+    fn test_625_pow_0_25() {
+        // NOTE: this test is not correct, but is an example of why we need a square root
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::from(625u128), FPDecimal::ONE / FPDecimal::FOUR),
+            FPDecimal::FIVE
+        );
+    }
+
+    #[test]
+    fn test_49_pow_0_5() {
+        assert_eq!(FPDecimal::pow(FPDecimal::from(49u128), FPDecimal::must_from_str("0.5")), FPDecimal::SEVEN);
+    }
+
+    #[test]
+    fn test_343_pow_0_5() {
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::from(343u128), FPDecimal::must_from_str("0.5")),
+            FPDecimal::must_from_str("18.520259177452134133")
+        );
+    }
+    #[test]
+    fn test_343_pow_1_over_3() {
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::from(343u128), FPDecimal::ONE / FPDecimal::THREE),
+            FPDecimal::SEVEN
+        );
+    }
+
+    #[test]
+    fn test_2401_pow_0_25() {
+        // NOTE: this test is not correct, but is an example of why we need a square root
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::from(2401u128), FPDecimal::ONE / FPDecimal::FOUR),
+            FPDecimal::SEVEN
+        );
+    }
+
+    #[test]
+    fn test_121_pow_0_5() {
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::from(121u128), FPDecimal::must_from_str("0.5")),
+            FPDecimal::from(11u128)
+        );
+    }
+
+    #[test]
+    fn test_1331_pow_0_5() {
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::from(1331u128), FPDecimal::must_from_str("0.5")),
+            FPDecimal::must_from_str("36.482872693909398340")
+        );
+    }
+    #[test]
+    fn test_1331_pow_1_over_3() {
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::from(1331u128), FPDecimal::ONE / FPDecimal::THREE),
+            FPDecimal::from(11u128)
+        );
+    }
+
+    #[test]
+    fn test_14641_pow_0_25() {
+        // NOTE: this test is not correct, but is an example of why we need a square root
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::from(14641u128), FPDecimal::ONE / FPDecimal::FOUR),
+            FPDecimal::from(11u128)
+        );
     }
 
     #[test]
@@ -498,12 +751,6 @@ mod tests {
             FPDecimal::E_10
         );
     }
-
-    // #[test]
-    // fn test_exp10_eq() {
-    //     // assert_eq!(FPDecimal::must_from_str("22026.465794806718"), FPDecimal::E_10);
-    //     assert_eq!(FPDecimal::E.checked_pow(FPDecimal::must_from_str("10")), FPDecimal::E_10);
-    // }
 
     #[test]
     fn test_pow_zero_2() {
@@ -532,7 +779,7 @@ mod tests {
         ];
 
         for (ix, el) in inputs.iter().enumerate() {
-            let result = FPDecimal::sqrt(FPDecimal::from(*el));
+            let result = FPDecimal::_sqrt(FPDecimal::from(*el));
 
             assert_eq!(result, expected[ix]);
         }
@@ -600,7 +847,7 @@ mod tests {
     }
 
     #[test]
-    fn test_checked_pow() {
+    fn test_checked_2_pow_2() {
         let base = FPDecimal::from(2u128);
 
         let result = FPDecimal::checked_pow(base, FPDecimal::from(2u128)).unwrap();

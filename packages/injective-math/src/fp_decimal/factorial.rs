@@ -71,7 +71,7 @@ mod tests {
 
     #[test]
     fn test_factorial_negative_nine() {
-        let negative_nine = FPDecimal::ZERO - FPDecimal::NINE;
+        let negative_nine = -FPDecimal::NINE;
         assert_eq!(negative_nine, FPDecimal::from_str("-9").unwrap());
         assert_eq!(FPDecimal::from_str("-362880").unwrap(), negative_nine.factorial());
     }

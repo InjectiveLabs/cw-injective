@@ -495,6 +495,8 @@ mod tests {
             sign: 1,
         };
         assert_eq!(FPDecimal::reciprocal(five), point_2);
+        assert_eq!(FPDecimal::reciprocal(point_2), five);
+        assert_eq!(FPDecimal::reciprocal(FPDecimal::must_from_str("0.5")), FPDecimal::TWO);
     }
 
     #[test]
