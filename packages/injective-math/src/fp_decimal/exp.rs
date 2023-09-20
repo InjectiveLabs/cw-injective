@@ -399,7 +399,7 @@ impl FPDecimal {
                         Ordering::Less => {
                             // taylor expansion approximation of exponentation compuation with float number exponent
                             // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
-                            if let Some(_) = a.log2() {
+                            if a.log2().is_some() {
                                 if ((FPDecimal::reciprocal(b) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001")
                                 {
                                     let mut tmp_b = FPDecimal::reciprocal(b).int();
@@ -419,7 +419,7 @@ impl FPDecimal {
                                 };
                             }
 
-                            if let Some(_) = a.log3() {
+                            if a.log3().is_some() {
                                 if ((FPDecimal::reciprocal(b) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001")
                                 {
                                     let mut tmp_b = FPDecimal::reciprocal(b).int();
@@ -439,7 +439,7 @@ impl FPDecimal {
                                 };
                             }
 
-                            if let Some(_) = a.log5() {
+                            if a.log5().is_some() {
                                 if ((FPDecimal::reciprocal(b) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001")
                                 {
                                     let mut tmp_b = FPDecimal::reciprocal(b).int();
@@ -459,7 +459,7 @@ impl FPDecimal {
                                 };
                             }
 
-                            if let Some(_) = a.log7() {
+                            if a.log7().is_some() {
                                 if ((FPDecimal::reciprocal(b) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001")
                                 {
                                     let mut tmp_b = FPDecimal::reciprocal(b).int();
@@ -479,7 +479,7 @@ impl FPDecimal {
                                 };
                             }
 
-                            if let Some(_) = a.log11() {
+                            if a.log11().is_some() {
                                 if ((FPDecimal::reciprocal(b) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001")
                                 {
                                     let mut tmp_b = FPDecimal::reciprocal(b).int();
