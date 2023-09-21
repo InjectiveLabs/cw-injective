@@ -279,12 +279,12 @@ mod tests {
 
     #[test]
     fn test_is_int() {
-        assert_eq!(FPDecimal::TWO.is_int(), true);
+        assert!(FPDecimal::TWO.is_int());
     }
 
     #[test]
     fn test_is_not_int() {
-        assert_eq!(FPDecimal::must_from_str("2.1").is_int(), false);
+        assert!(!FPDecimal::must_from_str("2.1").is_int());
         assert_eq!(FPDecimal::must_from_str("2.1") % FPDecimal::ONE, FPDecimal::must_from_str("0.1"));
     }
 }

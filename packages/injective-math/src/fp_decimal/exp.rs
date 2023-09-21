@@ -351,71 +351,57 @@ impl FPDecimal {
                 }
             }
 
-            fn inner(mut a: FPDecimal, mut b: FPDecimal) -> Result<FPDecimal, OverflowError> {
-                // a^b
-                // 14 terms taylor expansion provides a good enough approximation
-                let n_terms = 13u128;
-                match b.cmp(&FPDecimal::ZERO) {
-                    Ordering::Equal => Ok(FPDecimal::one()),
-                    Ordering::Less => {
-                        a = FPDecimal::ONE / a;
-                        b = -b;
-                        match b.cmp(&(FPDecimal::ONE)) {
-                            Ordering::Equal => Ok(a),
-                            Ordering::Less => Ok(FPDecimal::_exp_taylor_expansion(a, b, n_terms)),
-                            Ordering::Greater => {
-                                let mut int_b = b.int();
-                                let rem_b = b - int_b;
-                                let mut float_exp = FPDecimal::ONE;
-                                if rem_b != FPDecimal::ZERO {
-                                    float_exp = FPDecimal::_exp_taylor_expansion(a, rem_b, n_terms);
-                                }
-                                let mut tmp_a = FPDecimal::ONE;
-                                while int_b > FPDecimal::one() {
-                                    if int_b.num % FPDecimal::TWO.num == FPDecimal::ONE.num {
-                                        tmp_a = a * tmp_a;
-                                        int_b -= FPDecimal::ONE;
-                                    }
-                                    a = a * a;
-                                    int_b /= FPDecimal::TWO;
-                                }
-                                a *= tmp_a;
-                                a *= float_exp;
-                                Ok(a)
-                            }
-                        }
-                    }
-                    Ordering::Greater => match b.cmp(&FPDecimal::ONE) {
-                        Ordering::Equal => Ok(a),
-                        Ordering::Less => {
-                            // taylor expansion approximation of exponentation compuation with float number exponent
-                            Ok(FPDecimal::_exp_taylor_expansion(a, b, n_terms))
-                        }
-                        Ordering::Greater => {
-                            let mut int_b = b.int();
-                            let rem_b = b - int_b;
-                            let mut float_exp = FPDecimal::ONE;
-                            if rem_b != FPDecimal::ZERO {
-                                float_exp = FPDecimal::_exp_taylor_expansion(a, rem_b, n_terms);
-                            }
-                            let mut tmp_a = FPDecimal::ONE;
-                            while int_b > FPDecimal::one() {
-                                if int_b.num % FPDecimal::TWO.num == FPDecimal::ONE.num {
-                                    tmp_a = a * tmp_a;
-                                    int_b -= FPDecimal::ONE;
-                                }
-                                a = a * a;
-                                int_b /= FPDecimal::TWO;
-                            }
-                            a *= tmp_a;
-                            a *= float_exp;
-                            Ok(a)
-                        }
-                    },
+            fn compute_exponentiation(mut base: FPDecimal, mut exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
+                const N_TERMS: u128 = 13;
+
+                if exponent == FPDecimal::ZERO {
+                    return Ok(FPDecimal::one());
+                }
+
+                if exponent < FPDecimal::ZERO {
+                    base = FPDecimal::ONE / base;
+                    exponent = -exponent;
+                }
+
+                match exponent.cmp(&FPDecimal::ONE) {
+                    Ordering::Equal => Ok(base),
+                    Ordering::Less => Ok(FPDecimal::_exp_taylor_expansion(base, exponent, N_TERMS)),
+                    Ordering::Greater => compute_exponent_greater_one(base, exponent, N_TERMS),
                 }
             }
 
-            inner(self, exponent).map_err(|_| OverflowError {
+            fn compute_exponent_greater_one(mut base: FPDecimal, exponent: FPDecimal, n_terms: u128) -> Result<FPDecimal, OverflowError> {
+                let integer_part_of_exponent = exponent.int();
+                let fractional_part_of_exponent = exponent - integer_part_of_exponent;
+
+                let fractional_exponentiation = if fractional_part_of_exponent != FPDecimal::ZERO {
+                    FPDecimal::_exp_taylor_expansion(base, fractional_part_of_exponent, n_terms)
+                } else {
+                    FPDecimal::ONE
+                };
+
+                base = compute_integer_exponentiation(base, integer_part_of_exponent);
+
+                Ok(base * fractional_exponentiation)
+            }
+
+            fn compute_integer_exponentiation(mut base: FPDecimal, mut exponent: FPDecimal) -> FPDecimal {
+                let mut temp_base = FPDecimal::ONE;
+
+                while exponent > FPDecimal::one() {
+                    if exponent.num % FPDecimal::TWO.num == FPDecimal::ONE.num {
+                        temp_base = base * temp_base;
+                        exponent -= FPDecimal::ONE;
+                    }
+
+                    base = base * base;
+                    exponent /= FPDecimal::TWO;
+                }
+
+                base * temp_base
+            }
+
+            compute_exponentiation(self, exponent).map_err(|_| OverflowError {
                 operation: OverflowOperation::Pow,
                 operand1: self.to_string(),
                 operand2: exponent.to_string(),
@@ -498,12 +484,6 @@ mod tests {
             FPDecimal::E_10
         );
     }
-
-    // #[test]
-    // fn test_exp10_eq() {
-    //     // assert_eq!(FPDecimal::must_from_str("22026.465794806718"), FPDecimal::E_10);
-    //     assert_eq!(FPDecimal::E.checked_pow(FPDecimal::must_from_str("10")), FPDecimal::E_10);
-    // }
 
     #[test]
     fn test_pow_zero_2() {
