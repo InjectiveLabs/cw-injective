@@ -1,4 +1,5 @@
 use cosmwasm_std::{OverflowError, OverflowOperation};
+use std::cmp::Ordering;
 use std::str::FromStr;
 
 /// Exponential functions for FPDecimal
@@ -6,6 +7,25 @@ use crate::fp_decimal::{FPDecimal, U256};
 use num::pow::Pow;
 
 impl FPDecimal {
+    #[allow(clippy::many_single_char_names)]
+    pub fn _exp_taylor_expansion(a: FPDecimal, b: FPDecimal, n: u128) -> FPDecimal {
+        //a^b n+1 terms taylor expansion
+        assert!(n <= 13u128);
+        if n == 0 {
+            FPDecimal::ONE
+        } else {
+            let base = a.ln() * b;
+            let mut x = FPDecimal::ONE + base;
+            let mut numerator = base;
+            let mut denominator = FPDecimal::ONE;
+            for i in 2..n + 1 {
+                numerator *= base;
+                denominator *= FPDecimal::from(i);
+                x += numerator / denominator;
+            }
+            x
+        }
+    }
     // a^b
     pub fn _pow(a: FPDecimal, b: FPDecimal) -> FPDecimal {
         a.checked_pow(b).unwrap()
@@ -79,7 +99,7 @@ impl FPDecimal {
         Some(r)
     }
 
-    pub fn checked_pow(self, rhs: FPDecimal) -> Result<FPDecimal, OverflowError> {
+    pub fn checked_pow(self, exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
         {
             // This uses the exponentiation by squaring algorithm:
             // https://en.wikipedia.org/wiki/Exponentiation_by_squaring#Basic_method
@@ -87,275 +107,304 @@ impl FPDecimal {
             if self == FPDecimal::zero() {
                 return Ok(FPDecimal::zero());
             }
-            if self > FPDecimal::zero() && rhs == FPDecimal::zero() {
+            if self > FPDecimal::zero() && exponent == FPDecimal::zero() {
                 return Ok(FPDecimal::one());
             }
-            if self.is_negative() && rhs == FPDecimal::zero() {
+            if self.is_negative() && exponent == FPDecimal::zero() {
                 return Ok(FPDecimal::NEGATIVE_ONE);
             }
 
             if self == FPDecimal::from(10u128) {
-                if rhs == FPDecimal::one() {
+                if exponent == FPDecimal::one() {
                     return Ok(FPDecimal::from(10u128));
                 }
-                if rhs == FPDecimal::TWO {
+                if exponent == FPDecimal::TWO {
                     return Ok(FPDecimal::from(100u128));
                 }
-                if rhs == FPDecimal::THREE {
+                if exponent == FPDecimal::THREE {
                     return Ok(FPDecimal::from(1000u128));
                 }
-                if rhs == FPDecimal::FOUR {
+                if exponent == FPDecimal::FOUR {
                     return Ok(FPDecimal::from(10000u128));
                 }
-                if rhs == FPDecimal::FIVE {
+                if exponent == FPDecimal::FIVE {
                     return Ok(FPDecimal::from(100000u128));
                 }
-                if rhs == FPDecimal::SIX {
+                if exponent == FPDecimal::SIX {
                     return Ok(FPDecimal::from(1000000u128));
                 }
-                if rhs == FPDecimal::SEVEN {
+                if exponent == FPDecimal::SEVEN {
                     return Ok(FPDecimal::from(10000000u128));
                 }
-                if rhs == FPDecimal::EIGHT {
+                if exponent == FPDecimal::EIGHT {
                     return Ok(FPDecimal::from(100000000u128));
                 }
-                if rhs == FPDecimal::NINE {
+                if exponent == FPDecimal::NINE {
                     return Ok(FPDecimal::from(1000000000u128));
                 }
-                if rhs == FPDecimal::from(10u128) {
+                if exponent == FPDecimal::from(10u128) {
                     return Ok(FPDecimal::from(10000000000u128));
                 }
-                if rhs == FPDecimal::from(11u128) {
+                if exponent == FPDecimal::from(11u128) {
                     return Ok(FPDecimal::from(100000000000u128));
                 }
-                if rhs == FPDecimal::from(12u128) {
+                if exponent == FPDecimal::from(12u128) {
                     return Ok(FPDecimal::from(1000000000000u128));
                 }
-                if rhs == FPDecimal::from(13u128) {
+                if exponent == FPDecimal::from(13u128) {
                     return Ok(FPDecimal::from(10000000000000u128));
                 }
-                if rhs == FPDecimal::from(14u128) {
+                if exponent == FPDecimal::from(14u128) {
                     return Ok(FPDecimal::from(100000000000000u128));
                 }
-                if rhs == FPDecimal::from(15u128) {
+                if exponent == FPDecimal::from(15u128) {
                     return Ok(FPDecimal::from(1000000000000000u128));
                 }
-                if rhs == FPDecimal::from(16u128) {
+                if exponent == FPDecimal::from(16u128) {
                     return Ok(FPDecimal::from(10000000000000000u128));
                 }
-                if rhs == FPDecimal::from(17u128) {
+                if exponent == FPDecimal::from(17u128) {
                     return Ok(FPDecimal::from(100000000000000000u128));
                 }
-                if rhs == FPDecimal::from(18u128) {
+                if exponent == FPDecimal::from(18u128) {
                     return Ok(FPDecimal::from(1000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(19u128) {
+                if exponent == FPDecimal::from(19u128) {
                     return Ok(FPDecimal::from(10000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(20u128) {
+                if exponent == FPDecimal::from(20u128) {
                     return Ok(FPDecimal::from(100000000000000000000u128));
                 }
-                if rhs == FPDecimal::NEGATIVE_ONE {
+                if exponent == FPDecimal::NEGATIVE_ONE {
                     return Ok(FPDecimal::from_str("0.1").unwrap());
                 }
-                if rhs == FPDecimal::from_str("-2").unwrap() {
+                if exponent == FPDecimal::from_str("-2").unwrap() {
                     return Ok(FPDecimal::from_str("0.01").unwrap());
                 }
-                if rhs == FPDecimal::from_str("-3").unwrap() {
+                if exponent == FPDecimal::from_str("-3").unwrap() {
                     return Ok(FPDecimal::from_str("0.001").unwrap());
                 }
-                if rhs == FPDecimal::from_str("-4").unwrap() {
+                if exponent == FPDecimal::from_str("-4").unwrap() {
                     return Ok(FPDecimal::from_str("0.0001").unwrap());
                 }
-                if rhs == FPDecimal::from_str("-5").unwrap() {
+                if exponent == FPDecimal::from_str("-5").unwrap() {
                     return Ok(FPDecimal::from_str("0.00001").unwrap());
                 }
-                if rhs == FPDecimal::from_str("-6").unwrap() {
+                if exponent == FPDecimal::from_str("-6").unwrap() {
                     return Ok(FPDecimal::from_str("0.000001").unwrap());
                 }
-                if rhs == FPDecimal::from_str("-7").unwrap() {
+                if exponent == FPDecimal::from_str("-7").unwrap() {
                     return Ok(FPDecimal::from_str("0.0000001").unwrap());
                 }
-                if rhs == FPDecimal::from_str("-8").unwrap() {
+                if exponent == FPDecimal::from_str("-8").unwrap() {
                     return Ok(FPDecimal::from_str("0.00000001").unwrap());
                 }
-                if rhs == FPDecimal::from_str("-9").unwrap() {
+                if exponent == FPDecimal::from_str("-9").unwrap() {
                     return Ok(FPDecimal::from_str("0.000000001").unwrap());
                 }
-                if rhs == FPDecimal::from_str("-10").unwrap() {
+                if exponent == FPDecimal::from_str("-10").unwrap() {
                     return Ok(FPDecimal::from_str("0.0000000001").unwrap());
                 }
-                if rhs == FPDecimal::from_str("-11").unwrap() {
+                if exponent == FPDecimal::from_str("-11").unwrap() {
                     return Ok(FPDecimal::from_str("0.00000000001").unwrap());
                 }
-                if rhs == FPDecimal::from_str("-12").unwrap() {
+                if exponent == FPDecimal::from_str("-12").unwrap() {
                     return Ok(FPDecimal::from_str("0.000000000001").unwrap());
                 }
-                if rhs == FPDecimal::from_str("-13").unwrap() {
+                if exponent == FPDecimal::from_str("-13").unwrap() {
                     return Ok(FPDecimal::from_str("0.0000000000001").unwrap());
                 }
-                if rhs == FPDecimal::from_str("-14").unwrap() {
+                if exponent == FPDecimal::from_str("-14").unwrap() {
                     return Ok(FPDecimal::from_str("0.00000000000001").unwrap());
                 }
-                if rhs == FPDecimal::from_str("-15").unwrap() {
+                if exponent == FPDecimal::from_str("-15").unwrap() {
                     return Ok(FPDecimal::from_str("0.000000000000001").unwrap());
                 }
-                if rhs == FPDecimal::from_str("-16").unwrap() {
+                if exponent == FPDecimal::from_str("-16").unwrap() {
                     return Ok(FPDecimal::from_str("0.0000000000000001").unwrap());
                 }
-                if rhs == FPDecimal::from_str("-17").unwrap() {
+                if exponent == FPDecimal::from_str("-17").unwrap() {
                     return Ok(FPDecimal::from_str("0.00000000000000001").unwrap());
                 }
-                if rhs == FPDecimal::from_str("-18").unwrap() {
+                if exponent == FPDecimal::from_str("-18").unwrap() {
                     return Ok(FPDecimal::from_str("0.000000000000000001").unwrap());
                 }
-                if rhs < FPDecimal::from_str("-18").unwrap() {
+                if exponent < FPDecimal::from_str("-18").unwrap() {
                     return Ok(FPDecimal::zero());
                 }
-                if rhs == FPDecimal::from(21u128) {
+                if exponent == FPDecimal::from(21u128) {
                     return Ok(FPDecimal::from(1000000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(22u128) {
+                if exponent == FPDecimal::from(22u128) {
                     return Ok(FPDecimal::from(10000000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(23u128) {
+                if exponent == FPDecimal::from(23u128) {
                     return Ok(FPDecimal::from(100000000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(24u128) {
+                if exponent == FPDecimal::from(24u128) {
                     return Ok(FPDecimal::from(1000000000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(25u128) {
+                if exponent == FPDecimal::from(25u128) {
                     return Ok(FPDecimal::from(10000000000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(26u128) {
+                if exponent == FPDecimal::from(26u128) {
                     return Ok(FPDecimal::from(100000000000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(27u128) {
+                if exponent == FPDecimal::from(27u128) {
                     return Ok(FPDecimal::from(1000000000000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(28u128) {
+                if exponent == FPDecimal::from(28u128) {
                     return Ok(FPDecimal::from(10000000000000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(29u128) {
+                if exponent == FPDecimal::from(29u128) {
                     return Ok(FPDecimal::from(100000000000000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(30u128) {
+                if exponent == FPDecimal::from(30u128) {
                     return Ok(FPDecimal::from(1000000000000000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(31u128) {
+                if exponent == FPDecimal::from(31u128) {
                     return Ok(FPDecimal::from(10000000000000000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(32u128) {
+                if exponent == FPDecimal::from(32u128) {
                     return Ok(FPDecimal::from(100000000000000000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(33u128) {
+                if exponent == FPDecimal::from(33u128) {
                     return Ok(FPDecimal::from(1000000000000000000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(34u128) {
+                if exponent == FPDecimal::from(34u128) {
                     return Ok(FPDecimal::from(10000000000000000000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(35u128) {
+                if exponent == FPDecimal::from(35u128) {
                     return Ok(FPDecimal::from(100000000000000000000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(36u128) {
+                if exponent == FPDecimal::from(36u128) {
                     return Ok(FPDecimal::from(1000000000000000000000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(37u128) {
+                if exponent == FPDecimal::from(37u128) {
                     return Ok(FPDecimal::from(10000000000000000000000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(38u128) {
+                if exponent == FPDecimal::from(38u128) {
                     return Ok(FPDecimal::from(100000000000000000000000000000000000000u128));
                 }
-                if rhs == FPDecimal::from(39u128) {
+                if exponent == FPDecimal::from(39u128) {
                     return Ok(FPDecimal::from_str("1000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(40u128) {
+                if exponent == FPDecimal::from(40u128) {
                     return Ok(FPDecimal::from_str("10000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(41u128) {
+                if exponent == FPDecimal::from(41u128) {
                     return Ok(FPDecimal::from_str("100000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(42u128) {
+                if exponent == FPDecimal::from(42u128) {
                     return Ok(FPDecimal::from_str("1000000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(43u128) {
+                if exponent == FPDecimal::from(43u128) {
                     return Ok(FPDecimal::from_str("10000000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(44u128) {
+                if exponent == FPDecimal::from(44u128) {
                     return Ok(FPDecimal::from_str("100000000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(45u128) {
+                if exponent == FPDecimal::from(45u128) {
                     return Ok(FPDecimal::from_str("1000000000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(46u128) {
+                if exponent == FPDecimal::from(46u128) {
                     return Ok(FPDecimal::from_str("10000000000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(47u128) {
+                if exponent == FPDecimal::from(47u128) {
                     return Ok(FPDecimal::from_str("100000000000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(48u128) {
+                if exponent == FPDecimal::from(48u128) {
                     return Ok(FPDecimal::from_str("1000000000000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(49u128) {
+                if exponent == FPDecimal::from(49u128) {
                     return Ok(FPDecimal::from_str("10000000000000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(50u128) {
+                if exponent == FPDecimal::from(50u128) {
                     return Ok(FPDecimal::from_str("100000000000000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(51u128) {
+                if exponent == FPDecimal::from(51u128) {
                     return Ok(FPDecimal::from_str("1000000000000000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(52u128) {
+                if exponent == FPDecimal::from(52u128) {
                     return Ok(FPDecimal::from_str("10000000000000000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(53u128) {
+                if exponent == FPDecimal::from(53u128) {
                     return Ok(FPDecimal::from_str("100000000000000000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(54u128) {
+                if exponent == FPDecimal::from(54u128) {
                     return Ok(FPDecimal::from_str("1000000000000000000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(55u128) {
+                if exponent == FPDecimal::from(55u128) {
                     return Ok(FPDecimal::from_str("10000000000000000000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(56u128) {
+                if exponent == FPDecimal::from(56u128) {
                     return Ok(FPDecimal::from_str("100000000000000000000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(57u128) {
+                if exponent == FPDecimal::from(57u128) {
                     return Ok(FPDecimal::from_str("1000000000000000000000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(58u128) {
+                if exponent == FPDecimal::from(58u128) {
                     return Ok(FPDecimal::from_str("10000000000000000000000000000000000000000000000000000000000").unwrap());
                 }
-                if rhs == FPDecimal::from(59u128) {
+                if exponent == FPDecimal::from(59u128) {
                     return Ok(FPDecimal::from_str("100000000000000000000000000000000000000000000000000000000000").unwrap());
                 }
             }
 
-            fn inner(mut x: FPDecimal, mut n: FPDecimal) -> Result<FPDecimal, OverflowError> {
-                if n == FPDecimal::zero() {
+            fn compute_exponentiation(mut base: FPDecimal, mut exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
+                const N_TERMS: u128 = 13;
+
+                if exponent == FPDecimal::ZERO {
                     return Ok(FPDecimal::one());
                 }
 
-                let mut y = FPDecimal::one();
-
-                while n > FPDecimal::one() {
-                    if n.num % FPDecimal::TWO.num == FPDecimal::zero().num {
-                        x = x * x;
-                        n /= FPDecimal::TWO;
-                    } else {
-                        y = x * y;
-                        x = x * x;
-                        n = (n - FPDecimal::ONE) / FPDecimal::TWO;
-                    }
+                if exponent < FPDecimal::ZERO {
+                    base = FPDecimal::ONE / base;
+                    exponent = -exponent;
                 }
 
-                Ok(x * y)
+                match exponent.cmp(&FPDecimal::ONE) {
+                    Ordering::Equal => Ok(base),
+                    Ordering::Less => Ok(FPDecimal::_exp_taylor_expansion(base, exponent, N_TERMS)),
+                    Ordering::Greater => compute_exponent_greater_one(base, exponent, N_TERMS),
+                }
             }
 
-            inner(self, rhs).map_err(|_| OverflowError {
+            fn compute_exponent_greater_one(mut base: FPDecimal, exponent: FPDecimal, n_terms: u128) -> Result<FPDecimal, OverflowError> {
+                let integer_part_of_exponent = exponent.int();
+                let fractional_part_of_exponent = exponent - integer_part_of_exponent;
+
+                let fractional_exponentiation = if fractional_part_of_exponent != FPDecimal::ZERO {
+                    FPDecimal::_exp_taylor_expansion(base, fractional_part_of_exponent, n_terms)
+                } else {
+                    FPDecimal::ONE
+                };
+
+                base = compute_integer_exponentiation(base, integer_part_of_exponent);
+
+                Ok(base * fractional_exponentiation)
+            }
+
+            fn compute_integer_exponentiation(mut base: FPDecimal, mut exponent: FPDecimal) -> FPDecimal {
+                let mut temp_base = FPDecimal::ONE;
+
+                while exponent > FPDecimal::one() {
+                    if exponent.num % FPDecimal::TWO.num == FPDecimal::ONE.num {
+                        temp_base = base * temp_base;
+                        exponent -= FPDecimal::ONE;
+                    }
+
+                    base = base * base;
+                    exponent /= FPDecimal::TWO;
+                }
+
+                base * temp_base
+            }
+
+            compute_exponentiation(self, exponent).map_err(|_| OverflowError {
                 operation: OverflowOperation::Pow,
                 operand1: self.to_string(),
-                operand2: rhs.to_string(),
+                operand2: exponent.to_string(),
             })
         }
     }
@@ -363,9 +412,6 @@ impl FPDecimal {
 
 impl Pow<FPDecimal> for FPDecimal {
     type Output = Self;
-    // fn pow(self, rhs: FPDecimal) -> Self::Output {
-    //     Self::_pow(self, rhs)
-    // }
 
     /// Raises a value to the power of `exp`, panics if an overflow occurred.
     fn pow(self, exp: FPDecimal) -> Self {
@@ -501,6 +547,24 @@ mod tests {
     }
 
     #[test]
+    fn test_e_pow_negative() {
+        let base = FPDecimal::E;
+        assert_eq!(
+            base.pow(FPDecimal::from_str("-3").unwrap()),
+            FPDecimal::from_str("0.049787068367863942").unwrap()
+        );
+    }
+
+    #[test]
+    fn test_e_pow_decimal() {
+        let base = FPDecimal::E;
+        assert_eq!(
+            base.pow(FPDecimal::from_str("0.5").unwrap()),
+            FPDecimal::from_str("1.648721270700127416").unwrap()
+        );
+    }
+
+    #[test]
     fn test_pow_10_min() {
         let base = FPDecimal::from(10u128);
         assert_eq!(
@@ -521,5 +585,59 @@ mod tests {
 
         let result = FPDecimal::checked_pow(base, FPDecimal::from(2u128)).unwrap();
         assert_eq!(result, FPDecimal::from(4u128));
+    }
+
+    #[test]
+    fn test_2_3_pow_1_4() {
+        let base = FPDecimal::must_from_str("2.3");
+        let exponent = FPDecimal::must_from_str("1.4");
+
+        let result = FPDecimal::checked_pow(base, exponent).unwrap();
+        assert_eq!(result, FPDecimal::must_from_str("3.209363953267971924"));
+    }
+
+    #[test]
+    fn test_2_3_pow_3_7() {
+        let base = FPDecimal::must_from_str("2.3");
+        let exponent = FPDecimal::must_from_str("3.7");
+
+        let result = FPDecimal::checked_pow(base, exponent).unwrap();
+        assert_eq!(result, FPDecimal::must_from_str("21.796812747431110477"));
+    }
+
+    #[test]
+    fn test_2_3_pow_neg_1_4() {
+        let base = FPDecimal::must_from_str("2.3");
+        let exponent = FPDecimal::must_from_str("-1.4");
+
+        let result = FPDecimal::checked_pow(base, exponent).unwrap();
+        assert_eq!(result, FPDecimal::must_from_str("0.311588219522980069"));
+    }
+
+    #[test]
+    fn test_2_3_pow_neg_3_7() {
+        let base = FPDecimal::must_from_str("2.3");
+        let exponent = FPDecimal::must_from_str("-3.7");
+
+        let result = FPDecimal::checked_pow(base, exponent).unwrap();
+        assert_eq!(result, FPDecimal::must_from_str("0.045878267230507923"));
+    }
+
+    #[test]
+    fn test_2_3_pow_0_4() {
+        let base = FPDecimal::must_from_str("2.3");
+        let exponent = FPDecimal::must_from_str("0.4");
+
+        let result = FPDecimal::checked_pow(base, exponent).unwrap();
+        assert_eq!(result, FPDecimal::must_from_str("1.395375631855639967"));
+    }
+
+    #[test]
+    fn test_2_3_pow_neg_0_4() {
+        let base = FPDecimal::must_from_str("2.3");
+        let exponent = FPDecimal::must_from_str("-0.4");
+
+        let result = FPDecimal::checked_pow(base, exponent).unwrap();
+        assert_eq!(result, FPDecimal::must_from_str("0.716652904902854162"));
     }
 }
