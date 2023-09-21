@@ -354,7 +354,6 @@ impl FPDecimal {
                 }
             }
 
-
             fn compute_exponentiation(base: FPDecimal, mut exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
                 // base^exponent
                 // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
@@ -1070,7 +1069,6 @@ impl FPDecimal {
                 base * temp_base
             }
 
-
             fn compute_positive_exponent_greater_one(base: FPDecimal, exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
                 let integer_part_of_exponent = exponent.int();
                 let fractional_part_of_exponent = exponent - integer_part_of_exponent;
@@ -1371,7 +1369,6 @@ mod tests {
         let base = FPDecimal::E;
         assert_eq!(
             base.pow(FPDecimal::from_str("-3").unwrap()),
-
             FPDecimal::from_str("0.049787068367863943").unwrap()
         );
     }
