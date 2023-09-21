@@ -28,7 +28,7 @@ impl FPDecimal {
     }
     // a^b
     pub fn _pow(a: FPDecimal, b: FPDecimal) -> FPDecimal {
-        a.checked_pow(b).unwrap()
+        a.checked_positive_pow(b).unwrap()
     }
     // e^(a)
     pub fn _exp(a: FPDecimal) -> FPDecimal {
@@ -105,7 +105,7 @@ impl FPDecimal {
         }
     }
 
-    pub fn checked_pow(self, exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
+    pub fn checked_positive_pow(self, exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
         {
             // This uses the exponentiation by squaring algorithm:
             // https://en.wikipedia.org/wiki/Exponentiation_by_squaring#Basic_method
@@ -115,9 +115,6 @@ impl FPDecimal {
             }
             if self > FPDecimal::zero() && exponent == FPDecimal::zero() {
                 return Ok(FPDecimal::one());
-            }
-            if self.is_negative() && exponent == FPDecimal::zero() {
-                return Ok(FPDecimal::NEGATIVE_ONE);
             }
             if exponent > FPDecimal::from(60u128) {
                 return Err(OverflowError::new(OverflowOperation::Pow, self.to_string(), exponent.to_string()));
@@ -522,7 +519,6 @@ impl FPDecimal {
                                     int_b /= FPDecimal::TWO;
                                 }
                                 a *= tmp_a;
-                                // a *= float_exp;
                                 Ok(FPDecimal::ONE / a * float_exp)
                             }
                         }
@@ -698,6 +694,537 @@ impl FPDecimal {
             })
         }
     }
+
+    pub fn checked_negative_pow(self, exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
+        {
+            // This uses the exponentiation by squaring algorithm:
+            // https://en.wikipedia.org/wiki/Exponentiation_by_squaring#Basic_method
+
+            if self == FPDecimal::zero() {
+                return Ok(FPDecimal::zero());
+            }
+            if self.is_negative() && exponent == FPDecimal::zero() {
+                return Ok(FPDecimal::NEGATIVE_ONE);
+            }
+            if exponent > FPDecimal::from(60u128) {
+                return Err(OverflowError::new(OverflowOperation::Pow, self.to_string(), exponent.to_string()));
+            }
+
+            if self == -FPDecimal::from(10u128) {
+                if exponent == FPDecimal::one() {
+                    return Ok(-FPDecimal::from(10u128));
+                }
+                if exponent == FPDecimal::TWO {
+                    return Ok(FPDecimal::from(100u128));
+                }
+                if exponent == FPDecimal::THREE {
+                    return Ok(-FPDecimal::from(1000u128));
+                }
+                if exponent == FPDecimal::FOUR {
+                    return Ok(-FPDecimal::from(10000u128));
+                }
+                if exponent == FPDecimal::FIVE {
+                    return Ok(-FPDecimal::from(100000u128));
+                }
+                if exponent == FPDecimal::SIX {
+                    return Ok(FPDecimal::from(1000000u128));
+                }
+                if exponent == FPDecimal::SEVEN {
+                    return Ok(-FPDecimal::from(10000000u128));
+                }
+                if exponent == FPDecimal::EIGHT {
+                    return Ok(FPDecimal::from(100000000u128));
+                }
+                if exponent == FPDecimal::NINE {
+                    return Ok(-FPDecimal::from(1000000000u128));
+                }
+                if exponent == FPDecimal::from(10u128) {
+                    return Ok(FPDecimal::from(10000000000u128));
+                }
+                if exponent == FPDecimal::from(11u128) {
+                    return Ok(-FPDecimal::from(100000000000u128));
+                }
+                if exponent == FPDecimal::from(12u128) {
+                    return Ok(FPDecimal::from(1000000000000u128));
+                }
+                if exponent == FPDecimal::from(13u128) {
+                    return Ok(-FPDecimal::from(10000000000000u128));
+                }
+                if exponent == FPDecimal::from(14u128) {
+                    return Ok(FPDecimal::from(100000000000000u128));
+                }
+                if exponent == FPDecimal::from(15u128) {
+                    return Ok(-FPDecimal::from(1000000000000000u128));
+                }
+                if exponent == FPDecimal::from(16u128) {
+                    return Ok(FPDecimal::from(10000000000000000u128));
+                }
+                if exponent == FPDecimal::from(17u128) {
+                    return Ok(-FPDecimal::from(100000000000000000u128));
+                }
+                if exponent == FPDecimal::from(18u128) {
+                    return Ok(FPDecimal::from(1000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(19u128) {
+                    return Ok(-FPDecimal::from(10000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(20u128) {
+                    return Ok(FPDecimal::from(100000000000000000000u128));
+                }
+                if exponent == FPDecimal::NEGATIVE_ONE {
+                    return Ok(-FPDecimal::from_str("0.1").unwrap());
+                }
+                if exponent == FPDecimal::from_str("-2").unwrap() {
+                    return Ok(FPDecimal::from_str("0.01").unwrap());
+                }
+                if exponent == FPDecimal::from_str("-3").unwrap() {
+                    return Ok(-FPDecimal::from_str("0.001").unwrap());
+                }
+                if exponent == FPDecimal::from_str("-4").unwrap() {
+                    return Ok(FPDecimal::from_str("0.0001").unwrap());
+                }
+                if exponent == FPDecimal::from_str("-5").unwrap() {
+                    return Ok(-FPDecimal::from_str("0.00001").unwrap());
+                }
+                if exponent == FPDecimal::from_str("-6").unwrap() {
+                    return Ok(FPDecimal::from_str("0.000001").unwrap());
+                }
+                if exponent == FPDecimal::from_str("-7").unwrap() {
+                    return Ok(-FPDecimal::from_str("0.0000001").unwrap());
+                }
+                if exponent == FPDecimal::from_str("-8").unwrap() {
+                    return Ok(FPDecimal::from_str("0.00000001").unwrap());
+                }
+                if exponent == FPDecimal::from_str("-9").unwrap() {
+                    return Ok(-FPDecimal::from_str("0.000000001").unwrap());
+                }
+                if exponent == FPDecimal::from_str("-10").unwrap() {
+                    return Ok(FPDecimal::from_str("0.0000000001").unwrap());
+                }
+                if exponent == FPDecimal::from_str("-11").unwrap() {
+                    return Ok(-FPDecimal::from_str("0.00000000001").unwrap());
+                }
+                if exponent == FPDecimal::from_str("-12").unwrap() {
+                    return Ok(FPDecimal::from_str("0.000000000001").unwrap());
+                }
+                if exponent == FPDecimal::from_str("-13").unwrap() {
+                    return Ok(-FPDecimal::from_str("0.0000000000001").unwrap());
+                }
+                if exponent == FPDecimal::from_str("-14").unwrap() {
+                    return Ok(FPDecimal::from_str("0.00000000000001").unwrap());
+                }
+                if exponent == FPDecimal::from_str("-15").unwrap() {
+                    return Ok(-FPDecimal::from_str("0.000000000000001").unwrap());
+                }
+                if exponent == FPDecimal::from_str("-16").unwrap() {
+                    return Ok(FPDecimal::from_str("0.0000000000000001").unwrap());
+                }
+                if exponent == FPDecimal::from_str("-17").unwrap() {
+                    return Ok(-FPDecimal::from_str("0.00000000000000001").unwrap());
+                }
+                if exponent == FPDecimal::from_str("-18").unwrap() {
+                    return Ok(FPDecimal::from_str("0.000000000000000001").unwrap());
+                }
+                if exponent < FPDecimal::from_str("-18").unwrap() {
+                    return Ok(FPDecimal::zero());
+                }
+
+                if exponent == FPDecimal::from(21u128) {
+                    return Ok(-FPDecimal::from(1000000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(22u128) {
+                    return Ok(-FPDecimal::from(10000000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(23u128) {
+                    return Ok(-FPDecimal::from(100000000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(24u128) {
+                    return Ok(FPDecimal::from(1000000000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(25u128) {
+                    return Ok(-FPDecimal::from(10000000000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(26u128) {
+                    return Ok(FPDecimal::from(100000000000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(27u128) {
+                    return Ok(-FPDecimal::from(1000000000000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(28u128) {
+                    return Ok(FPDecimal::from(10000000000000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(29u128) {
+                    return Ok(-FPDecimal::from(100000000000000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(30u128) {
+                    return Ok(FPDecimal::from(1000000000000000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(31u128) {
+                    return Ok(-FPDecimal::from(10000000000000000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(32u128) {
+                    return Ok(FPDecimal::from(100000000000000000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(33u128) {
+                    return Ok(-FPDecimal::from(1000000000000000000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(34u128) {
+                    return Ok(FPDecimal::from(10000000000000000000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(35u128) {
+                    return Ok(-FPDecimal::from(100000000000000000000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(36u128) {
+                    return Ok(FPDecimal::from(1000000000000000000000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(37u128) {
+                    return Ok(-FPDecimal::from(10000000000000000000000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(38u128) {
+                    return Ok(FPDecimal::from(100000000000000000000000000000000000000u128));
+                }
+                if exponent == FPDecimal::from(39u128) {
+                    return Ok(-FPDecimal::from_str("1000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(40u128) {
+                    return Ok(FPDecimal::from_str("10000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(41u128) {
+                    return Ok(-FPDecimal::from_str("100000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(42u128) {
+                    return Ok(FPDecimal::from_str("1000000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(43u128) {
+                    return Ok(-FPDecimal::from_str("10000000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(44u128) {
+                    return Ok(FPDecimal::from_str("100000000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(45u128) {
+                    return Ok(-FPDecimal::from_str("1000000000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(46u128) {
+                    return Ok(FPDecimal::from_str("10000000000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(47u128) {
+                    return Ok(-FPDecimal::from_str("100000000000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(48u128) {
+                    return Ok(FPDecimal::from_str("1000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(49u128) {
+                    return Ok(-FPDecimal::from_str("10000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(50u128) {
+                    return Ok(FPDecimal::from_str("100000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(51u128) {
+                    return Ok(-FPDecimal::from_str("1000000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(52u128) {
+                    return Ok(FPDecimal::from_str("10000000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(53u128) {
+                    return Ok(-FPDecimal::from_str("100000000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(54u128) {
+                    return Ok(FPDecimal::from_str("1000000000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(55u128) {
+                    return Ok(-FPDecimal::from_str("10000000000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(56u128) {
+                    return Ok(FPDecimal::from_str("100000000000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(57u128) {
+                    return Ok(-FPDecimal::from_str("1000000000000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(58u128) {
+                    return Ok(FPDecimal::from_str("10000000000000000000000000000000000000000000000000000000000").unwrap());
+                }
+                if exponent == FPDecimal::from(59u128) {
+                    return Ok(-FPDecimal::from_str("100000000000000000000000000000000000000000000000000000000000").unwrap());
+                }
+            }
+
+            fn inner(mut a: FPDecimal, mut exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
+                // a^b
+                // 14 terms taylor expansion provides a good enough approximation
+                let n_terms = 13u128;
+                match exponent.cmp(&FPDecimal::ZERO) {
+                    Ordering::Equal => Ok(FPDecimal::one()),
+                    Ordering::Less => {
+                        exponent = -exponent;
+                        match exponent.cmp(&(FPDecimal::ONE)) {
+                            Ordering::Equal => Ok(FPDecimal::ONE / a),
+                            Ordering::Less => {
+                                // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
+                                a = -a;
+                                if a.log2().is_some() {
+                                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                                        panic!("No complex number");
+                                    };
+
+                                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
+                                        <= FPDecimal::must_from_str("0.000001")
+                                    {
+                                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
+                                        while tmp_b > FPDecimal::ONE {
+                                            a /= FPDecimal::TWO;
+                                            tmp_b -= FPDecimal::ONE;
+                                        }
+                                        return Ok(-FPDecimal::ONE / a);
+                                    };
+                                }
+
+                                if a.log3().is_some() {
+                                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                                        panic!("No complex number");
+                                    };
+
+                                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
+                                        <= FPDecimal::must_from_str("0.000001")
+                                    {
+                                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
+                                        while tmp_b > FPDecimal::ONE {
+                                            a /= FPDecimal::THREE;
+                                            tmp_b -= FPDecimal::ONE;
+                                        }
+                                        return Ok(-FPDecimal::ONE / a);
+                                    };
+                                }
+
+                                if a.log5().is_some() {
+                                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                                        panic!("No complex number");
+                                    };
+
+                                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
+                                        <= FPDecimal::must_from_str("0.000001")
+                                    {
+                                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
+                                        while tmp_b > FPDecimal::ONE {
+                                            a /= FPDecimal::FIVE;
+                                            tmp_b -= FPDecimal::ONE;
+                                        }
+                                        return Ok(-FPDecimal::ONE / a);
+                                    };
+                                }
+
+                                if a.log7().is_some() {
+                                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                                        panic!("No complex number");
+                                    };
+
+                                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
+                                        <= FPDecimal::must_from_str("0.000001")
+                                    {
+                                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
+                                        while tmp_b > FPDecimal::ONE {
+                                            a /= FPDecimal::SEVEN;
+                                            tmp_b -= FPDecimal::ONE;
+                                        }
+                                        return Ok(-FPDecimal::ONE / a);
+                                    };
+                                }
+                                if a.log10().is_some() {
+                                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                                        panic!("No complex number");
+                                    };
+
+                                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
+                                        <= FPDecimal::must_from_str("0.000001")
+                                    {
+                                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
+                                        while tmp_b > FPDecimal::ONE {
+                                            a /= FPDecimal::TEN;
+                                            tmp_b -= FPDecimal::ONE;
+                                        }
+                                        return Ok(-FPDecimal::ONE / a);
+                                    };
+                                }
+
+                                if a.log11().is_some() {
+                                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                                        panic!("No complex number");
+                                    };
+
+                                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
+                                        <= FPDecimal::must_from_str("0.000001")
+                                    {
+                                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
+                                        while tmp_b > FPDecimal::ONE {
+                                            a /= FPDecimal::from(11u128);
+                                            tmp_b -= FPDecimal::ONE;
+                                        }
+                                        return Ok(-FPDecimal::ONE / a);
+                                    };
+                                }
+
+                                Ok(FPDecimal::_exp_taylor_expansion(FPDecimal::ONE / a, exponent, n_terms))
+                            }
+                            Ordering::Greater => {
+                                let mut int_b = exponent.int();
+                                let rem_b = exponent - int_b;
+                                let mut float_exp = FPDecimal::ONE;
+                                if rem_b != FPDecimal::ZERO {
+                                    float_exp = FPDecimal::_exp_taylor_expansion(FPDecimal::ONE / a, rem_b, n_terms);
+                                }
+                                let mut tmp_a = FPDecimal::ONE;
+                                while int_b > FPDecimal::one() {
+                                    if int_b.num % FPDecimal::TWO.num == FPDecimal::ONE.num {
+                                        tmp_a = a * tmp_a;
+                                        int_b -= FPDecimal::ONE;
+                                    }
+                                    a = a * a;
+                                    int_b /= FPDecimal::TWO;
+                                }
+                                a *= tmp_a;
+                                Ok(FPDecimal::ONE / a * float_exp)
+                            }
+                        }
+                    }
+                    Ordering::Greater => match exponent.cmp(&FPDecimal::ONE) {
+                        Ordering::Equal => Ok(a),
+                        Ordering::Less => {
+                            // taylor expansion approximation of exponentation compuation with float number exponent
+                            // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
+                            a = -a;
+                            if a.log2().is_some() {
+                                if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                                    panic!("No complex number");
+                                };
+
+                                if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
+                                    <= FPDecimal::must_from_str("0.000001")
+                                {
+                                    let mut tmp_b = FPDecimal::reciprocal(exponent).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a /= FPDecimal::TWO;
+                                        tmp_b -= FPDecimal::ONE;
+                                    }
+                                    return Ok(-a);
+                                };
+                            }
+
+                            if a.log3().is_some() {
+                                if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                                    panic!("No complex number");
+                                };
+
+                                if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
+                                    <= FPDecimal::must_from_str("0.000001")
+                                {
+                                    let mut tmp_b = FPDecimal::reciprocal(exponent).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a /= FPDecimal::THREE;
+                                        tmp_b -= FPDecimal::ONE;
+                                    }
+                                    return Ok(-a);
+                                };
+                            }
+
+                            if a.log5().is_some() {
+                                if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                                    panic!("No complex number");
+                                };
+
+                                if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
+                                    <= FPDecimal::must_from_str("0.000001")
+                                {
+                                    let mut tmp_b = FPDecimal::reciprocal(exponent).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a /= FPDecimal::FIVE;
+                                        tmp_b -= FPDecimal::ONE;
+                                    }
+                                    return Ok(-a);
+                                };
+                            }
+
+                            if a.log7().is_some() {
+                                if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                                    panic!("No complex number");
+                                };
+
+                                if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
+                                    <= FPDecimal::must_from_str("0.000001")
+                                {
+                                    let mut tmp_b = FPDecimal::reciprocal(exponent).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a /= FPDecimal::SEVEN;
+                                        tmp_b -= FPDecimal::ONE;
+                                    }
+                                    return Ok(-a);
+                                };
+                            }
+
+                            if a.log10().is_some() {
+                                if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                                    panic!("No complex number");
+                                };
+
+                                if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
+                                    <= FPDecimal::must_from_str("0.000001")
+                                {
+                                    let mut tmp_b = FPDecimal::reciprocal(exponent).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a /= FPDecimal::TEN;
+                                        tmp_b -= FPDecimal::ONE;
+                                    }
+                                    return Ok(-a);
+                                };
+                            }
+
+                            if a.log11().is_some() {
+                                if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                                    panic!("No complex number");
+                                };
+
+                                if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
+                                    <= FPDecimal::must_from_str("0.000001")
+                                {
+                                    let mut tmp_b = FPDecimal::reciprocal(exponent).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a /= FPDecimal::from(11u128);
+                                        tmp_b -= FPDecimal::ONE;
+                                    }
+                                    return Ok(-a);
+                                };
+                            }
+
+                            Ok(FPDecimal::_exp_taylor_expansion(a, exponent, n_terms))
+                        }
+
+                        Ordering::Greater => {
+                            let mut int_b = exponent.int();
+                            let rem_b = exponent - int_b;
+                            if rem_b != FPDecimal::ZERO {
+                                panic!("No complex number");
+                            }
+                            let mut tmp_a = FPDecimal::ONE;
+                            while int_b > FPDecimal::one() {
+                                if int_b.num % FPDecimal::TWO.num == FPDecimal::ONE.num {
+                                    tmp_a = a * tmp_a;
+                                    int_b -= FPDecimal::ONE;
+                                }
+                                a = a * a;
+                                int_b /= FPDecimal::TWO;
+                            }
+                            a *= tmp_a;
+                            Ok(a)
+                        }
+                    },
+                }
+            }
+
+            inner(self, exponent).map_err(|_| OverflowError {
+                operation: OverflowOperation::Pow,
+                operand1: self.to_string(),
+                operand2: exponent.to_string(),
+            })
+        }
+    }
 }
 
 impl Pow<FPDecimal> for FPDecimal {
@@ -705,9 +1232,16 @@ impl Pow<FPDecimal> for FPDecimal {
 
     /// Raises a value to the power of `exp`, panics if an overflow occurred.
     fn pow(self, exp: FPDecimal) -> Self {
-        match self.checked_pow(exp) {
-            Ok(value) => value,
-            Err(_) => panic!("Multiplication overflow"),
+        if self >= FPDecimal::ZERO {
+            match self.checked_positive_pow(exp) {
+                Ok(value) => value,
+                Err(_) => panic!("Multiplication overflow"),
+            }
+        } else {
+            match self.checked_negative_pow(exp) {
+                Ok(value) => value,
+                Err(_) => panic!("Multiplication overflow"),
+            }
         }
     }
 }
@@ -1015,7 +1549,7 @@ mod tests {
     fn test_checked_2_pow_2() {
         let base = FPDecimal::from(2u128);
 
-        let result = FPDecimal::checked_pow(base, FPDecimal::from(2u128)).unwrap();
+        let result = FPDecimal::checked_positive_pow(base, FPDecimal::from(2u128)).unwrap();
         assert_eq!(result, FPDecimal::from(4u128));
     }
 
@@ -1024,7 +1558,7 @@ mod tests {
         let base = FPDecimal::must_from_str("2.3");
         let exponent = FPDecimal::must_from_str("1.4");
 
-        let result = FPDecimal::checked_pow(base, exponent).unwrap();
+        let result = FPDecimal::checked_positive_pow(base, exponent).unwrap();
         assert_eq!(result, FPDecimal::must_from_str("3.209363953267971924"));
     }
 
@@ -1033,7 +1567,7 @@ mod tests {
         let base = FPDecimal::must_from_str("2.3");
         let exponent = FPDecimal::must_from_str("3.7");
 
-        let result = FPDecimal::checked_pow(base, exponent).unwrap();
+        let result = FPDecimal::checked_positive_pow(base, exponent).unwrap();
         assert_eq!(result, FPDecimal::must_from_str("21.796812747431110477"));
     }
 
@@ -1042,7 +1576,7 @@ mod tests {
         let base = FPDecimal::must_from_str("2.3");
         let exponent = FPDecimal::must_from_str("-1.4");
 
-        let result = FPDecimal::checked_pow(base, exponent).unwrap();
+        let result = FPDecimal::checked_positive_pow(base, exponent).unwrap();
         assert_eq!(result, FPDecimal::must_from_str("0.311588219522980069"));
     }
 
@@ -1051,7 +1585,7 @@ mod tests {
         let base = FPDecimal::must_from_str("2.3");
         let exponent = FPDecimal::must_from_str("-3.7");
 
-        let result = FPDecimal::checked_pow(base, exponent).unwrap();
+        let result = FPDecimal::checked_positive_pow(base, exponent).unwrap();
         assert_eq!(result, FPDecimal::must_from_str("0.045878267230507924"));
     }
 
@@ -1060,7 +1594,7 @@ mod tests {
         let base = FPDecimal::must_from_str("2.3");
         let exponent = FPDecimal::must_from_str("0.4");
 
-        let result = FPDecimal::checked_pow(base, exponent).unwrap();
+        let result = FPDecimal::checked_positive_pow(base, exponent).unwrap();
         assert_eq!(result, FPDecimal::must_from_str("1.395375631855639967"));
     }
 
@@ -1069,7 +1603,7 @@ mod tests {
         let base = FPDecimal::must_from_str("2.3");
         let exponent = FPDecimal::must_from_str("-0.4");
 
-        let result = FPDecimal::checked_pow(base, exponent).unwrap();
+        let result = FPDecimal::checked_positive_pow(base, exponent).unwrap();
         assert_eq!(result, FPDecimal::must_from_str("0.716652904902854162"));
     }
 
@@ -1078,7 +1612,7 @@ mod tests {
         let base = FPDecimal::ONE / FPDecimal::from(16u128);
         let exponent = FPDecimal::must_from_str("-0.5");
 
-        let result = FPDecimal::checked_pow(base, exponent).unwrap();
+        let result = FPDecimal::checked_positive_pow(base, exponent).unwrap();
         assert_eq!(result, FPDecimal::FOUR);
     }
 
@@ -1097,11 +1631,29 @@ mod tests {
             FPDecimal::TEN
         );
     }
+
     #[test]
     fn test_neg_1000_pow_1_over_3() {
         assert_eq!(
             FPDecimal::pow(FPDecimal::must_from_str("-1000.0"), FPDecimal::ONE / FPDecimal::THREE),
-            FPDecimal::must_from_str("-10.0")
+            -FPDecimal::TEN
+        );
+    }
+
+    #[test]
+    fn test_neg_10_pow_3() {
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::must_from_str("-10"), FPDecimal::THREE),
+            -FPDecimal::TEN.pow(FPDecimal::THREE)
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_neg_1000_pow_1_over_4() {
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::must_from_str("-1000.0"), FPDecimal::ONE / FPDecimal::FOUR),
+            -FPDecimal::TEN
         );
     }
 }
