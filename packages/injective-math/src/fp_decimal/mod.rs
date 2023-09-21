@@ -1,8 +1,8 @@
-use std::ops::Neg;
 use std::str::FromStr;
+use std::{convert::TryFrom, ops::Neg};
 
 use bigint::U256;
-use cosmwasm_std::{Uint128, Uint256};
+use cosmwasm_std::{Decimal256, StdError, Uint128, Uint256};
 use schemars::JsonSchema;
 
 #[allow(clippy::upper_case_acronyms)]
@@ -75,6 +75,32 @@ impl From<Uint128> for FPDecimal {
 impl From<Uint256> for FPDecimal {
     fn from(x: Uint256) -> FPDecimal {
         FPDecimal::from_str(&x.to_string()).unwrap()
+    }
+}
+
+// impl that converts cosmwasm Decimal256 to FPDecimal.
+impl From<Decimal256> for FPDecimal {
+    fn from(value: Decimal256) -> FPDecimal {
+        let atomics = value.atomics().to_be_bytes();
+        FPDecimal {
+            num: atomics.into(),
+            sign: 1,
+        }
+    }
+}
+
+// impl that tries to convert FPDecimal into Decimal256.
+impl TryFrom<FPDecimal> for Decimal256 {
+    type Error = StdError;
+
+    fn try_from(fp_decimal: FPDecimal) -> Result<Self, Self::Error> {
+        if fp_decimal.is_negative() {
+            return Err(StdError::generic_err(format!("Value {} must be >= {}", fp_decimal.num, 0)));
+        }
+
+        let fp_decimal_num_uint256 = fp_decimal.to_u256();
+
+        Ok(Decimal256::new(fp_decimal_num_uint256))
     }
 }
 
@@ -246,6 +272,21 @@ impl FPDecimal {
     pub fn fraction(&self) -> FPDecimal {
         FPDecimal::_fraction(*self)
     }
+
+    pub fn into_uint256_ceil(self) -> Uint256 {
+        let uint256 = self.to_u256();
+        uint256.checked_add(1u64.into()).unwrap() // Add 1 to round up
+    }
+
+    pub fn into_uint256_floor(self) -> Uint256 {
+        self.to_u256()
+    }
+
+    pub fn to_u256(&self) -> Uint256 {
+        let mut bytes = [0u8; 32];
+        self.num.to_big_endian(&mut bytes);
+        Uint256::from_be_bytes(bytes)
+    }
 }
 
 mod arithmetic;
@@ -262,7 +303,11 @@ mod trigonometry;
 
 #[cfg(test)]
 mod tests {
+    use std::{convert::TryFrom, str::FromStr};
+
     use crate::FPDecimal;
+    use bigint::U256;
+    use cosmwasm_std::{Decimal256, Uint256};
     #[test]
     fn test_neg_sign() {
         let lhs = FPDecimal::ZERO - FPDecimal::ONE;
@@ -275,5 +320,72 @@ mod tests {
         let lhs = FPDecimal::ZERO;
         let rhs = -FPDecimal::ZERO;
         assert_eq!(lhs, rhs);
+    }
+
+    #[test]
+    fn test_to_u256() {
+        let fp_decimal = FPDecimal {
+            num: U256::from(12345u64),
+            sign: 1, // Assuming it's always positive
+        };
+
+        let uint256 = fp_decimal.to_u256();
+        assert_eq!(uint256, Uint256::from(12345u64));
+    }
+
+    #[test]
+    fn into_uint256_floor() {
+        let fp_decimal = FPDecimal {
+            num: U256::from_dec_str("12345").unwrap(),
+            sign: 1,
+        };
+
+        let uint256 = fp_decimal.into_uint256_floor();
+        assert_eq!(uint256, Uint256::from(12345u64));
+    }
+
+    #[test]
+    fn into_uint256_ceil() {
+        let fp_decimal = FPDecimal {
+            num: U256::from_dec_str("12345").unwrap(),
+            sign: 1,
+        };
+
+        let uint256 = fp_decimal.into_uint256_ceil();
+        assert_eq!(uint256, Uint256::from(12346u64));
+    }
+
+    #[test]
+    fn dec256_to_fpdecimal_conversion() {
+        // Decimal value for testing
+        let decimal_value = Decimal256::from_str("1.234").unwrap(); // returns 1.234
+
+        //  Perform the conversion
+        let fp_decimal: FPDecimal = decimal_value.into();
+
+        // Check if the conversion produced the expected FPDecimal
+
+        let expected_fp_decimal = FPDecimal::must_from_str("1.234");
+
+        // Use assertions to check if the actual value matches the expected value
+        assert_eq!(fp_decimal.num, expected_fp_decimal.num);
+        assert_eq!(fp_decimal.sign, expected_fp_decimal.sign);
+    }
+
+    #[test]
+    fn fpdecimal_to_dec256() {
+        // Test a valid positive value
+        let fp_decimal_valid = FPDecimal::must_from_str("1.2345");
+        let decimal_valid = Decimal256::try_from(fp_decimal_valid).unwrap();
+        assert_eq!(decimal_valid.to_string(), fp_decimal_valid.to_string());
+
+        // Test a valid zero value
+        let fp_decimal_zero = FPDecimal::zero();
+        let decimal_zero = Decimal256::try_from(fp_decimal_zero).unwrap();
+        assert_eq!(decimal_zero.to_string(), "0");
+
+        // Test a negative value (should fail)
+        let fp_decimal_negative = FPDecimal::must_from_str("-1.2345");
+        assert!(Decimal256::try_from(fp_decimal_negative).is_err());
     }
 }
