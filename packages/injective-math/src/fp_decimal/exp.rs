@@ -373,6 +373,15 @@ impl FPDecimal {
                             Ordering::Less => {
                                 // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
                                 if a.log2().is_some() {
+                                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
+                                        while tmp_b > FPDecimal::ONE {
+                                            a = a.sqrt();
+                                            tmp_b /= FPDecimal::TWO;
+                                        }
+                                        return Ok(FPDecimal::ONE / a);
+                                    };
+
                                     if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
                                         <= FPDecimal::must_from_str("0.000001")
                                     {
@@ -383,6 +392,9 @@ impl FPDecimal {
                                         }
                                         return Ok(FPDecimal::ONE / a);
                                     };
+                                }
+
+                                if a.log3().is_some() {
                                     if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                                         let mut tmp_b = FPDecimal::reciprocal(exponent).int();
                                         while tmp_b > FPDecimal::ONE {
@@ -391,9 +403,7 @@ impl FPDecimal {
                                         }
                                         return Ok(FPDecimal::ONE / a);
                                     };
-                                }
 
-                                if a.log3().is_some() {
                                     if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
                                         <= FPDecimal::must_from_str("0.000001")
                                     {
@@ -404,6 +414,9 @@ impl FPDecimal {
                                         }
                                         return Ok(FPDecimal::ONE / a);
                                     };
+                                }
+
+                                if a.log5().is_some() {
                                     if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                                         let mut tmp_b = FPDecimal::reciprocal(exponent).int();
                                         while tmp_b > FPDecimal::ONE {
@@ -412,10 +425,7 @@ impl FPDecimal {
                                         }
                                         return Ok(FPDecimal::ONE / a);
                                     };
-                                }
 
-                                if a.log5().is_some() {
-                                    println!("here");
                                     if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
                                         <= FPDecimal::must_from_str("0.000001")
                                     {
@@ -426,6 +436,9 @@ impl FPDecimal {
                                         }
                                         return Ok(FPDecimal::ONE / a);
                                     };
+                                }
+
+                                if a.log7().is_some() {
                                     if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                                         let mut tmp_b = FPDecimal::reciprocal(exponent).int();
                                         while tmp_b > FPDecimal::ONE {
@@ -434,9 +447,7 @@ impl FPDecimal {
                                         }
                                         return Ok(FPDecimal::ONE / a);
                                     };
-                                }
 
-                                if a.log7().is_some() {
                                     if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
                                         <= FPDecimal::must_from_str("0.000001")
                                     {
@@ -447,6 +458,9 @@ impl FPDecimal {
                                         }
                                         return Ok(FPDecimal::ONE / a);
                                     };
+                                }
+
+                                if a.log11().is_some() {
                                     if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                                         let mut tmp_b = FPDecimal::reciprocal(exponent).int();
                                         while tmp_b > FPDecimal::ONE {
@@ -455,9 +469,7 @@ impl FPDecimal {
                                         }
                                         return Ok(FPDecimal::ONE / a);
                                     };
-                                }
 
-                                if a.log11().is_some() {
                                     if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
                                         <= FPDecimal::must_from_str("0.000001")
                                     {
@@ -465,14 +477,6 @@ impl FPDecimal {
                                         while tmp_b > FPDecimal::ONE {
                                             a /= FPDecimal::from(11u128);
                                             tmp_b -= FPDecimal::ONE;
-                                        }
-                                        return Ok(FPDecimal::ONE / a);
-                                    };
-                                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
-                                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
-                                        while tmp_b > FPDecimal::ONE {
-                                            a = a.sqrt();
-                                            tmp_b /= FPDecimal::TWO;
                                         }
                                         return Ok(FPDecimal::ONE / a);
                                     };
@@ -508,6 +512,15 @@ impl FPDecimal {
                             // taylor expansion approximation of exponentation compuation with float number exponent
                             // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
                             if a.log2().is_some() {
+                                if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                                    let mut tmp_b = FPDecimal::reciprocal(exponent).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a = a.sqrt();
+                                        tmp_b /= FPDecimal::TWO;
+                                    }
+                                    return Ok(a);
+                                };
+
                                 if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
                                     <= FPDecimal::must_from_str("0.000001")
                                 {
@@ -518,6 +531,9 @@ impl FPDecimal {
                                     }
                                     return Ok(a);
                                 };
+                            }
+
+                            if a.log3().is_some() {
                                 if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                                     let mut tmp_b = FPDecimal::reciprocal(exponent).int();
                                     while tmp_b > FPDecimal::ONE {
@@ -526,9 +542,7 @@ impl FPDecimal {
                                     }
                                     return Ok(a);
                                 };
-                            }
 
-                            if a.log3().is_some() {
                                 if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
                                     <= FPDecimal::must_from_str("0.000001")
                                 {
@@ -539,6 +553,9 @@ impl FPDecimal {
                                     }
                                     return Ok(a);
                                 };
+                            }
+
+                            if a.log5().is_some() {
                                 if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                                     let mut tmp_b = FPDecimal::reciprocal(exponent).int();
                                     while tmp_b > FPDecimal::ONE {
@@ -547,10 +564,7 @@ impl FPDecimal {
                                     }
                                     return Ok(a);
                                 };
-                            }
 
-                            if a.log5().is_some() {
-                                println!("here");
                                 if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
                                     <= FPDecimal::must_from_str("0.000001")
                                 {
@@ -561,6 +575,9 @@ impl FPDecimal {
                                     }
                                     return Ok(a);
                                 };
+                            }
+
+                            if a.log7().is_some() {
                                 if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                                     let mut tmp_b = FPDecimal::reciprocal(exponent).int();
                                     while tmp_b > FPDecimal::ONE {
@@ -569,9 +586,7 @@ impl FPDecimal {
                                     }
                                     return Ok(a);
                                 };
-                            }
 
-                            if a.log7().is_some() {
                                 if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
                                     <= FPDecimal::must_from_str("0.000001")
                                 {
@@ -582,6 +597,9 @@ impl FPDecimal {
                                     }
                                     return Ok(a);
                                 };
+                            }
+
+                            if a.log11().is_some() {
                                 if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                                     let mut tmp_b = FPDecimal::reciprocal(exponent).int();
                                     while tmp_b > FPDecimal::ONE {
@@ -590,9 +608,7 @@ impl FPDecimal {
                                     }
                                     return Ok(a);
                                 };
-                            }
 
-                            if a.log11().is_some() {
                                 if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
                                     <= FPDecimal::must_from_str("0.000001")
                                 {
@@ -600,14 +616,6 @@ impl FPDecimal {
                                     while tmp_b > FPDecimal::ONE {
                                         a /= FPDecimal::from(11u128);
                                         tmp_b -= FPDecimal::ONE;
-                                    }
-                                    return Ok(a);
-                                };
-                                if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
-                                    let mut tmp_b = FPDecimal::reciprocal(exponent).int();
-                                    while tmp_b > FPDecimal::ONE {
-                                        a = a.sqrt();
-                                        tmp_b /= FPDecimal::TWO;
                                     }
                                     return Ok(a);
                                 };
