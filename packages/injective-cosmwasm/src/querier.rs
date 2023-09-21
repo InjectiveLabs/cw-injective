@@ -5,6 +5,7 @@ use injective_math::FPDecimal;
 use crate::authz::response::{GranteeGrantsResponse, GranterGrantsResponse, GrantsResponse};
 use crate::exchange::response::StakedAmountResponse;
 use crate::exchange::{
+    cancel::CancellationStrategy,
     order::OrderSide,
     response::{
         DerivativeMarketResponse, ExchangeParamsResponse, MarketMidPriceAndTOBResponse, MarketVolatilityResponse, OracleVolatilityResponse,
@@ -236,7 +237,7 @@ impl<'a> InjectiveQuerier<'a> {
         subaccount_id: &'a P,
         base_amount: FPDecimal,
         quote_amount: FPDecimal,
-        strategy: i32,
+        strategy: CancellationStrategy,
         reference_price: Option<FPDecimal>,
     ) -> StdResult<TraderSpotOrdersResponse> {
         let request = InjectiveQueryWrapper {
@@ -260,7 +261,7 @@ impl<'a> InjectiveQuerier<'a> {
         market_id: &'a T,
         subaccount_id: &'a P,
         quote_amount: FPDecimal,
-        strategy: i32,
+        strategy: CancellationStrategy,
         reference_price: Option<FPDecimal>,
     ) -> StdResult<TraderDerivativeOrdersResponse> {
         let request = InjectiveQueryWrapper {

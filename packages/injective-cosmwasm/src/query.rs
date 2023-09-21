@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use injective_math::FPDecimal;
 
 use crate::exchange::{
+    cancel::CancellationStrategy,
     order::OrderSide,
     types::{MarketId, SubaccountId},
 };
@@ -58,14 +59,14 @@ pub enum InjectiveQuery {
         subaccount_id: SubaccountId,
         base_amount: FPDecimal,
         quote_amount: FPDecimal,
-        strategy: i32,
+        strategy: CancellationStrategy,
         reference_price: Option<FPDecimal>,
     },
     TraderDerivativeOrdersToCancelUpToAmount {
         market_id: MarketId,
         subaccount_id: SubaccountId,
         quote_amount: FPDecimal,
-        strategy: i32,
+        strategy: CancellationStrategy,
         reference_price: Option<FPDecimal>,
     },
     DerivativeMarket {
