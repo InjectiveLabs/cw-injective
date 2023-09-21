@@ -630,4 +630,18 @@ mod tests {
         let b = FPDecimal::FOUR;
         assert_eq!(a.log(b), FPDecimal::TWO);
     }
+
+    #[test]
+    fn test_ln2_3() {
+        let three = FPDecimal {
+            num: U256([3, 0, 0, 0]) * FPDecimal::ONE.num,
+            sign: 1,
+        };
+        let two = FPDecimal {
+            num: U256([2, 0, 0, 0]) * FPDecimal::ONE.num,
+            sign: 1,
+        };
+        let two_point_three = two + three / FPDecimal::from(10u128);
+        assert_eq!(two_point_three.ln(), FPDecimal::must_from_str("0.832909122935103999"));
+    }
 }

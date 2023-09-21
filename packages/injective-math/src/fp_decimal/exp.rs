@@ -112,6 +112,7 @@ impl FPDecimal {
             if self > FPDecimal::zero() && exponent == FPDecimal::zero() {
                 return Ok(FPDecimal::one());
             }
+
             if exponent > FPDecimal::from(60u128) {
                 return Err(OverflowError::new(OverflowOperation::Pow, self.to_string(), exponent.to_string()));
             }
@@ -352,6 +353,7 @@ impl FPDecimal {
                     return Ok(FPDecimal::from_str("100000000000000000000000000000000000000000000000000000000000").unwrap());
                 }
             }
+
 
             fn compute_exponentiation(base: FPDecimal, mut exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
                 // base^exponent
@@ -1068,6 +1070,7 @@ impl FPDecimal {
                 base * temp_base
             }
 
+
             fn compute_positive_exponent_greater_one(base: FPDecimal, exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
                 let integer_part_of_exponent = exponent.int();
                 let fractional_part_of_exponent = exponent - integer_part_of_exponent;
@@ -1368,6 +1371,7 @@ mod tests {
         let base = FPDecimal::E;
         assert_eq!(
             base.pow(FPDecimal::from_str("-3").unwrap()),
+
             FPDecimal::from_str("0.049787068367863943").unwrap()
         );
     }
@@ -1408,8 +1412,8 @@ mod tests {
     fn test_2_3_pow_1_4() {
         let base = FPDecimal::must_from_str("2.3");
         let exponent = FPDecimal::must_from_str("1.4");
-
         let result = FPDecimal::checked_positive_pow(base, exponent).unwrap();
+
         assert_eq!(result, FPDecimal::must_from_str("3.209363953267971924"));
     }
 
@@ -1417,7 +1421,6 @@ mod tests {
     fn test_2_3_pow_3_7() {
         let base = FPDecimal::must_from_str("2.3");
         let exponent = FPDecimal::must_from_str("3.7");
-
         let result = FPDecimal::checked_positive_pow(base, exponent).unwrap();
         assert_eq!(result, FPDecimal::must_from_str("21.796812747431110477"));
     }
@@ -1426,7 +1429,6 @@ mod tests {
     fn test_2_3_pow_neg_1_4() {
         let base = FPDecimal::must_from_str("2.3");
         let exponent = FPDecimal::must_from_str("-1.4");
-
         let result = FPDecimal::checked_positive_pow(base, exponent).unwrap();
         assert_eq!(result, FPDecimal::must_from_str("0.311588219522980069"));
     }
@@ -1435,7 +1437,6 @@ mod tests {
     fn test_2_3_pow_neg_3_7() {
         let base = FPDecimal::must_from_str("2.3");
         let exponent = FPDecimal::must_from_str("-3.7");
-
         let result = FPDecimal::checked_positive_pow(base, exponent).unwrap();
         assert_eq!(result, FPDecimal::must_from_str("0.045878267230507924"));
     }
@@ -1444,7 +1445,6 @@ mod tests {
     fn test_2_3_pow_0_4() {
         let base = FPDecimal::must_from_str("2.3");
         let exponent = FPDecimal::must_from_str("0.4");
-
         let result = FPDecimal::checked_positive_pow(base, exponent).unwrap();
         assert_eq!(result, FPDecimal::must_from_str("1.395375631855639967"));
     }
@@ -1453,7 +1453,6 @@ mod tests {
     fn test_2_3_pow_neg_0_4() {
         let base = FPDecimal::must_from_str("2.3");
         let exponent = FPDecimal::must_from_str("-0.4");
-
         let result = FPDecimal::checked_positive_pow(base, exponent).unwrap();
         assert_eq!(result, FPDecimal::must_from_str("0.716652904902854162"));
     }
