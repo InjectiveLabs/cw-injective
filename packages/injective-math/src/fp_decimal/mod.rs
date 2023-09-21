@@ -331,6 +331,8 @@ mod tests {
     fn test_is_not_int() {
         assert!(!FPDecimal::must_from_str("2.1").is_int());
         assert_eq!(FPDecimal::must_from_str("2.1") % FPDecimal::ONE, FPDecimal::must_from_str("0.1"));
+    }
+    
     #[test]
     fn test_to_u256() {
         let fp_decimal = FPDecimal {
