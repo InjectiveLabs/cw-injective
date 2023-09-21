@@ -26,10 +26,6 @@ impl FPDecimal {
             x
         }
     }
-    // a^b
-    // pub fn _pow(a: FPDecimal, b: FPDecimal) -> FPDecimal {
-    //     a.checked_positive_pow(b).unwrap()
-    // }
     // e^(a)
     pub fn _exp(a: FPDecimal) -> FPDecimal {
         // this throws underflow with a sufficiently large negative exponent
