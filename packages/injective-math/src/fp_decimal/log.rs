@@ -8,19 +8,15 @@ impl FPDecimal {
         }
         if let Some(value) = self.log3() {
             return Some((value, 3u128));
-            // return Some(value);
         }
         if let Some(value) = self.log5() {
             return Some((value, 5u128));
-            // return Some(value);
         }
         if let Some(value) = self.log7() {
             return Some((value, 7u128));
-            // return Some(value);
         }
         if let Some(value) = self.log11() {
             return Some((value, 11u128));
-            // return Some(value);
         }
         None
     }
@@ -59,9 +55,36 @@ impl FPDecimal {
         if self == FPDecimal::from(1024u128) {
             return Some(FPDecimal::TEN);
         }
-        // Some(self.log(FPDecimal::TWO))
-        // Some(self.ln() / FPDecimal::TWO.ln())
-        // Some(self.log(FPDecimal::TWO))
+        if self == FPDecimal::ONE / FPDecimal::TWO {
+            return Some(-FPDecimal::ONE);
+        }
+        if self == FPDecimal::ONE / FPDecimal::FOUR {
+            return Some(-FPDecimal::TWO);
+        }
+        if self == FPDecimal::ONE / FPDecimal::EIGHT {
+            return Some(-FPDecimal::THREE);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(16u128) {
+            return Some(-FPDecimal::FOUR);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(32u128) {
+            return Some(-FPDecimal::FIVE);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(64u128) {
+            return Some(-FPDecimal::SIX);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(128u128) {
+            return Some(-FPDecimal::SEVEN);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(256u128) {
+            return Some(-FPDecimal::EIGHT);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(512u128) {
+            return Some(-FPDecimal::NINE);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(1024u128) {
+            return Some(-FPDecimal::TEN);
+        }
         None
     }
 
@@ -130,9 +153,6 @@ impl FPDecimal {
         if self == FPDecimal::ONE / FPDecimal::from(59049u128) {
             return Some(-FPDecimal::TEN);
         }
-
-        // Some(self.ln() / FPDecimal::THREE.ln())
-        // Some(self.log(FPDecimal::THREE))
         None
     }
 
@@ -200,9 +220,6 @@ impl FPDecimal {
         if self == FPDecimal::ONE / FPDecimal::from(9765625u128) {
             return Some(-FPDecimal::TEN);
         }
-
-        // Some(self.ln() / FPDecimal::FIVE.ln())
-        // Some(self.log(FPDecimal::FIVE))
         None
     }
 
@@ -271,8 +288,6 @@ impl FPDecimal {
         if self == FPDecimal::ONE / FPDecimal::from(282475249u128) {
             return Some(-FPDecimal::TEN);
         }
-        // Some(self.log(FPDecimal::SEVEN))
-        // Some(self.ln() / FPDecimal::SEVEN.ln())
         None
     }
 
@@ -341,9 +356,6 @@ impl FPDecimal {
         if self == FPDecimal::ONE / FPDecimal::from(25937424601u128) {
             return Some(-FPDecimal::TEN);
         }
-
-        // Some(self.log(FPDecimal::from(11u128)))
-        // Some(self.ln() / FPDecimal::from(11u128).ln())
         None
     }
 
@@ -360,7 +372,6 @@ impl FPDecimal {
 
         a.ln() / base.ln()
     }
-    // }
 
     /// natural logarithm
     #[allow(clippy::many_single_char_names)]
@@ -387,14 +398,9 @@ impl FPDecimal {
         }
         if v == FPDecimal::ONE.num {
             return r;
-            // return FPDecimal { num: r, sign: 1 };
         }
         if v == FPDecimal::E.num {
             return r + FPDecimal::ONE;
-            // return FPDecimal {
-            //     num: FPDecimal::ONE.num + r,
-            //     sign: 1,
-            // };
         }
 
         let frac_1_5_fpdec = FPDecimal {
@@ -443,7 +449,6 @@ impl FPDecimal {
     }
 
     pub fn log(&self, base: FPDecimal) -> FPDecimal {
-        // Base :self
         assert!(base > FPDecimal::ZERO);
         if *self == FPDecimal::ONE {
             return FPDecimal::ZERO;
