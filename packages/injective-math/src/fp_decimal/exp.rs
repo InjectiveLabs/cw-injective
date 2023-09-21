@@ -459,6 +459,27 @@ impl FPDecimal {
                                         return Ok(FPDecimal::ONE / a);
                                     };
                                 }
+                                if a.log10().is_some() {
+                                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
+                                        while tmp_b > FPDecimal::ONE {
+                                            a = a.sqrt();
+                                            tmp_b /= FPDecimal::TWO;
+                                        }
+                                        return Ok(FPDecimal::ONE / a);
+                                    };
+
+                                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
+                                        <= FPDecimal::must_from_str("0.000001")
+                                    {
+                                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
+                                        while tmp_b > FPDecimal::ONE {
+                                            a /= FPDecimal::TEN;
+                                            tmp_b -= FPDecimal::ONE;
+                                        }
+                                        return Ok(FPDecimal::ONE / a);
+                                    };
+                                }
 
                                 if a.log11().is_some() {
                                     if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
@@ -593,6 +614,28 @@ impl FPDecimal {
                                     let mut tmp_b = FPDecimal::reciprocal(exponent).int();
                                     while tmp_b > FPDecimal::ONE {
                                         a /= FPDecimal::SEVEN;
+                                        tmp_b -= FPDecimal::ONE;
+                                    }
+                                    return Ok(a);
+                                };
+                            }
+
+                            if a.log10().is_some() {
+                                if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                                    let mut tmp_b = FPDecimal::reciprocal(exponent).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a = a.sqrt();
+                                        tmp_b /= FPDecimal::TWO;
+                                    }
+                                    return Ok(a);
+                                };
+
+                                if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs()
+                                    <= FPDecimal::must_from_str("0.000001")
+                                {
+                                    let mut tmp_b = FPDecimal::reciprocal(exponent).int();
+                                    while tmp_b > FPDecimal::ONE {
+                                        a /= FPDecimal::TEN;
                                         tmp_b -= FPDecimal::ONE;
                                     }
                                     return Ok(a);
@@ -1037,5 +1080,28 @@ mod tests {
 
         let result = FPDecimal::checked_pow(base, exponent).unwrap();
         assert_eq!(result, FPDecimal::FOUR);
+    }
+
+    #[test]
+    fn test_100_pow_neg_1_over_2() {
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::from(100u128), FPDecimal::must_from_str("-0.5")),
+            FPDecimal::must_from_str("0.1")
+        );
+    }
+
+    #[test]
+    fn test_1000_pow_1_over_3() {
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::from(1000u128), FPDecimal::ONE / FPDecimal::THREE),
+            FPDecimal::TEN
+        );
+    }
+    #[test]
+    fn test_neg_1000_pow_1_over_3() {
+        assert_eq!(
+            FPDecimal::pow(FPDecimal::must_from_str("-1000.0"), FPDecimal::ONE / FPDecimal::THREE),
+            FPDecimal::must_from_str("-10.0")
+        );
     }
 }

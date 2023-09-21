@@ -1,7 +1,8 @@
 [package]
 authors     = [ "Markus Waas <markus@injectivelabs.org>" ]
 description = "Math library for CosmWasm contracts in Injective Protocol"
-edition     = "2018"
+# edition     = "2018"
+edition     = "2021"
 license     = "Apache-2.0"
 name        = "injective-math"
 readme      = "README.md"

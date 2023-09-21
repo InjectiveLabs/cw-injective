@@ -15,6 +15,9 @@ impl FPDecimal {
         if let Some(value) = self.log7() {
             return Some((value, 7u128));
         }
+        if let Some(value) = self.log10() {
+            return Some((value, 10u128));
+        }
         if let Some(value) = self.log11() {
             return Some((value, 11u128));
         }
@@ -286,6 +289,74 @@ impl FPDecimal {
             return Some(-FPDecimal::NINE);
         }
         if self == FPDecimal::ONE / FPDecimal::from(282475249u128) {
+            return Some(-FPDecimal::TEN);
+        }
+        None
+    }
+
+    pub fn log10(self) -> Option<FPDecimal> {
+        if self == FPDecimal::ONE {
+            return Some(FPDecimal::ZERO);
+        }
+        if self == FPDecimal::TEN {
+            return Some(FPDecimal::ONE);
+        }
+        if self == FPDecimal::from(100u128) {
+            return Some(FPDecimal::TWO);
+        }
+        if self == FPDecimal::from(1_000u128) {
+            return Some(FPDecimal::THREE);
+        }
+        if self == FPDecimal::from(10_000u128) {
+            return Some(FPDecimal::FOUR);
+        }
+        if self == FPDecimal::from(100_000u128) {
+            return Some(FPDecimal::FIVE);
+        }
+        if self == FPDecimal::from(1_000_000u128) {
+            return Some(FPDecimal::SIX);
+        }
+        if self == FPDecimal::from(10_000_000u128) {
+            return Some(FPDecimal::SEVEN);
+        }
+        if self == FPDecimal::from(100_000_000u128) {
+            return Some(FPDecimal::EIGHT);
+        }
+        if self == FPDecimal::from(1_000_000_000u128) {
+            return Some(FPDecimal::NINE);
+        }
+        if self == FPDecimal::from(10_000_000_000u128) {
+            return Some(FPDecimal::TEN);
+        }
+
+        if self == FPDecimal::ONE / FPDecimal::TEN {
+            return Some(-FPDecimal::ONE);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(100u128) {
+            return Some(-FPDecimal::TWO);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(1_000u128) {
+            return Some(-FPDecimal::THREE);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(10_000u128) {
+            return Some(-FPDecimal::FOUR);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(100_000u128) {
+            return Some(-FPDecimal::FIVE);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(1_000_000u128) {
+            return Some(-FPDecimal::SIX);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(10_000_000u128) {
+            return Some(-FPDecimal::SEVEN);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(100_000_000u128) {
+            return Some(-FPDecimal::EIGHT);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(1_000_000_000u128) {
+            return Some(-FPDecimal::NINE);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(10_000_000_000u128) {
             return Some(-FPDecimal::TEN);
         }
         None
