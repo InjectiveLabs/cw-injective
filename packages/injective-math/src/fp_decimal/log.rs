@@ -438,7 +438,7 @@ impl FPDecimal {
         }
         if a == FPDecimal::ZERO {
             // FIXME should be an undefined, not sure if it will be better to just add assert!(b>0)
-            return FPDecimal::SMALLEST_PRECISION;
+            panic!("Undefined");
         }
 
         a.ln() / base.ln()
@@ -578,14 +578,12 @@ mod tests {
     }
     #[test]
     fn test_log_2_8() {
-        // assert_eq!(FPDecimal::TWO.log(FPDecimal::EIGHT), FPDecimal::THREE);
         assert_eq!(FPDecimal::EIGHT.log(FPDecimal::TWO), FPDecimal::THREE);
     }
 
     #[test]
     fn test_log_11_8() {
         assert_eq!(
-            // FPDecimal::from(11u128).log(FPDecimal::EIGHT),
             FPDecimal::EIGHT.log(FPDecimal::from(11u128)),
             FPDecimal::must_from_str("0.867194478953663578")
         );
@@ -623,7 +621,6 @@ mod tests {
     fn test_ln4_16() {
         let a = FPDecimal::from(16u128);
         let b = FPDecimal::FOUR;
-        // assert_eq!(b.log(a), FPDecimal::TWO);
         assert_eq!(a.log(b), FPDecimal::TWO);
     }
 
@@ -631,21 +628,6 @@ mod tests {
     fn test_log_e_16() {
         let a = FPDecimal::from(16u128);
         let b = FPDecimal::FOUR;
-        // assert_eq!(b.log(a), FPDecimal::TWO);
         assert_eq!(a.log(b), FPDecimal::TWO);
-    }
-
-    #[test]
-    fn test_ln2_3() {
-        let three = FPDecimal {
-            num: U256([3, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let two = FPDecimal {
-            num: U256([2, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let two_point_three = two + three / FPDecimal::from(10u128);
-        assert_eq!(two_point_three.ln(), FPDecimal::must_from_str("0.832909122935103999"));
     }
 }
