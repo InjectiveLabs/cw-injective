@@ -560,7 +560,7 @@ impl FPDecimal {
             }
 
             fn compute_positive_exponent_less_one(base: FPDecimal, exponent: FPDecimal, n_terms: u128) -> Result<FPDecimal, OverflowError> {
-                // taylor expansion approximation of exponentation compuation with float number exponent
+                // taylor expansion approximation of exponentiation computation with float number exponent
                 // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
                 let reciprocal = FPDecimal::reciprocal(exponent);
                 if base._log2().is_some() {
@@ -971,99 +971,51 @@ impl FPDecimal {
                 }
             }
 
+            type BaseCheckFunction<'a> = (&'a dyn Fn(FPDecimal) -> Option<FPDecimal>, FPDecimal);
+
             fn compute_negative_exponent_less_one(mut base: FPDecimal, exponent: FPDecimal, n_terms: u128) -> Result<FPDecimal, OverflowError> {
                 // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
                 base = -base;
-                if base._log2().is_some() {
-                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
-                        panic!("No complex number");
-                    };
 
-                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001") {
-                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
-                        while tmp_b > FPDecimal::ONE {
-                            base /= FPDecimal::TWO;
-                            tmp_b -= FPDecimal::ONE;
-                        }
+                let base_checks: Vec<BaseCheckFunction> = vec![
+                    (&FPDecimal::_log2, FPDecimal::TWO),
+                    (&FPDecimal::_log3, FPDecimal::THREE),
+                    (&FPDecimal::_log5, FPDecimal::FIVE),
+                    (&FPDecimal::_log7, FPDecimal::SEVEN),
+                    (&FPDecimal::_log10, FPDecimal::TEN),
+                ];
+
+                for (log_fn, divisor) in &base_checks {
+                    if log_fn(base).is_some() && check_conditions_and_return_negative(&mut base, divisor, &exponent) {
                         return Ok(-FPDecimal::ONE / base);
-                    };
+                    }
                 }
 
-                if base._log3().is_some() {
-                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
-                        panic!("No complex number");
-                    };
-
-                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001") {
-                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
-                        while tmp_b > FPDecimal::ONE {
-                            base /= FPDecimal::THREE;
-                            tmp_b -= FPDecimal::ONE;
-                        }
-                        return Ok(-FPDecimal::ONE / base);
-                    };
-                }
-
-                if base._log5().is_some() {
-                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
-                        panic!("No complex number");
-                    };
-
-                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001") {
-                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
-                        while tmp_b > FPDecimal::ONE {
-                            base /= FPDecimal::FIVE;
-                            tmp_b -= FPDecimal::ONE;
-                        }
-                        return Ok(-FPDecimal::ONE / base);
-                    };
-                }
-
-                if base._log7().is_some() {
-                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
-                        panic!("No complex number");
-                    };
-
-                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001") {
-                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
-                        while tmp_b > FPDecimal::ONE {
-                            base /= FPDecimal::SEVEN;
-                            tmp_b -= FPDecimal::ONE;
-                        }
-                        return Ok(-FPDecimal::ONE / base);
-                    };
-                }
-                if base._log10().is_some() {
-                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
-                        panic!("No complex number");
-                    };
-
-                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001") {
-                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
-                        while tmp_b > FPDecimal::ONE {
-                            base /= FPDecimal::TEN;
-                            tmp_b -= FPDecimal::ONE;
-                        }
-                        return Ok(-FPDecimal::ONE / base);
-                    };
-                }
-
-                if base._log11().is_some() {
-                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
-                        panic!("No complex number");
-                    };
-
-                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001") {
-                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
-                        while tmp_b > FPDecimal::ONE {
-                            base /= FPDecimal::from(11u128);
-                            tmp_b -= FPDecimal::ONE;
-                        }
-                        return Ok(-FPDecimal::ONE / base);
-                    };
+                // Handling log11 case separately
+                if (base / FPDecimal::from(11u128))._log10().is_some()
+                    && check_conditions_and_return_negative(&mut base, &FPDecimal::from(11u128), &exponent)
+                {
+                    return Ok(-FPDecimal::ONE / base);
                 }
 
                 Ok(FPDecimal::_exp_taylor_expansion(FPDecimal::ONE / base, exponent, n_terms))
+            }
+
+            fn check_conditions_and_return_negative(base: &mut FPDecimal, divisor: &FPDecimal, exponent: &FPDecimal) -> bool {
+                if FPDecimal::reciprocal(*exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                    panic!("No complex number");
+                };
+
+                if ((FPDecimal::reciprocal(*exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001") {
+                    let mut tmp_b = FPDecimal::reciprocal(*exponent).int();
+                    while tmp_b > FPDecimal::ONE {
+                        *base /= *divisor;
+                        tmp_b -= FPDecimal::ONE;
+                    }
+                    true
+                } else {
+                    false
+                }
             }
 
             fn compute_negative_exponent_greater_one(mut base: FPDecimal, exponent: FPDecimal, n_terms: u128) -> Result<FPDecimal, OverflowError> {
@@ -1080,100 +1032,49 @@ impl FPDecimal {
             }
 
             fn compute_positive_exponent_less_one(mut base: FPDecimal, exponent: FPDecimal, n_terms: u128) -> Result<FPDecimal, OverflowError> {
-                // taylor expansion approximation of exponentation compuation with float number exponent
+                // taylor expansion approximation of exponentiation computation with float number exponent
                 // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
                 base = -base;
-                if base._log2().is_some() {
-                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
-                        panic!("No complex number");
-                    };
 
-                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001") {
-                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
-                        while tmp_b > FPDecimal::ONE {
-                            base /= FPDecimal::TWO;
-                            tmp_b -= FPDecimal::ONE;
-                        }
+                // Define a list of base-check functions and their corresponding values
+                let base_checks: Vec<BaseCheckFunction> = vec![
+                    (&FPDecimal::_log2, FPDecimal::TWO),
+                    (&FPDecimal::_log3, FPDecimal::THREE),
+                    (&FPDecimal::_log5, FPDecimal::FIVE),
+                    (&FPDecimal::_log7, FPDecimal::SEVEN),
+                    (&FPDecimal::_log10, FPDecimal::TEN),
+                ];
+
+                for (log_fn, divisor) in &base_checks {
+                    if log_fn(base).is_some() && check_conditions_and_return(&mut base, divisor, &exponent) {
                         return Ok(-base);
-                    };
+                    }
                 }
 
-                if base._log3().is_some() {
-                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
-                        panic!("No complex number");
-                    };
-
-                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001") {
-                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
-                        while tmp_b > FPDecimal::ONE {
-                            base /= FPDecimal::THREE;
-                            tmp_b -= FPDecimal::ONE;
-                        }
-                        return Ok(-base);
-                    };
-                }
-
-                if base._log5().is_some() {
-                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
-                        panic!("No complex number");
-                    };
-
-                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001") {
-                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
-                        while tmp_b > FPDecimal::ONE {
-                            base /= FPDecimal::FIVE;
-                            tmp_b -= FPDecimal::ONE;
-                        }
-                        return Ok(-base);
-                    };
-                }
-
-                if base._log7().is_some() {
-                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
-                        panic!("No complex number");
-                    };
-
-                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001") {
-                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
-                        while tmp_b > FPDecimal::ONE {
-                            base /= FPDecimal::SEVEN;
-                            tmp_b -= FPDecimal::ONE;
-                        }
-                        return Ok(-base);
-                    };
-                }
-
-                if base._log10().is_some() {
-                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
-                        panic!("No complex number");
-                    };
-
-                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001") {
-                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
-                        while tmp_b > FPDecimal::ONE {
-                            base /= FPDecimal::TEN;
-                            tmp_b -= FPDecimal::ONE;
-                        }
-                        return Ok(-base);
-                    };
-                }
-
-                if base._log11().is_some() {
-                    if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
-                        panic!("No complex number");
-                    };
-
-                    if ((FPDecimal::reciprocal(exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001") {
-                        let mut tmp_b = FPDecimal::reciprocal(exponent).int();
-                        while tmp_b > FPDecimal::ONE {
-                            base /= FPDecimal::from(11u128);
-                            tmp_b -= FPDecimal::ONE;
-                        }
-                        return Ok(-base);
-                    };
+                // Handling log11 case separately
+                if (base / FPDecimal::from(11u128))._log10().is_some() && check_conditions_and_return(&mut base, &FPDecimal::from(11u128), &exponent)
+                {
+                    return Ok(-base);
                 }
 
                 Ok(FPDecimal::_exp_taylor_expansion(base, exponent, n_terms))
+            }
+
+            fn check_conditions_and_return(base: &mut FPDecimal, divisor: &FPDecimal, exponent: &FPDecimal) -> bool {
+                if FPDecimal::reciprocal(*exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                    panic!("No complex number");
+                };
+
+                if ((FPDecimal::reciprocal(*exponent) % FPDecimal::TWO).int() - FPDecimal::ONE).abs() <= FPDecimal::must_from_str("0.000001") {
+                    let mut tmp_b = FPDecimal::reciprocal(*exponent).int();
+                    while tmp_b > FPDecimal::ONE {
+                        *base /= *divisor;
+                        tmp_b -= FPDecimal::ONE;
+                    }
+                    true
+                } else {
+                    false
+                }
             }
 
             fn compute_integer_exponentiation(mut base: FPDecimal, mut exponent: FPDecimal) -> FPDecimal {
