@@ -6,6 +6,11 @@ impl FPDecimal {
         if let Some(value) = self._log2() {
             return Some((value, 2u128));
         }
+
+        if let Some(value) = self._log_e() {
+            //NOTE: base e can't be represented by u128, so we  27 in here
+            return Some((value, 27u128));
+        }
         if let Some(value) = self._log3() {
             return Some((value, 3u128));
         }
@@ -20,6 +25,74 @@ impl FPDecimal {
         }
         if let Some(value) = self._log11() {
             return Some((value, 11u128));
+        }
+        None
+    }
+
+    pub fn _log_e(self) -> Option<FPDecimal> {
+        let e = FPDecimal::E;
+        if self == FPDecimal::ONE {
+            return Some(FPDecimal::ZERO);
+        }
+        if self == FPDecimal::E {
+            return Some(FPDecimal::ONE);
+        }
+        if self == e * e {
+            return Some(FPDecimal::TWO);
+        }
+        if self == e * e * e {
+            return Some(FPDecimal::THREE);
+        }
+        if self == e * e * e * e {
+            return Some(FPDecimal::FOUR);
+        }
+        if self == e * e * e * e * e {
+            return Some(FPDecimal::FIVE);
+        }
+        if self == e * e * e * e * e * e {
+            return Some(FPDecimal::SIX);
+        }
+        if self == e * e * e * e * e * e * e {
+            return Some(FPDecimal::SEVEN);
+        }
+        if self == e * e * e * e * e * e * e * e {
+            return Some(FPDecimal::EIGHT);
+        }
+        if self == e * e * e * e * e * e * e * e * e {
+            return Some(FPDecimal::NINE);
+        }
+        if self == e * e * e * e * e * e * e * e * e * e {
+            return Some(FPDecimal::TEN);
+        }
+        if self == FPDecimal::ONE / FPDecimal::E {
+            return Some(-FPDecimal::ONE);
+        }
+        if self == FPDecimal::ONE / (e * e) {
+            return Some(-FPDecimal::TWO);
+        }
+        if self == FPDecimal::ONE / (e * e * e) {
+            return Some(-FPDecimal::THREE);
+        }
+        if self == FPDecimal::ONE / (e * e * e * e) {
+            return Some(-FPDecimal::FOUR);
+        }
+        if self == FPDecimal::ONE / (e * e * e * e * e) {
+            return Some(-FPDecimal::FIVE);
+        }
+        if self == FPDecimal::ONE / (e * e * e * e * e * e) {
+            return Some(-FPDecimal::SIX);
+        }
+        if self == FPDecimal::ONE / (e * e * e * e * e * e * e) {
+            return Some(-FPDecimal::SEVEN);
+        }
+        if self == FPDecimal::ONE / (e * e * e * e * e * e * e * e) {
+            return Some(-FPDecimal::EIGHT);
+        }
+        if self == FPDecimal::ONE / (e * e * e * e * e * e * e * e * e) {
+            return Some(-FPDecimal::NINE);
+        }
+        if self == FPDecimal::ONE / (e * e * e * e * e * e * e * e * e * e) {
+            return Some(-FPDecimal::TEN);
         }
         None
     }
@@ -516,72 +589,8 @@ impl FPDecimal {
     }
 
     pub fn ln(&self) -> FPDecimal {
-        {
-            let e = FPDecimal::E;
-            if *self == FPDecimal::ONE {
-                return FPDecimal::ZERO;
-            }
-            if *self == FPDecimal::E {
-                return FPDecimal::ONE;
-            }
-            if *self == e * e {
-                return FPDecimal::TWO;
-            }
-            if *self == e * e * e {
-                return FPDecimal::THREE;
-            }
-            if *self == e * e * e * e {
-                return FPDecimal::FOUR;
-            }
-            if *self == e * e * e * e * e {
-                return FPDecimal::FIVE;
-            }
-            if *self == e * e * e * e * e * e {
-                return FPDecimal::SIX;
-            }
-            if *self == e * e * e * e * e * e * e {
-                return FPDecimal::SEVEN;
-            }
-            if *self == e * e * e * e * e * e * e * e {
-                return FPDecimal::EIGHT;
-            }
-            if *self == e * e * e * e * e * e * e * e * e {
-                return FPDecimal::NINE;
-            }
-            if *self == e * e * e * e * e * e * e * e * e * e {
-                return FPDecimal::TEN;
-            }
-
-            if *self == FPDecimal::ONE / FPDecimal::E {
-                return -FPDecimal::ONE;
-            }
-            if *self == FPDecimal::ONE / (e * e) {
-                return -FPDecimal::TWO;
-            }
-            if *self == FPDecimal::ONE / (e * e * e) {
-                return -FPDecimal::THREE;
-            }
-            if *self == FPDecimal::ONE / (e * e * e * e) {
-                return -FPDecimal::FOUR;
-            }
-            if *self == FPDecimal::ONE / (e * e * e * e * e) {
-                return -FPDecimal::FIVE;
-            }
-            if *self == FPDecimal::ONE / (e * e * e * e * e * e) {
-                return -FPDecimal::SIX;
-            }
-            if *self == FPDecimal::ONE / (e * e * e * e * e * e * e) {
-                return -FPDecimal::SEVEN;
-            }
-            if *self == FPDecimal::ONE / (e * e * e * e * e * e * e * e) {
-                return -FPDecimal::EIGHT;
-            }
-            if *self == FPDecimal::ONE / (e * e * e * e * e * e * e * e * e) {
-                return -FPDecimal::NINE;
-            }
-            if *self == FPDecimal::ONE / (e * e * e * e * e * e * e * e * e * e) {
-                return -FPDecimal::TEN;
-            }
+        if let Some(value) = self._log_e() {
+            return value;
         }
         FPDecimal::_ln(*self)
     }
