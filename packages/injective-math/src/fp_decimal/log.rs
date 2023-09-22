@@ -3,28 +3,28 @@ use crate::fp_decimal::{FPDecimal, U256};
 
 impl FPDecimal {
     pub fn _log_const(self) -> Option<(FPDecimal, u128)> {
-        if let Some(value) = self.log2() {
+        if let Some(value) = self._log2() {
             return Some((value, 2u128));
         }
-        if let Some(value) = self.log3() {
+        if let Some(value) = self._log3() {
             return Some((value, 3u128));
         }
-        if let Some(value) = self.log5() {
+        if let Some(value) = self._log5() {
             return Some((value, 5u128));
         }
-        if let Some(value) = self.log7() {
+        if let Some(value) = self._log7() {
             return Some((value, 7u128));
         }
-        if let Some(value) = self.log10() {
+        if let Some(value) = self._log10() {
             return Some((value, 10u128));
         }
-        if let Some(value) = self.log11() {
+        if let Some(value) = self._log11() {
             return Some((value, 11u128));
         }
         None
     }
 
-    pub fn log2(self) -> Option<FPDecimal> {
+    pub fn _log2(self) -> Option<FPDecimal> {
         if self == FPDecimal::ONE {
             return Some(FPDecimal::ZERO);
         }
@@ -91,7 +91,7 @@ impl FPDecimal {
         None
     }
 
-    pub fn log3(self) -> Option<FPDecimal> {
+    pub fn _log3(self) -> Option<FPDecimal> {
         if self == FPDecimal::ONE {
             return Some(FPDecimal::ZERO);
         }
@@ -159,7 +159,7 @@ impl FPDecimal {
         None
     }
 
-    pub fn log5(self) -> Option<FPDecimal> {
+    pub fn _log5(self) -> Option<FPDecimal> {
         if self == FPDecimal::ONE {
             return Some(FPDecimal::ZERO);
         }
@@ -227,7 +227,7 @@ impl FPDecimal {
     }
 
     // 7^1..10
-    pub fn log7(self) -> Option<FPDecimal> {
+    pub fn _log7(self) -> Option<FPDecimal> {
         if self == FPDecimal::ONE {
             return Some(FPDecimal::ZERO);
         }
@@ -294,7 +294,7 @@ impl FPDecimal {
         None
     }
 
-    pub fn log10(self) -> Option<FPDecimal> {
+    pub fn _log10(self) -> Option<FPDecimal> {
         if self == FPDecimal::ONE {
             return Some(FPDecimal::ZERO);
         }
@@ -363,7 +363,7 @@ impl FPDecimal {
     }
 
     // 11^1..10
-    pub fn log11(self) -> Option<FPDecimal> {
+    pub fn _log11(self) -> Option<FPDecimal> {
         if self == FPDecimal::ONE {
             return Some(FPDecimal::ZERO);
         }
@@ -516,6 +516,73 @@ impl FPDecimal {
     }
 
     pub fn ln(&self) -> FPDecimal {
+        {
+            let e = FPDecimal::E;
+            if *self == FPDecimal::ONE {
+                return FPDecimal::ZERO;
+            }
+            if *self == FPDecimal::E {
+                return FPDecimal::ONE;
+            }
+            if *self == e * e {
+                return FPDecimal::TWO;
+            }
+            if *self == e * e * e {
+                return FPDecimal::THREE;
+            }
+            if *self == e * e * e * e {
+                return FPDecimal::FOUR;
+            }
+            if *self == e * e * e * e * e {
+                return FPDecimal::FIVE;
+            }
+            if *self == e * e * e * e * e * e {
+                return FPDecimal::SIX;
+            }
+            if *self == e * e * e * e * e * e * e {
+                return FPDecimal::SEVEN;
+            }
+            if *self == e * e * e * e * e * e * e * e {
+                return FPDecimal::EIGHT;
+            }
+            if *self == e * e * e * e * e * e * e * e * e {
+                return FPDecimal::NINE;
+            }
+            if *self == e * e * e * e * e * e * e * e * e * e {
+                return FPDecimal::TEN;
+            }
+
+            if *self == FPDecimal::ONE / FPDecimal::E {
+                return -FPDecimal::ONE;
+            }
+            if *self == FPDecimal::ONE / (e * e) {
+                return -FPDecimal::TWO;
+            }
+            if *self == FPDecimal::ONE / (e * e * e) {
+                return -FPDecimal::THREE;
+            }
+            if *self == FPDecimal::ONE / (e * e * e * e) {
+                return -FPDecimal::FOUR;
+            }
+            if *self == FPDecimal::ONE / (e * e * e * e * e) {
+                return -FPDecimal::FIVE;
+            }
+            if *self == FPDecimal::ONE / (e * e * e * e * e * e) {
+                return -FPDecimal::SIX;
+            }
+            if *self == FPDecimal::ONE / (e * e * e * e * e * e * e) {
+                return -FPDecimal::SEVEN;
+            }
+            if *self == FPDecimal::ONE / (e * e * e * e * e * e * e * e) {
+                return -FPDecimal::EIGHT;
+            }
+            if *self == FPDecimal::ONE / (e * e * e * e * e * e * e * e * e) {
+                return -FPDecimal::NINE;
+            }
+            if *self == FPDecimal::ONE / (e * e * e * e * e * e * e * e * e * e) {
+                return -FPDecimal::TEN;
+            }
+        }
         FPDecimal::_ln(*self)
     }
 

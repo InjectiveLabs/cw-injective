@@ -117,6 +117,66 @@ impl FPDecimal {
                 return Err(OverflowError::new(OverflowOperation::Pow, self.to_string(), exponent.to_string()));
             }
 
+            if self == FPDecimal::E {
+                if exponent == FPDecimal::ONE.ln() {
+                    return Ok(FPDecimal::ONE);
+                }
+                if exponent == FPDecimal::TWO.ln() {
+                    return Ok(FPDecimal::TWO);
+                }
+                if exponent == FPDecimal::THREE.ln() {
+                    return Ok(FPDecimal::THREE);
+                }
+                if exponent == FPDecimal::FOUR.ln() {
+                    return Ok(FPDecimal::FOUR);
+                }
+                if exponent == FPDecimal::FIVE.ln() {
+                    return Ok(FPDecimal::FIVE);
+                }
+                if exponent == FPDecimal::SIX.ln() {
+                    return Ok(FPDecimal::SIX);
+                }
+                if exponent == FPDecimal::SEVEN.ln() {
+                    return Ok(FPDecimal::SEVEN);
+                }
+                if exponent == FPDecimal::EIGHT.ln() {
+                    return Ok(FPDecimal::EIGHT);
+                }
+                if exponent == FPDecimal::NINE.ln() {
+                    return Ok(FPDecimal::NINE);
+                }
+                if exponent == FPDecimal::TEN.ln() {
+                    return Ok(FPDecimal::TEN);
+                }
+                if exponent == (FPDecimal::ONE / FPDecimal::TWO).ln() {
+                    return Ok(FPDecimal::ONE / FPDecimal::TWO);
+                }
+                if exponent == (FPDecimal::ONE / FPDecimal::THREE).ln() {
+                    return Ok(FPDecimal::ONE / FPDecimal::THREE);
+                }
+                if exponent == (FPDecimal::ONE / FPDecimal::FOUR).ln() {
+                    return Ok(FPDecimal::ONE / FPDecimal::FOUR);
+                }
+                if exponent == (FPDecimal::ONE / FPDecimal::FIVE).ln() {
+                    return Ok(FPDecimal::ONE / FPDecimal::FIVE);
+                }
+                if exponent == (FPDecimal::ONE / FPDecimal::SIX).ln() {
+                    return Ok(FPDecimal::ONE / FPDecimal::SIX);
+                }
+                if exponent == (FPDecimal::ONE / FPDecimal::SEVEN).ln() {
+                    return Ok(FPDecimal::ONE / FPDecimal::SEVEN);
+                }
+                if exponent == (FPDecimal::ONE / FPDecimal::EIGHT).ln() {
+                    return Ok(FPDecimal::ONE / FPDecimal::EIGHT);
+                }
+                if exponent == (FPDecimal::ONE / FPDecimal::NINE).ln() {
+                    return Ok(FPDecimal::ONE / FPDecimal::NINE);
+                }
+                if exponent == (FPDecimal::ONE / FPDecimal::TEN).ln() {
+                    return Ok(FPDecimal::ONE / FPDecimal::TEN);
+                }
+            }
+
             if self == FPDecimal::from(10u128) {
                 if exponent == FPDecimal::one() {
                     return Ok(FPDecimal::from(10u128));
@@ -431,37 +491,37 @@ impl FPDecimal {
                 // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
                 let reciprocal = FPDecimal::reciprocal(exponent);
 
-                if base.log2().is_some() {
+                if base._log2().is_some() {
                     if let Some(value) = negative_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::TWO) {
                         return Ok(value);
                     }
                 }
 
-                if base.log3().is_some() {
+                if base._log3().is_some() {
                     if let Some(value) = negative_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::THREE) {
                         return Ok(value);
                     }
                 }
 
-                if base.log5().is_some() {
+                if base._log5().is_some() {
                     if let Some(value) = negative_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::FIVE) {
                         return Ok(value);
                     }
                 }
 
-                if base.log7().is_some() {
+                if base._log7().is_some() {
                     if let Some(value) = negative_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::SEVEN) {
                         return Ok(value);
                     }
                 }
 
-                if base.log10().is_some() {
+                if base._log10().is_some() {
                     if let Some(value) = negative_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::TEN) {
                         return Ok(value);
                     }
                 }
 
-                if base.log11().is_some() {
+                if base._log11().is_some() {
                     if let Some(value) = negative_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::from(11u128)) {
                         return Ok(value);
                     }
@@ -503,32 +563,32 @@ impl FPDecimal {
                 // taylor expansion approximation of exponentation compuation with float number exponent
                 // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
                 let reciprocal = FPDecimal::reciprocal(exponent);
-                if base.log2().is_some() {
+                if base._log2().is_some() {
                     if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::TWO) {
                         return Ok(value);
                     }
                 }
-                if base.log3().is_some() {
+                if base._log3().is_some() {
                     if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::THREE) {
                         return Ok(value);
                     }
                 }
-                if base.log5().is_some() {
+                if base._log5().is_some() {
                     if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::FIVE) {
                         return Ok(value);
                     }
                 }
-                if base.log7().is_some() {
+                if base._log7().is_some() {
                     if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::SEVEN) {
                         return Ok(value);
                     }
                 }
-                if base.log10().is_some() {
+                if base._log10().is_some() {
                     if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::TEN) {
                         return Ok(value);
                     }
                 }
-                if base.log11().is_some() {
+                if base._log11().is_some() {
                     if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::from(11u128)) {
                         return Ok(value);
                     }
@@ -590,9 +650,69 @@ impl FPDecimal {
             if exponent > FPDecimal::from(60u128) {
                 return Err(OverflowError::new(OverflowOperation::Pow, self.to_string(), exponent.to_string()));
             }
+            if self == -FPDecimal::E {
+                let e = FPDecimal::E;
+                if exponent == FPDecimal::ONE {
+                    return Ok(-e);
+                }
+                if exponent == FPDecimal::TWO {
+                    return Ok(e * e);
+                }
+                if exponent == FPDecimal::THREE {
+                    return Ok(-e * e * e);
+                }
+                if exponent == FPDecimal::FOUR {
+                    return Ok(e * e * e * e);
+                }
+                if exponent == FPDecimal::FIVE {
+                    return Ok(-e * e * e * e * e);
+                }
+                if exponent == FPDecimal::SIX {
+                    return Ok(e * e * e * e * e * e);
+                }
+                if exponent == FPDecimal::SEVEN {
+                    return Ok(-e * e * e * e * e * e * e);
+                }
+                if exponent == FPDecimal::EIGHT {
+                    return Ok(e * e * e * e * e * e * e * e);
+                }
+                if exponent == FPDecimal::NINE {
+                    return Ok(-e * e * e * e * e * e * e * e * e);
+                }
+                if exponent == FPDecimal::TEN {
+                    return Ok(e * e * e * e * e * e * e * e * e * e);
+                }
+                if exponent == -FPDecimal::TWO {
+                    return Ok((FPDecimal::ONE) / (e * e));
+                }
+                if exponent == -FPDecimal::THREE {
+                    return Ok(-(FPDecimal::ONE) / (e * e * e));
+                }
+                if exponent == -FPDecimal::FOUR {
+                    return Ok((FPDecimal::ONE) / (e * e * e * e));
+                }
+                if exponent == -FPDecimal::FIVE {
+                    return Ok(-(FPDecimal::ONE) / (e * e * e * e * e));
+                }
+                if exponent == -FPDecimal::SIX {
+                    return Ok((FPDecimal::ONE) / (e * e * e * e * e * e));
+                }
+                if exponent == -FPDecimal::SEVEN {
+                    return Ok(-(FPDecimal::ONE) / (e * e * e * e * e * e * e));
+                }
+                if exponent == -FPDecimal::EIGHT {
+                    return Ok((FPDecimal::ONE) / (e * e * e * e * e * e * e * e));
+                }
+                if exponent == -FPDecimal::NINE {
+                    return Ok(-(FPDecimal::ONE) / (e * e * e * e * e * e * e * e * e));
+                }
+                if exponent == -FPDecimal::TEN {
+                    return Ok((FPDecimal::ONE) / (e * e * e * e * e * e * e * e * e * e));
+                }
+            }
 
             if self == -FPDecimal::from(10u128) {
-                if exponent == FPDecimal::one() {
+                if exponent == FPDecimal::ONE {
                     return Ok(-FPDecimal::from(10u128));
                 }
                 if exponent == FPDecimal::TWO {
@@ -854,7 +974,7 @@ impl FPDecimal {
             fn compute_negative_exponent_less_one(mut base: FPDecimal, exponent: FPDecimal, n_terms: u128) -> Result<FPDecimal, OverflowError> {
                 // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
                 base = -base;
-                if base.log2().is_some() {
+                if base._log2().is_some() {
                     if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                         panic!("No complex number");
                     };
@@ -869,7 +989,7 @@ impl FPDecimal {
                     };
                 }
 
-                if base.log3().is_some() {
+                if base._log3().is_some() {
                     if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                         panic!("No complex number");
                     };
@@ -884,7 +1004,7 @@ impl FPDecimal {
                     };
                 }
 
-                if base.log5().is_some() {
+                if base._log5().is_some() {
                     if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                         panic!("No complex number");
                     };
@@ -899,7 +1019,7 @@ impl FPDecimal {
                     };
                 }
 
-                if base.log7().is_some() {
+                if base._log7().is_some() {
                     if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                         panic!("No complex number");
                     };
@@ -913,7 +1033,7 @@ impl FPDecimal {
                         return Ok(-FPDecimal::ONE / base);
                     };
                 }
-                if base.log10().is_some() {
+                if base._log10().is_some() {
                     if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                         panic!("No complex number");
                     };
@@ -928,7 +1048,7 @@ impl FPDecimal {
                     };
                 }
 
-                if base.log11().is_some() {
+                if base._log11().is_some() {
                     if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                         panic!("No complex number");
                     };
@@ -963,7 +1083,7 @@ impl FPDecimal {
                 // taylor expansion approximation of exponentation compuation with float number exponent
                 // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
                 base = -base;
-                if base.log2().is_some() {
+                if base._log2().is_some() {
                     if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                         panic!("No complex number");
                     };
@@ -978,7 +1098,7 @@ impl FPDecimal {
                     };
                 }
 
-                if base.log3().is_some() {
+                if base._log3().is_some() {
                     if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                         panic!("No complex number");
                     };
@@ -993,7 +1113,7 @@ impl FPDecimal {
                     };
                 }
 
-                if base.log5().is_some() {
+                if base._log5().is_some() {
                     if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                         panic!("No complex number");
                     };
@@ -1008,7 +1128,7 @@ impl FPDecimal {
                     };
                 }
 
-                if base.log7().is_some() {
+                if base._log7().is_some() {
                     if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                         panic!("No complex number");
                     };
@@ -1023,7 +1143,7 @@ impl FPDecimal {
                     };
                 }
 
-                if base.log10().is_some() {
+                if base._log10().is_some() {
                     if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                         panic!("No complex number");
                     };
@@ -1038,7 +1158,7 @@ impl FPDecimal {
                     };
                 }
 
-                if base.log11().is_some() {
+                if base._log11().is_some() {
                     if FPDecimal::reciprocal(exponent) % FPDecimal::TWO == FPDecimal::ZERO {
                         panic!("No complex number");
                     };
@@ -1502,5 +1622,10 @@ mod tests {
             FPDecimal::pow(FPDecimal::must_from_str("-1000.0"), FPDecimal::ONE / FPDecimal::FOUR),
             -FPDecimal::TEN
         );
+    }
+
+    #[test]
+    fn test_exp_log_2() {
+        assert_eq!(FPDecimal::E.pow(FPDecimal::must_from_str("2.0").ln()), FPDecimal::must_from_str("2.0"));
     }
 }
