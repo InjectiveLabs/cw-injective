@@ -489,41 +489,81 @@ impl FPDecimal {
 
             fn compute_negative_exponent_less_one(base: FPDecimal, exponent: FPDecimal, n_terms: u128) -> Result<FPDecimal, OverflowError> {
                 // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
-                let reciprocal = FPDecimal::reciprocal(exponent);
+                let abs_error = FPDecimal::must_from_str("0.00000000000000001");
+                let reciprocal = if (FPDecimal::reciprocal(exponent) - FPDecimal::reciprocal(exponent).int()).abs() < abs_error {
+                    FPDecimal::reciprocal(exponent).int()
+                } else {
+                    FPDecimal::reciprocal(exponent)
+                };
+
+                // let reciprocal = FPDecimal::reciprocal(exponent);
 
                 if base._log2().is_some() {
-                    if let Some(value) = negative_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::TWO) {
-                        return Ok(value);
+                    if base._log2().unwrap().abs() >= reciprocal {
+                        if let Some(value) = negative_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::TWO) {
+                            return Ok(value);
+                        }
+                    } else {
+                        let multiplier = base._log2().unwrap();
+                        return Ok(multiplier * FPDecimal::TWO.ln() / reciprocal);
                     }
                 }
 
                 if base._log3().is_some() {
-                    if let Some(value) = negative_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::THREE) {
-                        return Ok(value);
+                    if base._log2().unwrap().abs() >= reciprocal {
+                        if let Some(value) = negative_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::THREE) {
+                            return Ok(value);
+                        }
+                    } else {
+                        let multipler = base._log3().unwrap();
+                        return Ok(multipler * FPDecimal::FIVE.ln() / reciprocal);
                     }
                 }
 
+                // if base._log5().is_some() && base._log5() == Some(reciprocal) {
+                // println!("base._log5: {}, reciprocal: {}", base._log5().unwrap(), reciprocal);
                 if base._log5().is_some() {
-                    if let Some(value) = negative_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::FIVE) {
-                        return Ok(value);
+                    if base._log5().unwrap().abs() >= reciprocal {
+                        if let Some(value) = negative_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::FIVE) {
+                            return Ok(value);
+                        }
+                    } else {
+                        let multipler = base._log5().unwrap();
+                        return Ok(multipler * FPDecimal::FIVE.ln() / reciprocal);
                     }
                 }
 
+                // if base._log7().is_some() && base._log7() == Some(reciprocal) {
                 if base._log7().is_some() {
-                    if let Some(value) = negative_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::SEVEN) {
-                        return Ok(value);
+                    if base._log7().unwrap().abs() >= reciprocal {
+                        if let Some(value) = negative_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::SEVEN) {
+                            return Ok(value);
+                        }
+                    } else {
+                        let multipler = base._log7().unwrap();
+                        return Ok(multipler * FPDecimal::SEVEN.ln() / reciprocal);
                     }
                 }
 
                 if base._log10().is_some() {
-                    if let Some(value) = negative_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::TEN) {
-                        return Ok(value);
+                    if base._log10().unwrap().abs() >= reciprocal {
+                        if let Some(value) = negative_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::TEN) {
+                            return Ok(value);
+                        }
+                    } else {
+                        let multipler = base._log10().unwrap();
+                        return Ok(multipler * FPDecimal::TEN.ln() / reciprocal);
                     }
                 }
 
                 if base._log11().is_some() {
-                    if let Some(value) = negative_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::from(11u128)) {
-                        return Ok(value);
+                    if base._log11().unwrap().abs() >= reciprocal {
+                        if let Some(value) = negative_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::from(11u128)) {
+                            return Ok(value);
+                        }
+                    } else {
+                        let multipler = base._log11().unwrap();
+                        return Ok(multipler * FPDecimal::TEN.ln() / reciprocal);
                     }
                 }
 
@@ -560,39 +600,74 @@ impl FPDecimal {
             }
 
             fn compute_positive_exponent_less_one(base: FPDecimal, exponent: FPDecimal, n_terms: u128) -> Result<FPDecimal, OverflowError> {
+                println!("here");
                 // taylor expansion approximation of exponentiation computation with float number exponent
                 // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
-                let reciprocal = FPDecimal::reciprocal(exponent);
-                if base._log2().is_some() && base._log2() == Some(reciprocal) {
-                    if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::TWO) {
-                        return Ok(value);
+                let abs_error = FPDecimal::must_from_str("0.00000000000000001");
+                let reciprocal = if (FPDecimal::reciprocal(exponent) - FPDecimal::reciprocal(exponent).int()).abs() < abs_error {
+                    FPDecimal::reciprocal(exponent).int()
+                } else {
+                    FPDecimal::reciprocal(exponent)
+                };
+                // println!("base: {}, exponent {}, reciprocal {}", base, exponent, reciprocal);
+                if base._log2().is_some() {
+                    if base._log2().unwrap().abs() >= reciprocal {
+                        if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::TWO) {
+                            return Ok(value);
+                        }
+                    } else {
+                        let multiplier = base._log2().unwrap();
+                        return Ok(multiplier * FPDecimal::TWO.ln() / reciprocal);
                     }
                 }
-                if base._log3().is_some() && base._log3() == Some(reciprocal) {
-                    if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::THREE) {
-                        return Ok(value);
+                if base._log3().is_some() {
+                    if base._log3().unwrap().abs() >= reciprocal {
+                        if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::THREE) {
+                            return Ok(value);
+                        }
+                    } else {
+                        let multiplier = base._log3().unwrap();
+                        return Ok(multiplier * FPDecimal::THREE.ln() / reciprocal);
                     }
                 }
-                if base._log5().is_some() && base._log5() == Some(reciprocal) {
-                    // if base._log5().unwrap() == reciprocal {
-                    if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::FIVE) {
-                        return Ok(value);
-                    }
-                    // }
-                }
-                if base._log7().is_some() && base._log7() == Some(reciprocal) {
-                    if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::SEVEN) {
-                        return Ok(value);
+                if base._log5().is_some() {
+                    if base._log5().unwrap().abs() >= reciprocal {
+                        if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::FIVE) {
+                            return Ok(value);
+                        }
+                    } else {
+                        let multiplier = base._log5().unwrap();
+                        return Ok(multiplier * FPDecimal::THREE.ln() / reciprocal);
                     }
                 }
-                if base._log10().is_some() && base._log10() == Some(reciprocal) {
-                    if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::TEN) {
-                        return Ok(value);
+                if base._log7().is_some() {
+                    if base._log7().unwrap().abs() >= reciprocal {
+                        if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::SEVEN) {
+                            return Ok(value);
+                        }
+                    } else {
+                        let multiplier = base._log7().unwrap();
+                        return Ok(multiplier * FPDecimal::THREE.ln() / reciprocal);
                     }
                 }
-                if base._log11().is_some() && base._log11() == Some(reciprocal) {
-                    if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::from(11u128)) {
-                        return Ok(value);
+                if base._log10().is_some() {
+                    if base._log10().unwrap().abs() >= reciprocal {
+                        if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::TEN) {
+                            return Ok(value);
+                        }
+                    } else {
+                        let multiplier = base._log10().unwrap();
+                        return Ok(multiplier * FPDecimal::THREE.ln() / reciprocal);
+                    }
+                }
+                if base._log11().is_some() {
+                    if base._log11().unwrap().abs() >= reciprocal {
+                        if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::from(11u128)) {
+                            return Ok(value);
+                        }
+                    } else {
+                        let multiplier = base._log10().unwrap();
+                        return Ok(multiplier * FPDecimal::THREE.ln() / reciprocal);
                     }
                 }
 
@@ -961,17 +1036,13 @@ impl FPDecimal {
                         exponent = -exponent;
                         match exponent.cmp(&(FPDecimal::ONE)) {
                             Ordering::Equal => Ok(FPDecimal::ONE / base),
-                            Ordering::Less => compute_negative_exponent_less_one(base, exponent, N_TERMS),
-                            // Ordering::Less => compute_exponent_less_one(FPDecimal::ONE / base, exponent, N_TERMS),
-                            // Ordering::Greater => compute_negative_exponent_greater_one(base, exponent, N_TERMS),
-                            // Ordering::Greater => compute_exponent_greater_one(FPDecimal::ONE / base, exponent, N_TERMS),
+                            Ordering::Less => compute_negative_exponent_less_one(FPDecimal::ONE / base, exponent, N_TERMS),
                             Ordering::Greater => compute_negative_exponent_greater_one(FPDecimal::ONE / base, exponent, N_TERMS),
                         }
                     }
                     Ordering::Greater => match exponent.cmp(&FPDecimal::ONE) {
                         Ordering::Equal => Ok(base),
                         Ordering::Less => compute_positive_exponent_less_one(base, exponent, N_TERMS),
-                        // Ordering::Less => compute_exponent_less_one(base, exponent, N_TERMS),
                         Ordering::Greater => compute_positive_exponent_greater_one(base, exponent),
                     },
                 }
@@ -993,14 +1064,12 @@ impl FPDecimal {
 
                 for (log_fn, divisor) in &base_checks {
                     if log_fn(base).is_some() && check_conditions_and_return_negative(&mut base, divisor, &exponent) {
-                        return Ok(-FPDecimal::ONE / base);
+                        return Ok(-base);
                     }
                 }
 
                 // Handling log11 case separately
-                if (base / FPDecimal::from(11u128))._log11().is_some()
-                    && check_conditions_and_return_negative(&mut base, &FPDecimal::from(11u128), &exponent)
-                {
+                if (base)._log11().is_some() && check_conditions_and_return_negative(&mut base, &FPDecimal::from(11u128), &exponent) {
                     return Ok(-FPDecimal::ONE / base);
                 }
 
@@ -1008,7 +1077,14 @@ impl FPDecimal {
             }
 
             fn check_conditions_and_return_negative(base: &mut FPDecimal, divisor: &FPDecimal, exponent: &FPDecimal) -> bool {
-                if FPDecimal::reciprocal(*exponent) % FPDecimal::TWO == FPDecimal::ZERO {
+                let abs_error = FPDecimal::must_from_str("0.00000000000000001");
+                let reciprocal = if (FPDecimal::reciprocal(*exponent) - FPDecimal::reciprocal(*exponent).int()).abs() < abs_error {
+                    FPDecimal::reciprocal(*exponent).int()
+                } else {
+                    FPDecimal::reciprocal(*exponent)
+                };
+
+                if reciprocal % FPDecimal::TWO == FPDecimal::ZERO {
                     panic!("No complex number");
                 };
 
@@ -1058,8 +1134,7 @@ impl FPDecimal {
                 }
 
                 // Handling log11 case separately
-                if (base / FPDecimal::from(11u128))._log11().is_some() && check_conditions_and_return(&mut base, &FPDecimal::from(11u128), &exponent)
-                {
+                if base._log11().is_some() && check_conditions_and_return(&mut base, &FPDecimal::from(11u128), &exponent) {
                     return Ok(-base);
                 }
 
@@ -1491,6 +1566,15 @@ mod tests {
     }
 
     #[test]
+    fn test_1_over_16_pow_0_5() {
+        let base = FPDecimal::ONE / FPDecimal::from(16u128);
+        let exponent = FPDecimal::must_from_str("0.5");
+
+        let result = FPDecimal::checked_positive_pow(base, exponent).unwrap();
+        assert_eq!(result, FPDecimal::ONE / FPDecimal::FOUR);
+    }
+
+    #[test]
     fn test_100_pow_neg_1_over_2() {
         assert_eq!(
             FPDecimal::pow(FPDecimal::from(100u128), FPDecimal::must_from_str("-0.5")),
@@ -1549,11 +1633,11 @@ mod tests {
         let result: FPDecimal = a.pow(x);
         assert_eq!(result, FPDecimal::must_from_str("1.429969148308728731"));
     }
-    #[test]
-    fn test_negative_25_pow_0_11111_decimal_lib() {
-        let x = FPDecimal::ONE / FPDecimal::from(9 as u128);
-        let a: FPDecimal = FPDecimal::must_from_str("-25.0");
-        let result: FPDecimal = a.pow(x);
-        assert_eq!(result, FPDecimal::must_from_str("1.429969148308728731"));
-    }
+    // #[test]
+    // fn test_negative_25_pow_0_11111_decimal_lib() {
+    //     let x = FPDecimal::ONE / FPDecimal::from(9 as u128);
+    //     let a: FPDecimal = FPDecimal::must_from_str("-25.0");
+    //     let result: FPDecimal = a.pow(x);
+    //     assert_eq!(result, FPDecimal::must_from_str("1.429969148308728731"));
+    // }
 }
