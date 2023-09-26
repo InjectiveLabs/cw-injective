@@ -174,6 +174,10 @@ impl FPDecimal {
         num: U256([9_000_000_000_000_000_000, 0, 0, 0]),
         sign: 1,
     };
+    pub const TEN: FPDecimal = FPDecimal {
+        num: U256([10_000_000_000_000_000_000, 0, 0, 0]),
+        sign: 1,
+    };
 
     pub const SMALLEST_PRECISION: FPDecimal = FPDecimal {
         num: U256([1, 0, 0, 0]),
