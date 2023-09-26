@@ -4,7 +4,7 @@ use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use super::market::MarketStatus;
+use super::market::{GenericMarket, MarketStatus};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PerpetualMarketInfo {
@@ -68,4 +68,38 @@ pub struct DerivativeMarket {
     pub status: MarketStatus,
     pub min_price_tick_size: FPDecimal,
     pub min_quantity_tick_size: FPDecimal,
+}
+
+impl GenericMarket for DerivativeMarket {
+    fn get_ticker(&self) -> &str {
+        &self.ticker
+    }
+
+    fn get_quote_denom(&self) -> &str {
+        &self.quote_denom
+    }
+
+    fn get_maker_fee_rate(&self) -> FPDecimal {
+        self.maker_fee_rate
+    }
+
+    fn get_taker_fee_rate(&self) -> FPDecimal {
+        self.taker_fee_rate
+    }
+
+    fn get_market_id(&self) -> &MarketId {
+        &self.market_id
+    }
+
+    fn get_status(&self) -> MarketStatus {
+        self.status
+    }
+
+    fn get_min_price_tick_size(&self) -> FPDecimal {
+        self.min_price_tick_size
+    }
+
+    fn min_quantity_tick_size(&self) -> FPDecimal {
+        self.min_quantity_tick_size
+    }
 }
