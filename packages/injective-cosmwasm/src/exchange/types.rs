@@ -39,7 +39,7 @@ pub struct Params {
     pub derivative_atomic_market_order_fee_multiplier: FPDecimal,
     pub binary_options_atomic_market_order_fee_multiplier: FPDecimal,
     pub minimal_protocol_fee_rate: FPDecimal,
-    pub is_instant_derivative_market_launch_enabled: bool,
+    pub is_instant_derivative_market_launch_enabled: Option<bool>,
 }
 
 /// Deposit is data format for the subaccount deposit

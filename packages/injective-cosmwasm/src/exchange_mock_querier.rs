@@ -308,7 +308,7 @@ fn default_exchange_params_response_handler() -> QuerierResult {
             derivative_atomic_market_order_fee_multiplier: FPDecimal::must_from_str("2.0"),
             binary_options_atomic_market_order_fee_multiplier: FPDecimal::must_from_str("2.0"),
             minimal_protocol_fee_rate: FPDecimal::must_from_str("0.00001"),
-            is_instant_derivative_market_launch_enabled: true,
+            is_instant_derivative_market_launch_enabled: Some(true),
         }),
     };
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
