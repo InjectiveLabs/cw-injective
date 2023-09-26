@@ -21,7 +21,7 @@ use crate::oracle::{
 use crate::tokenfactory::response::{TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
 use crate::wasmx::response::QueryContractRegistrationInfoResponse;
 use crate::{
-    Deposit, DerivativeMarketResponse, ExchangeParamsResponse, FullDerivativeMarket, InjectiveQuery, InjectiveQueryWrapper,
+    CancellationStrategy, Deposit, DerivativeMarketResponse, ExchangeParamsResponse, FullDerivativeMarket, InjectiveQuery, InjectiveQueryWrapper,
     MarketMidPriceAndTOBResponse, MarketStatus, MarketVolatilityResponse, OracleInfo, OracleVolatilityResponse, OrderSide,
     PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PythPriceResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse,
     QueryDenomDecimalResponse, QueryDenomDecimalsResponse, QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarket, SpotMarketResponse,
@@ -347,7 +347,7 @@ pub trait HandlesTraderSpotOrdersToCancelUpToAmountQuery {
         subaccount_id: SubaccountId,
         base_amount: FPDecimal,
         quote_amount: FPDecimal,
-        strategy: i32,
+        strategy: CancellationStrategy,
         reference_price: Option<FPDecimal>,
     ) -> QuerierResult;
 }
@@ -358,7 +358,7 @@ pub trait HandlesTraderDerivativeOrdersToCancelUpToAmountQuery {
         market_id: MarketId,
         subaccount_id: SubaccountId,
         quote_amount: FPDecimal,
-        strategy: i32,
+        strategy: CancellationStrategy,
         reference_price: Option<FPDecimal>,
     ) -> QuerierResult;
 }
@@ -772,8 +772,8 @@ pub mod handlers {
     use crate::tokenfactory::response::{TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
     use crate::wasmx::{response::QueryContractRegistrationInfoResponse, types::RegisteredContract};
     use crate::{
-        exchange_mock_querier::TestCoin, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition, FullDerivativeMarket,
-        FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery,
+        exchange_mock_querier::TestCoin, CancellationStrategy, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition,
+        FullDerivativeMarket, FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery,
         HandlesPriceLevelsQuery, HandlesSmartQuery, HandlesSubaccountAndDenomQuery, HandlesTraderSpotOrdersToCancelUpToAmountQuery, MarketId,
         MetadataStatistics, OracleVolatilityResponse, OrderSide, Position, PriceLevel, QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarket,
         SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountId, SubaccountPositionInMarketResponse,
@@ -898,7 +898,7 @@ pub mod handlers {
         Some(Box::new(Temp { markets }))
     }
 
-    pub type SpotUpToAmountConsumingFunction = fn(MarketId, SubaccountId, FPDecimal, FPDecimal, i32, Option<FPDecimal>);
+    pub type SpotUpToAmountConsumingFunction = fn(MarketId, SubaccountId, FPDecimal, FPDecimal, CancellationStrategy, Option<FPDecimal>);
 
     pub fn create_spot_orders_up_to_amount_handler(
         orders: Option<Vec<TrimmedSpotLimitOrder>>,
@@ -915,7 +915,7 @@ pub mod handlers {
                 subaccount_id: SubaccountId,
                 base_amount: FPDecimal,
                 quote_amount: FPDecimal,
-                strategy: i32,
+                strategy: CancellationStrategy,
                 reference_price: Option<FPDecimal>,
             ) -> QuerierResult {
                 if self.assertion.is_some() {
@@ -930,7 +930,7 @@ pub mod handlers {
         Some(Box::new(Temp { orders, assertion }))
     }
 
-    pub type DerivativeUpToAmountConsumingFunction = fn(MarketId, SubaccountId, FPDecimal, i32, Option<FPDecimal>);
+    pub type DerivativeUpToAmountConsumingFunction = fn(MarketId, SubaccountId, FPDecimal, CancellationStrategy, Option<FPDecimal>);
 
     pub fn create_derivative_orders_up_to_amount_handler(
         orders: Option<Vec<TrimmedDerivativeLimitOrder>>,
@@ -946,7 +946,7 @@ pub mod handlers {
                 market_id: MarketId,
                 subaccount_id: SubaccountId,
                 quote_amount: FPDecimal,
-                strategy: i32,
+                strategy: CancellationStrategy,
                 reference_price: Option<FPDecimal>,
             ) -> QuerierResult {
                 if self.assertion.is_some() {
