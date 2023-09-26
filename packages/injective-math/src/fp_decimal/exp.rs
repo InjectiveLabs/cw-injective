@@ -205,7 +205,7 @@ impl FPDecimal {
                 if exponent == FPDecimal::NINE {
                     return Ok(FPDecimal::from(1000000000u128));
                 }
-                if exponent == FPDecimal::from(10u128) {
+                if exponent == FPDecimal::TEN {
                     return Ok(FPDecimal::from(10000000000u128));
                 }
                 if exponent == FPDecimal::from(11u128) {
@@ -563,32 +563,34 @@ impl FPDecimal {
                 // taylor expansion approximation of exponentiation computation with float number exponent
                 // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
                 let reciprocal = FPDecimal::reciprocal(exponent);
-                if base._log2().is_some() {
+                if base._log2().is_some() && base._log2() == Some(reciprocal) {
                     if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::TWO) {
                         return Ok(value);
                     }
                 }
-                if base._log3().is_some() {
+                if base._log3().is_some() && base._log3() == Some(reciprocal) {
                     if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::THREE) {
                         return Ok(value);
                     }
                 }
-                if base._log5().is_some() {
+                if base._log5().is_some() && base._log5() == Some(reciprocal) {
+                    // if base._log5().unwrap() == reciprocal {
                     if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::FIVE) {
                         return Ok(value);
                     }
+                    // }
                 }
-                if base._log7().is_some() {
+                if base._log7().is_some() && base._log7() == Some(reciprocal) {
                     if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::SEVEN) {
                         return Ok(value);
                     }
                 }
-                if base._log10().is_some() {
+                if base._log10().is_some() && base._log10() == Some(reciprocal) {
                     if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::TEN) {
                         return Ok(value);
                     }
                 }
-                if base._log11().is_some() {
+                if base._log11().is_some() && base._log11() == Some(reciprocal) {
                     if let Some(value) = positive_exponent_check_basic_log(base, exponent, reciprocal, FPDecimal::from(11u128)) {
                         return Ok(value);
                     }
@@ -960,12 +962,16 @@ impl FPDecimal {
                         match exponent.cmp(&(FPDecimal::ONE)) {
                             Ordering::Equal => Ok(FPDecimal::ONE / base),
                             Ordering::Less => compute_negative_exponent_less_one(base, exponent, N_TERMS),
-                            Ordering::Greater => compute_negative_exponent_greater_one(base, exponent, N_TERMS),
+                            // Ordering::Less => compute_exponent_less_one(FPDecimal::ONE / base, exponent, N_TERMS),
+                            // Ordering::Greater => compute_negative_exponent_greater_one(base, exponent, N_TERMS),
+                            // Ordering::Greater => compute_exponent_greater_one(FPDecimal::ONE / base, exponent, N_TERMS),
+                            Ordering::Greater => compute_negative_exponent_greater_one(FPDecimal::ONE / base, exponent, N_TERMS),
                         }
                     }
                     Ordering::Greater => match exponent.cmp(&FPDecimal::ONE) {
                         Ordering::Equal => Ok(base),
                         Ordering::Less => compute_positive_exponent_less_one(base, exponent, N_TERMS),
+                        // Ordering::Less => compute_exponent_less_one(base, exponent, N_TERMS),
                         Ordering::Greater => compute_positive_exponent_greater_one(base, exponent),
                     },
                 }
@@ -992,7 +998,7 @@ impl FPDecimal {
                 }
 
                 // Handling log11 case separately
-                if (base / FPDecimal::from(11u128))._log10().is_some()
+                if (base / FPDecimal::from(11u128))._log11().is_some()
                     && check_conditions_and_return_negative(&mut base, &FPDecimal::from(11u128), &exponent)
                 {
                     return Ok(-FPDecimal::ONE / base);
@@ -1052,7 +1058,7 @@ impl FPDecimal {
                 }
 
                 // Handling log11 case separately
-                if (base / FPDecimal::from(11u128))._log10().is_some() && check_conditions_and_return(&mut base, &FPDecimal::from(11u128), &exponent)
+                if (base / FPDecimal::from(11u128))._log11().is_some() && check_conditions_and_return(&mut base, &FPDecimal::from(11u128), &exponent)
                 {
                     return Ok(-base);
                 }
@@ -1528,5 +1534,26 @@ mod tests {
     #[test]
     fn test_exp_log_2() {
         assert_eq!(FPDecimal::E.pow(FPDecimal::must_from_str("2.0").ln()), FPDecimal::must_from_str("2.0"));
+    }
+    #[test]
+    fn test_25_pow_0_11111() {
+        let power = FPDecimal::ONE / FPDecimal::from(9 as u128);
+        let result: FPDecimal = FPDecimal::must_from_str("25.0").ln() * power;
+        let dampen: FPDecimal = FPDecimal::E.pow(result);
+        assert_eq!(dampen, FPDecimal::must_from_str("1.429969148308728731"));
+    }
+    #[test]
+    fn test_25_pow_0_11111_decimal_lib() {
+        let x = FPDecimal::ONE / FPDecimal::from(9 as u128);
+        let a: FPDecimal = FPDecimal::must_from_str("25.0");
+        let result: FPDecimal = a.pow(x);
+        assert_eq!(result, FPDecimal::must_from_str("1.429969148308728731"));
+    }
+    #[test]
+    fn test_negative_25_pow_0_11111_decimal_lib() {
+        let x = FPDecimal::ONE / FPDecimal::from(9 as u128);
+        let a: FPDecimal = FPDecimal::must_from_str("-25.0");
+        let result: FPDecimal = a.pow(x);
+        assert_eq!(result, FPDecimal::must_from_str("1.429969148308728731"));
     }
 }
