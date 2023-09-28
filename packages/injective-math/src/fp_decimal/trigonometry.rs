@@ -1,5 +1,3 @@
-use num::pow::Pow;
-
 use crate::fp_decimal::FPDecimal;
 
 impl FPDecimal {

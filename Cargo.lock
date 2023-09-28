@@ -894,7 +894,6 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "ethereum-types",
- "num 0.4.1",
  "schemars",
  "serde 1.0.188",
  "subtle-encoding",

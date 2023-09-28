@@ -1,5 +1,4 @@
 use crate::fp_decimal::FPDecimal;
-use num::pow::Pow;
 
 pub trait Scaled {
     fn scaled(self, digits: i32) -> Self;
