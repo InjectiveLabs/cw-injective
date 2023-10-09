@@ -861,7 +861,7 @@ dependencies = [
  "cw-storage-plus 0.15.1",
  "ethereum-types",
  "hex",
- "injective-math 0.1.22",
+ "injective-math 0.1.23",
  "schemars",
  "serde 1.0.188",
  "serde-json-wasm 0.4.1",
@@ -888,7 +888,7 @@ dependencies = [
 
 [[package]]
 name = "injective-math"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "bigint",
  "cosmwasm-schema",
@@ -937,7 +937,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-multi-test",
  "injective-cosmwasm 0.2.14",
- "injective-math 0.1.22",
+ "injective-math 0.1.23",
  "rand 0.4.6",
  "secp256k1",
  "serde 1.0.188",
