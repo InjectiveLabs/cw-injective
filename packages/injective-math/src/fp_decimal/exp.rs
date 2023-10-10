@@ -4,7 +4,6 @@ use std::str::FromStr;
 
 /// Exponential functions for FPDecimal
 use crate::fp_decimal::{FPDecimal, U256};
-use num::pow::Pow;
 
 impl FPDecimal {
     #[allow(clippy::many_single_char_names)]
@@ -1093,20 +1092,15 @@ impl FPDecimal {
             })
         }
     }
-}
-
-impl Pow<FPDecimal> for FPDecimal {
-    type Output = Self;
-
-    /// Raises a value to the power of `exp`, panics if an overflow occurred.
-    fn pow(self, exp: FPDecimal) -> Self {
+    pub fn pow(self, exponent: FPDecimal) -> FPDecimal {
+        // fn pow(self, exp: FPDecimal) -> Self {
         if self >= FPDecimal::ZERO {
-            match self.checked_positive_pow(exp) {
+            match self.checked_positive_pow(exponent) {
                 Ok(value) => value,
                 Err(_) => panic!("Multiplication overflow"),
             }
         } else {
-            match self.checked_negative_pow(exp) {
+            match self.checked_negative_pow(exponent) {
                 Ok(value) => value,
                 Err(_) => panic!("Multiplication overflow"),
             }
@@ -1119,7 +1113,6 @@ mod tests {
 
     use crate::FPDecimal;
     use bigint::U256;
-    use num::pow::Pow;
     use std::str::FromStr;
 
     #[test]
