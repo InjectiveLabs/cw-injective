@@ -93,7 +93,7 @@ pub(crate) mod testing_helpers {
             api: MockApi::default(),
             storage: MockStorage::default(),
             querier: custom_querier,
-            custom_query_type: PhantomData::default(),
+            custom_query_type: PhantomData,
         }
     }
 

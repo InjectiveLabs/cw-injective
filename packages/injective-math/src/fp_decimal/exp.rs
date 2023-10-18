@@ -1520,14 +1520,14 @@ mod tests {
     }
     #[test]
     fn test_25_pow_0_11111() {
-        let power = FPDecimal::ONE / FPDecimal::from(9 as u128);
+        let power = FPDecimal::ONE / FPDecimal::from(9_u128);
         let result: FPDecimal = FPDecimal::must_from_str("25.0").ln() * power;
         let dampen: FPDecimal = FPDecimal::E.pow(result);
         assert_eq!(dampen, FPDecimal::must_from_str("1.429969148308728731"));
     }
     #[test]
     fn test_25_pow_0_11111_decimal_lib() {
-        let x = FPDecimal::ONE / FPDecimal::from(9 as u128);
+        let x = FPDecimal::ONE / FPDecimal::from(9_u128);
         let a: FPDecimal = FPDecimal::must_from_str("25.0");
         let result: FPDecimal = a.pow(x);
         assert_eq!(result, FPDecimal::must_from_str("1.429969148308728731"));

@@ -703,12 +703,12 @@ mod tests {
 
     #[test]
     fn test_chain_sum() {
-        let vector = vec![FPDecimal::ZERO, FPDecimal::ONE, FPDecimal::TWO, FPDecimal::THREE];
+        let vector = [FPDecimal::ZERO, FPDecimal::ONE, FPDecimal::TWO, FPDecimal::THREE];
         assert_eq!(FPDecimal::SIX, vector.iter().sum());
     }
     #[test]
     fn test_chain_sum_equal_zero() {
-        let vector = vec![FPDecimal::ZERO, FPDecimal::ONE, FPDecimal::TWO, -FPDecimal::THREE];
+        let vector = [FPDecimal::ZERO, FPDecimal::ONE, FPDecimal::TWO, -FPDecimal::THREE];
         assert_eq!(FPDecimal::ZERO, vector.iter().sum());
     }
 }
