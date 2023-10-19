@@ -18,12 +18,14 @@ impl FPDecimal {
                 sign: x.sign,
             };
         }
-        let mut sign = y.sign;
         if y.num == x.num {
-            sign = 1;
+            return FPDecimal::ZERO;
         }
 
-        FPDecimal { num: y.num - x.num, sign }
+        FPDecimal {
+            num: y.num - x.num,
+            sign: y.sign,
+        }
     }
 
     pub fn add(&self, other: i128) -> FPDecimal {
@@ -79,7 +81,7 @@ impl FPDecimal {
 
         let num = FPDecimal::ONE.num.full_mul(x.num) / y.num.into();
         if num.is_zero() {
-            return FPDecimal::zero();
+            return FPDecimal::ZERO;
         }
 
         FPDecimal {
@@ -88,11 +90,11 @@ impl FPDecimal {
         }
     }
 
-    pub fn div(&self, other: i128) -> FPDecimal {
+    pub fn div(&self, other: i128) -> Self {
         FPDecimal::_div(*self, FPDecimal::from(other))
     }
 
-    pub fn reciprocal(x: FPDecimal) -> FPDecimal {
+    pub fn reciprocal(x: FPDecimal) -> Self {
         assert!(x.num != U256::zero());
         FPDecimal {
             num: FPDecimal::ONE.num * FPDecimal::ONE.num / x.num,
@@ -100,7 +102,7 @@ impl FPDecimal {
         }
     }
 
-    pub fn abs(&self) -> FPDecimal {
+    pub fn abs(&self) -> Self {
         FPDecimal { num: self.num, sign: 1i8 }
     }
 
@@ -239,7 +241,6 @@ impl<'a> iter::Sum<&'a Self> for FPDecimal {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
 
     use crate::FPDecimal;
     use bigint::U256;
@@ -354,65 +355,65 @@ mod tests {
     fn test_mul_precisions() {
         // 8.33157469 * 0.000000000001 = 0.00000000000833157469
         assert_eq!(
-            FPDecimal::from_str("8.33157469").unwrap() * FPDecimal::from_str("0.000000000001").unwrap(),
-            FPDecimal::from_str("0.000000000008331574").unwrap()
+            FPDecimal::must_from_str("8.33157469") * FPDecimal::must_from_str("0.000000000001"),
+            FPDecimal::must_from_str("0.000000000008331574")
         );
 
         // 1.5 * 1.5 = 2.25
         assert_eq!(
-            FPDecimal::from_str("1.5").unwrap() * FPDecimal::from_str("1.5").unwrap(),
-            FPDecimal::from_str("2.25").unwrap()
+            FPDecimal::must_from_str("1.5") * FPDecimal::must_from_str("1.5"),
+            FPDecimal::must_from_str("2.25")
         );
 
         // 2.718281828459045235 * 2.718281828459045235 = 7.389056098930650225
-        assert_eq!(FPDecimal::E * FPDecimal::E, FPDecimal::from_str("7.389056098930650225").unwrap());
+        assert_eq!(FPDecimal::E * FPDecimal::E, FPDecimal::must_from_str("7.389056098930650225"));
 
         // 0.5 * 0.5 = 0.25
         assert_eq!(
-            FPDecimal::from_str("0.5").unwrap() * FPDecimal::from_str("0.5").unwrap(),
-            FPDecimal::from_str("0.25").unwrap()
+            FPDecimal::must_from_str("0.5") * FPDecimal::must_from_str("0.5"),
+            FPDecimal::must_from_str("0.25")
         );
 
         // 5 * 0.5 = 2.5
-        assert_eq!(FPDecimal::FIVE * FPDecimal::from_str("0.5").unwrap(), FPDecimal::from_str("2.5").unwrap());
+        assert_eq!(FPDecimal::FIVE * FPDecimal::must_from_str("0.5"), FPDecimal::must_from_str("2.5"));
 
         // 0.5 * 5 = 2.5
-        assert_eq!(FPDecimal::from_str("0.5").unwrap() * FPDecimal::FIVE, FPDecimal::from_str("2.5").unwrap());
+        assert_eq!(FPDecimal::must_from_str("0.5") * FPDecimal::FIVE, FPDecimal::must_from_str("2.5"));
 
         // 4 * 2.5 = 10
-        assert_eq!(FPDecimal::FOUR * FPDecimal::from_str("2.5").unwrap(), FPDecimal::from_str("10").unwrap());
+        assert_eq!(FPDecimal::FOUR * FPDecimal::must_from_str("2.5"), FPDecimal::must_from_str("10"));
 
         // 2.5 * 4 = 10
-        assert_eq!(FPDecimal::from_str("2.5").unwrap() * FPDecimal::FOUR, FPDecimal::from_str("10").unwrap());
+        assert_eq!(FPDecimal::must_from_str("2.5") * FPDecimal::FOUR, FPDecimal::must_from_str("10"));
 
         // 0.000000008 * 0.9 = 0.0000000072
         assert_eq!(
-            FPDecimal::from_str("0.000000008").unwrap() * FPDecimal::from_str("0.9").unwrap(),
-            FPDecimal::from_str("0.0000000072").unwrap()
+            FPDecimal::must_from_str("0.000000008") * FPDecimal::must_from_str("0.9"),
+            FPDecimal::must_from_str("0.0000000072")
         );
 
         // 0.0000000008 * 0.9 = 0.00000000072
         assert_eq!(
-            FPDecimal::from_str("0.0000000008").unwrap() * FPDecimal::from_str("0.9").unwrap(),
-            FPDecimal::from_str("0.00000000072").unwrap()
+            FPDecimal::must_from_str("0.0000000008") * FPDecimal::must_from_str("0.9"),
+            FPDecimal::must_from_str("0.00000000072")
         );
 
         // -0.5 * 0.5 = -0.25
         assert_eq!(
-            FPDecimal::from_str("-0.5").unwrap() * FPDecimal::from_str("0.5").unwrap(),
-            FPDecimal::from_str("-0.25").unwrap()
+            FPDecimal::must_from_str("-0.5") * FPDecimal::must_from_str("0.5"),
+            FPDecimal::must_from_str("-0.25")
         );
 
         // -0.5 * -0.5 = 0.25
         assert_eq!(
-            FPDecimal::from_str("-0.5").unwrap() * FPDecimal::from_str("-0.5").unwrap(),
-            FPDecimal::from_str("0.25").unwrap()
+            FPDecimal::must_from_str("-0.5") * FPDecimal::must_from_str("-0.5"),
+            FPDecimal::must_from_str("0.25")
         );
 
         // -5 * -3 = 15
         assert_eq!(
-            FPDecimal::from_str("-5").unwrap() * FPDecimal::from_str("-3").unwrap(),
-            FPDecimal::from_str("15").unwrap()
+            FPDecimal::must_from_str("-5") * FPDecimal::must_from_str("-3"),
+            FPDecimal::must_from_str("15")
         );
     }
 
@@ -568,7 +569,7 @@ mod tests {
         };
         five -= four;
         let one = five;
-        assert_eq!(one, FPDecimal::one());
+        assert_eq!(one, FPDecimal::ONE);
 
         let mut one = one;
         let five = FPDecimal {
@@ -635,7 +636,7 @@ mod tests {
         let val = FPDecimal::TWO;
         assert!(!val.is_negative());
 
-        let val = FPDecimal::zero();
+        let val = FPDecimal::ZERO;
         assert!(!val.is_negative());
 
         // even a manually assigned negative zero value returns positive
@@ -654,10 +655,10 @@ mod tests {
         let lhs = FPDecimal::from(2u128);
         let rhs = FPDecimal::from(3u128);
         let ans = lhs.abs_diff(&rhs);
-        assert_eq!(FPDecimal::one(), ans);
+        assert_eq!(FPDecimal::ONE, ans);
 
         let lhs = FPDecimal::from(3u128);
-        let rhs = FPDecimal::one();
+        let rhs = FPDecimal::ONE;
         let ans = lhs.abs_diff(&rhs);
         assert_eq!(FPDecimal::from(2u128), ans);
 

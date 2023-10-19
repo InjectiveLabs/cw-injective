@@ -8,7 +8,7 @@ impl FPDecimal {
         }
 
         if let Some(value) = self._log_e() {
-            //NOTE: base e can't be represented by u128, so we  27 in here
+            //NOTE: base e can't be represented by u128, so we use 27 in here
             return Some((value, 27u128));
         }
         if let Some(value) = self._log3() {
@@ -521,9 +521,9 @@ impl FPDecimal {
     #[allow(clippy::many_single_char_names)]
     pub fn _ln(a: FPDecimal) -> FPDecimal {
         assert!(a.sign != 0);
-        assert!(a != FPDecimal::zero());
+        assert!(a != FPDecimal::ZERO);
         let mut v = a.num;
-        let mut r = FPDecimal::zero();
+        let mut r = FPDecimal::ZERO;
         while v <= FPDecimal::ONE.num / U256([10, 0, 0, 0]) {
             v = v * U256([10, 0, 0, 0]);
             r -= FPDecimal::LN_10;
@@ -630,9 +630,9 @@ mod tests {
 
     #[test]
     fn test_ln_sanity() {
-        let half = FPDecimal::one().div(2i128);
+        let half = FPDecimal::ONE.div(2i128);
         println!("{}", FPDecimal::_ln(half)); // works if you comment this out
-        let num = FPDecimal::one().mul(5).div(4);
+        let num = FPDecimal::ONE.mul(5).div(4);
         println!("{}", FPDecimal::checked_positive_pow(num, half).unwrap());
     }
 

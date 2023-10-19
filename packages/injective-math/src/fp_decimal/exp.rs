@@ -32,7 +32,7 @@ impl FPDecimal {
         // otherwise if there is a long enough delay between updates on a cluster
         // the penalty function will be bricked
         if a.sign == 0 && a.num >= FPDecimal::from(45i128).num {
-            return FPDecimal::zero();
+            return FPDecimal::ZERO;
         }
         let mut x = a.num;
         let mut r = FPDecimal::ONE;
@@ -46,7 +46,7 @@ impl FPDecimal {
                 return FPDecimal::reciprocal(val);
             }
             return val;
-        } else if x == FPDecimal::zero().num {
+        } else if x == FPDecimal::ZERO.num {
             let val = r;
             if a.sign == 0 {
                 return FPDecimal::reciprocal(val);
@@ -70,17 +70,17 @@ impl FPDecimal {
     pub fn _sqrt(a: FPDecimal) -> Option<FPDecimal> {
         const MAX_ITERATIONS: i64 = 300;
 
-        if a < FPDecimal::zero() {
+        if a < FPDecimal::ZERO {
             return None;
         }
 
         if a.is_zero() {
-            return Some(FPDecimal::zero());
+            return Some(FPDecimal::ZERO);
         }
 
         // Start with an arbitrary number as the first guess
         let mut r = a / FPDecimal::TWO;
-        let mut l = r + FPDecimal::one();
+        let mut l = r + FPDecimal::ONE;
 
         // Keep going while the difference is larger than the tolerance
         let mut c = 0i64;
@@ -104,11 +104,11 @@ impl FPDecimal {
             // This uses the exponentiation by squaring algorithm:
             // https://en.wikipedia.org/wiki/Exponentiation_by_squaring#Basic_method
 
-            if self == FPDecimal::zero() {
-                return Ok(FPDecimal::zero());
+            if self == FPDecimal::ZERO {
+                return Ok(FPDecimal::ZERO);
             }
-            if self > FPDecimal::zero() && exponent == FPDecimal::zero() {
-                return Ok(FPDecimal::one());
+            if self > FPDecimal::ZERO && exponent == FPDecimal::ZERO {
+                return Ok(FPDecimal::ONE);
             }
 
             if exponent > FPDecimal::from(60u128) {
@@ -176,7 +176,7 @@ impl FPDecimal {
             }
 
             if self == FPDecimal::from(10u128) {
-                if exponent == FPDecimal::one() {
+                if exponent == FPDecimal::ONE {
                     return Ok(FPDecimal::from(10u128));
                 }
                 if exponent == FPDecimal::TWO {
@@ -291,7 +291,7 @@ impl FPDecimal {
                     return Ok(FPDecimal::from_str("0.000000000000000001").unwrap());
                 }
                 if exponent < FPDecimal::from_str("-18").unwrap() {
-                    return Ok(FPDecimal::zero());
+                    return Ok(FPDecimal::ZERO);
                 }
                 if exponent == FPDecimal::from(21u128) {
                     return Ok(FPDecimal::from(1000000000000000000000u128));
@@ -418,7 +418,7 @@ impl FPDecimal {
                 // 14 terms taylor expansion provides a good enough approximation
                 const N_TERMS: u128 = 13;
                 match exponent.cmp(&FPDecimal::ZERO) {
-                    Ordering::Equal => Ok(FPDecimal::one()),
+                    Ordering::Equal => Ok(FPDecimal::ONE),
                     // Negative exponent
                     Ordering::Less => {
                         exponent = -exponent;
@@ -445,7 +445,7 @@ impl FPDecimal {
                     float_exp = FPDecimal::_exp_taylor_expansion(FPDecimal::ONE / base, rem_b, n_terms);
                 }
                 let mut tmp_a = FPDecimal::ONE;
-                while int_b > FPDecimal::one() {
+                while int_b > FPDecimal::ONE {
                     if int_b.num % FPDecimal::TWO.num == FPDecimal::ONE.num {
                         tmp_a = base * tmp_a;
                         int_b -= FPDecimal::ONE;
@@ -584,7 +584,7 @@ impl FPDecimal {
             fn compute_integer_exponentiation(mut base: FPDecimal, mut exponent: FPDecimal) -> FPDecimal {
                 let mut temp_base = FPDecimal::ONE;
 
-                while exponent > FPDecimal::one() {
+                while exponent > FPDecimal::ONE {
                     if exponent.num % FPDecimal::TWO.num == FPDecimal::ONE.num {
                         temp_base = base * temp_base;
                         exponent -= FPDecimal::ONE;
@@ -625,10 +625,10 @@ impl FPDecimal {
             // This uses the exponentiation by squaring algorithm:
             // https://en.wikipedia.org/wiki/Exponentiation_by_squaring#Basic_method
 
-            if self == FPDecimal::zero() {
-                return Ok(FPDecimal::zero());
+            if self == FPDecimal::ZERO {
+                return Ok(FPDecimal::ZERO);
             }
-            if self.is_negative() && exponent == FPDecimal::zero() {
+            if self.is_negative() && exponent == FPDecimal::ZERO {
                 return Ok(FPDecimal::NEGATIVE_ONE);
             }
             if exponent > FPDecimal::from(60u128) {
@@ -811,7 +811,7 @@ impl FPDecimal {
                     return Ok(FPDecimal::from_str("0.000000000000000001").unwrap());
                 }
                 if exponent < FPDecimal::from_str("-18").unwrap() {
-                    return Ok(FPDecimal::zero());
+                    return Ok(FPDecimal::ZERO);
                 }
 
                 if exponent == FPDecimal::from(21u128) {
@@ -938,7 +938,7 @@ impl FPDecimal {
                 // 14 terms taylor expansion provides a good enough approximation
                 const N_TERMS: u128 = 13;
                 match exponent.cmp(&FPDecimal::ZERO) {
-                    Ordering::Equal => Ok(FPDecimal::one()),
+                    Ordering::Equal => Ok(FPDecimal::ONE),
                     Ordering::Less => {
                         exponent = -exponent;
                         match exponent.cmp(&(FPDecimal::ONE)) {
@@ -1065,7 +1065,7 @@ impl FPDecimal {
 
             fn compute_integer_exponentiation(mut base: FPDecimal, mut exponent: FPDecimal) -> FPDecimal {
                 let mut temp_base = FPDecimal::ONE;
-                while exponent > FPDecimal::one() {
+                while exponent > FPDecimal::ONE {
                     if exponent.num % FPDecimal::TWO.num == FPDecimal::ONE.num {
                         temp_base = base * temp_base;
                         exponent -= FPDecimal::ONE;
@@ -1122,7 +1122,7 @@ mod tests {
 
     #[test]
     fn test_exp0() {
-        assert_eq!(FPDecimal::_exp(FPDecimal::zero()), FPDecimal::ONE);
+        assert_eq!(FPDecimal::_exp(FPDecimal::ZERO), FPDecimal::ONE);
     }
 
     #[test]
@@ -1138,7 +1138,7 @@ mod tests {
 
     #[test]
     fn test_pow_zero() {
-        FPDecimal::pow(FPDecimal::zero(), FPDecimal::one().div(2i128));
+        FPDecimal::pow(FPDecimal::ZERO, FPDecimal::ONE.div(2i128));
         assert_eq!(FPDecimal::ZERO.pow(FPDecimal::ONE), FPDecimal::ZERO);
     }
 
@@ -1290,7 +1290,7 @@ mod tests {
 
     #[test]
     fn test_pow_exp0() {
-        assert_eq!(FPDecimal::E.pow(FPDecimal::zero()), FPDecimal::ONE);
+        assert_eq!(FPDecimal::E.pow(FPDecimal::ZERO), FPDecimal::ONE);
     }
 
     #[test]
@@ -1306,7 +1306,7 @@ mod tests {
 
     #[test]
     fn test_pow_zero_2() {
-        FPDecimal::ZERO.pow(FPDecimal::one().div(2i128));
+        FPDecimal::ZERO.pow(FPDecimal::ONE.div(2i128));
     }
 
     #[test]
@@ -1314,8 +1314,8 @@ mod tests {
         let inputs: Vec<i128> = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 16, 25, -1];
 
         let expected: Vec<Option<FPDecimal>> = vec![
-            Some(FPDecimal::zero()),
-            Some(FPDecimal::one()),
+            Some(FPDecimal::ZERO),
+            Some(FPDecimal::ONE),
             Some(FPDecimal::from_str("1.414213562373095048").unwrap()),
             Some(FPDecimal::from_str("1.732050807568877293").unwrap()),
             Some(FPDecimal::TWO),
@@ -1395,7 +1395,7 @@ mod tests {
     #[test]
     fn test_pow_10_underflow() {
         let base = FPDecimal::from(10u128);
-        assert_eq!(base.pow(FPDecimal::from_str("-19").unwrap()), FPDecimal::zero());
+        assert_eq!(base.pow(FPDecimal::from_str("-19").unwrap()), FPDecimal::ZERO);
     }
 
     #[test]

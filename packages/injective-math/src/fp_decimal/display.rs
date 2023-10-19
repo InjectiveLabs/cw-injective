@@ -7,7 +7,7 @@ impl fmt::Display for FPDecimal {
         let integer = self.int().abs();
         let fraction = (FPDecimal::_fraction(*self)).abs();
 
-        if fraction == FPDecimal::zero() {
+        if fraction == FPDecimal::ZERO {
             write!(f, "{}{}", sign, integer.num / FPDecimal::ONE.num)
         } else {
             let fraction_string = fraction.num.to_string(); //

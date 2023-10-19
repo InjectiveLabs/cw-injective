@@ -11,7 +11,7 @@ impl Scaled for FPDecimal {
 }
 
 pub fn dec_scale_factor() -> FPDecimal {
-    FPDecimal::one().scaled(18)
+    FPDecimal::ONE.scaled(18)
 }
 
 #[cfg(test)]

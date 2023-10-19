@@ -189,38 +189,31 @@ impl FPDecimal {
         sign: 1,
     };
 
+    pub const E: FPDecimal = FPDecimal {
+        // 1_000_000_000_000_000_000
+        num: U256([2_718_281_828_459_045_235, 0, 0, 0]),
+        sign: 1,
+    };
+
     pub const E_10: FPDecimal = FPDecimal {
         num: U256([1053370797511854089u64, 1194u64, 0, 0]),
         sign: 1,
     }; // e^10
-
-    pub const E: FPDecimal = FPDecimal {
-        num: U256([2718281828459045235, 0, 0, 0]),
-        sign: 1,
-    };
-
-    pub const LN_10: FPDecimal = FPDecimal {
-        num: U256([2302585092994045684, 0, 0, 0]),
-        sign: 1,
-    }; // ln(10)
 
     pub const LN_1_5: FPDecimal = FPDecimal {
         num: U256([405465108108164382, 0, 0, 0]),
         sign: 1,
     }; // ln(1.5)
 
+    pub const LN_10: FPDecimal = FPDecimal {
+        num: U256([2302585092994045684, 0, 0, 0]),
+        sign: 1,
+    }; // ln(10)
+
     pub const PI: FPDecimal = FPDecimal {
         num: U256([3_141_592_653_589_793_238, 0, 0, 0]),
         sign: 1,
     };
-
-    pub const fn one() -> FPDecimal {
-        FPDecimal::ONE
-    }
-
-    pub const fn zero() -> FPDecimal {
-        FPDecimal::ZERO
-    }
 
     pub fn is_zero(&self) -> bool {
         self.num.is_zero()
@@ -235,37 +228,21 @@ impl FPDecimal {
         self.sign == 0
     }
 
-    pub const fn max() -> FPDecimal {
-        FPDecimal::MAX
-    }
-
-    pub const fn min() -> FPDecimal {
-        FPDecimal::MIN
-    }
-
-    pub const fn e() -> FPDecimal {
-        FPDecimal::E
-    }
-
-    pub fn _int(x: FPDecimal) -> FPDecimal {
+    pub fn _int(x: FPDecimal) -> Self {
         let x1 = x.num;
         let x1_1 = x1 / FPDecimal::ONE.num;
         let x_final = x1_1 * FPDecimal::ONE.num;
         FPDecimal { num: x_final, sign: x.sign }
     }
 
-    pub fn int(&self) -> FPDecimal {
+    pub fn int(&self) -> Self {
         FPDecimal::_int(*self)
     }
     pub fn is_int(&self) -> bool {
         *self == self.int()
     }
 
-    pub fn _sign(x: FPDecimal) -> i8 {
-        x.sign
-    }
-
-    pub fn _fraction(x: FPDecimal) -> FPDecimal {
+    pub fn _fraction(x: FPDecimal) -> Self {
         let x1 = x.num;
         FPDecimal {
             num: x1 - FPDecimal::_int(x).num,
@@ -273,7 +250,7 @@ impl FPDecimal {
         }
     }
 
-    pub fn fraction(&self) -> FPDecimal {
+    pub fn fraction(&self) -> Self {
         FPDecimal::_fraction(*self)
     }
 
@@ -395,7 +372,7 @@ mod tests {
         assert_eq!(decimal_valid.to_string(), fp_decimal_valid.to_string());
 
         // Test a valid zero value
-        let fp_decimal_zero = FPDecimal::zero();
+        let fp_decimal_zero = FPDecimal::ZERO;
         let decimal_zero = Decimal256::try_from(fp_decimal_zero).unwrap();
         assert_eq!(decimal_zero.to_string(), "0");
 

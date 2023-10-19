@@ -1,16 +1,11 @@
 use crate::fp_decimal::FPDecimal;
 
 pub fn sum(vec: &[FPDecimal]) -> FPDecimal {
-    vec.iter().fold(FPDecimal::zero(), |acc, &el| acc + el)
+    vec.iter().fold(FPDecimal::ZERO, |acc, &el| acc + el)
 }
 
 pub fn dot(vec: &[FPDecimal], other: &[FPDecimal]) -> FPDecimal {
-    let mut sum = FPDecimal::zero();
-    let mul_result: Vec<FPDecimal> = mul(vec, other);
-    for item in mul_result {
-        sum += item;
-    }
-    sum
+    mul(vec, other).iter().sum()
 }
 
 pub fn mul(vec: &[FPDecimal], other: &[FPDecimal]) -> Vec<FPDecimal> {

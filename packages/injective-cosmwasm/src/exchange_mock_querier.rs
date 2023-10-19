@@ -106,7 +106,7 @@ fn default_derivative_market_response_handler(market_id: MarketId) -> QuerierRes
                 min_quantity_tick_size: FPDecimal::from_str("0.0001").unwrap(),
             }),
             info: None,
-            mark_price: FPDecimal::one(),
+            mark_price: FPDecimal::ONE,
         }),
     };
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
@@ -153,7 +153,7 @@ fn default_perpetual_market_funding_response_handler() -> QuerierResult {
 
 fn default_market_volatility_response_handler() -> QuerierResult {
     let response = MarketVolatilityResponse {
-        volatility: Some(FPDecimal::one()),
+        volatility: Some(FPDecimal::ONE),
         history_metadata: None,
         raw_history: None,
     };
@@ -222,7 +222,7 @@ fn default_denom_decimals_handler() -> QuerierResult {
 
 fn default_oracle_volatility_response_handler() -> QuerierResult {
     let response = OracleVolatilityResponse {
-        volatility: Some(FPDecimal::one()),
+        volatility: Some(FPDecimal::ONE),
         history_metadata: None,
         raw_history: None,
     };
@@ -233,13 +233,13 @@ fn default_pyth_price_response_handler() -> QuerierResult {
     let response = PythPriceResponse {
         price_state: Some(PythPriceState {
             price_id: "0xff0ec26442c57d7456695b843694e7379b15cf1b250b27e0e47e657f1955aaff".to_string(),
-            ema_price: FPDecimal::one(),
-            ema_conf: FPDecimal::one(),
-            conf: FPDecimal::one(),
+            ema_price: FPDecimal::ONE,
+            ema_conf: FPDecimal::ONE,
+            conf: FPDecimal::ONE,
             publish_time: 1i64,
             price_state: PriceState {
-                price: FPDecimal::one(),
-                cumulative_price: FPDecimal::one(),
+                price: FPDecimal::ONE,
+                cumulative_price: FPDecimal::ONE,
                 timestamp: 1i64,
             },
         }),
