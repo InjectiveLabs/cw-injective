@@ -1,8 +1,6 @@
-use bigint::U256;
+use crate::fp_decimal::{FPDecimal, U256};
 use cosmwasm_std::StdError;
 use std::str::FromStr;
-
-use crate::fp_decimal::FPDecimal;
 
 impl FromStr for FPDecimal {
     type Err = StdError;
@@ -14,11 +12,14 @@ impl FromStr for FPDecimal {
     /// This never performs any kind of rounding.
     /// More than 18 fractional digits, even zeros, result in an error.
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let sign = if input.starts_with('-') { 0 } else { 1 };
-        let parts: Vec<&str> = input.trim_start_matches('-').split('.').collect();
+        let mut sign = if input.starts_with('-') { 0 } else { 1 };
+        let parts = input.trim_start_matches('-').split('.').collect::<Vec<&str>>();
         match parts.len() {
             1 => {
                 let integer = U256::from_dec_str(parts[0]).map_err(|_| StdError::generic_err("Error parsing integer"))?;
+                if integer == U256([0, 0, 0, 0]) {
+                    sign = 1;
+                }
                 Ok(FPDecimal {
                     num: integer * FPDecimal::ONE.num,
                     sign,
@@ -30,7 +31,9 @@ impl FromStr for FPDecimal {
                 let exp = FPDecimal::DIGITS
                     .checked_sub(parts[1].len())
                     .ok_or_else(|| StdError::generic_err(format!("Cannot parse more than {} fractional digits", FPDecimal::DIGITS)))?;
-
+                if integer == U256([0, 0, 0, 0]) {
+                    sign = 1;
+                }
                 Ok(FPDecimal {
                     num: integer * FPDecimal::ONE.num + fraction * U256::exp10(exp),
                     sign,
@@ -47,19 +50,30 @@ impl FPDecimal {
     pub fn must_from_str(input: &str) -> Self {
         let i = Self::from_str(input).unwrap();
         // to handle must_from_str("-0")
-        if i.num == U256([0, 0, 0, 0]) {
-            return FPDecimal::ZERO;
-        }
+        //if i.num == U256([0, 0, 0, 0]) {
+        //    return FPDecimal::ZERO;
+        //}
         i
     }
 }
 
 #[cfg(test)]
 mod tests {
-
     use crate::FPDecimal;
-    use bigint::U256;
+    use primitive_types::U256;
     use std::str::FromStr;
+
+    #[test]
+    fn test_from_str_zero() {
+        let zero = FPDecimal::from_str("0").unwrap();
+        let neg_zero = FPDecimal::from_str("-0").unwrap();
+        let zero_zero = FPDecimal::from_str("00").unwrap();
+        let neg_zero_zero = FPDecimal::from_str("-00").unwrap();
+        assert_eq!(zero, FPDecimal::ZERO);
+        assert_eq!(zero_zero, FPDecimal::ZERO);
+        assert_eq!(neg_zero, FPDecimal::ZERO);
+        assert_eq!(neg_zero_zero, FPDecimal::ZERO);
+    }
 
     #[test]
     fn test_from_str() {

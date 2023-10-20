@@ -1,5 +1,6 @@
 use crate::FPDecimal;
-use bigint::U256;
+use primitive_types::U256;
+
 use cosmwasm_std::StdError;
 use std::cmp::Ordering;
 use std::{fmt::Display, str::FromStr};

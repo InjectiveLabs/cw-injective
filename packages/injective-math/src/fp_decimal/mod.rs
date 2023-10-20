@@ -1,8 +1,8 @@
 use std::str::FromStr;
 use std::{convert::TryFrom, ops::Neg};
 
-use bigint::U256;
 use cosmwasm_std::{Decimal256, StdError, Uint128, Uint256};
+use primitive_types::U256;
 use schemars::JsonSchema;
 
 #[allow(clippy::upper_case_acronyms)]
@@ -122,6 +122,7 @@ impl Neg for FPDecimal {
     }
 }
 
+// constants
 impl FPDecimal {
     pub const MAX: FPDecimal = FPDecimal { num: U256::MAX, sign: 1 };
     pub const MIN: FPDecimal = FPDecimal { num: U256::MAX, sign: 0 };
@@ -134,6 +135,12 @@ impl FPDecimal {
         num: U256([0, 0, 0, 0]),
         sign: 1,
     };
+
+    pub const LN2: FPDecimal = FPDecimal {
+        num: U256([693_147_180_559_945_309, 0, 0, 0]),
+        sign: 1,
+    };
+
     pub const ONE: FPDecimal = FPDecimal {
         num: U256([1_000_000_000_000_000_000, 0, 0, 0]),
         sign: 1,
@@ -196,22 +203,22 @@ impl FPDecimal {
     };
 
     pub const E_10: FPDecimal = FPDecimal {
-        num: U256([1053370797511854089u64, 1194u64, 0, 0]),
+        num: U256([1_053_370_797_511_854_089u64, 1194u64, 0, 0]),
         sign: 1,
     }; // e^10
 
     pub const LN_1_5: FPDecimal = FPDecimal {
-        num: U256([405465108108164382, 0, 0, 0]),
+        num: U256([405_465_108_108_164_382, 0, 0, 0]),
         sign: 1,
     }; // ln(1.5)
 
     pub const LN_10: FPDecimal = FPDecimal {
-        num: U256([2302585092994045684, 0, 0, 0]),
+        num: U256([2_302_585_092_994_045_684, 0, 0, 0]),
         sign: 1,
     }; // ln(10)
 
     pub const PI: FPDecimal = FPDecimal {
-        num: U256([3_141_592_653_589_793_238, 0, 0, 0]),
+        num: U256([3_141_592_653_589_793_115, 0, 0, 0]),
         sign: 1,
     };
 
@@ -286,9 +293,28 @@ mod trigonometry;
 mod tests {
     use std::{convert::TryFrom, str::FromStr};
 
+    use crate::fp_decimal::U256;
     use crate::FPDecimal;
-    use bigint::U256;
     use cosmwasm_std::{Decimal256, Uint256};
+
+    #[test]
+    fn test_const_pi() {
+        let pi = FPDecimal::PI;
+        let three_point_two = FPDecimal::must_from_str("3.2");
+        let three_point_one = FPDecimal::must_from_str("3.1");
+        let pi_precise = FPDecimal::must_from_str("3.141592653589793115");
+        assert!(three_point_one < pi);
+        assert!(pi < three_point_two);
+        assert_eq!(pi, pi_precise);
+    }
+
+    #[test]
+    fn test_const_ln2() {
+        let ln2 = FPDecimal::LN2;
+        let ln2_precise = FPDecimal::must_from_str("0.693147180559945309");
+        assert_eq!(ln2, ln2_precise);
+    }
+
     #[test]
     fn test_neg_sign() {
         let lhs = FPDecimal::ZERO - FPDecimal::ONE;

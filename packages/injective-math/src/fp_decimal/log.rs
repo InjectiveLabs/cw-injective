@@ -518,8 +518,47 @@ impl FPDecimal {
     }
 
     /// natural logarithm
+
     #[allow(clippy::many_single_char_names)]
-    pub fn _ln(a: FPDecimal) -> FPDecimal {
+    pub fn _ln_greater_than_one(mut a: FPDecimal) -> FPDecimal {
+        // ln(123.456) => ln(1.23456 * 10^2) =>ln(1.23456)+2ln(10)
+        let mut exponent = 0u128;
+        while a > FPDecimal::ONE {
+            a /= FPDecimal::TEN;
+            exponent += 1;
+        }
+        a.ln() + FPDecimal::from(exponent) * FPDecimal::TEN.ln()
+    }
+
+    #[allow(clippy::many_single_char_names)]
+    fn two_agm(mut a0: FPDecimal, mut b0: FPDecimal, tol: FPDecimal) -> FPDecimal {
+        loop {
+            if (a0 - b0).abs() > tol {
+                break;
+            }
+            let a1 = (a0 + b0) / FPDecimal::TWO;
+            let b1 = (a0 * b0).sqrt();
+            a0 = a1;
+            b0 = b1;
+        }
+        a0 + b0
+    }
+
+    #[allow(clippy::many_single_char_names)]
+    fn _ln(&self) -> FPDecimal {
+        // m =8, 2**8=256;
+        let two_pow_m = FPDecimal::from(256u128);
+        let s = *self * two_pow_m;
+        let tol = FPDecimal::must_from_str("0.00000001");
+        let a0 = FPDecimal::ONE;
+        let b0 = FPDecimal::FOUR / s;
+        let two_agm = FPDecimal::two_agm(a0, b0, tol);
+
+        FPDecimal::PI / two_agm - FPDecimal::EIGHT * FPDecimal::LN2
+    }
+
+    #[allow(clippy::many_single_char_names)]
+    pub fn _ln_old(a: FPDecimal) -> FPDecimal {
         assert!(a.sign != 0);
         assert!(a != FPDecimal::ZERO);
         let mut v = a.num;
@@ -589,10 +628,13 @@ impl FPDecimal {
     }
 
     pub fn ln(&self) -> FPDecimal {
+        if *self == FPDecimal::TWO {
+            return FPDecimal::LN2;
+        }
         if let Some(value) = self._log_e() {
             return value;
         }
-        FPDecimal::_ln(*self)
+        self._ln()
     }
 
     pub fn log(&self, base: FPDecimal) -> FPDecimal {
@@ -626,14 +668,20 @@ impl FPDecimal {
 mod tests {
 
     use crate::FPDecimal;
-    use bigint::U256;
+    //use bigint::U256;
+
+    use primitive_types::U256;
 
     #[test]
+    fn test_ln3() {
+        assert_eq!(FPDecimal::THREE.ln(), FPDecimal::must_from_str("1.09861228866810969"));
+    }
+    #[test]
     fn test_ln_sanity() {
-        let half = FPDecimal::ONE.div(2i128);
-        println!("{}", FPDecimal::_ln(half)); // works if you comment this out
-        let num = FPDecimal::ONE.mul(5).div(4);
-        println!("{}", FPDecimal::checked_positive_pow(num, half).unwrap());
+        //let half = FPDecimal::ONE.div(2i128);
+        assert_eq!((FPDecimal::ONE / FPDecimal::TWO).ln(), FPDecimal::must_from_str("-0.693147180559945307"));
+        assert_eq!((FPDecimal::FIVE / FPDecimal::FOUR).ln(), FPDecimal::must_from_str("0.223143551314209761"));
+        assert_eq!((FPDecimal::TEN.pow(FPDecimal::must_from_str("20"))).ln(), FPDecimal::must_from_str("20"));
     }
 
     #[test]

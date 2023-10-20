@@ -7,23 +7,51 @@ use crate::fp_decimal::{FPDecimal, U256};
 
 impl FPDecimal {
     #[allow(clippy::many_single_char_names)]
-    pub fn _exp_taylor_expansion(a: FPDecimal, b: FPDecimal, n: u128) -> FPDecimal {
+    pub fn _exp_taylor_expansion(a: FPDecimal, b: FPDecimal) -> FPDecimal {
         //a^b n+1 terms taylor expansion
-        assert!(n <= 13u128);
-        if n == 0 {
-            FPDecimal::ONE
-        } else {
-            let base = a.ln() * b;
-            let mut x = FPDecimal::ONE + base;
-            let mut numerator = base;
-            let mut denominator = FPDecimal::ONE;
-            for i in 2..n + 1 {
+        let base = a.ln() * b;
+        let mut numerator = base;
+        let mut denominator = FPDecimal::ONE;
+
+        let denominator_parts = vec![
+            FPDecimal::TWO,
+            FPDecimal::THREE,
+            FPDecimal::FOUR,
+            FPDecimal::FIVE,
+            FPDecimal::SIX,
+            FPDecimal::SEVEN,
+            FPDecimal::EIGHT,
+            FPDecimal::NINE,
+            FPDecimal::TEN,
+            FPDecimal::must_from_str("11"),
+            FPDecimal::must_from_str("12"),
+            FPDecimal::must_from_str("13"),
+            FPDecimal::must_from_str("14"),
+            FPDecimal::must_from_str("15"),
+            FPDecimal::must_from_str("16"),
+            FPDecimal::must_from_str("17"),
+            FPDecimal::must_from_str("18"),
+            FPDecimal::must_from_str("19"),
+            FPDecimal::must_from_str("20"),
+            FPDecimal::must_from_str("21"),
+            FPDecimal::must_from_str("22"),
+            FPDecimal::must_from_str("23"),
+            FPDecimal::must_from_str("24"),
+            FPDecimal::must_from_str("25"),
+        ];
+
+        denominator_parts
+            .iter()
+            .map(|part| {
                 numerator *= base;
-                denominator *= FPDecimal::from(i);
-                x += numerator / denominator;
-            }
-            x
-        }
+                denominator *= *part;
+                numerator / denominator
+            })
+            .collect::<Vec<FPDecimal>>()
+            .iter()
+            .sum::<FPDecimal>()
+            + FPDecimal::ONE
+            + a.ln() * b
     }
     // e^(a)
     pub fn _exp(a: FPDecimal) -> FPDecimal {
@@ -416,7 +444,7 @@ impl FPDecimal {
                 // base^exponent
                 // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
                 // 14 terms taylor expansion provides a good enough approximation
-                const N_TERMS: u128 = 13;
+                //const N_TERMS: u128 = 13;
                 match exponent.cmp(&FPDecimal::ZERO) {
                     Ordering::Equal => Ok(FPDecimal::ONE),
                     // Negative exponent
@@ -424,25 +452,25 @@ impl FPDecimal {
                         exponent = -exponent;
                         match exponent.cmp(&(FPDecimal::ONE)) {
                             Ordering::Equal => Ok(FPDecimal::ONE / base),
-                            Ordering::Less => compute_negative_exponent_less_one(base, exponent, N_TERMS),
-                            Ordering::Greater => compute_negative_exponent_greater_one(base, exponent, N_TERMS),
+                            Ordering::Less => compute_negative_exponent_less_one(base, exponent),
+                            Ordering::Greater => compute_negative_exponent_greater_one(base, exponent),
                         }
                     }
                     // Positive exponent
                     Ordering::Greater => match exponent.cmp(&FPDecimal::ONE) {
                         Ordering::Equal => Ok(base),
-                        Ordering::Less => compute_positive_exponent_less_one(base, exponent, N_TERMS),
-                        Ordering::Greater => compute_positive_exponent_greater_one(base, exponent, N_TERMS),
+                        Ordering::Less => compute_positive_exponent_less_one(base, exponent),
+                        Ordering::Greater => compute_positive_exponent_greater_one(base, exponent),
                     },
                 }
             }
 
-            fn compute_negative_exponent_greater_one(mut base: FPDecimal, exponent: FPDecimal, n_terms: u128) -> Result<FPDecimal, OverflowError> {
+            fn compute_negative_exponent_greater_one(mut base: FPDecimal, exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
                 let mut int_b = exponent.int();
                 let rem_b = exponent - int_b;
                 let mut float_exp = FPDecimal::ONE;
                 if rem_b != FPDecimal::ZERO {
-                    float_exp = FPDecimal::_exp_taylor_expansion(FPDecimal::ONE / base, rem_b, n_terms);
+                    float_exp = FPDecimal::_exp_taylor_expansion(FPDecimal::ONE / base, rem_b);
                 }
                 let mut tmp_a = FPDecimal::ONE;
                 while int_b > FPDecimal::ONE {
@@ -487,7 +515,7 @@ impl FPDecimal {
 
             type BaseCheckFunction<'a> = (&'a dyn Fn(FPDecimal) -> Option<FPDecimal>, FPDecimal);
 
-            fn compute_negative_exponent_less_one(base: FPDecimal, exponent: FPDecimal, n_terms: u128) -> Result<FPDecimal, OverflowError> {
+            fn compute_negative_exponent_less_one(base: FPDecimal, exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
                 // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
                 let abs_error = FPDecimal::must_from_str("0.00000000000000001");
                 let reciprocal = if (FPDecimal::reciprocal(exponent) - FPDecimal::reciprocal(exponent).int()).abs() < abs_error {
@@ -519,7 +547,7 @@ impl FPDecimal {
                     }
                 }
 
-                Ok(FPDecimal::_exp_taylor_expansion(FPDecimal::ONE / base, exponent, n_terms))
+                Ok(FPDecimal::_exp_taylor_expansion(FPDecimal::ONE / base, exponent))
             }
 
             fn positive_exponent_check_basic_log(
@@ -551,7 +579,7 @@ impl FPDecimal {
                 None
             }
 
-            fn compute_positive_exponent_less_one(base: FPDecimal, exponent: FPDecimal, n_terms: u128) -> Result<FPDecimal, OverflowError> {
+            fn compute_positive_exponent_less_one(base: FPDecimal, exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
                 // taylor expansion approximation of exponentiation computation with float number exponent
                 // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
                 let abs_error = FPDecimal::must_from_str("0.00000000000000001");
@@ -578,7 +606,7 @@ impl FPDecimal {
                     }
                 }
 
-                Ok(FPDecimal::_exp_taylor_expansion(base, exponent, n_terms))
+                Ok(FPDecimal::_exp_taylor_expansion(base, exponent))
             }
 
             fn compute_integer_exponentiation(mut base: FPDecimal, mut exponent: FPDecimal) -> FPDecimal {
@@ -597,12 +625,12 @@ impl FPDecimal {
                 base * temp_base
             }
 
-            fn compute_positive_exponent_greater_one(mut base: FPDecimal, exponent: FPDecimal, n_terms: u128) -> Result<FPDecimal, OverflowError> {
+            fn compute_positive_exponent_greater_one(mut base: FPDecimal, exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
                 let integer_part_of_exponent = exponent.int();
                 let fractional_part_of_exponent = exponent - integer_part_of_exponent;
 
                 let fractional_exponentiation = if fractional_part_of_exponent != FPDecimal::ZERO {
-                    FPDecimal::_exp_taylor_expansion(base, fractional_part_of_exponent, n_terms)
+                    FPDecimal::_exp_taylor_expansion(base, fractional_part_of_exponent)
                 } else {
                     FPDecimal::ONE
                 };
@@ -936,20 +964,19 @@ impl FPDecimal {
             fn compute_exponentiation(base: FPDecimal, mut exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
                 // a^b
                 // 14 terms taylor expansion provides a good enough approximation
-                const N_TERMS: u128 = 13;
                 match exponent.cmp(&FPDecimal::ZERO) {
                     Ordering::Equal => Ok(FPDecimal::ONE),
                     Ordering::Less => {
                         exponent = -exponent;
                         match exponent.cmp(&(FPDecimal::ONE)) {
                             Ordering::Equal => Ok(FPDecimal::ONE / base),
-                            Ordering::Less => compute_negative_exponent_less_one(FPDecimal::ONE / base, exponent, N_TERMS),
-                            Ordering::Greater => compute_negative_exponent_greater_one(FPDecimal::ONE / base, exponent, N_TERMS),
+                            Ordering::Less => compute_negative_exponent_less_one(FPDecimal::ONE / base, exponent),
+                            Ordering::Greater => compute_negative_exponent_greater_one(FPDecimal::ONE / base, exponent),
                         }
                     }
                     Ordering::Greater => match exponent.cmp(&FPDecimal::ONE) {
                         Ordering::Equal => Ok(base),
-                        Ordering::Less => compute_positive_exponent_less_one(base, exponent, N_TERMS),
+                        Ordering::Less => compute_positive_exponent_less_one(base, exponent),
                         Ordering::Greater => compute_positive_exponent_greater_one(base, exponent),
                     },
                 }
@@ -957,7 +984,7 @@ impl FPDecimal {
 
             type BaseCheckFunction<'a> = (&'a dyn Fn(FPDecimal) -> Option<FPDecimal>, FPDecimal);
 
-            fn compute_negative_exponent_less_one(mut base: FPDecimal, exponent: FPDecimal, n_terms: u128) -> Result<FPDecimal, OverflowError> {
+            fn compute_negative_exponent_less_one(mut base: FPDecimal, exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
                 // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
                 base = -base;
 
@@ -981,7 +1008,7 @@ impl FPDecimal {
                     return Ok(-FPDecimal::ONE / base);
                 }
 
-                Ok(FPDecimal::_exp_taylor_expansion(FPDecimal::ONE / base, exponent, n_terms))
+                Ok(FPDecimal::_exp_taylor_expansion(FPDecimal::ONE / base, exponent))
             }
 
             fn check_conditions_and_return_negative(mut base: FPDecimal, divisor: FPDecimal, exponent: &FPDecimal) -> bool {
@@ -1008,12 +1035,12 @@ impl FPDecimal {
                 }
             }
 
-            fn compute_negative_exponent_greater_one(mut base: FPDecimal, exponent: FPDecimal, n_terms: u128) -> Result<FPDecimal, OverflowError> {
+            fn compute_negative_exponent_greater_one(mut base: FPDecimal, exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
                 let integer_part_of_exponent = exponent.int();
                 let fractional_part_of_exponent = exponent - integer_part_of_exponent;
 
                 let fractional_exponentiation = if fractional_part_of_exponent != FPDecimal::ZERO {
-                    FPDecimal::_exp_taylor_expansion(FPDecimal::ONE / base, fractional_part_of_exponent, n_terms)
+                    FPDecimal::_exp_taylor_expansion(FPDecimal::ONE / base, fractional_part_of_exponent)
                 } else {
                     FPDecimal::ONE
                 };
@@ -1021,7 +1048,7 @@ impl FPDecimal {
                 Ok(FPDecimal::ONE / base * fractional_exponentiation)
             }
 
-            fn compute_positive_exponent_less_one(mut base: FPDecimal, exponent: FPDecimal, n_terms: u128) -> Result<FPDecimal, OverflowError> {
+            fn compute_positive_exponent_less_one(mut base: FPDecimal, exponent: FPDecimal) -> Result<FPDecimal, OverflowError> {
                 // taylor expansion approximation of exponentiation computation with float number exponent
                 // NOTE: only accurate for 1,3,5,7,11, and combinations of these numbers
                 base = -base;
@@ -1043,7 +1070,7 @@ impl FPDecimal {
                     }
                 }
 
-                Ok(FPDecimal::_exp_taylor_expansion(base, exponent, n_terms))
+                Ok(FPDecimal::_exp_taylor_expansion(base, exponent))
             }
 
             fn check_conditions_and_return(base: &mut FPDecimal, divisor: &FPDecimal, exponent: &FPDecimal) -> bool {
@@ -1111,9 +1138,19 @@ impl FPDecimal {
 #[cfg(test)]
 mod tests {
 
+    use crate::fp_decimal::U256;
     use crate::FPDecimal;
-    use bigint::U256;
     use std::str::FromStr;
+
+    #[test]
+    fn test_3_pow_2_point_3() {
+        // a^x = e^(xln(a))
+        // 3^2.3 = e(2.3ln(3))
+        assert_eq!(
+            FPDecimal::_exp_taylor_expansion(FPDecimal::THREE, FPDecimal::must_from_str("2.3")),
+            FPDecimal::must_from_str("12.513502532843181622")
+        );
+    }
 
     #[test]
     fn test_exp() {
