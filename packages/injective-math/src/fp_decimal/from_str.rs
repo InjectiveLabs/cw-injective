@@ -62,14 +62,14 @@ mod tests {
 
     #[test]
     fn test_from_str_neg() {
-        assert_eq!((FPDecimal::ONE / FPDecimal::TWO).ln(), FPDecimal::must_from_str("-0.693147180450538234"));
+        assert_eq!((FPDecimal::ONE / FPDecimal::TWO).ln(), FPDecimal::must_from_str("-0.693147180435828445"));
         assert_eq!(
             (FPDecimal::ONE / FPDecimal::must_from_str("1.9")).ln(),
-            FPDecimal::must_from_str("-0.641853885753276276") //FPDecimal::must_from_str("-0.693147180559945307")
+            FPDecimal::must_from_str("-0.641853885737462182")
         );
         assert_eq!(
             (FPDecimal::ONE / FPDecimal::THREE).ln(),
-            FPDecimal::must_from_str("-1.098612288373303233")
+            FPDecimal::must_from_str("-1.098612288365102671")
         );
     }
 

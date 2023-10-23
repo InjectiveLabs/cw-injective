@@ -549,9 +549,10 @@ impl FPDecimal {
         // m =8, 2**8=256;
         // m=16, 2**16=65536
         // m=32, 2**32=4294967296
+        // m=128, 2**128=340282366920938463463374607431768211456
         let two_pow_m = FPDecimal::from(4294967296u128);
         let s = *self * two_pow_m;
-        let tol = FPDecimal::must_from_str("0.00001");
+        let tol = FPDecimal::must_from_str("0.0000001");
         let a0 = FPDecimal::ONE;
         let b0 = FPDecimal::FOUR / s;
         let two_agm = FPDecimal::_two_agm(a0, b0, tol);
@@ -681,10 +682,10 @@ mod tests {
     }
     #[test]
     fn test_ln_x_smaller_than_1() {
-        assert_eq!((FPDecimal::ONE / FPDecimal::TWO).ln(), FPDecimal::must_from_str("-0.693147180450538234"));
+        assert_eq!((FPDecimal::ONE / FPDecimal::TWO).ln(), FPDecimal::must_from_str("-0.693147180435828445"));
         assert_eq!(
             (FPDecimal::ONE / FPDecimal::THREE).ln(),
-            FPDecimal::must_from_str("-1.098612288373303233")
+            FPDecimal::must_from_str("-1.098612288365102671")
         );
         assert_eq!((FPDecimal::ONE / FPDecimal::NINE).ln(), FPDecimal::must_from_str("-2.197224577273354107"));
 
@@ -705,7 +706,8 @@ mod tests {
 
     #[test]
     fn test_ln_x_greater_than_1() {
-        assert_eq!(FPDecimal::must_from_str("1.001").ln(), FPDecimal::must_from_str("0.000999500760528615"));
+        assert_eq!(FPDecimal::must_from_str("1.0001").ln(), FPDecimal::must_from_str("0.000099995720261047"));
+        assert_eq!(FPDecimal::must_from_str("1.001").ln(), FPDecimal::must_from_str("0.000999500798628942"));
         assert_eq!(FPDecimal::must_from_str("1.1").ln(), FPDecimal::must_from_str("0.095310179804324867"));
         assert_eq!((FPDecimal::FIVE / FPDecimal::FOUR).ln(), FPDecimal::must_from_str("0.223143551314209761"));
         assert_eq!((FPDecimal::must_from_str("100")).ln(), FPDecimal::must_from_str("4.605170185988091368"));

@@ -11,7 +11,7 @@ impl FPDecimal {
             num: FPDecimal::ONE.num * U256([2, 0, 0, 0]),
             sign: 1,
         };
-        let numerator: FPDecimal = FPDecimal::_sub(FPDecimal::_exp(x), FPDecimal::_exp(neg_x));
+        let numerator: FPDecimal = FPDecimal::_sub(FPDecimal::exp(x), FPDecimal::exp(neg_x));
         FPDecimal::_div(numerator, denominator)
     }
 
@@ -28,7 +28,7 @@ impl FPDecimal {
             num: FPDecimal::ONE.num * U256([2, 0, 0, 0]),
             sign: 1,
         };
-        let numerator: FPDecimal = FPDecimal::_add(FPDecimal::_exp(x), FPDecimal::_exp(neg_x));
+        let numerator: FPDecimal = FPDecimal::_add(FPDecimal::exp(x), FPDecimal::exp(neg_x));
         FPDecimal::_div(numerator, denominator)
     }
 
