@@ -636,7 +636,7 @@ impl FPDecimal {
         if let Some(value) = self._log_e() {
             return value;
         }
-        if self.abs() < FPDecimal::must_from_str("1.5") {
+        if self.abs() < FPDecimal::must_from_str("1.1") {
             return self._ln_robust();
         }
         self._ln()
@@ -680,21 +680,49 @@ mod tests {
         assert_ne!(FPDecimal::THREE.ln(), FPDecimal::must_from_str("1.09861228866810969"));
     }
     #[test]
-    fn test_ln_sanity() {
-        assert_eq!((FPDecimal::ONE / FPDecimal::TWO).ln(), FPDecimal::must_from_str("-0.693147180559945307"));
+    fn test_ln_x_smaller_than_1() {
+        assert_eq!((FPDecimal::ONE / FPDecimal::TWO).ln(), FPDecimal::must_from_str("-0.693147180450538234"));
         assert_eq!(
             (FPDecimal::ONE / FPDecimal::THREE).ln(),
-            FPDecimal::must_from_str("-1.098612288668109746")
+            FPDecimal::must_from_str("-1.098612288373303233")
         );
-        assert_eq!((FPDecimal::ONE / FPDecimal::NINE).ln(), FPDecimal::must_from_str("-2.197224577336219438"));
+        assert_eq!((FPDecimal::ONE / FPDecimal::NINE).ln(), FPDecimal::must_from_str("-2.197224577273354107"));
 
-        assert_eq!((FPDecimal::ONE / FPDecimal::TEN).ln(), FPDecimal::must_from_str("-2.302585092994045628"));
+        assert_eq!((FPDecimal::ONE / FPDecimal::TEN).ln(), FPDecimal::must_from_str("-2.302585092978637669"));
         assert_eq!(
             (FPDecimal::ONE / FPDecimal::from(11u128)).ln(),
-            FPDecimal::must_from_str("-2.397895272798370516")
+            FPDecimal::must_from_str("-2.397895272724232098")
         );
-        //assert_eq!((FPDecimal::FIVE / FPDecimal::FOUR).ln(), FPDecimal::must_from_str("0.223143551314209761"));
-        assert_eq!((FPDecimal::TEN.pow(FPDecimal::must_from_str("20"))).ln(), FPDecimal::must_from_str("20"));
+        assert_eq!(
+            (FPDecimal::ONE / FPDecimal::from(20u128)).ln(),
+            FPDecimal::must_from_str("-2.995732273537724492")
+        );
+        assert_eq!(
+            (FPDecimal::ONE / FPDecimal::from(30u128)).ln(),
+            FPDecimal::must_from_str("-3.401197381645697712")
+        );
+    }
+
+    #[test]
+    fn test_ln_x_greater_than_1() {
+        assert_eq!(FPDecimal::must_from_str("1.001").ln(), FPDecimal::must_from_str("0.000999500760528615"));
+        assert_eq!(FPDecimal::must_from_str("1.1").ln(), FPDecimal::must_from_str("0.095310179804324867"));
+        assert_eq!((FPDecimal::FIVE / FPDecimal::FOUR).ln(), FPDecimal::must_from_str("0.223143551314209761"));
+        assert_eq!((FPDecimal::must_from_str("100")).ln(), FPDecimal::must_from_str("4.605170185988091368"));
+        assert_eq!((FPDecimal::must_from_str("1000")).ln(), FPDecimal::must_from_str("6.907755278982137052"));
+        assert_eq!((FPDecimal::must_from_str("10000")).ln(), FPDecimal::must_from_str("9.210340371976182736"));
+        assert_eq!(
+            (FPDecimal::must_from_str("100000")).ln(),
+            FPDecimal::must_from_str("11.51292546497022842")
+        );
+        assert_eq!(
+            (FPDecimal::must_from_str("1000000")).ln(),
+            FPDecimal::must_from_str("13.815510557964274104")
+        );
+        assert_eq!(
+            (FPDecimal::must_from_str("10000000")).ln(),
+            FPDecimal::must_from_str("16.118095650958319788")
+        );
     }
 
     #[test]
