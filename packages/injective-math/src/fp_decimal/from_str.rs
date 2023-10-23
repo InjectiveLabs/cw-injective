@@ -31,9 +31,7 @@ impl FromStr for FPDecimal {
                 let exp = FPDecimal::DIGITS
                     .checked_sub(parts[1].len())
                     .ok_or_else(|| StdError::generic_err(format!("Cannot parse more than {} fractional digits", FPDecimal::DIGITS)))?;
-                if integer == U256([0, 0, 0, 0]) {
-                    sign = 1;
-                }
+
                 Ok(FPDecimal {
                     num: integer * FPDecimal::ONE.num + fraction * U256::exp10(exp),
                     sign,
@@ -41,7 +39,6 @@ impl FromStr for FPDecimal {
             }
             _ => Err(StdError::generic_err("Unexpected number of dots")),
         }
-
         //Ok(FPDecimal {num: num * FPDecimal::ONE.num, sign: sign})
     }
 }
@@ -62,6 +59,19 @@ mod tests {
     use crate::FPDecimal;
     use primitive_types::U256;
     use std::str::FromStr;
+
+    #[test]
+    fn test_from_str_neg() {
+        //assert_eq!((FPDecimal::ONE / FPDecimal::TWO).ln(), FPDecimal::must_from_str("-0.693147180559945307"));
+        assert_eq!(
+            (FPDecimal::ONE / FPDecimal::must_from_str("1.9")).ln(),
+            FPDecimal::must_from_str("-0.641853886172394774") //FPDecimal::must_from_str("-0.693147180559945307")
+        );
+        assert_eq!(
+            (FPDecimal::ONE / FPDecimal::THREE).ln(),
+            FPDecimal::must_from_str("-1.098612288668109746")
+        );
+    }
 
     #[test]
     fn test_from_str_zero() {
