@@ -113,14 +113,12 @@ mod tests {
 
     #[test]
     fn test_sine_one() {
+        //0.84147098480789650666
         almost_eq(FPDecimal::ONE.imprecise_sin(), FPDecimal::from_str("0.8414709848").unwrap());
     }
 
     #[test]
     fn test_sine_negative_one() {
-        almost_eq(
-            (FPDecimal::ZERO - FPDecimal::ONE).imprecise_sin(),
-            FPDecimal::from_str("-0.8414709848").unwrap(),
-        );
+        almost_eq((-FPDecimal::ONE).imprecise_sin(), FPDecimal::from_str("-0.8414709848").unwrap());
     }
 }

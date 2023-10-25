@@ -74,6 +74,10 @@ impl FPDecimal {
             return self.sqrt();
         }
         fn common_const_checks(base: FPDecimal, exponent: FPDecimal) -> Option<FPDecimal> {
+            if base == FPDecimal::ONE {
+                return Some(FPDecimal::ONE);
+            }
+
             if base == FPDecimal::E {
                 if exponent == FPDecimal::ONE {
                     return Some(base);
@@ -691,7 +695,6 @@ impl FPDecimal {
 
         type BaseCheckFunction<'a> = (&'a dyn Fn(FPDecimal) -> Option<FPDecimal>, FPDecimal);
 
-        // println!("i'm here {}", exponent);
         match common_checks(exponent) {
             Some(value) => {
                 return value;
@@ -710,8 +713,6 @@ impl FPDecimal {
                     if log_fn(exponent).is_some() {
                         let value = log_fn(exponent).unwrap();
                         if self == divisor {
-                            println!("i'm here {}**{}", self, exponent);
-
                             return value;
                         }
                     }
@@ -2471,6 +2472,13 @@ mod tests {
         assert_eq!(FPDecimal::ONE.sqrt(), FPDecimal::ONE);
         assert_eq!(FPDecimal::NINE.sqrt(), FPDecimal::THREE);
         assert_eq!(FPDecimal::from(81u128).sqrt(), FPDecimal::NINE);
+    }
+    #[test]
+    fn test_1_power_n() {
+        assert_eq!(FPDecimal::ONE, FPDecimal::ONE.pow_robust(FPDecimal::ONE));
+        assert_eq!(FPDecimal::ONE, FPDecimal::ONE.pow_robust(FPDecimal::TWO));
+        assert_eq!(FPDecimal::ONE, FPDecimal::ONE.pow_robust(FPDecimal::THREE));
+        assert_eq!(FPDecimal::ONE, FPDecimal::ONE.pow_robust(FPDecimal::FOUR));
     }
 
     // NOTE: its ok we ignore these two unit tests. they should not be the goal of this crate
