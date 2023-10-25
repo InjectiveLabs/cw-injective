@@ -660,10 +660,6 @@ impl FPDecimal {
             }
         }
 
-        if let Some(value) = common_const_checks(self, exponent) {
-            return value;
-        }
-
         fn common_checks(exponent: FPDecimal) -> Option<FPDecimal> {
             if FPDecimal::TWO.ln() == exponent {
                 return Some(FPDecimal::TWO);
@@ -687,6 +683,10 @@ impl FPDecimal {
         }
 
         type BaseCheckFunction<'a> = (&'a dyn Fn(FPDecimal) -> Option<FPDecimal>, FPDecimal);
+
+        if let Some(value) = common_const_checks(self, exponent) {
+            return value;
+        }
 
         match common_checks(exponent) {
             Some(value) => value,
