@@ -6,7 +6,7 @@ pub trait Scaled {
 
 impl Scaled for FPDecimal {
     fn scaled(self, digits: i32) -> Self {
-        self.to_owned() * FPDecimal::from(10i128).pow_robust(FPDecimal::from(digits as i128))
+        self.to_owned() * FPDecimal::from(10i128).pow(FPDecimal::from(digits as i128))
     }
 }
 

@@ -567,11 +567,11 @@ impl FPDecimal {
         let mut v = self.num;
         let mut r = FPDecimal::ZERO;
         while v <= FPDecimal::ONE.num / U256([10, 0, 0, 0]) {
-            v = v * U256([10, 0, 0, 0]);
+            v *= U256([10, 0, 0, 0]);
             r -= FPDecimal::LN_10;
         }
         while v >= U256([10, 0, 0, 0]) * FPDecimal::ONE.num {
-            v = v / U256([10, 0, 0, 0]);
+            v /= U256([10, 0, 0, 0]);
             r += FPDecimal::LN_10;
         }
         while v < FPDecimal::ONE.num {

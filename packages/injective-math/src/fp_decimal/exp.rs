@@ -55,14 +55,7 @@ impl FPDecimal {
     }
     // e^(a)
 
-    // pub fn pow_robust(self, exponent: FPDecimal) -> FPDecimal {
-    //     if self < FPDecimal::ZERO && exponent.is_int() && exponent % FPDecimal::TWO == FPDecimal::ONE {
-    //         return -FPDecimal::exp(exponent * (-self).ln());
-    //     }
-    //     self._pow_robust(exponent)
-    // }
-
-    pub fn pow_robust(self, exponent: FPDecimal) -> FPDecimal {
+    pub fn pow(self, exponent: FPDecimal) -> FPDecimal {
         if self.is_zero() {
             return self;
         }
@@ -696,9 +689,7 @@ impl FPDecimal {
         type BaseCheckFunction<'a> = (&'a dyn Fn(FPDecimal) -> Option<FPDecimal>, FPDecimal);
 
         match common_checks(exponent) {
-            Some(value) => {
-                return value;
-            }
+            Some(value) => value,
             None => {
                 let base_checks: Vec<BaseCheckFunction> = vec![
                     (&FPDecimal::_log_e, FPDecimal::E),
@@ -739,7 +730,7 @@ impl FPDecimal {
         let mut x = a.num;
         let mut r = FPDecimal::ONE;
         while x >= U256([10, 0, 0, 0]) * FPDecimal::ONE.num {
-            x = x - U256([10, 0, 0, 0]) * FPDecimal::ONE.num;
+            x -= U256([10, 0, 0, 0]) * FPDecimal::ONE.num;
             r = FPDecimal::_mul(r, FPDecimal::E_10);
         }
         if x == FPDecimal::ONE.num {
@@ -759,7 +750,7 @@ impl FPDecimal {
         let mut d = tr;
         for i in 1..((2 * FPDecimal::DIGITS + 1) as u64) {
             d = (d * x) / (FPDecimal::ONE.num * U256([i, 0, 0, 0]));
-            tr = tr + d;
+            tr += d;
         }
         let val = FPDecimal::_mul(FPDecimal { num: tr, sign: 1 }, r);
         if a.sign == 0 {
@@ -2041,19 +2032,19 @@ mod tests {
 
     #[test]
     fn test_pow_zero() {
-        FPDecimal::pow_robust(FPDecimal::ZERO, FPDecimal::ONE.div(2i128));
-        assert_eq!(FPDecimal::ZERO.pow_robust(FPDecimal::ONE), FPDecimal::ZERO);
+        FPDecimal::pow(FPDecimal::ZERO, FPDecimal::ONE.div(2i128));
+        assert_eq!(FPDecimal::ZERO.pow(FPDecimal::ONE), FPDecimal::ZERO);
     }
 
     #[test]
     fn test_4_pow_0_5() {
-        assert_eq!(FPDecimal::pow_robust(FPDecimal::FOUR, FPDecimal::must_from_str("0.5")), FPDecimal::TWO);
+        assert_eq!(FPDecimal::pow(FPDecimal::FOUR, FPDecimal::must_from_str("0.5")), FPDecimal::TWO);
     }
 
     #[test]
     fn test_128_pow_0_5() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(128u128), FPDecimal::must_from_str("0.5")),
+            FPDecimal::pow(FPDecimal::from(128u128), FPDecimal::must_from_str("0.5")),
             FPDecimal::must_from_str("11.313708498984760390")
         );
     }
@@ -2061,27 +2052,27 @@ mod tests {
     #[test]
     fn test_128_pow_1_7() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(128u128), FPDecimal::ONE / FPDecimal::SEVEN),
+            FPDecimal::pow(FPDecimal::from(128u128), FPDecimal::ONE / FPDecimal::SEVEN),
             FPDecimal::TWO
         );
     }
 
     #[test]
     fn test_9_pow_0_5() {
-        assert_eq!(FPDecimal::pow_robust(FPDecimal::NINE, FPDecimal::must_from_str("0.5")), FPDecimal::THREE);
+        assert_eq!(FPDecimal::pow(FPDecimal::NINE, FPDecimal::must_from_str("0.5")), FPDecimal::THREE);
     }
 
     #[test]
     fn test_27_pow_0_5() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(27u128), FPDecimal::must_from_str("0.5")),
+            FPDecimal::pow(FPDecimal::from(27u128), FPDecimal::must_from_str("0.5")),
             FPDecimal::must_from_str("5.196152422706631880")
         );
     }
     #[test]
     fn test_27_pow_1_over_3() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(27u128), FPDecimal::ONE / FPDecimal::THREE),
+            FPDecimal::pow(FPDecimal::from(27u128), FPDecimal::ONE / FPDecimal::THREE),
             FPDecimal::THREE
         );
     }
@@ -2089,38 +2080,32 @@ mod tests {
     #[test]
     fn test_81_pow_0_25() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(81u128), FPDecimal::ONE / FPDecimal::FOUR),
+            FPDecimal::pow(FPDecimal::from(81u128), FPDecimal::ONE / FPDecimal::FOUR),
             FPDecimal::THREE
         );
     }
 
     #[test]
     fn test_81_pow_0_5() {
-        assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(81u128), FPDecimal::ONE / FPDecimal::TWO),
-            FPDecimal::NINE
-        );
+        assert_eq!(FPDecimal::pow(FPDecimal::from(81u128), FPDecimal::ONE / FPDecimal::TWO), FPDecimal::NINE);
     }
 
     #[test]
     fn test_25_pow_0_5() {
-        assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(25u128), FPDecimal::must_from_str("0.5")),
-            FPDecimal::FIVE
-        );
+        assert_eq!(FPDecimal::pow(FPDecimal::from(25u128), FPDecimal::must_from_str("0.5")), FPDecimal::FIVE);
     }
 
     #[test]
     fn test_125_pow_0_5() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(125u128), FPDecimal::must_from_str("0.5")),
+            FPDecimal::pow(FPDecimal::from(125u128), FPDecimal::must_from_str("0.5")),
             FPDecimal::must_from_str("11.180339887498948482")
         );
     }
     #[test]
     fn test_125_pow_1_over_3() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(125u128), FPDecimal::ONE / FPDecimal::THREE),
+            FPDecimal::pow(FPDecimal::from(125u128), FPDecimal::ONE / FPDecimal::THREE),
             FPDecimal::FIVE
         );
     }
@@ -2128,30 +2113,27 @@ mod tests {
     #[test]
     fn test_625_pow_0_25() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(625u128), FPDecimal::ONE / FPDecimal::FOUR),
+            FPDecimal::pow(FPDecimal::from(625u128), FPDecimal::ONE / FPDecimal::FOUR),
             FPDecimal::FIVE
         );
     }
 
     #[test]
     fn test_49_pow_0_5() {
-        assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(49u128), FPDecimal::must_from_str("0.5")),
-            FPDecimal::SEVEN
-        );
+        assert_eq!(FPDecimal::pow(FPDecimal::from(49u128), FPDecimal::must_from_str("0.5")), FPDecimal::SEVEN);
     }
 
     #[test]
     fn test_343_pow_0_5() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(343u128), FPDecimal::must_from_str("0.5")),
+            FPDecimal::pow(FPDecimal::from(343u128), FPDecimal::must_from_str("0.5")),
             FPDecimal::must_from_str("18.520259177452134133")
         );
     }
     #[test]
     fn test_343_pow_1_over_3() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(343u128), FPDecimal::ONE / FPDecimal::THREE),
+            FPDecimal::pow(FPDecimal::from(343u128), FPDecimal::ONE / FPDecimal::THREE),
             FPDecimal::SEVEN
         );
     }
@@ -2159,7 +2141,7 @@ mod tests {
     #[test]
     fn test_2401_pow_0_25() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(2401u128), FPDecimal::ONE / FPDecimal::FOUR),
+            FPDecimal::pow(FPDecimal::from(2401u128), FPDecimal::ONE / FPDecimal::FOUR),
             FPDecimal::SEVEN
         );
     }
@@ -2167,7 +2149,7 @@ mod tests {
     #[test]
     fn test_121_pow_0_5() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(121u128), FPDecimal::must_from_str("0.5")),
+            FPDecimal::pow(FPDecimal::from(121u128), FPDecimal::must_from_str("0.5")),
             FPDecimal::from(11u128)
         );
     }
@@ -2175,14 +2157,14 @@ mod tests {
     #[test]
     fn test_1331_pow_0_5() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(1331u128), FPDecimal::must_from_str("0.5")),
+            FPDecimal::pow(FPDecimal::from(1331u128), FPDecimal::must_from_str("0.5")),
             FPDecimal::must_from_str("36.48287269390939834")
         );
     }
     #[test]
     fn test_1331_pow_1_over_3() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(1331u128), FPDecimal::ONE / FPDecimal::THREE),
+            FPDecimal::pow(FPDecimal::from(1331u128), FPDecimal::ONE / FPDecimal::THREE),
             FPDecimal::from(11u128)
         );
     }
@@ -2190,35 +2172,35 @@ mod tests {
     #[test]
     fn test_14641_pow_0_25() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(14641u128), FPDecimal::ONE / FPDecimal::FOUR),
+            FPDecimal::pow(FPDecimal::from(14641u128), FPDecimal::ONE / FPDecimal::FOUR),
             FPDecimal::from(11u128)
         );
     }
 
     #[test]
     fn test_2_pow_1() {
-        assert_eq!(FPDecimal::TWO.pow_robust(FPDecimal::ONE), FPDecimal::TWO);
+        assert_eq!(FPDecimal::TWO.pow(FPDecimal::ONE), FPDecimal::TWO);
     }
 
     #[test]
     fn test_3_pow_1() {
-        assert_eq!(FPDecimal::THREE.pow_robust(FPDecimal::ONE), FPDecimal::THREE);
+        assert_eq!(FPDecimal::THREE.pow(FPDecimal::ONE), FPDecimal::THREE);
     }
 
     #[test]
     fn test_pow_exp_1() {
-        assert_eq!(FPDecimal::E.pow_robust(FPDecimal::ONE), FPDecimal::E);
+        assert_eq!(FPDecimal::E.pow(FPDecimal::ONE), FPDecimal::E);
     }
 
     #[test]
     fn test_pow_exp_0() {
-        assert_eq!(FPDecimal::E.pow_robust(FPDecimal::ZERO), FPDecimal::ONE);
+        assert_eq!(FPDecimal::E.pow(FPDecimal::ZERO), FPDecimal::ONE);
     }
 
     #[test]
     fn test_pow_exp_10() {
         assert_eq!(
-            FPDecimal::E.pow_robust(FPDecimal {
+            FPDecimal::E.pow(FPDecimal {
                 num: U256([10, 0, 0, 0]) * FPDecimal::ONE.num,
                 sign: 1
             }),
@@ -2228,7 +2210,7 @@ mod tests {
 
     #[test]
     fn test_pow_zero_2() {
-        FPDecimal::ZERO.pow_robust(FPDecimal::ONE.div(2i128));
+        FPDecimal::ZERO.pow(FPDecimal::ONE.div(2i128));
     }
 
     #[test]
@@ -2262,17 +2244,14 @@ mod tests {
     #[test]
     fn test_pow_10_positive() {
         let base = FPDecimal::from(10u128);
-        assert_eq!(
-            base.pow_robust(FPDecimal::from_str("6").unwrap()),
-            FPDecimal::from_str("1000000").unwrap()
-        );
+        assert_eq!(base.pow(FPDecimal::from_str("6").unwrap()), FPDecimal::from_str("1000000").unwrap());
     }
 
     #[test]
     fn test_pow_10_max() {
         let base = FPDecimal::from(10u128);
         assert_eq!(
-            base.pow_robust(FPDecimal::from_str("59").unwrap()),
+            base.pow(FPDecimal::from_str("59").unwrap()),
             FPDecimal::from_str("100000000000000000000000000000000000000000000000000000000000").unwrap()
         );
     }
@@ -2281,20 +2260,20 @@ mod tests {
     #[should_panic]
     fn test_pow_10_overflow() {
         let base = FPDecimal::from(10u128);
-        base.pow_robust(FPDecimal::from_str("60").unwrap());
+        base.pow(FPDecimal::from_str("60").unwrap());
     }
 
     #[test]
     fn test_pow_10_neg_3() {
         let base = FPDecimal::from(10u128);
-        assert_eq!(base.pow_robust(FPDecimal::from_str("-3").unwrap()), FPDecimal::from_str("0.001").unwrap());
+        assert_eq!(base.pow(FPDecimal::from_str("-3").unwrap()), FPDecimal::from_str("0.001").unwrap());
     }
 
     #[test]
     fn test_e_pow_neg_3() {
         let base = FPDecimal::E;
         assert_eq!(
-            base.pow_robust(FPDecimal::from_str("-3").unwrap()),
+            base.pow(FPDecimal::from_str("-3").unwrap()),
             FPDecimal::from_str("0.049787068367863943").unwrap()
         );
     }
@@ -2302,7 +2281,7 @@ mod tests {
     #[test]
     fn test_e_pow_0_5() {
         assert_eq!(
-            FPDecimal::E.pow_robust(FPDecimal::from_str("0.5").unwrap()),
+            FPDecimal::E.pow(FPDecimal::from_str("0.5").unwrap()),
             // 1.6487212707001281469
             FPDecimal::from_str("1.648721270700128146").unwrap()
         );
@@ -2312,7 +2291,7 @@ mod tests {
     fn test_pow_10_min() {
         let base = FPDecimal::from(10u128);
         assert_eq!(
-            base.pow_robust(FPDecimal::from_str("-18").unwrap()),
+            base.pow(FPDecimal::from_str("-18").unwrap()),
             FPDecimal::from_str("0.000000000000000001").unwrap()
         );
     }
@@ -2320,7 +2299,7 @@ mod tests {
     #[test]
     fn test_pow_10_underflow() {
         let base = FPDecimal::from(10u128);
-        assert_eq!(base.pow_robust(FPDecimal::from_str("-19").unwrap()), FPDecimal::ZERO);
+        assert_eq!(base.pow(FPDecimal::from_str("-19").unwrap()), FPDecimal::ZERO);
     }
 
     #[test]
@@ -2336,7 +2315,7 @@ mod tests {
         let base = FPDecimal::must_from_str("2.3");
         let exponent = FPDecimal::must_from_str("1.4");
         // let result_1 = FPDecimal::checked_positive_pow(base, exponent).unwrap();
-        let result_2 = FPDecimal::pow_robust(base, exponent);
+        let result_2 = FPDecimal::pow(base, exponent);
         assert_eq!(result_2, FPDecimal::must_from_str("3.209363953267971906"));
     }
 
@@ -2344,7 +2323,7 @@ mod tests {
     fn test_2_3_pow_3_7() {
         let base = FPDecimal::must_from_str("2.3");
         let exponent = FPDecimal::must_from_str("3.7");
-        let result_2 = FPDecimal::pow_robust(base, exponent);
+        let result_2 = FPDecimal::pow(base, exponent);
         //21.796812747431183828
         assert_eq!(result_2, FPDecimal::must_from_str("21.796812747431186181"));
     }
@@ -2354,7 +2333,7 @@ mod tests {
         let base = FPDecimal::must_from_str("2.3");
         let exponent = FPDecimal::must_from_str("-1.4");
         // let result_1 = FPDecimal::checked_positive_pow(base, exponent).unwrap();
-        let result_2 = FPDecimal::pow_robust(base, exponent);
+        let result_2 = FPDecimal::pow(base, exponent);
         // 0.31158821952298012815
         assert_eq!(result_2, FPDecimal::must_from_str("0.311588219522980075"));
         // assert_eq!(result_1, FPDecimal::must_from_str("0.311588219522980069"));
@@ -2365,7 +2344,7 @@ mod tests {
         let base = FPDecimal::must_from_str("2.3");
         let exponent = FPDecimal::must_from_str("-3.7");
         // let result_1 = FPDecimal::checked_positive_pow(base, exponent).unwrap();
-        let result_2 = FPDecimal::pow_robust(base, exponent);
+        let result_2 = FPDecimal::pow(base, exponent);
         // 0.045878267230508407006
         assert_eq!(result_2, FPDecimal::must_from_str("0.045878267230508402"));
         // assert_eq!(result_1, FPDecimal::must_from_str("0.045878267230507924"));
@@ -2375,7 +2354,7 @@ mod tests {
     fn test_2_3_pow_0_4() {
         let base = FPDecimal::must_from_str("2.3");
         let exponent = FPDecimal::must_from_str("0.4");
-        let result_2 = FPDecimal::pow_robust(base, exponent);
+        let result_2 = FPDecimal::pow(base, exponent);
         assert_eq!(result_2, FPDecimal::must_from_str("1.395375631855639968"));
     }
 
@@ -2383,7 +2362,7 @@ mod tests {
     fn test_2_3_pow_neg_0_4() {
         let base = FPDecimal::must_from_str("2.3");
         let exponent = FPDecimal::must_from_str("-0.4");
-        let result_2 = FPDecimal::pow_robust(base, exponent);
+        let result_2 = FPDecimal::pow(base, exponent);
         // 0.71665290490285417314
         assert_eq!(result_2, FPDecimal::must_from_str("0.716652904902854170"));
     }
@@ -2409,7 +2388,7 @@ mod tests {
     #[test]
     fn test_100_pow_neg_1_over_2() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(100u128), FPDecimal::must_from_str("-0.5")),
+            FPDecimal::pow(FPDecimal::from(100u128), FPDecimal::must_from_str("-0.5")),
             FPDecimal::must_from_str("0.1")
         );
     }
@@ -2417,7 +2396,7 @@ mod tests {
     #[test]
     fn test_1000_pow_1_over_3() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::from(1000u128), FPDecimal::ONE / FPDecimal::THREE),
+            FPDecimal::pow(FPDecimal::from(1000u128), FPDecimal::ONE / FPDecimal::THREE),
             FPDecimal::TEN
         );
     }
@@ -2425,36 +2404,36 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_neg_1000_pow_1_over_3() {
-        FPDecimal::pow_robust(FPDecimal::must_from_str("-1000.0"), FPDecimal::ONE / FPDecimal::THREE);
+        FPDecimal::pow(FPDecimal::must_from_str("-1000.0"), FPDecimal::ONE / FPDecimal::THREE);
     }
 
     #[test]
     fn test_neg_10_pow_3() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::must_from_str("-10"), FPDecimal::THREE),
-            -FPDecimal::TEN.pow_robust(FPDecimal::THREE)
+            FPDecimal::pow(FPDecimal::must_from_str("-10"), FPDecimal::THREE),
+            -FPDecimal::TEN.pow(FPDecimal::THREE)
         );
     }
 
     #[test]
     fn test_neg_10_pow_4() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::must_from_str("-10"), FPDecimal::FOUR),
-            FPDecimal::TEN.pow_robust(FPDecimal::FOUR)
+            FPDecimal::pow(FPDecimal::must_from_str("-10"), FPDecimal::FOUR),
+            FPDecimal::TEN.pow(FPDecimal::FOUR)
         );
     }
 
     #[test]
     #[should_panic]
     fn test_neg_10_pow_2_3() {
-        FPDecimal::pow_robust(FPDecimal::must_from_str("-10"), FPDecimal::must_from_str("2.3"));
+        FPDecimal::pow(FPDecimal::must_from_str("-10"), FPDecimal::must_from_str("2.3"));
     }
 
     #[test]
     #[should_panic]
     fn test_neg_1000_pow_1_over_4() {
         assert_eq!(
-            FPDecimal::pow_robust(FPDecimal::must_from_str("-1000.0"), FPDecimal::ONE / FPDecimal::FOUR),
+            FPDecimal::pow(FPDecimal::must_from_str("-1000.0"), FPDecimal::ONE / FPDecimal::FOUR),
             -FPDecimal::TEN
         );
     }
@@ -2462,7 +2441,7 @@ mod tests {
     #[test]
     fn test_exp_log_2() {
         // assert_eq!(FPDecimal::E.pow(FPDecimal::TWO.ln()), FPDecimal::must_from_str("2.0"));
-        assert_eq!(FPDecimal::E.pow_robust(FPDecimal::TWO.ln()), FPDecimal::must_from_str("2.0"));
+        assert_eq!(FPDecimal::E.pow(FPDecimal::TWO.ln()), FPDecimal::must_from_str("2.0"));
     }
 
     #[test]
@@ -2475,10 +2454,10 @@ mod tests {
     }
     #[test]
     fn test_1_power_n() {
-        assert_eq!(FPDecimal::ONE, FPDecimal::ONE.pow_robust(FPDecimal::ONE));
-        assert_eq!(FPDecimal::ONE, FPDecimal::ONE.pow_robust(FPDecimal::TWO));
-        assert_eq!(FPDecimal::ONE, FPDecimal::ONE.pow_robust(FPDecimal::THREE));
-        assert_eq!(FPDecimal::ONE, FPDecimal::ONE.pow_robust(FPDecimal::FOUR));
+        assert_eq!(FPDecimal::ONE, FPDecimal::ONE.pow(FPDecimal::ONE));
+        assert_eq!(FPDecimal::ONE, FPDecimal::ONE.pow(FPDecimal::TWO));
+        assert_eq!(FPDecimal::ONE, FPDecimal::ONE.pow(FPDecimal::THREE));
+        assert_eq!(FPDecimal::ONE, FPDecimal::ONE.pow(FPDecimal::FOUR));
     }
 
     // NOTE: its ok we ignore these two unit tests. they should not be the goal of this crate

@@ -63,9 +63,9 @@ impl FPDecimal {
 
         let x2y2 = x2 * y2;
         let mut result = x1y1;
-        result = result + x2y1;
-        result = result + x1y2;
-        result = result + x2y2 / FPDecimal::MUL_PRECISION.num / FPDecimal::MUL_PRECISION.num;
+        result += x2y1;
+        result += x1y2;
+        result += x2y2 / FPDecimal::MUL_PRECISION.num / FPDecimal::MUL_PRECISION.num;
 
         FPDecimal { num: result, sign }
     }
