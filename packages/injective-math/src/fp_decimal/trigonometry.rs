@@ -10,8 +10,8 @@ impl FPDecimal {
         x - (x.pow(FPDecimal::THREE) / FPDecimal::THREE.factorial()) + (x.pow(FPDecimal::FIVE) / FPDecimal::FIVE.factorial())
             - (x.pow(FPDecimal::SEVEN) / FPDecimal::SEVEN.factorial())
             + (x.pow(FPDecimal::NINE) / FPDecimal::NINE.factorial())
-            - (x.pow(FPDecimal::TWO + FPDecimal::NINE) / (FPDecimal::TWO + FPDecimal::NINE).factorial())
-            + (x.pow(FPDecimal::FOUR + FPDecimal::NINE) / (FPDecimal::FOUR + FPDecimal::NINE).factorial())
+            - (x.pow(FPDecimal::ELEVEN) / (FPDecimal::ELEVEN).factorial())
+            + (x.pow(FPDecimal::THREE + FPDecimal::TEN) / (FPDecimal::THREE + FPDecimal::TEN).factorial())
     }
 
     pub(self) fn _sin(mut x: FPDecimal) -> FPDecimal {
