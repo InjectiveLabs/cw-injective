@@ -39,7 +39,6 @@ impl FromStr for FPDecimal {
             }
             _ => Err(StdError::generic_err("Unexpected number of dots")),
         }
-        //Ok(FPDecimal {num: num * FPDecimal::ONE.num, sign: sign})
     }
 }
 

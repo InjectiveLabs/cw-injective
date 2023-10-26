@@ -2,7 +2,7 @@
 use crate::fp_decimal::{FPDecimal, U256};
 
 impl FPDecimal {
-    pub fn _sinh(x: FPDecimal) -> FPDecimal {
+    pub(crate) fn _sinh(x: FPDecimal) -> FPDecimal {
         let neg_x: FPDecimal = FPDecimal {
             num: x.num,
             sign: 1 - x.sign,
@@ -19,7 +19,7 @@ impl FPDecimal {
         FPDecimal::_sinh(*self)
     }
 
-    pub fn _cosh(x: FPDecimal) -> FPDecimal {
+    pub(crate) fn _cosh(x: FPDecimal) -> FPDecimal {
         let neg_x: FPDecimal = FPDecimal {
             num: x.num,
             sign: 1 - x.sign,
@@ -36,7 +36,7 @@ impl FPDecimal {
         FPDecimal::_cosh(*self)
     }
 
-    pub fn _tanh(x: FPDecimal) -> FPDecimal {
+    pub(crate) fn _tanh(x: FPDecimal) -> FPDecimal {
         FPDecimal::_div(FPDecimal::_sinh(x), FPDecimal::_cosh(x))
     }
 

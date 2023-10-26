@@ -6,7 +6,7 @@ use std::iter;
 use std::ops;
 
 impl FPDecimal {
-    pub fn _add(x: FPDecimal, y: FPDecimal) -> FPDecimal {
+    pub(crate) fn _add(x: FPDecimal, y: FPDecimal) -> FPDecimal {
         if x.sign == y.sign {
             return FPDecimal {
                 num: x.num + y.num,
@@ -34,7 +34,7 @@ impl FPDecimal {
         FPDecimal::_add(*self, FPDecimal::from(other))
     }
 
-    pub fn _sub(x: FPDecimal, y: FPDecimal) -> FPDecimal {
+    pub(crate) fn _sub(x: FPDecimal, y: FPDecimal) -> FPDecimal {
         let neg_y = FPDecimal {
             num: y.num,
             sign: 1 - y.sign,
@@ -46,7 +46,7 @@ impl FPDecimal {
         FPDecimal::_sub(*self, FPDecimal::from(other))
     }
 
-    pub fn _mul(x: FPDecimal, y: FPDecimal) -> FPDecimal {
+    pub(crate) fn _mul(x: FPDecimal, y: FPDecimal) -> FPDecimal {
         let mut sign = 1;
         if x.sign != y.sign {
             sign = 0;
@@ -74,7 +74,7 @@ impl FPDecimal {
         FPDecimal::_mul(*self, FPDecimal::from(other))
     }
 
-    pub fn _div(x: FPDecimal, y: FPDecimal) -> FPDecimal {
+    pub(crate) fn _div(x: FPDecimal, y: FPDecimal) -> FPDecimal {
         if y == FPDecimal::ONE {
             return x;
         }

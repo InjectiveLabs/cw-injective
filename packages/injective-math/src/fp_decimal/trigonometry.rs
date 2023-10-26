@@ -1,7 +1,7 @@
 use crate::fp_decimal::FPDecimal;
 
 impl FPDecimal {
-    pub fn _cos(mut x: FPDecimal) -> FPDecimal {
+    pub(self) fn _cos(mut x: FPDecimal) -> FPDecimal {
         x = FPDecimal::_change_range(x);
         FPDecimal::_sin(FPDecimal::PI / FPDecimal::TWO - x)
     }
@@ -14,7 +14,7 @@ impl FPDecimal {
             + (x.pow(FPDecimal::FOUR + FPDecimal::NINE) / (FPDecimal::FOUR + FPDecimal::NINE).factorial())
     }
 
-    pub fn _sin(mut x: FPDecimal) -> FPDecimal {
+    pub(self) fn _sin(mut x: FPDecimal) -> FPDecimal {
         x = FPDecimal::_change_range(x);
         let pi_by_2 = FPDecimal::PI / FPDecimal::TWO;
         let pi_plus_pi_by_2 = FPDecimal::PI + FPDecimal::PI / FPDecimal::TWO;

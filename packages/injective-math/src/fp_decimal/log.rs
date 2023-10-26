@@ -2,34 +2,34 @@
 use crate::fp_decimal::{FPDecimal, U256};
 
 impl FPDecimal {
-    pub fn _log_const(self) -> Option<(FPDecimal, u128)> {
-        if let Some(value) = self._log2() {
+    fn _log_const(self) -> Option<(FPDecimal, u128)> {
+        if let Some(value) = self.log2() {
             return Some((value, 2u128));
         }
 
-        if let Some(value) = self._log_e() {
+        if let Some(value) = self.log_e() {
             //NOTE: base e can't be represented by u128, so we use 27 in here
             return Some((value, 27u128));
         }
-        if let Some(value) = self._log3() {
+        if let Some(value) = self.log3() {
             return Some((value, 3u128));
         }
-        if let Some(value) = self._log5() {
+        if let Some(value) = self.log5() {
             return Some((value, 5u128));
         }
-        if let Some(value) = self._log7() {
+        if let Some(value) = self.log7() {
             return Some((value, 7u128));
         }
-        if let Some(value) = self._log10() {
+        if let Some(value) = self.log10() {
             return Some((value, 10u128));
         }
-        if let Some(value) = self._log11() {
+        if let Some(value) = self.log11() {
             return Some((value, 11u128));
         }
         None
     }
 
-    pub fn _log_e(self) -> Option<FPDecimal> {
+    pub(crate) fn log_e(self) -> Option<FPDecimal> {
         let e = FPDecimal::E;
         if self == FPDecimal::ONE {
             return Some(FPDecimal::ZERO);
@@ -97,7 +97,7 @@ impl FPDecimal {
         None
     }
 
-    pub fn _log2(self) -> Option<FPDecimal> {
+    pub(crate) fn log2(self) -> Option<FPDecimal> {
         if self == FPDecimal::ONE {
             return Some(FPDecimal::ZERO);
         }
@@ -164,7 +164,7 @@ impl FPDecimal {
         None
     }
 
-    pub fn _log3(self) -> Option<FPDecimal> {
+    pub(crate) fn log3(self) -> Option<FPDecimal> {
         if self == FPDecimal::ONE {
             return Some(FPDecimal::ZERO);
         }
@@ -232,7 +232,7 @@ impl FPDecimal {
         None
     }
 
-    pub fn _log5(self) -> Option<FPDecimal> {
+    pub(crate) fn log5(self) -> Option<FPDecimal> {
         if self == FPDecimal::ONE {
             return Some(FPDecimal::ZERO);
         }
@@ -300,7 +300,7 @@ impl FPDecimal {
     }
 
     // 7^1..10
-    pub fn _log7(self) -> Option<FPDecimal> {
+    pub(crate) fn log7(self) -> Option<FPDecimal> {
         if self == FPDecimal::ONE {
             return Some(FPDecimal::ZERO);
         }
@@ -367,7 +367,7 @@ impl FPDecimal {
         None
     }
 
-    pub fn _log10(self) -> Option<FPDecimal> {
+    pub(crate) fn log10(self) -> Option<FPDecimal> {
         if self == FPDecimal::ONE {
             return Some(FPDecimal::ZERO);
         }
@@ -436,11 +436,11 @@ impl FPDecimal {
     }
 
     // 11^1..10
-    pub fn _log11(self) -> Option<FPDecimal> {
+    pub(crate) fn log11(self) -> Option<FPDecimal> {
         if self == FPDecimal::ONE {
             return Some(FPDecimal::ZERO);
         }
-        if self == FPDecimal::from(11u128) {
+        if self == FPDecimal::ELEVEN {
             return Some(FPDecimal::ONE);
         }
         if self == FPDecimal::from(121u128) {
@@ -470,7 +470,7 @@ impl FPDecimal {
         if self == FPDecimal::from(25937424601u128) {
             return Some(FPDecimal::TEN);
         }
-        if self == FPDecimal::ONE / FPDecimal::from(11u128) {
+        if self == FPDecimal::ONE / FPDecimal::ELEVEN {
             return Some(-FPDecimal::ONE);
         }
         if self == FPDecimal::ONE / FPDecimal::from(121u128) {
@@ -503,7 +503,7 @@ impl FPDecimal {
         None
     }
 
-    pub fn _log(a: FPDecimal, base: FPDecimal) -> FPDecimal {
+    fn _log(a: FPDecimal, base: FPDecimal) -> FPDecimal {
         // NOTE: only accurate 1,3,5,7,11, and combinations of these 4 numbers
         //log_base^b = ln(a)/ln(base)
         if a == FPDecimal::ONE {
@@ -515,19 +515,6 @@ impl FPDecimal {
         }
 
         a.ln() / base.ln()
-    }
-
-    /// natural logarithm
-
-    #[allow(clippy::many_single_char_names)]
-    pub fn _ln_greater_than_one(mut a: FPDecimal) -> FPDecimal {
-        // ln(123.456) => ln(1.23456 * 10^2) =>ln(1.23456)+2ln(10)
-        let mut exponent = 0u128;
-        while a > FPDecimal::ONE {
-            a /= FPDecimal::TEN;
-            exponent += 1;
-        }
-        a.ln() + FPDecimal::from(exponent) * FPDecimal::TEN.ln()
     }
 
     #[allow(clippy::many_single_char_names)]
@@ -634,7 +621,7 @@ impl FPDecimal {
         if *self == FPDecimal::TWO {
             return FPDecimal::LN2;
         }
-        if let Some(value) = self._log_e() {
+        if let Some(value) = self.log_e() {
             return value;
         }
         if self.abs() < FPDecimal::must_from_str("1.1") {
@@ -691,7 +678,7 @@ mod tests {
 
         assert_eq!((FPDecimal::ONE / FPDecimal::TEN).ln(), FPDecimal::must_from_str("-2.302585092978637669"));
         assert_eq!(
-            (FPDecimal::ONE / FPDecimal::from(11u128)).ln(),
+            (FPDecimal::ONE / FPDecimal::ELEVEN).ln(),
             FPDecimal::must_from_str("-2.397895272724232098")
         );
         assert_eq!(
@@ -750,10 +737,7 @@ mod tests {
 
     #[test]
     fn test_log_11_8() {
-        assert_eq!(
-            FPDecimal::EIGHT.log(FPDecimal::from(11u128)),
-            FPDecimal::must_from_str("0.867194478953663578")
-        );
+        assert_eq!(FPDecimal::EIGHT.log(FPDecimal::ELEVEN), FPDecimal::must_from_str("0.867194478953663578"));
     }
 
     #[test]
@@ -781,8 +765,6 @@ mod tests {
             sign: 1,
         };
         let two_point_three = two + three / FPDecimal::from(10u128);
-        //0.832909124129605490,
-        //                                                         0.8329091229351039296
         assert_eq!(two_point_three.ln(), FPDecimal::must_from_str("0.832909122935103999"));
     }
 
