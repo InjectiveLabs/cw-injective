@@ -88,6 +88,9 @@ pub fn floor(num: FPDecimal, min_tick: FPDecimal) -> FPDecimal {
 }
 
 pub fn round(num: FPDecimal, min_tick: FPDecimal) -> FPDecimal {
+    if min_tick < FPDecimal::must_from_str("0.00000001") {
+        panic!("min_tick should be greater than {}", FPDecimal::must_from_str("0.00000001"));
+    }
     let num_floor = floor(num, min_tick);
     let diff = num - num_floor;
     match diff.cmp(&(min_tick / FPDecimal::TWO)) {
