@@ -759,46 +759,6 @@ impl FPDecimal {
         val
     }
 
-    // pub fn _exp(a: FPDecimal) -> FPDecimal {
-    //     // this throws underflow with a sufficiently large negative exponent
-    //     // short circuit and just return 0 above a certain threshold
-    //     // otherwise if there is a long enough delay between updates on a cluster
-    //     // the penalty function will be bricked
-    //     if a.sign == 0 && a.num >= FPDecimal::from(45i128).num {
-    //         return FPDecimal::ZERO;
-    //     }
-    //     let mut x = a.num;
-    //     let mut r = FPDecimal::ONE;
-    //     while x >= U256([10, 0, 0, 0]) * FPDecimal::ONE.num {
-    //         x = x - U256([10, 0, 0, 0]) * FPDecimal::ONE.num;
-    //         r = FPDecimal::_mul(r, FPDecimal::E_10);
-    //     }
-    //     if x == FPDecimal::ONE.num {
-    //         let val = FPDecimal::_mul(r, FPDecimal::E);
-    //         if a.sign == 0 {
-    //             return FPDecimal::reciprocal(val);
-    //         }
-    //         return val;
-    //     } else if x == FPDecimal::ZERO.num {
-    //         let val = r;
-    //         if a.sign == 0 {
-    //             return FPDecimal::reciprocal(val);
-    //         }
-    //         return val;
-    //     }
-    //     let mut tr = FPDecimal::ONE.num;
-    //     let mut d = tr;
-    //     for i in 1..((2 * FPDecimal::DIGITS + 1) as u64) {
-    //         d = (d * x) / (FPDecimal::ONE.num * U256([i, 0, 0, 0]));
-    //         tr = tr + d;
-    //     }
-    //     let val = FPDecimal::_mul(FPDecimal { num: tr, sign: 1 }, r);
-    //     if a.sign == 0 {
-    //         return FPDecimal::reciprocal(val);
-    //     }
-    //     val
-    // }
-    // a^(0.5)
     pub fn _sqrt(a: FPDecimal) -> Option<FPDecimal> {
         const MAX_ITERATIONS: i64 = 300;
 
@@ -1824,57 +1784,6 @@ impl FPDecimal {
             })
         }
     }
-    // pub fn pow_robust(self, exponent: FPDecimal) -> FPDecimal {
-    //     // TODO: need to handle e^k seperately, since _Exp function is already implemented
-    //     if self == FPDecimal::E {
-    //         return FPDecimal::exp(exponent);
-    //     }
-    //     if self.is_zero() {
-    //         return self;
-    //     }
-    //     if self > FPDecimal::ZERO && exponent == FPDecimal::ZERO {
-    //         return FPDecimal::ONE;
-    //     }
-
-    //     // FPDecimal::_pow_robust(self, exponent)
-    //     if self >= FPDecimal::ZERO {
-    //         match self.checked_positive_pow(exponent) {
-    //             Ok(value) => value,
-    //             Err(_) => panic!("Multiplication overflow"),
-    //         }
-    //     } else {
-    //         match self.checked_negative_pow(exponent) {
-    //             Ok(value) => value,
-    //             Err(_) => panic!("Multiplication overflow"),
-    //         }
-    //     }
-    // }
-
-    // pub fn pow_robust(self, exponent: FPDecimal) -> FPDecimal {
-    //     // TODO: need to handle e^k seperately, since _Exp function is already implemented
-    //     if self == FPDecimal::E {
-    //         return FPDecimal::exp(exponent);
-    //     }
-    //     if self.is_zero() {
-    //         return self;
-    //     }
-    //     if self > FPDecimal::ZERO && exponent == FPDecimal::ZERO {
-    //         return FPDecimal::ONE;
-    //     }
-
-    //     // FPDecimal::_pow_robust(self, exponent)
-    //     if self >= FPDecimal::ZERO {
-    //         match self.checked_positive_pow(exponent) {
-    //             Ok(value) => value,
-    //             Err(_) => panic!("Multiplication overflow"),
-    //         }
-    //     } else {
-    //         match self.checked_negative_pow(exponent) {
-    //             Ok(value) => value,
-    //             Err(_) => panic!("Multiplication overflow"),
-    //         }
-    //     }
-    // }
 }
 
 #[cfg(test)]
@@ -2466,7 +2375,7 @@ mod tests {
     fn test_25_pow_0_11111() {
         let power = FPDecimal::ONE / FPDecimal::from(9_u128);
         let result: FPDecimal = FPDecimal::must_from_str("25.0").ln() * power;
-        let dampen: FPDecimal = FPDecimal::E.pow_robust(result);
+        let dampen: FPDecimal = FPDecimal::E.pow(result);
         //                                           1.4299640339921836144
         assert_eq!(dampen, FPDecimal::must_from_str("1.429969148308728731"));
     }
@@ -2474,7 +2383,7 @@ mod tests {
     fn test_25_pow_0_11111_decimal_lib() {
         let x = FPDecimal::ONE / FPDecimal::from(9_u128);
         let a: FPDecimal = FPDecimal::must_from_str("25.0");
-        let result: FPDecimal = a.pow_robust(x);
+        let result: FPDecimal = a.pow(x);
         assert_eq!(result, FPDecimal::must_from_str("1.429969148308728731"));
     }
     */
