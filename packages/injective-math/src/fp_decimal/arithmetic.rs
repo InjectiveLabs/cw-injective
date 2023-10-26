@@ -88,7 +88,6 @@ impl FPDecimal {
 
         FPDecimal {
             num: U256::try_from(num).unwrap(),
-            //num: num.into(),
             sign: 1 ^ x.sign ^ y.sign,
         }
     }
