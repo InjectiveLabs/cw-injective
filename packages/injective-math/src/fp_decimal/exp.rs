@@ -706,17 +706,12 @@ impl FPDecimal {
                     (&FPDecimal::log11, FPDecimal::ELEVEN),
                 ];
                 for (log_fn, divisor) in base_checks {
-                    if log_fn(exponent).is_some() {
-                        let value = log_fn(exponent).unwrap();
+                    if let Some(value) = log_fn(exponent) {
                         if self == divisor {
                             return value;
                         }
                     }
-                    if log_fn(self).is_some() {
-                        let value = log_fn(self).unwrap();
-                        if FPDecimal::ONE / value == exponent {
-                            return divisor;
-                        }
+                    if let Some(value) = log_fn(self) {
                         if FPDecimal::ONE / value == exponent {
                             return divisor;
                         }

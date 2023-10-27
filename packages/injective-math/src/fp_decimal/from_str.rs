@@ -56,6 +56,7 @@ mod tests {
 
     #[test]
     fn test_from_str_neg() {
+        //-0.69314718055994530943
         assert_eq!((FPDecimal::ONE / FPDecimal::TWO).ln(), FPDecimal::must_from_str("-0.693147180435828445"));
         assert_eq!(
             (FPDecimal::ONE / FPDecimal::must_from_str("1.9")).ln(),

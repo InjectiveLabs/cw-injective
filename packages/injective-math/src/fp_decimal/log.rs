@@ -2,33 +2,6 @@
 use crate::fp_decimal::{FPDecimal, U256};
 
 impl FPDecimal {
-    fn _log_const(self) -> Option<(FPDecimal, u128)> {
-        if let Some(value) = self.log2() {
-            return Some((value, 2u128));
-        }
-
-        if let Some(value) = self.log_e() {
-            //NOTE: base e can't be represented by u128, so we use 27 in here
-            return Some((value, 27u128));
-        }
-        if let Some(value) = self.log3() {
-            return Some((value, 3u128));
-        }
-        if let Some(value) = self.log5() {
-            return Some((value, 5u128));
-        }
-        if let Some(value) = self.log7() {
-            return Some((value, 7u128));
-        }
-        if let Some(value) = self.log10() {
-            return Some((value, 10u128));
-        }
-        if let Some(value) = self.log11() {
-            return Some((value, 11u128));
-        }
-        None
-    }
-
     pub(crate) fn log_e(self) -> Option<FPDecimal> {
         let e = FPDecimal::E;
         if self == FPDecimal::ONE {
@@ -64,6 +37,10 @@ impl FPDecimal {
         if self == e * e * e * e * e * e * e * e * e * e {
             return Some(FPDecimal::TEN);
         }
+        if self == e * e * e * e * e * e * e * e * e * e * e {
+            return Some(FPDecimal::ELEVEN);
+        }
+
         if self == FPDecimal::ONE / FPDecimal::E {
             return Some(-FPDecimal::ONE);
         }
@@ -93,6 +70,9 @@ impl FPDecimal {
         }
         if self == FPDecimal::ONE / (e * e * e * e * e * e * e * e * e * e) {
             return Some(-FPDecimal::TEN);
+        }
+        if self == FPDecimal::ONE / (e * e * e * e * e * e * e * e * e * e * e) {
+            return Some(-FPDecimal::ELEVEN);
         }
         None
     }
@@ -131,6 +111,10 @@ impl FPDecimal {
         if self == FPDecimal::from(1024u128) {
             return Some(FPDecimal::TEN);
         }
+        if self == FPDecimal::from(2048u128) {
+            return Some(FPDecimal::ELEVEN);
+        }
+
         if self == FPDecimal::ONE / FPDecimal::TWO {
             return Some(-FPDecimal::ONE);
         }
@@ -160,6 +144,9 @@ impl FPDecimal {
         }
         if self == FPDecimal::ONE / FPDecimal::from(1024u128) {
             return Some(-FPDecimal::TEN);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(2048u128) {
+            return Some(-FPDecimal::ELEVEN);
         }
         None
     }
@@ -198,6 +185,9 @@ impl FPDecimal {
         if self == FPDecimal::from(59049u128) {
             return Some(FPDecimal::TEN);
         }
+        if self == FPDecimal::from(177147u128) {
+            return Some(FPDecimal::ELEVEN);
+        }
 
         if self == FPDecimal::ONE / FPDecimal::THREE {
             return Some(-FPDecimal::ONE);
@@ -229,6 +219,10 @@ impl FPDecimal {
         if self == FPDecimal::ONE / FPDecimal::from(59049u128) {
             return Some(-FPDecimal::TEN);
         }
+        if self == FPDecimal::ONE / FPDecimal::from(177147u128) {
+            return Some(-FPDecimal::ELEVEN);
+        }
+
         None
     }
 
@@ -266,6 +260,10 @@ impl FPDecimal {
         if self == FPDecimal::from(9765625u128) {
             return Some(FPDecimal::TEN);
         }
+        if self == FPDecimal::from(48828125u128) {
+            return Some(FPDecimal::ELEVEN);
+        }
+
         if self == FPDecimal::ONE / FPDecimal::FIVE {
             return Some(-FPDecimal::ONE);
         }
@@ -296,6 +294,10 @@ impl FPDecimal {
         if self == FPDecimal::ONE / FPDecimal::from(9765625u128) {
             return Some(-FPDecimal::TEN);
         }
+        if self == FPDecimal::ONE / FPDecimal::from(48828125u128) {
+            return Some(-FPDecimal::ELEVEN);
+        }
+
         None
     }
 
@@ -334,6 +336,9 @@ impl FPDecimal {
         if self == FPDecimal::from(282475249u128) {
             return Some(FPDecimal::TEN);
         }
+        if self == FPDecimal::from(1977326743u128) {
+            return Some(FPDecimal::ELEVEN);
+        }
         if self == FPDecimal::ONE / FPDecimal::SEVEN {
             return Some(-FPDecimal::ONE);
         }
@@ -364,6 +369,10 @@ impl FPDecimal {
         if self == FPDecimal::ONE / FPDecimal::from(282475249u128) {
             return Some(-FPDecimal::TEN);
         }
+        if self == FPDecimal::ONE / FPDecimal::from(1977326743u128) {
+            return Some(-FPDecimal::ELEVEN);
+        }
+
         None
     }
 
@@ -401,6 +410,9 @@ impl FPDecimal {
         if self == FPDecimal::from(10_000_000_000u128) {
             return Some(FPDecimal::TEN);
         }
+        if self == FPDecimal::from(100_000_000_000u128) {
+            return Some(FPDecimal::ELEVEN);
+        }
 
         if self == FPDecimal::ONE / FPDecimal::TEN {
             return Some(-FPDecimal::ONE);
@@ -431,6 +443,9 @@ impl FPDecimal {
         }
         if self == FPDecimal::ONE / FPDecimal::from(10_000_000_000u128) {
             return Some(-FPDecimal::TEN);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(100_000_000_000u128) {
+            return Some(-FPDecimal::ELEVEN);
         }
         None
     }
@@ -470,6 +485,10 @@ impl FPDecimal {
         if self == FPDecimal::from(25937424601u128) {
             return Some(FPDecimal::TEN);
         }
+        if self == FPDecimal::from(285311670611u128) {
+            return Some(FPDecimal::ELEVEN);
+        }
+
         if self == FPDecimal::ONE / FPDecimal::ELEVEN {
             return Some(-FPDecimal::ONE);
         }
@@ -500,6 +519,10 @@ impl FPDecimal {
         if self == FPDecimal::ONE / FPDecimal::from(25937424601u128) {
             return Some(-FPDecimal::TEN);
         }
+        if self == FPDecimal::ONE / FPDecimal::from(285311670611u128) {
+            return Some(-FPDecimal::ELEVEN);
+        }
+
         None
     }
 
@@ -517,7 +540,37 @@ impl FPDecimal {
         a.ln() / base.ln()
     }
 
-    #[allow(clippy::many_single_char_names)]
+    pub fn log(&self, base: FPDecimal) -> FPDecimal {
+        assert!(base > FPDecimal::ZERO);
+        if *self == FPDecimal::ONE {
+            return FPDecimal::ZERO;
+        }
+        if *self == FPDecimal::ZERO {
+            // FIXME should be an undefined, not sure if it will be better to just add assert!(b>0)
+            return FPDecimal::SMALLEST_PRECISION;
+        }
+
+        if base == FPDecimal::E {
+            return self.ln();
+        }
+
+        let base_checks: Vec<&dyn Fn(FPDecimal) -> Option<FPDecimal>> = vec![
+            &FPDecimal::log_e,
+            &FPDecimal::log2,
+            &FPDecimal::log3,
+            &FPDecimal::log5,
+            &FPDecimal::log7,
+            &FPDecimal::log10,
+            &FPDecimal::log11,
+        ];
+        for log_fn in base_checks {
+            if let (Some(numerator), Some(denominator)) = (log_fn(*self), log_fn(base)) {
+                return numerator / denominator;
+            }
+        }
+        FPDecimal::_log(*self, base)
+    }
+
     fn _two_agm(mut a0: FPDecimal, mut b0: FPDecimal, tol: FPDecimal) -> FPDecimal {
         loop {
             if (a0 - b0).abs() < tol {
@@ -536,6 +589,7 @@ impl FPDecimal {
         // m =8, 2**8=256;
         // m=16, 2**16=65536
         // m=32, 2**32=4294967296
+        // m=64, 2**64=18446744073709551616
         // m=128, 2**128=340282366920938463463374607431768211456
         let two_pow_m = FPDecimal::from(4294967296u128);
         let s = *self * two_pow_m;
@@ -628,32 +682,6 @@ impl FPDecimal {
             return self._ln_robust();
         }
         self._ln()
-    }
-
-    pub fn log(&self, base: FPDecimal) -> FPDecimal {
-        assert!(base > FPDecimal::ZERO);
-        if *self == FPDecimal::ONE {
-            return FPDecimal::ZERO;
-        }
-        if *self == FPDecimal::ZERO {
-            // FIXME should be an undefined, not sure if it will be better to just add assert!(b>0)
-            return FPDecimal::SMALLEST_PRECISION;
-        }
-
-        if base == FPDecimal::E {
-            return self.ln();
-        }
-        let numerator = self._log_const();
-        let denominator = base._log_const();
-        match (numerator, denominator) {
-            (Some((n, nbase)), Some((d, dbase))) => {
-                if dbase == nbase {
-                    return n / d;
-                }
-                FPDecimal::_log(*self, base)
-            }
-            (_, _) => FPDecimal::_log(*self, base),
-        }
     }
 }
 
