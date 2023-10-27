@@ -21,7 +21,7 @@ impl FPDecimal {
             FPDecimal::EIGHT,
             FPDecimal::NINE,
             FPDecimal::TEN,
-            FPDecimal::must_from_str("11"),
+            FPDecimal::ELEVEN,
             FPDecimal::must_from_str("12"),
             FPDecimal::must_from_str("13"),
             FPDecimal::must_from_str("14"),
@@ -53,6 +53,993 @@ impl FPDecimal {
     }
     // e^(a)
 
+    fn two_pow(exponent: FPDecimal) -> Option<FPDecimal> {
+        if exponent == FPDecimal::ONE {
+            return Some(FPDecimal::TWO);
+        }
+        if exponent == FPDecimal::TWO {
+            return Some(FPDecimal::FOUR);
+        }
+        if exponent == FPDecimal::THREE {
+            return Some(FPDecimal::EIGHT);
+        }
+        if exponent == FPDecimal::FOUR {
+            return Some(FPDecimal::from(16u128));
+        }
+        if exponent == FPDecimal::FIVE {
+            return Some(FPDecimal::from(32u128));
+        }
+        if exponent == FPDecimal::SIX {
+            return Some(FPDecimal::from(64u128));
+        }
+        if exponent == FPDecimal::SEVEN {
+            return Some(FPDecimal::from(128u128));
+        }
+        if exponent == FPDecimal::EIGHT {
+            return Some(FPDecimal::from(256u128));
+        }
+        if exponent == FPDecimal::NINE {
+            return Some(FPDecimal::from(512u128));
+        }
+        if exponent == FPDecimal::TEN {
+            return Some(FPDecimal::from(1024u128));
+        }
+        if exponent == FPDecimal::ELEVEN {
+            return Some(FPDecimal::from(2048u128));
+        }
+        if exponent == FPDecimal::from(12u128) {
+            return Some(FPDecimal::from(4096u128));
+        }
+        if exponent == FPDecimal::from(13u128) {
+            return Some(FPDecimal::from(8192u128));
+        }
+        if exponent == FPDecimal::from(14u128) {
+            return Some(FPDecimal::from(16384u128));
+        }
+        if exponent == FPDecimal::from(15u128) {
+            return Some(FPDecimal::from(32768u128));
+        }
+
+        if FPDecimal::ONE.log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::ONE);
+        }
+        if FPDecimal::TWO.log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::TWO);
+        }
+        if FPDecimal::THREE.log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::THREE);
+        }
+        if FPDecimal::FOUR.log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::FOUR);
+        }
+        if FPDecimal::FIVE.log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::FIVE);
+        }
+        if FPDecimal::SIX.log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::SIX);
+        }
+        if FPDecimal::SEVEN.log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::SEVEN);
+        }
+        if FPDecimal::EIGHT.log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::EIGHT);
+        }
+        if FPDecimal::NINE.log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::NINE);
+        }
+        if FPDecimal::TEN.log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::TEN);
+        }
+        if FPDecimal::ELEVEN.log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::ELEVEN);
+        }
+        if FPDecimal::from(12u128).log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::from(12u128));
+        }
+        if FPDecimal::from(13u128).log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::from(13u128));
+        }
+        if FPDecimal::from(14u128).log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::from(14u128));
+        }
+        if FPDecimal::from(15u128).log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::from(15u128));
+        }
+
+        if (FPDecimal::ONE / FPDecimal::TWO).log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::TWO);
+        }
+        if (FPDecimal::ONE / FPDecimal::THREE).log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::THREE);
+        }
+        if (FPDecimal::ONE / FPDecimal::FOUR).log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::FOUR);
+        }
+        if (FPDecimal::ONE / FPDecimal::FIVE).log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::FIVE);
+        }
+        if (FPDecimal::ONE / FPDecimal::SIX).log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::SIX);
+        }
+        if (FPDecimal::ONE / FPDecimal::SEVEN).log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::SEVEN);
+        }
+        if (FPDecimal::ONE / FPDecimal::EIGHT).log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::EIGHT);
+        }
+        if (FPDecimal::ONE / FPDecimal::NINE).log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::NINE);
+        }
+        if (FPDecimal::ONE / FPDecimal::TEN).log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::TEN);
+        }
+        if (FPDecimal::ONE / FPDecimal::ELEVEN).log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::ELEVEN);
+        }
+        if (FPDecimal::ONE / FPDecimal::from(12u128)).log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::from(12u128));
+        }
+        if (FPDecimal::ONE / FPDecimal::from(13u128)).log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::from(13u128));
+        }
+        if (FPDecimal::ONE / FPDecimal::from(14u128)).log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::from(14u128));
+        }
+        if (FPDecimal::ONE / FPDecimal::from(15u128)).log2().is_some_and(|x| x == exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::from(15u128));
+        }
+
+        if exponent == -FPDecimal::TWO {
+            return Some(FPDecimal::ONE / FPDecimal::FOUR);
+        }
+        if exponent == -FPDecimal::THREE {
+            return Some(FPDecimal::ONE / FPDecimal::EIGHT);
+        }
+        if exponent == -FPDecimal::FOUR {
+            return Some(FPDecimal::ONE / FPDecimal::from(16u128));
+        }
+        if exponent == -FPDecimal::FIVE {
+            return Some(FPDecimal::ONE / FPDecimal::from(32u128));
+        }
+        if exponent == -FPDecimal::SIX {
+            return Some(FPDecimal::ONE / FPDecimal::from(64u128));
+        }
+        if exponent == -FPDecimal::SEVEN {
+            return Some(FPDecimal::ONE / FPDecimal::from(128u128));
+        }
+        if exponent == -FPDecimal::EIGHT {
+            return Some(FPDecimal::ONE / FPDecimal::from(256u128));
+        }
+        if exponent == -FPDecimal::NINE {
+            return Some(FPDecimal::ONE / FPDecimal::from(512u128));
+        }
+        if exponent == -FPDecimal::TEN {
+            return Some(FPDecimal::ONE / FPDecimal::from(1024u128));
+        }
+        if exponent == -FPDecimal::ELEVEN {
+            return Some(FPDecimal::ONE / FPDecimal::from(2048u128));
+        }
+        if exponent == -FPDecimal::from(12u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(4096u128));
+        }
+        if exponent == -FPDecimal::from(13u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(8192u128));
+        }
+        if exponent == -FPDecimal::from(14u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(16384u128));
+        }
+        if exponent == -FPDecimal::from(15u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(32768u128));
+        }
+
+        None
+    }
+
+    fn e_pow(exponent: FPDecimal) -> Option<FPDecimal> {
+        if exponent == FPDecimal::ONE {
+            return Some(FPDecimal::E);
+        }
+        if exponent == FPDecimal::ONE.ln() {
+            return Some(FPDecimal::ONE);
+        }
+        if exponent == FPDecimal::TWO.ln() {
+            return Some(FPDecimal::TWO);
+        }
+        if exponent == FPDecimal::THREE.ln() {
+            return Some(FPDecimal::THREE);
+        }
+        if exponent == FPDecimal::FOUR.ln() {
+            return Some(FPDecimal::FOUR);
+        }
+        if exponent == FPDecimal::FIVE.ln() {
+            return Some(FPDecimal::FIVE);
+        }
+        if exponent == FPDecimal::SIX.ln() {
+            return Some(FPDecimal::SIX);
+        }
+        if exponent == FPDecimal::SEVEN.ln() {
+            return Some(FPDecimal::SEVEN);
+        }
+        if exponent == FPDecimal::EIGHT.ln() {
+            return Some(FPDecimal::EIGHT);
+        }
+        if exponent == FPDecimal::NINE.ln() {
+            return Some(FPDecimal::NINE);
+        }
+        if exponent == FPDecimal::TEN.ln() {
+            return Some(FPDecimal::TEN);
+        }
+        if exponent == FPDecimal::ELEVEN.ln() {
+            return Some(FPDecimal::ELEVEN);
+        }
+        if exponent == FPDecimal::from(12u128).ln() {
+            return Some(FPDecimal::from(12u128));
+        }
+        if exponent == FPDecimal::from(13u128).ln() {
+            return Some(FPDecimal::from(13u128));
+        }
+        if exponent == FPDecimal::from(14u128).ln() {
+            return Some(FPDecimal::from(14u128));
+        }
+        if exponent == FPDecimal::from(15u128).ln() {
+            return Some(FPDecimal::from(15u128));
+        }
+
+        if exponent == (FPDecimal::ONE / FPDecimal::TWO).ln() {
+            return Some(FPDecimal::ONE / FPDecimal::TWO);
+        }
+        if exponent == (FPDecimal::ONE / FPDecimal::THREE).ln() {
+            return Some(FPDecimal::ONE / FPDecimal::THREE);
+        }
+        if exponent == (FPDecimal::ONE / FPDecimal::FOUR).ln() {
+            return Some(FPDecimal::ONE / FPDecimal::FOUR);
+        }
+        if exponent == (FPDecimal::ONE / FPDecimal::FIVE).ln() {
+            return Some(FPDecimal::ONE / FPDecimal::FIVE);
+        }
+        if exponent == (FPDecimal::ONE / FPDecimal::SIX).ln() {
+            return Some(FPDecimal::ONE / FPDecimal::SIX);
+        }
+        if exponent == (FPDecimal::ONE / FPDecimal::SEVEN).ln() {
+            return Some(FPDecimal::ONE / FPDecimal::SEVEN);
+        }
+        if exponent == (FPDecimal::ONE / FPDecimal::EIGHT).ln() {
+            return Some(FPDecimal::ONE / FPDecimal::EIGHT);
+        }
+        if exponent == (FPDecimal::ONE / FPDecimal::NINE).ln() {
+            return Some(FPDecimal::ONE / FPDecimal::NINE);
+        }
+        if exponent == (FPDecimal::ONE / FPDecimal::TEN).ln() {
+            return Some(FPDecimal::ONE / FPDecimal::TEN);
+        }
+        if exponent == (FPDecimal::ONE / FPDecimal::ELEVEN).ln() {
+            return Some(FPDecimal::ONE / FPDecimal::ELEVEN);
+        }
+        if exponent == (FPDecimal::ONE / FPDecimal::from(12u128)).ln() {
+            return Some(FPDecimal::ONE / FPDecimal::from(12u128));
+        }
+        if exponent == (FPDecimal::ONE / FPDecimal::from(13u128)).ln() {
+            return Some(FPDecimal::ONE / FPDecimal::from(13u128));
+        }
+        if exponent == (FPDecimal::ONE / FPDecimal::from(14u128)).ln() {
+            return Some(FPDecimal::ONE / FPDecimal::from(14u128));
+        }
+        if exponent == (FPDecimal::ONE / FPDecimal::from(15u128)).ln() {
+            return Some(FPDecimal::ONE / FPDecimal::from(15u128));
+        }
+
+        if exponent == -FPDecimal::ONE {
+            return Some(FPDecimal::ONE / FPDecimal::E);
+        }
+        if exponent == -FPDecimal::ONE.ln() {
+            return Some(FPDecimal::ONE);
+        }
+        if exponent == FPDecimal::TWO.ln() {
+            return Some(FPDecimal::ONE / FPDecimal::TWO);
+        }
+        if exponent == -FPDecimal::THREE.ln() {
+            return Some(FPDecimal::ONE / FPDecimal::THREE);
+        }
+        if exponent == -FPDecimal::FOUR.ln() {
+            return Some(FPDecimal::ONE / FPDecimal::FOUR);
+        }
+        if exponent == -FPDecimal::FIVE.ln() {
+            return Some(FPDecimal::ONE / FPDecimal::FIVE);
+        }
+        if exponent == -FPDecimal::SIX.ln() {
+            return Some(FPDecimal::ONE / FPDecimal::SIX);
+        }
+        if exponent == -FPDecimal::SEVEN.ln() {
+            return Some(FPDecimal::ONE / FPDecimal::SEVEN);
+        }
+        if exponent == -FPDecimal::EIGHT.ln() {
+            return Some(FPDecimal::ONE / FPDecimal::EIGHT);
+        }
+        if exponent == -FPDecimal::NINE.ln() {
+            return Some(FPDecimal::ONE / FPDecimal::NINE);
+        }
+        if exponent == -FPDecimal::TEN.ln() {
+            return Some(FPDecimal::ONE / FPDecimal::TEN);
+        }
+        if exponent == -FPDecimal::ELEVEN.ln() {
+            return Some(FPDecimal::ONE / FPDecimal::ELEVEN);
+        }
+        if exponent == -FPDecimal::from(12u128).ln() {
+            return Some(FPDecimal::ONE / FPDecimal::from(12u128));
+        }
+        if exponent == -FPDecimal::from(13u128).ln() {
+            return Some(FPDecimal::ONE / FPDecimal::from(13u128));
+        }
+        if exponent == -FPDecimal::from(14u128).ln() {
+            return Some(FPDecimal::ONE / FPDecimal::from(14u128));
+        }
+        if exponent == -FPDecimal::from(15u128).ln() {
+            return Some(FPDecimal::ONE / FPDecimal::from(15u128));
+        }
+
+        if exponent == -(FPDecimal::ONE / FPDecimal::TWO).ln() {
+            return Some(FPDecimal::TWO);
+        }
+        if exponent == -(FPDecimal::ONE / FPDecimal::THREE).ln() {
+            return Some(FPDecimal::THREE);
+        }
+        if exponent == -(FPDecimal::ONE / FPDecimal::FOUR).ln() {
+            return Some(FPDecimal::FOUR);
+        }
+        if exponent == -(FPDecimal::ONE / FPDecimal::FIVE).ln() {
+            return Some(FPDecimal::FIVE);
+        }
+        if exponent == -(FPDecimal::ONE / FPDecimal::SIX).ln() {
+            return Some(FPDecimal::SIX);
+        }
+        if exponent == -(FPDecimal::ONE / FPDecimal::SEVEN).ln() {
+            return Some(FPDecimal::SEVEN);
+        }
+        if exponent == -(FPDecimal::ONE / FPDecimal::EIGHT).ln() {
+            return Some(FPDecimal::EIGHT);
+        }
+        if exponent == -(FPDecimal::ONE / FPDecimal::NINE).ln() {
+            return Some(FPDecimal::NINE);
+        }
+        if exponent == -(FPDecimal::ONE / FPDecimal::TEN).ln() {
+            return Some(FPDecimal::TEN);
+        }
+        if exponent == -(FPDecimal::ONE / FPDecimal::ELEVEN).ln() {
+            return Some(FPDecimal::ELEVEN);
+        }
+        if exponent == -(FPDecimal::ONE / FPDecimal::from(12u128)).ln() {
+            return Some(FPDecimal::from(12u128));
+        }
+        if exponent == -(FPDecimal::ONE / FPDecimal::from(13u128)).ln() {
+            return Some(FPDecimal::from(13u128));
+        }
+        if exponent == -(FPDecimal::ONE / FPDecimal::from(14u128)).ln() {
+            return Some(FPDecimal::from(14u128));
+        }
+        if exponent == -(FPDecimal::ONE / FPDecimal::from(15u128)).ln() {
+            return Some(FPDecimal::from(15u128));
+        }
+        None
+    }
+
+    fn three_pow(exponent: FPDecimal) -> Option<FPDecimal> {
+        if exponent == FPDecimal::ONE {
+            return Some(FPDecimal::THREE);
+        }
+        if exponent == FPDecimal::TWO {
+            return Some(FPDecimal::NINE);
+        }
+        if exponent == FPDecimal::THREE {
+            return Some(FPDecimal::from(27u128));
+        }
+        if exponent == FPDecimal::FOUR {
+            return Some(FPDecimal::from(81u128));
+        }
+        if exponent == FPDecimal::FIVE {
+            return Some(FPDecimal::from(243u128));
+        }
+        if exponent == FPDecimal::SIX {
+            return Some(FPDecimal::from(729u128));
+        }
+        if exponent == FPDecimal::SEVEN {
+            return Some(FPDecimal::from(2187u128));
+        }
+        if exponent == FPDecimal::EIGHT {
+            return Some(FPDecimal::from(6561u128));
+        }
+        if exponent == FPDecimal::NINE {
+            return Some(FPDecimal::from(19683u128));
+        }
+        if exponent == FPDecimal::TEN {
+            return Some(FPDecimal::from(59049u128));
+        }
+        if exponent == FPDecimal::ELEVEN {
+            return Some(FPDecimal::from(177147u128));
+        }
+        if exponent == FPDecimal::from(12u128) {
+            return Some(FPDecimal::from(531441u128));
+        }
+        if exponent == FPDecimal::from(13u128) {
+            return Some(FPDecimal::from(1594323u128));
+        }
+        if exponent == FPDecimal::from(14u128) {
+            return Some(FPDecimal::from(4782969u128));
+        }
+        if exponent == FPDecimal::from(15u128) {
+            return Some(FPDecimal::from(14348907u128));
+        }
+
+        if exponent == -FPDecimal::ONE {
+            return Some(FPDecimal::ONE / FPDecimal::THREE);
+        }
+        if exponent == -FPDecimal::TWO {
+            return Some(FPDecimal::ONE / FPDecimal::NINE);
+        }
+        if exponent == -FPDecimal::THREE {
+            return Some(FPDecimal::ONE / FPDecimal::from(27u128));
+        }
+        if exponent == -FPDecimal::FOUR {
+            return Some(FPDecimal::ONE / FPDecimal::from(81u128));
+        }
+        if exponent == -FPDecimal::FIVE {
+            return Some(FPDecimal::ONE / FPDecimal::from(243u128));
+        }
+        if exponent == -FPDecimal::SIX {
+            return Some(FPDecimal::ONE / FPDecimal::from(729u128));
+        }
+        if exponent == -FPDecimal::SEVEN {
+            return Some(FPDecimal::ONE / FPDecimal::from(2187u128));
+        }
+        if exponent == -FPDecimal::EIGHT {
+            return Some(FPDecimal::ONE / FPDecimal::from(6561u128));
+        }
+        if exponent == -FPDecimal::NINE {
+            return Some(FPDecimal::ONE / FPDecimal::from(19683u128));
+        }
+        if exponent == -FPDecimal::TEN {
+            return Some(FPDecimal::ONE / FPDecimal::from(59049u128));
+        }
+        if exponent == -FPDecimal::ELEVEN {
+            return Some(FPDecimal::ONE / FPDecimal::from(177147u128));
+        }
+        if exponent == -FPDecimal::from(12u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(531441u128));
+        }
+        if exponent == -FPDecimal::from(13u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(1594323u128));
+        }
+        if exponent == -FPDecimal::from(14u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(4782969u128));
+        }
+        if exponent == -FPDecimal::from(15u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(14348907u128));
+        }
+        None
+    }
+
+    fn five_pow(exponent: FPDecimal) -> Option<FPDecimal> {
+        if exponent == FPDecimal::ONE {
+            return Some(FPDecimal::FIVE);
+        }
+        if exponent == FPDecimal::TWO {
+            return Some(FPDecimal::from(25u128));
+        }
+        if exponent == FPDecimal::THREE {
+            return Some(FPDecimal::from(125u128));
+        }
+        if exponent == FPDecimal::FOUR {
+            return Some(FPDecimal::from(625u128));
+        }
+        if exponent == FPDecimal::FIVE {
+            return Some(FPDecimal::from(3125u128));
+        }
+        if exponent == FPDecimal::SIX {
+            return Some(FPDecimal::from(15625u128));
+        }
+        if exponent == FPDecimal::SEVEN {
+            return Some(FPDecimal::from(78125u128));
+        }
+        if exponent == FPDecimal::EIGHT {
+            return Some(FPDecimal::from(390625u128));
+        }
+        if exponent == FPDecimal::NINE {
+            return Some(FPDecimal::from(1953125u128));
+        }
+        if exponent == FPDecimal::TEN {
+            return Some(FPDecimal::from(9765625u128));
+        }
+        if exponent == FPDecimal::ELEVEN {
+            return Some(FPDecimal::from(48828125u128));
+        }
+        if exponent == FPDecimal::from(12u128) {
+            return Some(FPDecimal::from(244140625u128));
+        }
+        if exponent == FPDecimal::from(13u128) {
+            return Some(FPDecimal::from(1220703125u128));
+        }
+        if exponent == FPDecimal::from(14u128) {
+            return Some(FPDecimal::from(6103515625u128));
+        }
+        if exponent == FPDecimal::from(15u128) {
+            return Some(FPDecimal::from(30517578125u128));
+        }
+
+        if exponent == -FPDecimal::ONE {
+            return Some(FPDecimal::ONE / FPDecimal::FIVE);
+        }
+        if exponent == -FPDecimal::TWO {
+            return Some(FPDecimal::ONE / FPDecimal::from(25u128));
+        }
+        if exponent == -FPDecimal::THREE {
+            return Some(FPDecimal::ONE / FPDecimal::from(125u128));
+        }
+        if exponent == -FPDecimal::FOUR {
+            return Some(FPDecimal::ONE / FPDecimal::from(625u128));
+        }
+        if exponent == -FPDecimal::FIVE {
+            return Some(FPDecimal::ONE / FPDecimal::from(3125u128));
+        }
+        if exponent == -FPDecimal::SIX {
+            return Some(FPDecimal::ONE / FPDecimal::from(15625u128));
+        }
+        if exponent == -FPDecimal::SEVEN {
+            return Some(FPDecimal::ONE / FPDecimal::from(78125u128));
+        }
+        if exponent == -FPDecimal::EIGHT {
+            return Some(FPDecimal::ONE / FPDecimal::from(390625u128));
+        }
+        if exponent == -FPDecimal::NINE {
+            return Some(FPDecimal::ONE / FPDecimal::from(1953125u128));
+        }
+        if exponent == -FPDecimal::TEN {
+            return Some(FPDecimal::ONE / FPDecimal::from(9765625u128));
+        }
+        if exponent == -FPDecimal::ELEVEN {
+            return Some(FPDecimal::ONE / FPDecimal::from(48828125u128));
+        }
+        if exponent == -FPDecimal::from(12u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(244140625u128));
+        }
+        if exponent == -FPDecimal::from(13u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(1220703125u128));
+        }
+        if exponent == -FPDecimal::from(14u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(6103515625u128));
+        }
+        if exponent == -FPDecimal::from(15u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(30517578125u128));
+        }
+        None
+    }
+
+    fn seven_pow(exponent: FPDecimal) -> Option<FPDecimal> {
+        if exponent == FPDecimal::ONE {
+            return Some(FPDecimal::SEVEN);
+        }
+        if exponent == FPDecimal::TWO {
+            return Some(FPDecimal::from(49u128));
+        }
+        if exponent == FPDecimal::THREE {
+            return Some(FPDecimal::from(343u128));
+        }
+        if exponent == FPDecimal::FOUR {
+            return Some(FPDecimal::from(2401u128));
+        }
+        if exponent == FPDecimal::FIVE {
+            return Some(FPDecimal::from(16807u128));
+        }
+        if exponent == FPDecimal::SIX {
+            return Some(FPDecimal::from(117649u128));
+        }
+        if exponent == FPDecimal::SEVEN {
+            return Some(FPDecimal::from(823543u128));
+        }
+        if exponent == FPDecimal::EIGHT {
+            return Some(FPDecimal::from(5764801u128));
+        }
+        if exponent == FPDecimal::NINE {
+            return Some(FPDecimal::from(40353607u128));
+        }
+        if exponent == FPDecimal::TEN {
+            return Some(FPDecimal::from(282475249u128));
+        }
+        if exponent == FPDecimal::ELEVEN {
+            return Some(FPDecimal::from(1977326743u128));
+        }
+        if exponent == FPDecimal::from(12u128) {
+            return Some(FPDecimal::from(13841287201u128));
+        }
+        if exponent == FPDecimal::from(13u128) {
+            return Some(FPDecimal::from(96889010407u128));
+        }
+        if exponent == FPDecimal::from(14u128) {
+            return Some(FPDecimal::from(678223072849u128));
+        }
+        if exponent == FPDecimal::from(15u128) {
+            return Some(FPDecimal::from(4747561509943u128));
+        }
+        if exponent == -FPDecimal::ONE {
+            return Some(FPDecimal::ONE / FPDecimal::SEVEN);
+        }
+        if exponent == -FPDecimal::TWO {
+            return Some(FPDecimal::ONE / FPDecimal::from(49u128));
+        }
+        if exponent == -FPDecimal::THREE {
+            return Some(FPDecimal::ONE / FPDecimal::from(343u128));
+        }
+        if exponent == -FPDecimal::FOUR {
+            return Some(FPDecimal::ONE / FPDecimal::from(2401u128));
+        }
+        if exponent == -FPDecimal::FIVE {
+            return Some(FPDecimal::ONE / FPDecimal::from(16807u128));
+        }
+        if exponent == -FPDecimal::SIX {
+            return Some(FPDecimal::ONE / FPDecimal::from(117649u128));
+        }
+        if exponent == -FPDecimal::SEVEN {
+            return Some(FPDecimal::ONE / FPDecimal::from(823543u128));
+        }
+        if exponent == -FPDecimal::EIGHT {
+            return Some(FPDecimal::ONE / FPDecimal::from(5764801u128));
+        }
+        if exponent == -FPDecimal::NINE {
+            return Some(FPDecimal::ONE / FPDecimal::from(40353607u128));
+        }
+        if exponent == -FPDecimal::TEN {
+            return Some(FPDecimal::ONE / FPDecimal::from(282475249u128));
+        }
+        if exponent == -FPDecimal::ELEVEN {
+            return Some(FPDecimal::ONE / FPDecimal::from(1977326743u128));
+        }
+        if exponent == -FPDecimal::from(12u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(13841287201u128));
+        }
+        if exponent == -FPDecimal::from(13u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(96889010407u128));
+        }
+        if exponent == -FPDecimal::from(14u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(678223072849u128));
+        }
+        if exponent == -FPDecimal::from(15u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(4747561509943u128));
+        }
+
+        None
+    }
+
+    fn ten_pow(exponent: FPDecimal) -> Option<FPDecimal> {
+        if exponent == FPDecimal::ONE {
+            return Some(FPDecimal::from(10u128));
+        }
+        if exponent == FPDecimal::TWO {
+            return Some(FPDecimal::from(100u128));
+        }
+        if exponent == FPDecimal::THREE {
+            return Some(FPDecimal::from(1000u128));
+        }
+        if exponent == FPDecimal::FOUR {
+            return Some(FPDecimal::from(10000u128));
+        }
+        if exponent == FPDecimal::FIVE {
+            return Some(FPDecimal::from(100000u128));
+        }
+        if exponent == FPDecimal::SIX {
+            return Some(FPDecimal::from(1000000u128));
+        }
+        if exponent == FPDecimal::SEVEN {
+            return Some(FPDecimal::from(10000000u128));
+        }
+        if exponent == FPDecimal::EIGHT {
+            return Some(FPDecimal::from(100000000u128));
+        }
+        if exponent == FPDecimal::NINE {
+            return Some(FPDecimal::from(1000000000u128));
+        }
+        if exponent == FPDecimal::TEN {
+            return Some(FPDecimal::from(10000000000u128));
+        }
+        if exponent == FPDecimal::ELEVEN {
+            return Some(FPDecimal::from(100000000000u128));
+        }
+        if exponent == FPDecimal::from(12u128) {
+            return Some(FPDecimal::from(1000000000000u128));
+        }
+        if exponent == FPDecimal::from(13u128) {
+            return Some(FPDecimal::from(10000000000000u128));
+        }
+        if exponent == FPDecimal::from(14u128) {
+            return Some(FPDecimal::from(100000000000000u128));
+        }
+        if exponent == FPDecimal::from(15u128) {
+            return Some(FPDecimal::from(1000000000000000u128));
+        }
+        if exponent == FPDecimal::from(16u128) {
+            return Some(FPDecimal::from(10000000000000000u128));
+        }
+        if exponent == FPDecimal::from(17u128) {
+            return Some(FPDecimal::from(100000000000000000u128));
+        }
+        if exponent == FPDecimal::from(18u128) {
+            return Some(FPDecimal::from(1000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(19u128) {
+            return Some(FPDecimal::from(10000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(20u128) {
+            return Some(FPDecimal::from(100000000000000000000u128));
+        }
+        if exponent == FPDecimal::NEGATIVE_ONE {
+            return Some(FPDecimal::from_str("0.1").unwrap());
+        }
+        if exponent == FPDecimal::from_str("-2").unwrap() {
+            return Some(FPDecimal::from_str("0.01").unwrap());
+        }
+        if exponent == FPDecimal::from_str("-3").unwrap() {
+            return Some(FPDecimal::from_str("0.001").unwrap());
+        }
+        if exponent == FPDecimal::from_str("-4").unwrap() {
+            return Some(FPDecimal::from_str("0.0001").unwrap());
+        }
+        if exponent == FPDecimal::from_str("-5").unwrap() {
+            return Some(FPDecimal::from_str("0.00001").unwrap());
+        }
+        if exponent == FPDecimal::from_str("-6").unwrap() {
+            return Some(FPDecimal::from_str("0.000001").unwrap());
+        }
+        if exponent == FPDecimal::from_str("-7").unwrap() {
+            return Some(FPDecimal::from_str("0.0000001").unwrap());
+        }
+        if exponent == FPDecimal::from_str("-8").unwrap() {
+            return Some(FPDecimal::from_str("0.00000001").unwrap());
+        }
+        if exponent == FPDecimal::from_str("-9").unwrap() {
+            return Some(FPDecimal::from_str("0.000000001").unwrap());
+        }
+        if exponent == FPDecimal::from_str("-10").unwrap() {
+            return Some(FPDecimal::from_str("0.0000000001").unwrap());
+        }
+        if exponent == FPDecimal::from_str("-11").unwrap() {
+            return Some(FPDecimal::from_str("0.00000000001").unwrap());
+        }
+        if exponent == FPDecimal::from_str("-12").unwrap() {
+            return Some(FPDecimal::from_str("0.000000000001").unwrap());
+        }
+        if exponent == FPDecimal::from_str("-13").unwrap() {
+            return Some(FPDecimal::from_str("0.0000000000001").unwrap());
+        }
+        if exponent == FPDecimal::from_str("-14").unwrap() {
+            return Some(FPDecimal::from_str("0.00000000000001").unwrap());
+        }
+        if exponent == FPDecimal::from_str("-15").unwrap() {
+            return Some(FPDecimal::from_str("0.000000000000001").unwrap());
+        }
+        if exponent == FPDecimal::from_str("-16").unwrap() {
+            return Some(FPDecimal::from_str("0.0000000000000001").unwrap());
+        }
+        if exponent == FPDecimal::from_str("-17").unwrap() {
+            return Some(FPDecimal::from_str("0.00000000000000001").unwrap());
+        }
+        if exponent == FPDecimal::from_str("-18").unwrap() {
+            return Some(FPDecimal::from_str("0.000000000000000001").unwrap());
+        }
+        if exponent < FPDecimal::from_str("-18").unwrap() {
+            return Some(FPDecimal::ZERO);
+        }
+        if exponent == FPDecimal::from(21u128) {
+            return Some(FPDecimal::from(1000000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(22u128) {
+            return Some(FPDecimal::from(10000000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(23u128) {
+            return Some(FPDecimal::from(100000000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(24u128) {
+            return Some(FPDecimal::from(1000000000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(25u128) {
+            return Some(FPDecimal::from(10000000000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(26u128) {
+            return Some(FPDecimal::from(100000000000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(27u128) {
+            return Some(FPDecimal::from(1000000000000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(28u128) {
+            return Some(FPDecimal::from(10000000000000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(29u128) {
+            return Some(FPDecimal::from(100000000000000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(30u128) {
+            return Some(FPDecimal::from(1000000000000000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(31u128) {
+            return Some(FPDecimal::from(10000000000000000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(32u128) {
+            return Some(FPDecimal::from(100000000000000000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(33u128) {
+            return Some(FPDecimal::from(1000000000000000000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(34u128) {
+            return Some(FPDecimal::from(10000000000000000000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(35u128) {
+            return Some(FPDecimal::from(100000000000000000000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(36u128) {
+            return Some(FPDecimal::from(1000000000000000000000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(37u128) {
+            return Some(FPDecimal::from(10000000000000000000000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(38u128) {
+            return Some(FPDecimal::from(100000000000000000000000000000000000000u128));
+        }
+        if exponent == FPDecimal::from(39u128) {
+            return Some(FPDecimal::from_str("1000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(40u128) {
+            return Some(FPDecimal::from_str("10000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(41u128) {
+            return Some(FPDecimal::from_str("100000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(42u128) {
+            return Some(FPDecimal::from_str("1000000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(43u128) {
+            return Some(FPDecimal::from_str("10000000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(44u128) {
+            return Some(FPDecimal::from_str("100000000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(45u128) {
+            return Some(FPDecimal::from_str("1000000000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(46u128) {
+            return Some(FPDecimal::from_str("10000000000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(47u128) {
+            return Some(FPDecimal::from_str("100000000000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(48u128) {
+            return Some(FPDecimal::from_str("1000000000000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(49u128) {
+            return Some(FPDecimal::from_str("10000000000000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(50u128) {
+            return Some(FPDecimal::from_str("100000000000000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(51u128) {
+            return Some(FPDecimal::from_str("1000000000000000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(52u128) {
+            return Some(FPDecimal::from_str("10000000000000000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(53u128) {
+            return Some(FPDecimal::from_str("100000000000000000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(54u128) {
+            return Some(FPDecimal::from_str("1000000000000000000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(55u128) {
+            return Some(FPDecimal::from_str("10000000000000000000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(56u128) {
+            return Some(FPDecimal::from_str("100000000000000000000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(57u128) {
+            return Some(FPDecimal::from_str("1000000000000000000000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(58u128) {
+            return Some(FPDecimal::from_str("10000000000000000000000000000000000000000000000000000000000").unwrap());
+        }
+        if exponent == FPDecimal::from(59u128) {
+            return Some(FPDecimal::from_str("100000000000000000000000000000000000000000000000000000000000").unwrap());
+        }
+        None
+    }
+
+    fn eleven_pow(exponent: FPDecimal) -> Option<FPDecimal> {
+        if exponent == FPDecimal::ONE {
+            return Some(FPDecimal::ELEVEN);
+        }
+        if exponent == FPDecimal::TWO {
+            return Some(FPDecimal::from(121u128));
+        }
+        if exponent == FPDecimal::THREE {
+            return Some(FPDecimal::from(1331u128));
+        }
+        if exponent == FPDecimal::FOUR {
+            return Some(FPDecimal::from(14641u128));
+        }
+        if exponent == FPDecimal::FIVE {
+            return Some(FPDecimal::from(161051u128));
+        }
+        if exponent == FPDecimal::SIX {
+            return Some(FPDecimal::from(1771561u128));
+        }
+        if exponent == FPDecimal::SEVEN {
+            return Some(FPDecimal::from(19487171u128));
+        }
+        if exponent == FPDecimal::EIGHT {
+            return Some(FPDecimal::from(214358881u128));
+        }
+        if exponent == FPDecimal::NINE {
+            return Some(FPDecimal::from(2357947691u128));
+        }
+        if exponent == FPDecimal::TEN {
+            return Some(FPDecimal::from(25937424601u128));
+        }
+        if exponent == FPDecimal::ELEVEN {
+            return Some(FPDecimal::from(285311670611u128));
+        }
+        if exponent == FPDecimal::from(12u128) {
+            return Some(FPDecimal::from(3138428376721u128));
+        }
+        if exponent == FPDecimal::from(13u128) {
+            return Some(FPDecimal::from(34522712143931u128));
+        }
+        if exponent == FPDecimal::from(14u128) {
+            return Some(FPDecimal::from(379749833583241u128));
+        }
+        if exponent == FPDecimal::from(15u128) {
+            return Some(FPDecimal::from(4177248169415651u128));
+        }
+        if exponent == -FPDecimal::ONE {
+            return Some(FPDecimal::ONE / FPDecimal::ELEVEN);
+        }
+        if exponent == -FPDecimal::TWO {
+            return Some(FPDecimal::ONE / FPDecimal::from(121u128));
+        }
+        if exponent == -FPDecimal::THREE {
+            return Some(FPDecimal::ONE / FPDecimal::from(1331u128));
+        }
+        if exponent == -FPDecimal::FOUR {
+            return Some(FPDecimal::ONE / FPDecimal::from(14641u128));
+        }
+        if exponent == -FPDecimal::FIVE {
+            return Some(FPDecimal::ONE / FPDecimal::from(161051u128));
+        }
+        if exponent == -FPDecimal::SIX {
+            return Some(FPDecimal::ONE / FPDecimal::from(1771561u128));
+        }
+        if exponent == -FPDecimal::SEVEN {
+            return Some(FPDecimal::ONE / FPDecimal::from(19487171u128));
+        }
+        if exponent == -FPDecimal::EIGHT {
+            return Some(FPDecimal::ONE / FPDecimal::from(214358881u128));
+        }
+        if exponent == -FPDecimal::NINE {
+            return Some(FPDecimal::ONE / FPDecimal::from(2357947691u128));
+        }
+        if exponent == -FPDecimal::TEN {
+            return Some(FPDecimal::ONE / FPDecimal::from(25937424601u128));
+        }
+        if exponent == -FPDecimal::ELEVEN {
+            return Some(FPDecimal::ONE / FPDecimal::from(285311670611u128));
+        }
+        if exponent == -FPDecimal::from(12u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(3138428376721u128));
+        }
+        if exponent == -FPDecimal::from(13u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(34522712143931u128));
+        }
+        if exponent == -FPDecimal::from(14u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(379749833583241u128));
+        }
+        if exponent == -FPDecimal::from(15u128) {
+            return Some(FPDecimal::ONE / FPDecimal::from(4177248169415651u128));
+        }
+
+        None
+    }
+
     pub fn pow(self, exponent: FPDecimal) -> FPDecimal {
         if self.is_zero() {
             return self;
@@ -69,573 +1056,19 @@ impl FPDecimal {
                 return Some(FPDecimal::ONE);
             }
 
-            if base == FPDecimal::E {
-                if exponent == FPDecimal::ONE {
-                    return Some(base);
-                }
-                if exponent == FPDecimal::ONE.ln() {
-                    return Some(FPDecimal::ONE);
-                }
-                if exponent == FPDecimal::TWO.ln() {
-                    return Some(FPDecimal::TWO);
-                }
-                if exponent == FPDecimal::THREE.ln() {
-                    return Some(FPDecimal::THREE);
-                }
-                if exponent == FPDecimal::FOUR.ln() {
-                    return Some(FPDecimal::FOUR);
-                }
-                if exponent == FPDecimal::FIVE.ln() {
-                    return Some(FPDecimal::FIVE);
-                }
-                if exponent == FPDecimal::SIX.ln() {
-                    return Some(FPDecimal::SIX);
-                }
-                if exponent == FPDecimal::SEVEN.ln() {
-                    return Some(FPDecimal::SEVEN);
-                }
-                if exponent == FPDecimal::EIGHT.ln() {
-                    return Some(FPDecimal::EIGHT);
-                }
-                if exponent == FPDecimal::NINE.ln() {
-                    return Some(FPDecimal::NINE);
-                }
-                if exponent == FPDecimal::TEN.ln() {
-                    return Some(FPDecimal::TEN);
-                }
-                if exponent == FPDecimal::ELEVEN.ln() {
-                    return Some(FPDecimal::ELEVEN);
-                }
-                if exponent == FPDecimal::from(12u128).ln() {
-                    return Some(FPDecimal::from(12u128));
-                }
-                if exponent == FPDecimal::from(13u128).ln() {
-                    return Some(FPDecimal::from(13u128));
-                }
-                if exponent == FPDecimal::from(14u128).ln() {
-                    return Some(FPDecimal::from(14u128));
-                }
-                if exponent == FPDecimal::from(15u128).ln() {
-                    return Some(FPDecimal::from(15u128));
-                }
+            let basic_check: [(&dyn Fn(FPDecimal) -> Option<FPDecimal>, FPDecimal); 7] = [
+                (&FPDecimal::two_pow, FPDecimal::TWO),
+                (&FPDecimal::e_pow, FPDecimal::E),
+                (&FPDecimal::three_pow, FPDecimal::THREE),
+                (&FPDecimal::five_pow, FPDecimal::FIVE),
+                (&FPDecimal::seven_pow, FPDecimal::SEVEN),
+                (&FPDecimal::ten_pow, FPDecimal::TEN),
+                (&FPDecimal::eleven_pow, FPDecimal::ELEVEN),
+            ];
 
-                if exponent == (FPDecimal::ONE / FPDecimal::TWO).ln() {
-                    return Some(FPDecimal::ONE / FPDecimal::TWO);
-                }
-                if exponent == (FPDecimal::ONE / FPDecimal::THREE).ln() {
-                    return Some(FPDecimal::ONE / FPDecimal::THREE);
-                }
-                if exponent == (FPDecimal::ONE / FPDecimal::FOUR).ln() {
-                    return Some(FPDecimal::ONE / FPDecimal::FOUR);
-                }
-                if exponent == (FPDecimal::ONE / FPDecimal::FIVE).ln() {
-                    return Some(FPDecimal::ONE / FPDecimal::FIVE);
-                }
-                if exponent == (FPDecimal::ONE / FPDecimal::SIX).ln() {
-                    return Some(FPDecimal::ONE / FPDecimal::SIX);
-                }
-                if exponent == (FPDecimal::ONE / FPDecimal::SEVEN).ln() {
-                    return Some(FPDecimal::ONE / FPDecimal::SEVEN);
-                }
-                if exponent == (FPDecimal::ONE / FPDecimal::EIGHT).ln() {
-                    return Some(FPDecimal::ONE / FPDecimal::EIGHT);
-                }
-                if exponent == (FPDecimal::ONE / FPDecimal::NINE).ln() {
-                    return Some(FPDecimal::ONE / FPDecimal::NINE);
-                }
-                if exponent == (FPDecimal::ONE / FPDecimal::TEN).ln() {
-                    return Some(FPDecimal::ONE / FPDecimal::TEN);
-                }
-                if exponent == (FPDecimal::ONE / FPDecimal::ELEVEN).ln() {
-                    return Some(FPDecimal::ONE / FPDecimal::ELEVEN);
-                }
-                if exponent == (FPDecimal::ONE / FPDecimal::from(12u128)).ln() {
-                    return Some(FPDecimal::ONE / FPDecimal::from(12u128));
-                }
-                if exponent == (FPDecimal::ONE / FPDecimal::from(13u128)).ln() {
-                    return Some(FPDecimal::ONE / FPDecimal::from(13u128));
-                }
-                if exponent == (FPDecimal::ONE / FPDecimal::from(14u128)).ln() {
-                    return Some(FPDecimal::ONE / FPDecimal::from(14u128));
-                }
-                if exponent == (FPDecimal::ONE / FPDecimal::from(15u128)).ln() {
-                    return Some(FPDecimal::ONE / FPDecimal::from(15u128));
-                }
-            }
-
-            if base == FPDecimal::TWO {
-                if exponent == FPDecimal::ONE {
-                    return Some(FPDecimal::TWO);
-                }
-                if exponent == FPDecimal::TWO {
-                    return Some(FPDecimal::FOUR);
-                }
-                if exponent == FPDecimal::THREE {
-                    return Some(FPDecimal::EIGHT);
-                }
-                if exponent == FPDecimal::FOUR {
-                    return Some(FPDecimal::from(16u128));
-                }
-                if exponent == FPDecimal::FIVE {
-                    return Some(FPDecimal::from(32u128));
-                }
-                if exponent == FPDecimal::SIX {
-                    return Some(FPDecimal::from(64u128));
-                }
-                if exponent == FPDecimal::SEVEN {
-                    return Some(FPDecimal::from(128u128));
-                }
-                if exponent == FPDecimal::EIGHT {
-                    return Some(FPDecimal::from(256u128));
-                }
-                if exponent == FPDecimal::NINE {
-                    return Some(FPDecimal::from(512u128));
-                }
-                if exponent == FPDecimal::TEN {
-                    return Some(FPDecimal::from(1024u128));
-                }
-                if exponent == FPDecimal::ELEVEN {
-                    return Some(FPDecimal::from(2048u128));
-                }
-                if exponent == FPDecimal::from(12u128) {
-                    return Some(FPDecimal::from(4096u128));
-                }
-                if exponent == FPDecimal::from(13u128) {
-                    return Some(FPDecimal::from(8192u128));
-                }
-                if exponent == FPDecimal::from(14u128) {
-                    return Some(FPDecimal::from(16384u128));
-                }
-                if exponent == FPDecimal::from(15u128) {
-                    return Some(FPDecimal::from(32768u128));
-                }
-            }
-            if base == FPDecimal::THREE {
-                if exponent == FPDecimal::ONE {
-                    return Some(FPDecimal::THREE);
-                }
-                if exponent == FPDecimal::TWO {
-                    return Some(FPDecimal::NINE);
-                }
-                if exponent == FPDecimal::THREE {
-                    return Some(FPDecimal::from(27u128));
-                }
-                if exponent == FPDecimal::FOUR {
-                    return Some(FPDecimal::from(81u128));
-                }
-                if exponent == FPDecimal::FIVE {
-                    return Some(FPDecimal::from(243u128));
-                }
-                if exponent == FPDecimal::SIX {
-                    return Some(FPDecimal::from(729u128));
-                }
-                if exponent == FPDecimal::SEVEN {
-                    return Some(FPDecimal::from(2187u128));
-                }
-                if exponent == FPDecimal::EIGHT {
-                    return Some(FPDecimal::from(6561u128));
-                }
-                if exponent == FPDecimal::NINE {
-                    return Some(FPDecimal::from(19683u128));
-                }
-                if exponent == FPDecimal::TEN {
-                    return Some(FPDecimal::from(59049u128));
-                }
-                if exponent == FPDecimal::ELEVEN {
-                    return Some(FPDecimal::from(177147u128));
-                }
-                if exponent == FPDecimal::from(12u128) {
-                    return Some(FPDecimal::from(531441u128));
-                }
-                if exponent == FPDecimal::from(13u128) {
-                    return Some(FPDecimal::from(1594323u128));
-                }
-                if exponent == FPDecimal::from(14u128) {
-                    return Some(FPDecimal::from(4782969u128));
-                }
-                if exponent == FPDecimal::from(15u128) {
-                    return Some(FPDecimal::from(14348907u128));
-                }
-            }
-
-            if base == FPDecimal::FIVE {
-                if exponent == FPDecimal::ONE {
-                    return Some(FPDecimal::FIVE);
-                }
-                if exponent == FPDecimal::TWO {
-                    return Some(FPDecimal::from(25u128));
-                }
-                if exponent == FPDecimal::THREE {
-                    return Some(FPDecimal::from(125u128));
-                }
-                if exponent == FPDecimal::FOUR {
-                    return Some(FPDecimal::from(625u128));
-                }
-                if exponent == FPDecimal::FIVE {
-                    return Some(FPDecimal::from(3125u128));
-                }
-                if exponent == FPDecimal::SIX {
-                    return Some(FPDecimal::from(15625u128));
-                }
-                if exponent == FPDecimal::SEVEN {
-                    return Some(FPDecimal::from(78125u128));
-                }
-                if exponent == FPDecimal::EIGHT {
-                    return Some(FPDecimal::from(390625u128));
-                }
-                if exponent == FPDecimal::NINE {
-                    return Some(FPDecimal::from(1953125u128));
-                }
-                if exponent == FPDecimal::TEN {
-                    return Some(FPDecimal::from(9765625u128));
-                }
-                if exponent == FPDecimal::ELEVEN {
-                    return Some(FPDecimal::from(48828125u128));
-                }
-                if exponent == FPDecimal::from(12u128) {
-                    return Some(FPDecimal::from(244140625u128));
-                }
-                if exponent == FPDecimal::from(13u128) {
-                    return Some(FPDecimal::from(1220703125u128));
-                }
-                if exponent == FPDecimal::from(14u128) {
-                    return Some(FPDecimal::from(6103515625u128));
-                }
-                if exponent == FPDecimal::from(15u128) {
-                    return Some(FPDecimal::from(30517578125u128));
-                }
-            }
-
-            if base == FPDecimal::SEVEN {
-                if exponent == FPDecimal::ONE {
-                    return Some(FPDecimal::SEVEN);
-                }
-                if exponent == FPDecimal::TWO {
-                    return Some(FPDecimal::from(49u128));
-                }
-                if exponent == FPDecimal::THREE {
-                    return Some(FPDecimal::from(343u128));
-                }
-                if exponent == FPDecimal::FOUR {
-                    return Some(FPDecimal::from(2401u128));
-                }
-                if exponent == FPDecimal::FIVE {
-                    return Some(FPDecimal::from(16807u128));
-                }
-                if exponent == FPDecimal::SIX {
-                    return Some(FPDecimal::from(117649u128));
-                }
-                if exponent == FPDecimal::SEVEN {
-                    return Some(FPDecimal::from(823543u128));
-                }
-                if exponent == FPDecimal::EIGHT {
-                    return Some(FPDecimal::from(5764801u128));
-                }
-                if exponent == FPDecimal::NINE {
-                    return Some(FPDecimal::from(40353607u128));
-                }
-                if exponent == FPDecimal::TEN {
-                    return Some(FPDecimal::from(282475249u128));
-                }
-                if exponent == FPDecimal::ELEVEN {
-                    return Some(FPDecimal::from(1977326743u128));
-                }
-                if exponent == FPDecimal::from(12u128) {
-                    return Some(FPDecimal::from(13841287201u128));
-                }
-                if exponent == FPDecimal::from(13u128) {
-                    return Some(FPDecimal::from(96889010407u128));
-                }
-                if exponent == FPDecimal::from(14u128) {
-                    return Some(FPDecimal::from(678223072849u128));
-                }
-                if exponent == FPDecimal::from(15u128) {
-                    return Some(FPDecimal::from(4747561509943u128));
-                }
-            }
-
-            if base == FPDecimal::from(10u128) {
-                if exponent == FPDecimal::ONE {
-                    return Some(FPDecimal::from(10u128));
-                }
-                if exponent == FPDecimal::TWO {
-                    return Some(FPDecimal::from(100u128));
-                }
-                if exponent == FPDecimal::THREE {
-                    return Some(FPDecimal::from(1000u128));
-                }
-                if exponent == FPDecimal::FOUR {
-                    return Some(FPDecimal::from(10000u128));
-                }
-                if exponent == FPDecimal::FIVE {
-                    return Some(FPDecimal::from(100000u128));
-                }
-                if exponent == FPDecimal::SIX {
-                    return Some(FPDecimal::from(1000000u128));
-                }
-                if exponent == FPDecimal::SEVEN {
-                    return Some(FPDecimal::from(10000000u128));
-                }
-                if exponent == FPDecimal::EIGHT {
-                    return Some(FPDecimal::from(100000000u128));
-                }
-                if exponent == FPDecimal::NINE {
-                    return Some(FPDecimal::from(1000000000u128));
-                }
-                if exponent == FPDecimal::TEN {
-                    return Some(FPDecimal::from(10000000000u128));
-                }
-                if exponent == FPDecimal::ELEVEN {
-                    return Some(FPDecimal::from(100000000000u128));
-                }
-                if exponent == FPDecimal::from(12u128) {
-                    return Some(FPDecimal::from(1000000000000u128));
-                }
-                if exponent == FPDecimal::from(13u128) {
-                    return Some(FPDecimal::from(10000000000000u128));
-                }
-                if exponent == FPDecimal::from(14u128) {
-                    return Some(FPDecimal::from(100000000000000u128));
-                }
-                if exponent == FPDecimal::from(15u128) {
-                    return Some(FPDecimal::from(1000000000000000u128));
-                }
-                if exponent == FPDecimal::from(16u128) {
-                    return Some(FPDecimal::from(10000000000000000u128));
-                }
-                if exponent == FPDecimal::from(17u128) {
-                    return Some(FPDecimal::from(100000000000000000u128));
-                }
-                if exponent == FPDecimal::from(18u128) {
-                    return Some(FPDecimal::from(1000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(19u128) {
-                    return Some(FPDecimal::from(10000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(20u128) {
-                    return Some(FPDecimal::from(100000000000000000000u128));
-                }
-                if exponent == FPDecimal::NEGATIVE_ONE {
-                    return Some(FPDecimal::from_str("0.1").unwrap());
-                }
-                if exponent == FPDecimal::from_str("-2").unwrap() {
-                    return Some(FPDecimal::from_str("0.01").unwrap());
-                }
-                if exponent == FPDecimal::from_str("-3").unwrap() {
-                    return Some(FPDecimal::from_str("0.001").unwrap());
-                }
-                if exponent == FPDecimal::from_str("-4").unwrap() {
-                    return Some(FPDecimal::from_str("0.0001").unwrap());
-                }
-                if exponent == FPDecimal::from_str("-5").unwrap() {
-                    return Some(FPDecimal::from_str("0.00001").unwrap());
-                }
-                if exponent == FPDecimal::from_str("-6").unwrap() {
-                    return Some(FPDecimal::from_str("0.000001").unwrap());
-                }
-                if exponent == FPDecimal::from_str("-7").unwrap() {
-                    return Some(FPDecimal::from_str("0.0000001").unwrap());
-                }
-                if exponent == FPDecimal::from_str("-8").unwrap() {
-                    return Some(FPDecimal::from_str("0.00000001").unwrap());
-                }
-                if exponent == FPDecimal::from_str("-9").unwrap() {
-                    return Some(FPDecimal::from_str("0.000000001").unwrap());
-                }
-                if exponent == FPDecimal::from_str("-10").unwrap() {
-                    return Some(FPDecimal::from_str("0.0000000001").unwrap());
-                }
-                if exponent == FPDecimal::from_str("-11").unwrap() {
-                    return Some(FPDecimal::from_str("0.00000000001").unwrap());
-                }
-                if exponent == FPDecimal::from_str("-12").unwrap() {
-                    return Some(FPDecimal::from_str("0.000000000001").unwrap());
-                }
-                if exponent == FPDecimal::from_str("-13").unwrap() {
-                    return Some(FPDecimal::from_str("0.0000000000001").unwrap());
-                }
-                if exponent == FPDecimal::from_str("-14").unwrap() {
-                    return Some(FPDecimal::from_str("0.00000000000001").unwrap());
-                }
-                if exponent == FPDecimal::from_str("-15").unwrap() {
-                    return Some(FPDecimal::from_str("0.000000000000001").unwrap());
-                }
-                if exponent == FPDecimal::from_str("-16").unwrap() {
-                    return Some(FPDecimal::from_str("0.0000000000000001").unwrap());
-                }
-                if exponent == FPDecimal::from_str("-17").unwrap() {
-                    return Some(FPDecimal::from_str("0.00000000000000001").unwrap());
-                }
-                if exponent == FPDecimal::from_str("-18").unwrap() {
-                    return Some(FPDecimal::from_str("0.000000000000000001").unwrap());
-                }
-                if exponent < FPDecimal::from_str("-18").unwrap() {
-                    return Some(FPDecimal::ZERO);
-                }
-                if exponent == FPDecimal::from(21u128) {
-                    return Some(FPDecimal::from(1000000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(22u128) {
-                    return Some(FPDecimal::from(10000000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(23u128) {
-                    return Some(FPDecimal::from(100000000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(24u128) {
-                    return Some(FPDecimal::from(1000000000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(25u128) {
-                    return Some(FPDecimal::from(10000000000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(26u128) {
-                    return Some(FPDecimal::from(100000000000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(27u128) {
-                    return Some(FPDecimal::from(1000000000000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(28u128) {
-                    return Some(FPDecimal::from(10000000000000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(29u128) {
-                    return Some(FPDecimal::from(100000000000000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(30u128) {
-                    return Some(FPDecimal::from(1000000000000000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(31u128) {
-                    return Some(FPDecimal::from(10000000000000000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(32u128) {
-                    return Some(FPDecimal::from(100000000000000000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(33u128) {
-                    return Some(FPDecimal::from(1000000000000000000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(34u128) {
-                    return Some(FPDecimal::from(10000000000000000000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(35u128) {
-                    return Some(FPDecimal::from(100000000000000000000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(36u128) {
-                    return Some(FPDecimal::from(1000000000000000000000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(37u128) {
-                    return Some(FPDecimal::from(10000000000000000000000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(38u128) {
-                    return Some(FPDecimal::from(100000000000000000000000000000000000000u128));
-                }
-                if exponent == FPDecimal::from(39u128) {
-                    return Some(FPDecimal::from_str("1000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(40u128) {
-                    return Some(FPDecimal::from_str("10000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(41u128) {
-                    return Some(FPDecimal::from_str("100000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(42u128) {
-                    return Some(FPDecimal::from_str("1000000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(43u128) {
-                    return Some(FPDecimal::from_str("10000000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(44u128) {
-                    return Some(FPDecimal::from_str("100000000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(45u128) {
-                    return Some(FPDecimal::from_str("1000000000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(46u128) {
-                    return Some(FPDecimal::from_str("10000000000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(47u128) {
-                    return Some(FPDecimal::from_str("100000000000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(48u128) {
-                    return Some(FPDecimal::from_str("1000000000000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(49u128) {
-                    return Some(FPDecimal::from_str("10000000000000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(50u128) {
-                    return Some(FPDecimal::from_str("100000000000000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(51u128) {
-                    return Some(FPDecimal::from_str("1000000000000000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(52u128) {
-                    return Some(FPDecimal::from_str("10000000000000000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(53u128) {
-                    return Some(FPDecimal::from_str("100000000000000000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(54u128) {
-                    return Some(FPDecimal::from_str("1000000000000000000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(55u128) {
-                    return Some(FPDecimal::from_str("10000000000000000000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(56u128) {
-                    return Some(FPDecimal::from_str("100000000000000000000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(57u128) {
-                    return Some(FPDecimal::from_str("1000000000000000000000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(58u128) {
-                    return Some(FPDecimal::from_str("10000000000000000000000000000000000000000000000000000000000").unwrap());
-                }
-                if exponent == FPDecimal::from(59u128) {
-                    return Some(FPDecimal::from_str("100000000000000000000000000000000000000000000000000000000000").unwrap());
-                }
-            }
-
-            if base == FPDecimal::ELEVEN {
-                if exponent == FPDecimal::ONE {
-                    return Some(FPDecimal::ELEVEN);
-                }
-                if exponent == FPDecimal::TWO {
-                    return Some(FPDecimal::from(121u128));
-                }
-                if exponent == FPDecimal::THREE {
-                    return Some(FPDecimal::from(1331u128));
-                }
-                if exponent == FPDecimal::FOUR {
-                    return Some(FPDecimal::from(14641u128));
-                }
-                if exponent == FPDecimal::FIVE {
-                    return Some(FPDecimal::from(161051u128));
-                }
-                if exponent == FPDecimal::SIX {
-                    return Some(FPDecimal::from(1771561u128));
-                }
-                if exponent == FPDecimal::SEVEN {
-                    return Some(FPDecimal::from(19487171u128));
-                }
-                if exponent == FPDecimal::EIGHT {
-                    return Some(FPDecimal::from(214358881u128));
-                }
-                if exponent == FPDecimal::NINE {
-                    return Some(FPDecimal::from(2357947691u128));
-                }
-                if exponent == FPDecimal::TEN {
-                    return Some(FPDecimal::from(25937424601u128));
-                }
-                if exponent == FPDecimal::ELEVEN {
-                    return Some(FPDecimal::from(285311670611u128));
-                }
-                if exponent == FPDecimal::from(12u128) {
-                    return Some(FPDecimal::from(3138428376721u128));
-                }
-                if exponent == FPDecimal::from(13u128) {
-                    return Some(FPDecimal::from(34522712143931u128));
-                }
-                if exponent == FPDecimal::from(14u128) {
-                    return Some(FPDecimal::from(379749833583241u128));
-                }
-                if exponent == FPDecimal::from(15u128) {
-                    return Some(FPDecimal::from(4177248169415651u128));
+            for (exp_fn, basic_case) in basic_check {
+                if base == basic_case {
+                    return exp_fn(exponent);
                 }
             }
             None

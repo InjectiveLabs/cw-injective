@@ -114,6 +114,18 @@ impl FPDecimal {
         if self == FPDecimal::from(2048u128) {
             return Some(FPDecimal::ELEVEN);
         }
+        if self == FPDecimal::from(4096u128) {
+            return Some(FPDecimal::from(12u128));
+        }
+        if self == FPDecimal::from(8192u128) {
+            return Some(FPDecimal::from(13u128));
+        }
+        if self == FPDecimal::from(16384u128) {
+            return Some(FPDecimal::from(14u128));
+        }
+        if self == FPDecimal::from(32768u128) {
+            return Some(FPDecimal::from(15u128));
+        }
 
         if self == FPDecimal::ONE / FPDecimal::TWO {
             return Some(-FPDecimal::ONE);
@@ -147,6 +159,18 @@ impl FPDecimal {
         }
         if self == FPDecimal::ONE / FPDecimal::from(2048u128) {
             return Some(-FPDecimal::ELEVEN);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(4096u128) {
+            return Some(-FPDecimal::from(12u128));
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(8192u128) {
+            return Some(-FPDecimal::from(13u128));
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(16384u128) {
+            return Some(-FPDecimal::from(14u128));
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(32768u128) {
+            return Some(-FPDecimal::from(15u128));
         }
         None
     }
@@ -188,6 +212,18 @@ impl FPDecimal {
         if self == FPDecimal::from(177147u128) {
             return Some(FPDecimal::ELEVEN);
         }
+        if self == FPDecimal::from(531441u128) {
+            return Some(FPDecimal::from(12u128));
+        }
+        if self == FPDecimal::from(531441u128) {
+            return Some(FPDecimal::from(13u128));
+        }
+        if self == FPDecimal::from(4782969u128) {
+            return Some(FPDecimal::from(14u128));
+        }
+        if self == FPDecimal::from(14348907u128) {
+            return Some(FPDecimal::from(15u128));
+        }
 
         if self == FPDecimal::ONE / FPDecimal::THREE {
             return Some(-FPDecimal::ONE);
@@ -221,6 +257,18 @@ impl FPDecimal {
         }
         if self == FPDecimal::ONE / FPDecimal::from(177147u128) {
             return Some(-FPDecimal::ELEVEN);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(531441u128) {
+            return Some(-FPDecimal::from(12u128));
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(531441u128) {
+            return Some(-FPDecimal::from(13u128));
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(4782969u128) {
+            return Some(-FPDecimal::from(14u128));
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(14348907u128) {
+            return Some(-FPDecimal::from(15u128));
         }
 
         None
@@ -263,6 +311,18 @@ impl FPDecimal {
         if self == FPDecimal::from(48828125u128) {
             return Some(FPDecimal::ELEVEN);
         }
+        if self == FPDecimal::from(244140625u128) {
+            return Some(FPDecimal::from(12u128));
+        }
+        if self == FPDecimal::from(1220703125u128) {
+            return Some(FPDecimal::from(13u128));
+        }
+        if self == FPDecimal::from(6103515625u128) {
+            return Some(FPDecimal::from(14u128));
+        }
+        if self == FPDecimal::from(30517578125u128) {
+            return Some(FPDecimal::from(15u128));
+        }
 
         if self == FPDecimal::ONE / FPDecimal::FIVE {
             return Some(-FPDecimal::ONE);
@@ -296,6 +356,18 @@ impl FPDecimal {
         }
         if self == FPDecimal::ONE / FPDecimal::from(48828125u128) {
             return Some(-FPDecimal::ELEVEN);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(244140625u128) {
+            return Some(-FPDecimal::from(12u128));
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(1220703125u128) {
+            return Some(-FPDecimal::from(13u128));
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(6103515625u128) {
+            return Some(-FPDecimal::from(14u128));
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(30517578125u128) {
+            return Some(-FPDecimal::from(15u128));
         }
 
         None
@@ -339,6 +411,19 @@ impl FPDecimal {
         if self == FPDecimal::from(1977326743u128) {
             return Some(FPDecimal::ELEVEN);
         }
+        if self == FPDecimal::from(13841287201u128) {
+            return Some(FPDecimal::from(12u128));
+        }
+        if self == FPDecimal::from(96889010407u128) {
+            return Some(FPDecimal::from(13u128));
+        }
+        if self == FPDecimal::from(678223072849u128) {
+            return Some(FPDecimal::from(14u128));
+        }
+        if self == FPDecimal::from(4747561509943u128) {
+            return Some(FPDecimal::from(15u128));
+        }
+
         if self == FPDecimal::ONE / FPDecimal::SEVEN {
             return Some(-FPDecimal::ONE);
         }
@@ -371,6 +456,18 @@ impl FPDecimal {
         }
         if self == FPDecimal::ONE / FPDecimal::from(1977326743u128) {
             return Some(-FPDecimal::ELEVEN);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(13841287201u128) {
+            return Some(-FPDecimal::from(12u128));
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(96889010407u128) {
+            return Some(-FPDecimal::from(13u128));
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(678223072849u128) {
+            return Some(-FPDecimal::from(14u128));
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(4747561509943u128) {
+            return Some(-FPDecimal::from(15u128));
         }
 
         None
@@ -413,6 +510,18 @@ impl FPDecimal {
         if self == FPDecimal::from(100_000_000_000u128) {
             return Some(FPDecimal::ELEVEN);
         }
+        if self == FPDecimal::from(1_000_000_000_000u128) {
+            return Some(FPDecimal::from(12u128));
+        }
+        if self == FPDecimal::from(10_000_000_000_000u128) {
+            return Some(FPDecimal::from(13u128));
+        }
+        if self == FPDecimal::from(100_000_000_000_000u128) {
+            return Some(FPDecimal::from(14u128));
+        }
+        if self == FPDecimal::from(1_000_000_000_000_000u128) {
+            return Some(FPDecimal::from(15u128));
+        }
 
         if self == FPDecimal::ONE / FPDecimal::TEN {
             return Some(-FPDecimal::ONE);
@@ -447,6 +556,19 @@ impl FPDecimal {
         if self == FPDecimal::ONE / FPDecimal::from(100_000_000_000u128) {
             return Some(-FPDecimal::ELEVEN);
         }
+        if self == FPDecimal::ONE / FPDecimal::from(1_000_000_000_000u128) {
+            return Some(-FPDecimal::from(12u128));
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(10_000_000_000_000u128) {
+            return Some(-FPDecimal::from(13u128));
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(100_000_000_000_000u128) {
+            return Some(-FPDecimal::from(14u128));
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(1_000_000_000_000_000u128) {
+            return Some(-FPDecimal::from(15u128));
+        }
+
         None
     }
 
@@ -488,6 +610,18 @@ impl FPDecimal {
         if self == FPDecimal::from(285311670611u128) {
             return Some(FPDecimal::ELEVEN);
         }
+        if self == FPDecimal::from(3138428376721u128) {
+            return Some(FPDecimal::from(12u128));
+        }
+        if self == FPDecimal::from(34522712143931u128) {
+            return Some(FPDecimal::from(13u128));
+        }
+        if self == FPDecimal::from(379749833583241u128) {
+            return Some(FPDecimal::from(14u128));
+        }
+        if self == FPDecimal::from(4177248169415651u128) {
+            return Some(FPDecimal::from(15u128));
+        }
 
         if self == FPDecimal::ONE / FPDecimal::ELEVEN {
             return Some(-FPDecimal::ONE);
@@ -521,6 +655,18 @@ impl FPDecimal {
         }
         if self == FPDecimal::ONE / FPDecimal::from(285311670611u128) {
             return Some(-FPDecimal::ELEVEN);
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(3138428376721u128) {
+            return Some(-FPDecimal::from(12u128));
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(34522712143931u128) {
+            return Some(-FPDecimal::from(13u128));
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(379749833583241u128) {
+            return Some(-FPDecimal::from(14u128));
+        }
+        if self == FPDecimal::ONE / FPDecimal::from(4177248169415651u128) {
+            return Some(-FPDecimal::from(15u128));
         }
 
         None
