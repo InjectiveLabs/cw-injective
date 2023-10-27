@@ -232,6 +232,95 @@ impl FPDecimal {
             return Some(FPDecimal::ONE / FPDecimal::from(32768u128));
         }
 
+        if FPDecimal::ONE.log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::ONE);
+        }
+        if FPDecimal::TWO.log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::TWO);
+        }
+        if FPDecimal::THREE.log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::THREE);
+        }
+        if FPDecimal::FOUR.log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::FOUR);
+        }
+        if FPDecimal::FIVE.log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::FIVE);
+        }
+        if FPDecimal::SIX.log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::SIX);
+        }
+        if FPDecimal::SEVEN.log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::SEVEN);
+        }
+        if FPDecimal::EIGHT.log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::EIGHT);
+        }
+        if FPDecimal::NINE.log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::NINE);
+        }
+        if FPDecimal::TEN.log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::TEN);
+        }
+        if FPDecimal::ELEVEN.log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::ELEVEN);
+        }
+        if FPDecimal::from(12u128).log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::from(12u128));
+        }
+        if FPDecimal::from(13u128).log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::from(13u128));
+        }
+        if FPDecimal::from(14u128).log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::from(14u128));
+        }
+        if FPDecimal::from(15u128).log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::ONE / FPDecimal::from(15u128));
+        }
+
+        if (FPDecimal::ONE / FPDecimal::TWO).log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::TWO);
+        }
+        if (FPDecimal::ONE / FPDecimal::THREE).log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::THREE);
+        }
+        if (FPDecimal::ONE / FPDecimal::FOUR).log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::FOUR);
+        }
+        if (FPDecimal::ONE / FPDecimal::FIVE).log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::FIVE);
+        }
+        if (FPDecimal::ONE / FPDecimal::SIX).log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::SIX);
+        }
+        if (FPDecimal::ONE / FPDecimal::SEVEN).log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::SEVEN);
+        }
+        if (FPDecimal::ONE / FPDecimal::EIGHT).log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::EIGHT);
+        }
+        if (FPDecimal::ONE / FPDecimal::NINE).log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::NINE);
+        }
+        if (FPDecimal::ONE / FPDecimal::TEN).log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::TEN);
+        }
+        if (FPDecimal::ONE / FPDecimal::ELEVEN).log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::ELEVEN);
+        }
+        if (FPDecimal::ONE / FPDecimal::from(12u128)).log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::from(12u128));
+        }
+        if (FPDecimal::ONE / FPDecimal::from(13u128)).log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::from(13u128));
+        }
+        if (FPDecimal::ONE / FPDecimal::from(14u128)).log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::from(14u128));
+        }
+        if (FPDecimal::ONE / FPDecimal::from(15u128)).log2().is_some_and(|x| x == -exponent) {
+            return Some(FPDecimal::from(15u128));
+        }
+
         None
     }
 
