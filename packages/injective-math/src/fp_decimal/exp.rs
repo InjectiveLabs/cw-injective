@@ -1055,8 +1055,10 @@ impl FPDecimal {
             if base == FPDecimal::ONE {
                 return Some(FPDecimal::ONE);
             }
+            // type
+            type BaseFunction<'a> = (&'a dyn Fn(FPDecimal) -> Option<FPDecimal>, FPDecimal);
 
-            let basic_check: [(&dyn Fn(FPDecimal) -> Option<FPDecimal>, FPDecimal); 7] = [
+            let basic_check: [BaseFunction; 7] = [
                 (&FPDecimal::two_pow, FPDecimal::TWO),
                 (&FPDecimal::e_pow, FPDecimal::E),
                 (&FPDecimal::three_pow, FPDecimal::THREE),
