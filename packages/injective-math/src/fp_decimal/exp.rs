@@ -1904,7 +1904,26 @@ mod tests {
     }
 
     // NOTE: its ok we ignore these two unit tests. they should not be the goal of this crate
+    // TODO: add a lookup table for this in future
     /*
+    #[test]
+    fn test_ln_e_pow_1_5() {
+        let base = FPDecimal::E * FPDecimal::E.sqrt();
+        assert_eq!(base.ln(), FPDecimal::must_from_str("1.5"));
+    }
+
+    #[test]
+    fn test_ln_e_pow_minus_1_5() {
+        let base = FPDecimal::ONE / (FPDecimal::E.sqrt() * FPDecimal::E);
+        assert_eq!(base.ln(), FPDecimal::must_from_str("-1.5"));
+    }
+    #[test]
+    fn test_log_1_5_2_2_5() {
+        let base = FPDecimal::must_from_str("1.5");
+        let exp = FPDecimal::must_from_str("2.25");
+        assert_eq!(exp.log(base), FPDecimal::TWO);
+    }
+
     #[test]
     fn test_25_pow_0_11111() {
         let power = FPDecimal::ONE / FPDecimal::from(9_u128);
