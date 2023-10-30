@@ -219,13 +219,110 @@ impl FPDecimal {
         sign: 1,
     }; // ln(1.5)
 
+    pub const LN_2: FPDecimal = FPDecimal {
+        // 405_465_108_704_634_977
+        num: U256([693_147_180_559_945_309, 0, 0, 0]),
+        sign: 1,
+    }; // ln(1.5)
+
     pub const LN_10: FPDecimal = FPDecimal {
         num: U256([2_302_585_092_994_045_684, 0, 0, 0]),
         sign: 1,
     }; // ln(10)
 
+    pub const LOG2_10: FPDecimal = FPDecimal {
+        // 3.321_928_094_887_362_347
+        num: U256([3_321_928_094_887_362_347, 0, 0, 0]),
+        sign: 1,
+    }; // log2(10)
+
+    pub const LOG2_E: FPDecimal = FPDecimal {
+        // 1.4426950408889633306
+        num: U256([1_442_695_040_888_963_330, 0, 0, 0]),
+        sign: 1,
+    }; // log2(10)
+
+    pub const LOG10_2: FPDecimal = FPDecimal {
+        // 0.30102999566398119523
+        num: U256([301_029_995_663_981_195, 0, 0, 0]),
+        sign: 1,
+    };
+
+    pub const LOG10_E: FPDecimal = FPDecimal {
+        // 0.30102999566398119523
+        num: U256([301_029_995_663_981_195, 0, 0, 0]),
+        sign: 1,
+    };
+
     pub const PI: FPDecimal = FPDecimal {
         num: U256([3_141_592_653_589_793_115, 0, 0, 0]),
+        sign: 1,
+    };
+
+    pub const FRAC_1_PI: FPDecimal = FPDecimal {
+        // 318_309_886_183_790_683
+        num: U256([318_309_886_183_790_683, 0, 0, 0]),
+        sign: 1,
+    };
+
+    pub const FRAC_1_SQRT_2: FPDecimal = FPDecimal {
+        // 0.707106781186547524
+        num: U256([707_106_781_186_547_524, 0, 0, 0]),
+        sign: 1,
+    };
+
+    pub const FRAC_2_PI: FPDecimal = FPDecimal {
+        // 636_619_772_367_581_3679
+        num: U256([636_619_772_367_581_368, 0, 0, 0]),
+        sign: 1,
+    };
+
+    pub const FRAC_2_SQRT_PI: FPDecimal = FPDecimal {
+        // 1_128_379_167_095_512_595
+        num: U256([1_128_379_167_095_512_595, 0, 0, 0]),
+        sign: 1,
+    };
+
+    pub const FRAC_PI_2: FPDecimal = FPDecimal {
+        // 1_570_796_326_794_896_558
+        num: U256([1_570_796_326_794_896_558, 0, 0, 0]),
+        sign: 1,
+    };
+
+    pub const FRAC_PI_3: FPDecimal = FPDecimal {
+        // 1_047_197_551_196_597_705
+        num: U256([1_047_197_551_196_597_705, 0, 0, 0]),
+        sign: 1,
+    };
+
+    pub const FRAC_PI_4: FPDecimal = FPDecimal {
+        // 0_785_398_163_397_448_279
+        num: U256([785_398_163_397_448_279, 0, 0, 0]),
+        sign: 1,
+    };
+
+    pub const FRAC_PI_6: FPDecimal = FPDecimal {
+        // 523_598_775_598_298_852
+        num: U256([523_598_775_598_298_852, 0, 0, 0]),
+        sign: 1,
+    };
+
+    pub const FRAC_PI_8: FPDecimal = FPDecimal {
+        // 392_699_081_698_724_139
+        num: U256([392_699_081_698_724_139, 0, 0, 0]),
+        sign: 1,
+    };
+
+    pub const SQRT_2: FPDecimal = FPDecimal {
+        // 1.414_213_562_373_095_048
+        num: U256([1_414_213_562_373_095_048, 0, 0, 0]),
+        sign: 1,
+    };
+
+    pub const TAU: FPDecimal = FPDecimal {
+        // 2*PI
+        // 6.283185307179586232
+        num: U256([6_283_185_307_179_586_232, 0, 0, 0]),
         sign: 1,
     };
 
