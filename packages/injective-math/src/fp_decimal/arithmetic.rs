@@ -87,7 +87,7 @@ impl FPDecimal {
         }
 
         FPDecimal {
-            num: U256::try_from(num).unwrap(),
+            num: U256::try_from(num).unwrap(), // panic only in MIN_FPDeciaml/-1
             sign: 1 ^ x.sign ^ y.sign,
         }
     }

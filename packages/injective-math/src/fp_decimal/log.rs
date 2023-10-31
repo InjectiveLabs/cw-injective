@@ -1,3 +1,4 @@
+use crate::fp_decimal::error::FPDecimalError;
 /// Logarithmic functions for FPDecimal
 use crate::fp_decimal::{FPDecimal, U256};
 
@@ -678,26 +679,21 @@ impl FPDecimal {
         if a == FPDecimal::ONE {
             return FPDecimal::ZERO;
         }
-        if a == FPDecimal::ZERO {
-            // FIXME should be an undefined, not sure if it will be better to just add assert!(b>0)
-            panic!("Undefined");
-        }
 
         a.ln() / base.ln()
     }
 
-    pub fn log(&self, base: FPDecimal) -> FPDecimal {
+    pub fn log(&self, base: FPDecimal) -> Result<FPDecimal, FPDecimalError> {
         assert!(base > FPDecimal::ZERO);
         if *self == FPDecimal::ONE {
-            return FPDecimal::ZERO;
+            return Ok(FPDecimal::ZERO);
         }
-        if *self == FPDecimal::ZERO {
-            // FIXME should be an undefined, not sure if it will be better to just add assert!(b>0)
-            return FPDecimal::SMALLEST_PRECISION;
+        if self.is_zero() {
+            return Err(FPDecimalError::Undefined("log0 ".to_owned()));
         }
 
         if base == FPDecimal::E {
-            return self.ln();
+            return Ok(self.ln());
         }
 
         let base_checks: Vec<&dyn Fn(FPDecimal) -> Option<FPDecimal>> = vec![
@@ -711,10 +707,10 @@ impl FPDecimal {
         ];
         for log_fn in base_checks {
             if let (Some(numerator), Some(denominator)) = (log_fn(*self), log_fn(base)) {
-                return numerator / denominator;
+                return Ok(numerator / denominator);
             }
         }
-        FPDecimal::_log(*self, base)
+        Ok(FPDecimal::_log(*self, base))
     }
 
     fn _two_agm(mut a0: FPDecimal, mut b0: FPDecimal, tol: FPDecimal) -> FPDecimal {
@@ -723,7 +719,7 @@ impl FPDecimal {
                 break;
             }
             let a1 = (a0 + b0) / FPDecimal::TWO;
-            let b1 = (a0 * b0).sqrt();
+            let b1 = (a0 * b0).sqrt().unwrap();
             a0 = a1;
             b0 = b1;
         }
@@ -906,12 +902,15 @@ mod tests {
     }
     #[test]
     fn test_log_2_8() {
-        assert_eq!(FPDecimal::EIGHT.log(FPDecimal::TWO), FPDecimal::THREE);
+        assert_eq!(FPDecimal::EIGHT.log(FPDecimal::TWO).unwrap(), FPDecimal::THREE);
     }
 
     #[test]
     fn test_log_11_8() {
-        assert_eq!(FPDecimal::EIGHT.log(FPDecimal::ELEVEN), FPDecimal::must_from_str("0.867194478953663578"));
+        assert_eq!(
+            FPDecimal::EIGHT.log(FPDecimal::ELEVEN).unwrap(),
+            FPDecimal::must_from_str("0.867194478953663578")
+        );
     }
 
     #[test]
@@ -946,13 +945,13 @@ mod tests {
     fn test_ln4_16() {
         let a = FPDecimal::from(16u128);
         let b = FPDecimal::FOUR;
-        assert_eq!(a.log(b), FPDecimal::TWO);
+        assert_eq!(a.log(b).unwrap(), FPDecimal::TWO);
     }
 
     #[test]
     fn test_log_e_16() {
         let a = FPDecimal::from(16u128);
         let b = FPDecimal::FOUR;
-        assert_eq!(a.log(b), FPDecimal::TWO);
+        assert_eq!(a.log(b).unwrap(), FPDecimal::TWO);
     }
 }

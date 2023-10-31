@@ -131,7 +131,7 @@ mod tests {
     fn test_discrete_newton_2() {
         let x0 = FPDecimal::TEN;
         fn func(x0: FPDecimal) -> FPDecimal {
-            x0.pow(FPDecimal::TWO)
+            x0.pow(FPDecimal::TWO).unwrap()
         }
         let delta = FPDecimal::must_from_str("0.25");
         let obj = FPDecimal::FIVE;
@@ -146,7 +146,7 @@ mod tests {
     fn test_discrete_newton_3() {
         let x0 = FPDecimal::TEN;
         fn func(x0: FPDecimal) -> FPDecimal {
-            -x0.pow(FPDecimal::TWO) + FPDecimal::TWO * x0 - FPDecimal::ONE
+            -x0.pow(FPDecimal::TWO).unwrap() + FPDecimal::TWO * x0 - FPDecimal::ONE
         }
         let delta = FPDecimal::ONE / FPDecimal::THREE;
         let obj = FPDecimal::must_from_str("-15");

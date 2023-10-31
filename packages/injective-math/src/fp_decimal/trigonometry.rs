@@ -7,11 +7,11 @@ impl FPDecimal {
     }
 
     fn _sine_taylor_expansion(x: FPDecimal) -> FPDecimal {
-        x - (x.pow(FPDecimal::THREE) / FPDecimal::THREE.factorial()) + (x.pow(FPDecimal::FIVE) / FPDecimal::FIVE.factorial())
-            - (x.pow(FPDecimal::SEVEN) / FPDecimal::SEVEN.factorial())
-            + (x.pow(FPDecimal::NINE) / FPDecimal::NINE.factorial())
-            - (x.pow(FPDecimal::ELEVEN) / (FPDecimal::ELEVEN).factorial())
-            + (x.pow(FPDecimal::THREE + FPDecimal::TEN) / (FPDecimal::THREE + FPDecimal::TEN).factorial())
+        x - (x.pow(FPDecimal::THREE).unwrap() / FPDecimal::THREE.factorial()) + (x.pow(FPDecimal::FIVE).unwrap() / FPDecimal::FIVE.factorial())
+            - (x.pow(FPDecimal::SEVEN).unwrap() / FPDecimal::SEVEN.factorial())
+            + (x.pow(FPDecimal::NINE).unwrap() / FPDecimal::NINE.factorial())
+            - (x.pow(FPDecimal::ELEVEN).unwrap() / (FPDecimal::ELEVEN).factorial())
+            + (x.pow(FPDecimal::THREE + FPDecimal::TEN).unwrap() / (FPDecimal::THREE + FPDecimal::TEN).factorial())
     }
 
     pub(self) fn _sin(mut x: FPDecimal) -> FPDecimal {
