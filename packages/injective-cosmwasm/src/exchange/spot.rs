@@ -69,6 +69,7 @@ impl SpotOrder {
         market_id: &MarketId,
         subaccount_id: SubaccountId,
         fee_recipient: Option<Addr>,
+        cid: Option<String>,
     ) -> Self {
         SpotOrder {
             market_id: market_id.clone(),
@@ -77,6 +78,7 @@ impl SpotOrder {
                 fee_recipient,
                 price,
                 quantity,
+                cid,
             },
             order_type,
             trigger_price: None,
@@ -153,6 +155,7 @@ impl ShortSpotOrder {
         market_id: &MarketId,
         subaccount_id: ShortSubaccountId,
         fee_recipient: Option<Addr>,
+        cid: Option<String>,
     ) -> Self {
         ShortSpotOrder {
             market_id: market_id.clone(),
@@ -161,6 +164,7 @@ impl ShortSpotOrder {
                 fee_recipient,
                 price,
                 quantity,
+                cid,
             },
             order_type,
             trigger_price: None,
@@ -194,6 +198,7 @@ pub struct ShortOrderInfo {
     pub fee_recipient: Option<Addr>,
     pub price: FPDecimal,
     pub quantity: FPDecimal,
+    pub cid: Option<String>,
 }
 
 impl From<OrderInfo> for ShortOrderInfo {
@@ -203,6 +208,7 @@ impl From<OrderInfo> for ShortOrderInfo {
             fee_recipient: order_info.fee_recipient,
             price: order_info.price,
             quantity: order_info.quantity,
+            cid: order_info.cid,
         }
     }
 }

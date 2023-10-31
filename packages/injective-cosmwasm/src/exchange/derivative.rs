@@ -94,6 +94,7 @@ impl DerivativeOrder {
         market_id: MarketId,
         subaccount_id: SubaccountId,
         fee_recipient: Option<Addr>,
+        cid: Option<String>,
     ) -> Self {
         DerivativeOrder {
             market_id,
@@ -102,6 +103,7 @@ impl DerivativeOrder {
                 fee_recipient,
                 price,
                 quantity,
+                cid,
             },
             order_type,
             margin,
@@ -199,6 +201,7 @@ impl ShortDerivativeOrder {
         market_id: MarketId,
         subaccount_id: ShortSubaccountId,
         fee_recipient: Option<Addr>,
+        cid: Option<String>,
     ) -> Self {
         ShortDerivativeOrder {
             market_id,
@@ -207,6 +210,7 @@ impl ShortDerivativeOrder {
                 fee_recipient,
                 price,
                 quantity,
+                cid,
             },
             order_type,
             margin,
