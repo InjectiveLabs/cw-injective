@@ -1,10 +1,12 @@
 /// Arithmetic operators for FPDecimal
 use crate::fp_decimal::{FPDecimal, U256};
+use core::convert::TryFrom;
+use primitive_types::U512;
 use std::iter;
 use std::ops;
 
 impl FPDecimal {
-    pub fn _add(x: FPDecimal, y: FPDecimal) -> FPDecimal {
+    pub(crate) fn _add(x: FPDecimal, y: FPDecimal) -> FPDecimal {
         if x.sign == y.sign {
             return FPDecimal {
                 num: x.num + y.num,
@@ -18,19 +20,21 @@ impl FPDecimal {
                 sign: x.sign,
             };
         }
-        let mut sign = y.sign;
         if y.num == x.num {
-            sign = 1;
+            return FPDecimal::ZERO;
         }
 
-        FPDecimal { num: y.num - x.num, sign }
+        FPDecimal {
+            num: y.num - x.num,
+            sign: y.sign,
+        }
     }
 
     pub fn add(&self, other: i128) -> FPDecimal {
         FPDecimal::_add(*self, FPDecimal::from(other))
     }
 
-    pub fn _sub(x: FPDecimal, y: FPDecimal) -> FPDecimal {
+    pub(crate) fn _sub(x: FPDecimal, y: FPDecimal) -> FPDecimal {
         let neg_y = FPDecimal {
             num: y.num,
             sign: 1 - y.sign,
@@ -42,15 +46,15 @@ impl FPDecimal {
         FPDecimal::_sub(*self, FPDecimal::from(other))
     }
 
-    pub fn _mul(x: FPDecimal, y: FPDecimal) -> FPDecimal {
+    pub(crate) fn _mul(x: FPDecimal, y: FPDecimal) -> FPDecimal {
         let mut sign = 1;
         if x.sign != y.sign {
             sign = 0;
         }
-        let x1: U256 = FPDecimal::_int(x).num / FPDecimal::ONE.num;
-        let x2: U256 = FPDecimal::_fraction(x).num;
-        let y1: U256 = FPDecimal::_int(y).num / FPDecimal::ONE.num;
-        let y2: U256 = FPDecimal::_fraction(y).num;
+        let x1 = FPDecimal::_int(x).num / FPDecimal::ONE.num;
+        let x2 = FPDecimal::_fraction(x).num;
+        let y1 = FPDecimal::_int(y).num / FPDecimal::ONE.num;
+        let y2 = FPDecimal::_fraction(y).num;
         let mut x1y1 = x1 * y1;
         let dec_x1y1 = x1y1 * FPDecimal::ONE.num;
         x1y1 = dec_x1y1;
@@ -59,9 +63,9 @@ impl FPDecimal {
 
         let x2y2 = x2 * y2;
         let mut result = x1y1;
-        result = result + x2y1;
-        result = result + x1y2;
-        result = result + x2y2 / FPDecimal::MUL_PRECISION.num / FPDecimal::MUL_PRECISION.num;
+        result += x2y1;
+        result += x1y2;
+        result += x2y2 / FPDecimal::MUL_PRECISION.num / FPDecimal::MUL_PRECISION.num;
 
         FPDecimal { num: result, sign }
     }
@@ -70,29 +74,29 @@ impl FPDecimal {
         FPDecimal::_mul(*self, FPDecimal::from(other))
     }
 
-    pub fn _div(x: FPDecimal, y: FPDecimal) -> FPDecimal {
+    pub(crate) fn _div(x: FPDecimal, y: FPDecimal) -> FPDecimal {
         if y == FPDecimal::ONE {
             return x;
         }
 
         assert_ne!(y.num, U256::zero());
 
-        let num = FPDecimal::ONE.num.full_mul(x.num) / y.num.into();
+        let num = FPDecimal::ONE.num.full_mul(x.num) / U512::try_from(y.num).unwrap();
         if num.is_zero() {
-            return FPDecimal::zero();
+            return FPDecimal::ZERO;
         }
 
         FPDecimal {
-            num: num.into(),
+            num: U256::try_from(num).unwrap(), // panic only in MIN_FPDeciaml/-1
             sign: 1 ^ x.sign ^ y.sign,
         }
     }
 
-    pub fn div(&self, other: i128) -> FPDecimal {
+    pub fn div(&self, other: i128) -> Self {
         FPDecimal::_div(*self, FPDecimal::from(other))
     }
 
-    pub fn reciprocal(x: FPDecimal) -> FPDecimal {
+    pub fn reciprocal(x: FPDecimal) -> Self {
         assert!(x.num != U256::zero());
         FPDecimal {
             num: FPDecimal::ONE.num * FPDecimal::ONE.num / x.num,
@@ -100,7 +104,7 @@ impl FPDecimal {
         }
     }
 
-    pub fn abs(&self) -> FPDecimal {
+    pub fn abs(&self) -> Self {
         FPDecimal { num: self.num, sign: 1i8 }
     }
 
@@ -239,10 +243,26 @@ impl<'a> iter::Sum<&'a Self> for FPDecimal {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
 
+    use crate::fp_decimal::U256;
     use crate::FPDecimal;
-    use bigint::U256;
+
+    #[test]
+    fn compare() {
+        let neg_ten = -FPDecimal::TEN;
+        let neg_point_one = -FPDecimal::must_from_str("0.1");
+        let neg_point_two = -FPDecimal::must_from_str("0.2");
+        let neg_one = -FPDecimal::ONE;
+        let point_one = FPDecimal::must_from_str("0.1");
+        let one = FPDecimal::ONE;
+        let ten = FPDecimal::TEN;
+        assert!(neg_ten < neg_one);
+        assert!(neg_one < neg_point_two);
+        assert!(neg_point_two < neg_point_one);
+        assert!(neg_point_one < point_one);
+        assert!(point_one < one);
+        assert!(one < ten);
+    }
 
     #[test]
     fn test_into_u128() {
@@ -259,241 +279,155 @@ mod tests {
         let _: u128 = (FPDecimal::from(u128::MAX) + FPDecimal::ONE).into();
     }
 
-    // #[test]
-    // fn test_overflow() {
-    //     let num1 = FPDecimal::from(1701411834604692317316873037158841i128);
-    //     assert_eq!(num1, FPDecimal::one());
-    // }
+    #[test]
+    #[should_panic(expected = "overflow")]
+    fn test_overflow() {
+        let num1 = FPDecimal::MAX + FPDecimal::ONE;
+        assert_eq!(num1, FPDecimal::ONE);
+    }
 
     #[test]
     fn test_add() {
-        let five = FPDecimal {
-            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let three = FPDecimal {
-            num: U256([3, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let eight = FPDecimal {
-            num: U256([8, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        assert_eq!(FPDecimal::_add(five, three), eight);
+        let five = FPDecimal::FIVE;
+        let three = FPDecimal::THREE;
+        let eight = FPDecimal::EIGHT;
+        assert_eq!(five + three, eight);
     }
 
     #[test]
     fn test_add_neg() {
-        let neg_five = FPDecimal {
-            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 0,
-        };
-        let neg_three = FPDecimal {
-            num: U256([3, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 0,
-        };
-        let neg_eight = FPDecimal {
-            num: U256([8, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 0,
-        };
-        assert_eq!(FPDecimal::_add(neg_five, neg_three), neg_eight);
+        let neg_five = -FPDecimal::FIVE;
+        let neg_three = -FPDecimal::THREE;
+        let neg_eight = -FPDecimal::EIGHT;
+        assert_eq!(neg_five + neg_three, neg_eight);
     }
 
     #[test]
     fn test_sub() {
-        let five = FPDecimal {
-            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let three = FPDecimal {
-            num: U256([3, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let two = FPDecimal {
-            num: U256([2, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        assert_eq!(FPDecimal::_sub(five, three), two);
+        let five = FPDecimal::FIVE;
+        let three = FPDecimal::THREE;
+        let two = FPDecimal::TWO;
+        assert_eq!(five - three, two);
     }
 
     #[test]
     fn test_sub_neg() {
-        let five = FPDecimal {
-            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let neg_three = FPDecimal {
-            num: U256([3, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 0,
-        };
-        let eight = FPDecimal {
-            num: U256([8, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
+        let five = FPDecimal::FIVE;
+        let neg_three = -FPDecimal::THREE;
+        let eight = FPDecimal::EIGHT;
         assert_eq!(FPDecimal::_sub(five, neg_three), eight);
     }
 
     #[test]
     fn test_mul() {
-        let five = FPDecimal {
-            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let three = FPDecimal {
-            num: U256([3, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let fifteen = FPDecimal {
-            num: U256([15, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        assert_eq!(FPDecimal::_mul(five, three), fifteen);
+        let five = FPDecimal::FIVE;
+        let three = FPDecimal::THREE;
+        let fifteen = FPDecimal::must_from_str("15");
+        assert_eq!(five * three, fifteen);
     }
 
     #[test]
     fn test_mul_precisions() {
         // 8.33157469 * 0.000000000001 = 0.00000000000833157469
         assert_eq!(
-            FPDecimal::from_str("8.33157469").unwrap() * FPDecimal::from_str("0.000000000001").unwrap(),
-            FPDecimal::from_str("0.000000000008331574").unwrap()
+            FPDecimal::must_from_str("8.33157469") * FPDecimal::must_from_str("0.000000000001"),
+            FPDecimal::must_from_str("0.000000000008331574")
         );
 
         // 1.5 * 1.5 = 2.25
         assert_eq!(
-            FPDecimal::from_str("1.5").unwrap() * FPDecimal::from_str("1.5").unwrap(),
-            FPDecimal::from_str("2.25").unwrap()
+            FPDecimal::must_from_str("1.5") * FPDecimal::must_from_str("1.5"),
+            FPDecimal::must_from_str("2.25")
         );
 
         // 2.718281828459045235 * 2.718281828459045235 = 7.389056098930650225
-        assert_eq!(FPDecimal::E * FPDecimal::E, FPDecimal::from_str("7.389056098930650225").unwrap());
+        assert_eq!(FPDecimal::E * FPDecimal::E, FPDecimal::must_from_str("7.389056098930650225"));
 
         // 0.5 * 0.5 = 0.25
         assert_eq!(
-            FPDecimal::from_str("0.5").unwrap() * FPDecimal::from_str("0.5").unwrap(),
-            FPDecimal::from_str("0.25").unwrap()
+            FPDecimal::must_from_str("0.5") * FPDecimal::must_from_str("0.5"),
+            FPDecimal::must_from_str("0.25")
         );
 
         // 5 * 0.5 = 2.5
-        assert_eq!(FPDecimal::FIVE * FPDecimal::from_str("0.5").unwrap(), FPDecimal::from_str("2.5").unwrap());
+        assert_eq!(FPDecimal::FIVE * FPDecimal::must_from_str("0.5"), FPDecimal::must_from_str("2.5"));
 
         // 0.5 * 5 = 2.5
-        assert_eq!(FPDecimal::from_str("0.5").unwrap() * FPDecimal::FIVE, FPDecimal::from_str("2.5").unwrap());
+        assert_eq!(FPDecimal::must_from_str("0.5") * FPDecimal::FIVE, FPDecimal::must_from_str("2.5"));
 
         // 4 * 2.5 = 10
-        assert_eq!(FPDecimal::FOUR * FPDecimal::from_str("2.5").unwrap(), FPDecimal::from_str("10").unwrap());
+        assert_eq!(FPDecimal::FOUR * FPDecimal::must_from_str("2.5"), FPDecimal::must_from_str("10"));
 
         // 2.5 * 4 = 10
-        assert_eq!(FPDecimal::from_str("2.5").unwrap() * FPDecimal::FOUR, FPDecimal::from_str("10").unwrap());
+        assert_eq!(FPDecimal::must_from_str("2.5") * FPDecimal::FOUR, FPDecimal::must_from_str("10"));
 
         // 0.000000008 * 0.9 = 0.0000000072
         assert_eq!(
-            FPDecimal::from_str("0.000000008").unwrap() * FPDecimal::from_str("0.9").unwrap(),
-            FPDecimal::from_str("0.0000000072").unwrap()
+            FPDecimal::must_from_str("0.000000008") * FPDecimal::must_from_str("0.9"),
+            FPDecimal::must_from_str("0.0000000072")
         );
 
         // 0.0000000008 * 0.9 = 0.00000000072
         assert_eq!(
-            FPDecimal::from_str("0.0000000008").unwrap() * FPDecimal::from_str("0.9").unwrap(),
-            FPDecimal::from_str("0.00000000072").unwrap()
+            FPDecimal::must_from_str("0.0000000008") * FPDecimal::must_from_str("0.9"),
+            FPDecimal::must_from_str("0.00000000072")
         );
 
         // -0.5 * 0.5 = -0.25
         assert_eq!(
-            FPDecimal::from_str("-0.5").unwrap() * FPDecimal::from_str("0.5").unwrap(),
-            FPDecimal::from_str("-0.25").unwrap()
+            FPDecimal::must_from_str("-0.5") * FPDecimal::must_from_str("0.5"),
+            FPDecimal::must_from_str("-0.25")
         );
 
         // -0.5 * -0.5 = 0.25
         assert_eq!(
-            FPDecimal::from_str("-0.5").unwrap() * FPDecimal::from_str("-0.5").unwrap(),
-            FPDecimal::from_str("0.25").unwrap()
+            FPDecimal::must_from_str("-0.5") * FPDecimal::must_from_str("-0.5"),
+            FPDecimal::must_from_str("0.25")
         );
 
         // -5 * -3 = 15
         assert_eq!(
-            FPDecimal::from_str("-5").unwrap() * FPDecimal::from_str("-3").unwrap(),
-            FPDecimal::from_str("15").unwrap()
+            FPDecimal::must_from_str("-5") * FPDecimal::must_from_str("-3"),
+            FPDecimal::must_from_str("15")
         );
     }
 
     #[test]
     fn test_mul_pos_neg() {
-        let five = FPDecimal {
-            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let neg_three = FPDecimal {
-            num: U256([3, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 0,
-        };
-        let neg_fifteen = FPDecimal {
-            num: U256([15, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 0,
-        };
-        assert_eq!(FPDecimal::_mul(five, neg_three), neg_fifteen);
+        let five = FPDecimal::FIVE;
+        let neg_three = -FPDecimal::THREE;
+        let neg_fifteen = FPDecimal::must_from_str("-15");
+        assert_eq!(five * neg_three, neg_fifteen);
     }
 
     #[test]
     fn test_mul_neg_pos() {
-        let neg_five = FPDecimal {
-            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 0,
-        };
-        let three = FPDecimal {
-            num: U256([3, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let neg_fifteen = FPDecimal {
-            num: U256([15, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 0,
-        };
-        assert_eq!(FPDecimal::_mul(neg_five, three), neg_fifteen);
+        let neg_five = -FPDecimal::FIVE;
+        let three = FPDecimal::THREE;
+        let neg_fifteen = FPDecimal::must_from_str("-15");
+        assert_eq!(neg_five * three, neg_fifteen);
     }
 
     #[test]
     fn test_mul_neg_neg() {
-        let neg_five = FPDecimal {
-            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 0,
-        };
-        let neg_three = FPDecimal {
-            num: U256([3, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 0,
-        };
-        let fifteen = FPDecimal {
-            num: U256([15, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        assert_eq!(FPDecimal::_mul(neg_five, neg_three), fifteen);
+        let neg_five = -FPDecimal::FIVE;
+        let neg_three = -FPDecimal::THREE;
+        let fifteen = FPDecimal::must_from_str("15");
+        assert_eq!(neg_five * neg_three, fifteen);
     }
 
     #[test]
     fn test_div() {
-        let hundred = FPDecimal {
-            num: U256([100, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let five = FPDecimal {
-            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let twenty = FPDecimal {
-            num: U256([20, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        assert_eq!(FPDecimal::_div(hundred, five), twenty);
+        let hundred = FPDecimal::must_from_str("100");
+        let five = FPDecimal::FIVE;
+        let twenty = FPDecimal::must_from_str("20");
+        assert_eq!(hundred / five, twenty);
     }
 
     #[test]
     fn test_reciprocal() {
-        let five = FPDecimal {
-            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let point_2 = FPDecimal {
-            num: FPDecimal::ONE.num / U256([5, 0, 0, 0]),
-            sign: 1,
-        };
+        let five = FPDecimal::FIVE;
+        let point_2 = FPDecimal::TWO / FPDecimal::TEN;
         assert_eq!(FPDecimal::reciprocal(five), point_2);
         assert_eq!(FPDecimal::reciprocal(point_2), five);
         assert_eq!(FPDecimal::reciprocal(FPDecimal::must_from_str("0.5")), FPDecimal::TWO);
@@ -501,133 +435,76 @@ mod tests {
 
     #[test]
     fn test_abs() {
-        let neg_five = FPDecimal {
-            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 0,
-        };
-        let five = FPDecimal {
-            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
+        let neg_five = -FPDecimal::FIVE;
+        let five = FPDecimal::FIVE;
         assert_eq!(neg_five.abs(), five);
     }
 
     #[test]
     fn test_div_identity() {
         for i in 1..10000 {
-            let a = FPDecimal {
-                num: U256([i, 0, 0, 0]) * FPDecimal::ONE.num,
-                sign: 1,
-            };
-
+            let a = FPDecimal::must_from_str(&format!("{}", i));
             assert_eq!(a / a, FPDecimal::ONE);
         }
     }
 
     #[test]
     fn test_add_assign() {
-        let mut five = FPDecimal {
-            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let four = FPDecimal {
-            num: U256([4, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let nine = FPDecimal {
-            num: U256([9, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        five += four;
-        let nine_2 = five;
-        assert_eq!(nine_2, nine);
+        let mut ans = FPDecimal::FIVE;
+        let four = FPDecimal::FOUR;
+        let nine = FPDecimal::NINE;
+        ans += four;
+        assert_eq!(ans, nine);
 
-        let mut nine = nine_2;
-        let five = FPDecimal {
-            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let neg_four = FPDecimal {
-            num: U256([4, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 0,
-        };
-        nine += neg_four;
-        let five_2 = nine;
-        assert_eq!(five, five_2);
+        let mut ans2 = FPDecimal::NINE;
+        let five = FPDecimal::FIVE;
+        let neg_four = -FPDecimal::FOUR;
+        ans2 += neg_four;
+        assert_eq!(five, ans2);
     }
 
     #[test]
     fn test_sub_assign() {
-        let mut five = FPDecimal {
-            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let four = FPDecimal {
-            num: U256([4, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        five -= four;
-        let one = five;
-        assert_eq!(one, FPDecimal::one());
+        let mut ans = FPDecimal::FIVE;
+        let four = FPDecimal::FOUR;
+        ans -= four;
+        assert_eq!(ans, FPDecimal::ONE);
 
-        let mut one = one;
-        let five = FPDecimal {
-            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let neg_four = FPDecimal {
-            num: U256([4, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 0,
-        };
-        one -= neg_four;
-        let five_2 = one;
-        assert_eq!(five, five_2);
+        let mut ans = FPDecimal::ONE;
+        let five = FPDecimal::FIVE;
+        let neg_four = -FPDecimal::FOUR;
+        ans -= neg_four;
+        assert_eq!(five, ans);
     }
 
     #[test]
     fn test_mul_assign() {
-        let mut five = FPDecimal {
-            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let two = FPDecimal {
-            num: U256([2, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let ten = FPDecimal {
-            num: U256([10, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        five *= two;
-        let ten_2 = five;
-        assert_eq!(ten, ten_2);
+        let mut ans = FPDecimal::FIVE;
+        let two = FPDecimal::TWO;
+        let ten = FPDecimal::TEN;
+        ans *= two;
+        assert_eq!(ten, ans);
 
-        let mut five = FPDecimal {
-            num: U256([5, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 1,
-        };
-        let two = FPDecimal {
-            num: U256([2, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 0,
-        };
-        let neg_ten = FPDecimal {
-            num: U256([10, 0, 0, 0]) * FPDecimal::ONE.num,
-            sign: 0,
-        };
-        five *= two;
-        let neg_ten_2 = five;
-        assert_eq!(neg_ten, neg_ten_2);
+        let mut ans = -FPDecimal::FIVE;
+        let two = FPDecimal::TWO;
+        let neg_ten = -FPDecimal::TEN;
+        ans *= two;
+        assert_eq!(neg_ten, ans);
     }
 
     #[test]
     fn test_div_assign() {
-        let mut x = FPDecimal::EIGHT;
-        x /= FPDecimal::TWO;
-        assert_eq!(FPDecimal::FOUR, x);
+        let mut ans = FPDecimal::EIGHT;
+        ans /= FPDecimal::TWO;
+        assert_eq!(FPDecimal::FOUR, ans);
 
         let mut y = FPDecimal::FIVE;
         y /= FPDecimal::TWO;
         assert_eq!(FPDecimal::must_from_str("2.5"), y);
+
+        let mut z = FPDecimal::ONE;
+        z /= FPDecimal::THREE;
+        assert_eq!(z, FPDecimal::THREE / FPDecimal::NINE);
     }
 
     #[test]
@@ -635,7 +512,7 @@ mod tests {
         let val = FPDecimal::TWO;
         assert!(!val.is_negative());
 
-        let val = FPDecimal::zero();
+        let val = FPDecimal::ZERO;
         assert!(!val.is_negative());
 
         // even a manually assigned negative zero value returns positive
@@ -651,20 +528,20 @@ mod tests {
 
     #[test]
     fn test_abs_diff() {
-        let lhs = FPDecimal::from(2u128);
-        let rhs = FPDecimal::from(3u128);
+        let lhs = FPDecimal::TWO;
+        let rhs = FPDecimal::THREE;
         let ans = lhs.abs_diff(&rhs);
-        assert_eq!(FPDecimal::one(), ans);
+        assert_eq!(FPDecimal::ONE, ans);
 
-        let lhs = FPDecimal::from(3u128);
-        let rhs = FPDecimal::one();
+        let lhs = FPDecimal::THREE;
+        let rhs = FPDecimal::ONE;
         let ans = lhs.abs_diff(&rhs);
-        assert_eq!(FPDecimal::from(2u128), ans);
+        assert_eq!(FPDecimal::TWO, ans);
 
         let lhs = FPDecimal::NEGATIVE_ONE;
         let rhs = FPDecimal::TWO;
         let ans = lhs.abs_diff(&rhs);
-        assert_eq!(FPDecimal::from(3u128), ans);
+        assert_eq!(FPDecimal::THREE, ans);
     }
 
     #[test]

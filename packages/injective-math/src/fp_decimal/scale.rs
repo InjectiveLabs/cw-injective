@@ -6,12 +6,12 @@ pub trait Scaled {
 
 impl Scaled for FPDecimal {
     fn scaled(self, digits: i32) -> Self {
-        self.to_owned() * FPDecimal::from(10i128).pow(FPDecimal::from(digits as i128))
+        self.to_owned() * FPDecimal::from(10i128).pow(FPDecimal::from(digits as i128)).unwrap()
     }
 }
 
 pub fn dec_scale_factor() -> FPDecimal {
-    FPDecimal::one().scaled(18)
+    FPDecimal::ONE.scaled(18)
 }
 
 #[cfg(test)]

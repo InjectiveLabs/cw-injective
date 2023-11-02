@@ -1,9 +1,11 @@
 pub mod fp_decimal;
+pub mod root_findings;
 pub mod utils;
 pub mod vector;
 
 use cosmwasm_std::{StdResult, Uint128};
 pub use fp_decimal::*;
+pub use root_findings::*;
 use std::str::FromStr;
 pub use utils::*;
 pub use vector::*;

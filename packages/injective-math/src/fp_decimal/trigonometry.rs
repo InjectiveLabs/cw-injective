@@ -1,20 +1,20 @@
 use crate::fp_decimal::FPDecimal;
 
 impl FPDecimal {
-    pub fn _cos(mut x: FPDecimal) -> FPDecimal {
+    pub(self) fn _cos(mut x: FPDecimal) -> FPDecimal {
         x = FPDecimal::_change_range(x);
         FPDecimal::_sin(FPDecimal::PI / FPDecimal::TWO - x)
     }
 
     fn _sine_taylor_expansion(x: FPDecimal) -> FPDecimal {
-        x - (x.pow(FPDecimal::THREE) / FPDecimal::THREE.factorial()) + (x.pow(FPDecimal::FIVE) / FPDecimal::FIVE.factorial())
-            - (x.pow(FPDecimal::SEVEN) / FPDecimal::SEVEN.factorial())
-            + (x.pow(FPDecimal::NINE) / FPDecimal::NINE.factorial())
-            - (x.pow(FPDecimal::TWO + FPDecimal::NINE) / (FPDecimal::TWO + FPDecimal::NINE).factorial())
-            + (x.pow(FPDecimal::FOUR + FPDecimal::NINE) / (FPDecimal::FOUR + FPDecimal::NINE).factorial())
+        x - (x.pow(FPDecimal::THREE).unwrap() / FPDecimal::THREE.factorial()) + (x.pow(FPDecimal::FIVE).unwrap() / FPDecimal::FIVE.factorial())
+            - (x.pow(FPDecimal::SEVEN).unwrap() / FPDecimal::SEVEN.factorial())
+            + (x.pow(FPDecimal::NINE).unwrap() / FPDecimal::NINE.factorial())
+            - (x.pow(FPDecimal::ELEVEN).unwrap() / (FPDecimal::ELEVEN).factorial())
+            + (x.pow(FPDecimal::THREE + FPDecimal::TEN).unwrap() / (FPDecimal::THREE + FPDecimal::TEN).factorial())
     }
 
-    pub fn _sin(mut x: FPDecimal) -> FPDecimal {
+    pub(self) fn _sin(mut x: FPDecimal) -> FPDecimal {
         x = FPDecimal::_change_range(x);
         let pi_by_2 = FPDecimal::PI / FPDecimal::TWO;
         let pi_plus_pi_by_2 = FPDecimal::PI + FPDecimal::PI / FPDecimal::TWO;
@@ -113,14 +113,12 @@ mod tests {
 
     #[test]
     fn test_sine_one() {
+        //0.84147098480789650666
         almost_eq(FPDecimal::ONE.imprecise_sin(), FPDecimal::from_str("0.8414709848").unwrap());
     }
 
     #[test]
     fn test_sine_negative_one() {
-        almost_eq(
-            (FPDecimal::ZERO - FPDecimal::ONE).imprecise_sin(),
-            FPDecimal::from_str("-0.8414709848").unwrap(),
-        );
+        almost_eq((-FPDecimal::ONE).imprecise_sin(), FPDecimal::from_str("-0.8414709848").unwrap());
     }
 }
