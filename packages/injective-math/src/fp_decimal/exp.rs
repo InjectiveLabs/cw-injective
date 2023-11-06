@@ -104,16 +104,8 @@ impl FPDecimal {
 
         fn check_log_2(x: &FPDecimal, exponent: &FPDecimal) -> bool {
             match x.log2() {
-                Some(v) => {
-                    if v == *exponent {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }
-                None => {
-                    return false;
-                }
+                Some(v) => v == *exponent,
+                None => false,
             }
         }
         let special_checks = [
