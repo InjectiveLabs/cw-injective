@@ -325,6 +325,17 @@ fn default_spot_market_orderbook_response_handler() -> QuerierResult {
     SystemResult::Ok(ContractResult::from(to_binary(&response)))
 }
 
+fn default_derivative_market_orderbook_response_handler() -> QuerierResult {
+    let response = QueryOrderbookResponse {
+        buys_price_level: vec![PriceLevel::new(9u128.into(), 10u128.into()), PriceLevel::new(8u128.into(), 10u128.into())],
+        sells_price_level: vec![
+            PriceLevel::new(11u128.into(), 10u128.into()),
+            PriceLevel::new(12u128.into(), 10u128.into()),
+        ],
+    };
+    SystemResult::Ok(ContractResult::from(to_binary(&response)))
+}
+
 fn default_market_atomic_execution_fee_multiplier_response_handler() -> QuerierResult {
     let response = QueryMarketAtomicExecutionFeeMultiplierResponse {
         multiplier: FPDecimal::from_str("2.0").unwrap(),
@@ -444,6 +455,10 @@ pub trait HandlesPriceLevelsQuery {
     fn handle(&self, market_id: MarketId, order_side: OrderSide) -> QuerierResult;
 }
 
+pub trait HandlesDerivativePriceLevelsQuery {
+    fn handle(&self, market_id: MarketId) -> QuerierResult;
+}
+
 pub trait HandlesExchangeParamsQuery {
     fn handle(&self) -> QuerierResult;
 }
@@ -482,6 +497,7 @@ pub struct WasmMockQuerier {
     pub all_balances_query_handler: Option<Box<dyn HandlesBankAllBalancesQuery>>,
     pub registered_contract_info_query_handler: Option<Box<dyn HandlesByAddressQuery>>,
     pub spot_market_orderbook_response_handler: Option<Box<dyn HandlesPriceLevelsQuery>>,
+    pub derivative_market_orderbook_response_handler: Option<Box<dyn HandlesDerivativePriceLevelsQuery>>,
     pub market_atomic_execution_fee_multiplier_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
 }
 
@@ -677,6 +693,10 @@ impl WasmMockQuerier {
                     Some(handler) => handler.handle(market_id, order_side),
                     None => default_spot_market_orderbook_response_handler(),
                 },
+                InjectiveQuery::DerivativeOrderbook { market_id, .. } => match &self.derivative_market_orderbook_response_handler {
+                    Some(handler) => handler.handle(market_id),
+                    None => default_derivative_market_orderbook_response_handler(),
+                },
                 InjectiveQuery::MarketAtomicExecutionFeeMultiplier { market_id } => {
                     match &self.market_atomic_execution_fee_multiplier_response_handler {
                         Some(handler) => handler.handle(market_id),
@@ -731,6 +751,7 @@ impl WasmMockQuerier {
             registered_contract_info_query_handler: None,
             denom_decimals_handler: None,
             spot_market_orderbook_response_handler: None,
+            derivative_market_orderbook_response_handler: None,
             market_atomic_execution_fee_multiplier_response_handler: None,
         }
     }
