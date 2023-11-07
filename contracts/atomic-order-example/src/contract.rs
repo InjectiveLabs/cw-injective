@@ -31,7 +31,7 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
-    let querier = InjectiveQuerier::new(&deps.querier);
+    let querier: InjectiveQuerier<'_> = InjectiveQuerier::new(&deps.querier);
     if let Some(market) = querier.query_spot_market(&msg.market_id)?.market {
         let state = ContractConfigState {
             market_id: msg.market_id,

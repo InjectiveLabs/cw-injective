@@ -956,6 +956,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "injective-cosmwasm-mock"
+version = "1.0.0"
+dependencies = [
+ "cosmwasm-std",
+ "cw-storage-plus 0.16.0",
+ "cw2 0.14.0",
+ "injective-cosmwasm 0.2.15",
+ "schemars",
+ "serde 1.0.188",
+ "thiserror",
+]
+
+[[package]]
 name = "injective-math"
 version = "0.1.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
