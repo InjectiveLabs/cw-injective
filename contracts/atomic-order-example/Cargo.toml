@@ -29,17 +29,17 @@ optimize = """docker run --rm -v "$(pwd)":/code \
 """
 
 [dependencies]
-cosmwasm-std = "1.4.1"
-cosmwasm-storage = "1.4.1"
+cosmwasm-std = "1.2.0"
+cosmwasm-storage = "1.2.0"
 cw-storage-plus = "0.14.0"
 cw2 = "0.14.0"
 cw-utils = "0.14.0"
 schemars = "0.8.8"
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
-injective-cosmwasm = { version = "0.1.104" }
-injective-math = { version = "0.1.4" }
 protobuf = { version = "2", features = ["with-bytes"] }
+injective-cosmwasm = { path = "../../packages/injective-cosmwasm", version = "0.2.15" }
+injective-math = { path = "../../packages/injective-math", version = "0.2.1" }
 injective-protobuf = { path = "../../packages/injective-protobuf", version = "0.2" }
 
 [dev-dependencies]
