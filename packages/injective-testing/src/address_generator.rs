@@ -60,7 +60,6 @@ pub fn generate_inj_address() -> Addr {
     let secp256k1 = Secp256k1::new();
     let mut rng = OsRng::new().expect("failed to create new random number generator");
     let (_, public_key) = secp256k1.generate_keypair(&mut rng).expect("failed to generate key pair");
-
     let public_key_array = &public_key.serialize_vec(&secp256k1, false)[1..];
     let keccak = tiny_keccak::keccak256(public_key_array);
     let address_short = to_hex_string(&keccak[ADDRESS_BYTE_INDEX..], 40); // get rid of the constant 0x04 byte

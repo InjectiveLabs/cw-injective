@@ -18,12 +18,12 @@ protobuf-codegen-pure = "2"
 backtraces = ["cosmwasm-std/backtraces"]
 
 [dependencies]
-cosmwasm-std = { version = "1.2.0" }
-schemars = "0.8.8"
-serde = { version = "1.0.136", default-features = false, features = ["derive"] }
-ethereum-types = "0.14.1"
-subtle-encoding = { version = "0.5.1", features = ["bech32-preview"] }
-protobuf = { version = "2", features = ["with-bytes"] }
+cosmwasm-std       = { workspace = true }
+schemars           = { workspace = true }
+serde              = { workspace = true }
+ethereum-types     = { workspace = true }
+subtle-encoding    = { workspace = true }
+protobuf           = { workspace = true }
 
 [dev-dependencies]
-cosmwasm-schema = { version = "1.4.1" }
+cosmwasm-schema    = { workspace = true }
