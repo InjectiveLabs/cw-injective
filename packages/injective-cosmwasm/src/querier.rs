@@ -419,6 +419,23 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
+    pub fn query_derivative_market_orderbook<T: Into<MarketId> + Clone>(
+        &self,
+        market_id: &'a T,
+        limit_cumulative_notional: FPDecimal,
+    ) -> StdResult<QueryOrderbookResponse> {
+        let request = InjectiveQueryWrapper {
+            route: InjectiveRoute::Exchange,
+            query_data: InjectiveQuery::DerivativeOrderbook {
+                market_id: market_id.clone().into(),
+                limit: 0,
+                limit_cumulative_notional: Some(limit_cumulative_notional),
+            },
+        };
+        let res: QueryOrderbookResponse = self.querier.query(&request.into())?;
+        Ok(res)
+    }
+
     pub fn query_market_atomic_execution_fee_multiplier<T: Into<MarketId> + Clone>(
         &self,
         market_id: &'a T,

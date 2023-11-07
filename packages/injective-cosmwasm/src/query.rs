@@ -115,6 +115,11 @@ pub enum InjectiveQuery {
         limit_cumulative_quantity: Option<FPDecimal>,
         limit_cumulative_notional: Option<FPDecimal>,
     },
+    DerivativeOrderbook {
+        market_id: MarketId,
+        limit: u64,
+        limit_cumulative_notional: Option<FPDecimal>,
+    },
     DerivativeMarketMidPriceAndTob {
         market_id: MarketId,
     },
