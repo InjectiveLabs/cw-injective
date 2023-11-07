@@ -15,7 +15,6 @@ cw-multi-test      = { workspace = true }
 injective-cosmwasm = { workspace = true }
 injective-math     = { workspace = true }
 rand               = { workspace = true }
-# secp256k1          = { workspace = true }
+secp256k1          = { workspace = true }
 serde              = { workspace = true }
 tiny-keccak        = { workspace = true }
-secp256k1          =  "0.6.2"
