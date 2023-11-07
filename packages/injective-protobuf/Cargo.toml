@@ -2,7 +2,7 @@
 name = "injective-protobuf"
 version = "0.2.0"
 authors = ["Mauro Lacy <mauro@lacy.com.es>"]
-edition = "2018"
+edition = "2021"
 description = "Protobug parsing for Injective Protocol"
 repository = "https://github.com/InjectiveLabs/cw-injective/tree/master/packages/injective-protobuf"
 license = "Apache-2.0"
@@ -23,7 +23,6 @@ schemars = "0.8.8"
 serde = { version = "1.0.136", default-features = false, features = ["derive"] }
 ethereum-types = "0.5.2"
 subtle-encoding = { version = "0.5.1", features = ["bech32-preview"] }
-num = "0.4.0"
 protobuf = { version = "2", features = ["with-bytes"] }
 
 [dev-dependencies]
