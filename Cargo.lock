@@ -990,7 +990,6 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "ethereum-types",
- "num 0.4.1",
  "protobuf",
  "protobuf-codegen-pure",
  "schemars",
