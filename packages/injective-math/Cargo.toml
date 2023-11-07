@@ -15,7 +15,7 @@ version     = "0.2.1"
 backtraces = [ "cosmwasm-std/backtraces" ]
 
 [dependencies]
-primitive-types = "0.12.2"
+primitive-types = {version= "0.12.2" ,default-features = false}
 cosmwasm-std    = { version = "1.4.1" }
 ethereum-types  = "0.5.2"
 schemars        = "0.8.8"
