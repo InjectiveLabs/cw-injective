@@ -333,7 +333,7 @@ fn default_derivative_market_orderbook_response_handler() -> QuerierResult {
             PriceLevel::new(12u128.into(), 10u128.into()),
         ],
     };
-    SystemResult::Ok(ContractResult::from(to_binary(&response)))
+    SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
 }
 
 fn default_market_atomic_execution_fee_multiplier_response_handler() -> QuerierResult {
