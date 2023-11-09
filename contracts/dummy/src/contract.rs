@@ -10,7 +10,7 @@ use injective_cosmwasm::{InjectiveMsgWrapper, InjectiveQueryWrapper};
 
 use crate::error::ContractError;
 use crate::mock_pyth_attestation::execute_trigger_pyth_update;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, SudoMsg};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:injective:dummy";
