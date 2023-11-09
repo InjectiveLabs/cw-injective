@@ -7,7 +7,11 @@ use cosmwasm_std::{
 };
 
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
-use injective_cosmwasm::{inj_mock_deps, inj_mock_env, HandlesMarketIdQuery, InjectiveQueryWrapper, InjectiveRoute, MarketId, OrderInfo, OrderType, OwnedDepsExt, SpotMarket, SpotMarketResponse, SpotOrder, SubaccountId, WasmMockQuerier, MarketStatus};
+use injective_cosmwasm::{
+    inj_mock_deps, inj_mock_env, HandlesMarketIdQuery, InjectiveQueryWrapper, InjectiveRoute,
+    MarketId, MarketStatus, OrderInfo, OrderType, OwnedDepsExt, SpotMarket, SpotMarketResponse,
+    SpotOrder, SubaccountId, WasmMockQuerier,
+};
 use injective_math::FPDecimal;
 
 use crate::contract::{execute, instantiate, reply, ATOMIC_ORDER_REPLY_ID};
