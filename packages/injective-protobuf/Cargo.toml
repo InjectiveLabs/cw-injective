@@ -2,7 +2,7 @@
 name = "injective-protobuf"
 version = "0.2.1"
 authors = ["Mauro Lacy <mauro@lacy.com.es>"]
-edition = "2018"
+edition = "2021"
 description = "Protobug parsing for Injective Protocol"
 repository = "https://github.com/InjectiveLabs/cw-injective/tree/master/packages/injective-protobuf"
 license = "Apache-2.0"
