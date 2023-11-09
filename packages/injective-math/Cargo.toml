@@ -16,11 +16,11 @@ backtraces = [ "cosmwasm-std/backtraces" ]
 
 [dependencies]
 primitive-types = {version= "0.12.2" ,default-features = false}
-cosmwasm-std    = { version = "1.4.1" }
-ethereum-types  = "0.5.2"
+cosmwasm-std        = { version = "1.2.7", features = [ "abort", "iterator", "stargate" ] }
+ethereum-types      = { version = "0.5.2" }
 schemars        = "0.8.8"
 serde           = { version = "1.0.136", default-features = false, features = [ "derive" ] }
 subtle-encoding = { version = "0.5.1", features = [ "bech32-preview" ] }
 
 [dev-dependencies]
-cosmwasm-schema = { version = "1.4.1" }
+cosmwasm-schema     = { version = "1.2.7" }
