@@ -1,7 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
+    to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
 };
 use cw2::set_contract_version;
 use cw_storage_plus::Item;
@@ -10,7 +10,7 @@ use injective_cosmwasm::{InjectiveMsgWrapper, InjectiveQueryWrapper};
 
 use crate::error::ContractError;
 use crate::mock_pyth_attestation::execute_trigger_pyth_update;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, SudoMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:injective:dummy";
@@ -44,7 +44,7 @@ pub fn execute(
     match msg {
         ExecuteMsg::Ping { .. } => {
             let mut response = Response::new();
-            response.data = Some(to_binary("pong")?);
+            response.data = Some(to_json_binary("pong")?);
             Ok(response)
         }
         ExecuteMsg::Error { .. } => Err(ContractError::Std(StdError::generic_err("oh no!"))),
@@ -71,15 +71,15 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, Contract
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::Ping { .. } => to_binary("pong"),
+        QueryMsg::Ping { .. } => to_json_binary("pong"),
         QueryMsg::Error { .. } => Err(StdError::generic_err("oh no!")),
         QueryMsg::Runs {} => {
             let runs_count = COUNTER.load(deps.storage)?;
-            to_binary(&format!("{runs_count}"))
+            to_json_binary(&format!("{runs_count}"))
         }
         QueryMsg::Active {} => {
             let is_active = ACTIVE.load(deps.storage)?;
-            to_binary(&format!("{is_active}"))
+            to_json_binary(&format!("{is_active}"))
         }
     }
 }

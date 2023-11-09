@@ -2,16 +2,12 @@ use std::str::FromStr;
 
 use cosmwasm_std::testing::{mock_info, MockApi, MockStorage};
 use cosmwasm_std::{
-    coins, to_binary, BankMsg, Binary, ContractResult, CosmosMsg, OwnedDeps, QuerierResult, Reply,
-    SubMsgResponse, SubMsgResult, SystemResult, Uint128,
+    coins, to_json_binary, BankMsg, Binary, ContractResult, CosmosMsg, OwnedDeps, QuerierResult,
+    Reply, SubMsgResponse, SubMsgResult, SystemResult, Uint128,
 };
 
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
-use injective_cosmwasm::{
-    inj_mock_deps, inj_mock_env, HandlesMarketIdQuery, InjectiveQueryWrapper, InjectiveRoute,
-    MarketId, OrderInfo, OrderType, OwnedDepsExt, SpotMarket, SpotMarketResponse, SpotOrder,
-    SubaccountId, WasmMockQuerier,
-};
+use injective_cosmwasm::{inj_mock_deps, inj_mock_env, HandlesMarketIdQuery, InjectiveQueryWrapper, InjectiveRoute, MarketId, OrderInfo, OrderType, OwnedDepsExt, SpotMarket, SpotMarketResponse, SpotOrder, SubaccountId, WasmMockQuerier, MarketStatus};
 use injective_math::FPDecimal;
 
 use crate::contract::{execute, instantiate, reply, ATOMIC_ORDER_REPLY_ID};
@@ -77,6 +73,7 @@ fn test_swap() {
                 fee_recipient: Some(env.contract.address),
                 price: i32_to_dec(1000),
                 quantity: i32_to_dec(8),
+                cid: None,
             },
             order_type: OrderType::BuyAtomic,
             trigger_price: None,
@@ -132,12 +129,12 @@ fn create_spot_market_handler() -> impl HandlesMarketIdQuery {
                     taker_fee_rate: FPDecimal::from_str("0.1").unwrap(),
                     relayer_fee_share_rate: FPDecimal::from_str("0.4").unwrap(),
                     market_id,
-                    status: 0,
+                    status: MarketStatus::Active,
                     min_price_tick_size: FPDecimal::from_str("0.000000000000001").unwrap(),
                     min_quantity_tick_size: FPDecimal::from_str("1000000000000000").unwrap(),
                 }),
             };
-            SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
         }
     }
     Temp()
