@@ -23,5 +23,4 @@ fn test_instantiation() {
     // Load compiled wasm bytecode
     let wasm_byte_code = std::fs::read("../../artifacts/injective_cosmwasm_mock-aarch64.wasm").unwrap();
     let code_id = wasm.store_code(&wasm_byte_code, None, admin).unwrap().data.code_id;
-    // instantiate contract with initial admin and make admin list mutable
 }

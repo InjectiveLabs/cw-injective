@@ -36,4 +36,3 @@ injective-cosmwasm = { path = "../../packages/injective-cosmwasm" }
 schemars           = "0.8.8"
 serde              = { version = "1.0.136", default-features = false, features = [ "derive" ] }
 thiserror          = { version = "1.0.30" }
-getrandom = { version = "0.2", features = ["js"] }
