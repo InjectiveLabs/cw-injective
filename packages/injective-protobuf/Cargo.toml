@@ -1,6 +1,6 @@
 [package]
 name = "injective-protobuf"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Mauro Lacy <mauro@lacy.com.es>"]
 edition = "2018"
 description = "Protobug parsing for Injective Protocol"
@@ -18,7 +18,7 @@ protobuf-codegen-pure = "2"
 backtraces = ["cosmwasm-std/backtraces"]
 
 [dependencies]
-cosmwasm-std = { version = "1.4.1" }
+cosmwasm-std        = { version = "1.2.7", features = [ "abort", "iterator", "stargate" ] }
 schemars = "0.8.8"
 serde = { version = "1.0.136", default-features = false, features = ["derive"] }
 ethereum-types = "0.5.2"
@@ -27,4 +27,4 @@ num = "0.4.0"
 protobuf = { version = "2", features = ["with-bytes"] }
 
 [dev-dependencies]
-cosmwasm-schema = { version = "1.4.1" }
+cosmwasm-schema     = { version = "1.2.7" }
