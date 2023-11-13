@@ -55,9 +55,9 @@ dependencies = [
  "cw-storage-plus 0.16.0",
  "cw-utils 0.16.0",
  "cw2 0.16.0",
- "injective-cosmwasm 0.2.17",
- "injective-math 0.2.2",
- "injective-protobuf",
+ "injective-cosmwasm 0.2.17 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-math 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-protobuf 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "protobuf",
  "schemars",
  "serde 1.0.192",
@@ -516,7 +516,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus 0.16.0",
  "cw2 0.16.0",
- "injective-cosmwasm 0.2.17",
+ "injective-cosmwasm 0.2.17 (registry+https://github.com/rust-lang/crates.io-index)",
  "schemars",
  "serde 1.0.192",
  "thiserror",
@@ -873,7 +873,7 @@ dependencies = [
  "cw-storage-plus 0.16.0",
  "ethereum-types",
  "hex",
- "injective-math 0.2.2",
+ "injective-math 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "schemars",
  "serde 1.0.192",
  "serde-json-wasm 0.4.1",
@@ -893,7 +893,7 @@ dependencies = [
  "cw-storage-plus 0.16.0",
  "ethereum-types",
  "hex",
- "injective-math 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-math 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "schemars",
  "serde 1.0.192",
  "serde_repr",
@@ -903,7 +903,7 @@ dependencies = [
 
 [[package]]
 name = "injective-math"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -916,9 +916,9 @@ dependencies = [
 
 [[package]]
 name = "injective-math"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca5067184c84c1451935527f53f612734d2bd14ab6d68e39f61745ed23429277"
+checksum = "9a377b42d309a85a5661ebcd50f9a218097efdc21c6e7709746ce07530bb9733"
 dependencies = [
  "cosmwasm-std",
  "ethereum-types",
@@ -933,6 +933,22 @@ name = "injective-protobuf"
 version = "0.2.1"
 dependencies = [
  "cosmwasm-schema",
+ "cosmwasm-std",
+ "ethereum-types",
+ "num 0.4.1",
+ "protobuf",
+ "protobuf-codegen-pure",
+ "schemars",
+ "serde 1.0.192",
+ "subtle-encoding",
+]
+
+[[package]]
+name = "injective-protobuf"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e48b6e4054ec0f985961f0f9db730118419c5b8903da36a4e5e219ff06874acd"
+dependencies = [
  "cosmwasm-std",
  "ethereum-types",
  "num 0.4.1",
@@ -966,7 +982,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-multi-test",
  "injective-cosmwasm 0.2.17 (registry+https://github.com/rust-lang/crates.io-index)",
- "injective-math 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-math 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.4.6",
  "secp256k1",
  "serde 1.0.192",
