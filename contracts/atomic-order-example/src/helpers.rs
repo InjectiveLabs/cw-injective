@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_json_binary, Addr, CosmosMsg, StdResult, SubMsg, WasmMsg};
+use cosmwasm_std::{to_binary, Addr, CosmosMsg, StdResult, SubMsg, WasmMsg};
 use injective_cosmwasm::InjectiveMsgWrapper;
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
@@ -17,7 +17,7 @@ impl CwTemplateContract {
     }
 
     pub fn call<T: Into<ExecuteMsg>>(&self, msg: T) -> StdResult<CosmosMsg> {
-        let msg = to_json_binary(&msg.into())?;
+        let msg = to_binary(&msg.into())?;
         Ok(WasmMsg::Execute {
             contract_addr: self.addr().into(),
             msg,
