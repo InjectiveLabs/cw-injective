@@ -19,7 +19,7 @@ cosmwasm-std        = { version = "=1.2.7", features = [ "abort", "iterator", "s
 cw-storage-plus     = { version = "=0.16.0" }
 ethereum-types      = { version = "0.5.2" }
 hex             = { version = "0.4.3", features = [ "serde" ] }
-injective-math  = { path = "../injective-math", version = "0.2.2" }
+injective-math  = { version = "0.2.3" }
 schemars        = "0.8.8"
 serde           = { version = "1.0.136", default-features = false, features = [ "derive" ] }
 serde_repr      = "0.1"

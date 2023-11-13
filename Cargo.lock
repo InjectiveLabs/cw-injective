@@ -55,8 +55,8 @@ dependencies = [
  "cw-storage-plus 0.16.0",
  "cw-utils 0.16.0",
  "cw2 0.16.0",
- "injective-cosmwasm",
- "injective-math",
+ "injective-cosmwasm 0.2.17",
+ "injective-math 0.2.2",
  "injective-protobuf",
  "protobuf",
  "schemars",
@@ -516,7 +516,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus 0.16.0",
  "cw2 0.16.0",
- "injective-cosmwasm",
+ "injective-cosmwasm 0.2.17",
  "schemars",
  "serde 1.0.192",
  "thiserror",
@@ -866,14 +866,14 @@ dependencies = [
 
 [[package]]
 name = "injective-cosmwasm"
-version = "0.2.16"
+version = "0.2.17"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-storage-plus 0.16.0",
  "ethereum-types",
  "hex",
- "injective-math",
+ "injective-math 0.2.2",
  "schemars",
  "serde 1.0.192",
  "serde-json-wasm 0.4.1",
@@ -884,10 +884,42 @@ dependencies = [
 ]
 
 [[package]]
+name = "injective-cosmwasm"
+version = "0.2.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3fd6a4f3cf857a24f7603bdc9faf08ff8d7385dec809f3a2459fe9c403b9f3c1"
+dependencies = [
+ "cosmwasm-std",
+ "cw-storage-plus 0.16.0",
+ "ethereum-types",
+ "hex",
+ "injective-math 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "schemars",
+ "serde 1.0.192",
+ "serde_repr",
+ "subtle-encoding",
+ "tiny-keccak",
+]
+
+[[package]]
 name = "injective-math"
 version = "0.2.2"
 dependencies = [
  "cosmwasm-schema",
+ "cosmwasm-std",
+ "ethereum-types",
+ "primitive-types",
+ "schemars",
+ "serde 1.0.192",
+ "subtle-encoding",
+]
+
+[[package]]
+name = "injective-math"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ca5067184c84c1451935527f53f612734d2bd14ab6d68e39f61745ed23429277"
+dependencies = [
  "cosmwasm-std",
  "ethereum-types",
  "primitive-types",
@@ -933,8 +965,8 @@ dependencies = [
  "base64",
  "cosmwasm-std",
  "cw-multi-test",
- "injective-cosmwasm",
- "injective-math",
+ "injective-cosmwasm 0.2.17 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-math 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.4.6",
  "secp256k1",
  "serde 1.0.192",
