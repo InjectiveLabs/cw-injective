@@ -781,8 +781,7 @@ impl TestDeposit {
 
 pub mod handlers {
     use cosmwasm_std::{
-        to_binary, AllBalanceResponse, BalanceResponse, Binary, Coin, ContractResult, QuerierResult, StdResult, SystemError, SystemResult,
-        Uint128,
+        to_binary, AllBalanceResponse, BalanceResponse, Binary, Coin, ContractResult, QuerierResult, StdResult, SystemError, SystemResult, Uint128,
     };
     use std::collections::HashMap;
 
