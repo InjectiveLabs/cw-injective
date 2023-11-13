@@ -1,5 +1,5 @@
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use cosmwasm_std::{Coin, Addr, Binary};
+use cosmwasm_std::{Addr, Binary, Coin};
 use injective_cosmwasm::{checked_address_to_subaccount_id, MarketId};
 use injective_test_tube::{Account, InjectiveTestApp, Module, Wasm};
 
@@ -31,8 +31,7 @@ fn test_instantiation() {
         .address;
 
     // Execute contract
-    let buyer_subaccount_id =
-                checked_address_to_subaccount_id(&Addr::unchecked(buyer.address()), 1u32);
+    let buyer_subaccount_id = checked_address_to_subaccount_id(&Addr::unchecked(buyer.address()), 1u32);
     let _res = wasm
         .execute(
             &contract_address,
