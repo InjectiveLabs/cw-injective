@@ -1,6 +1,6 @@
 use anyhow::{bail, Result as AnyResult};
 use cosmwasm_std::{testing::MockApi, Addr, Api, Binary, BlockInfo, Coin, CustomQuery, Empty, MemoryStorage, Querier, Storage};
-use cosmwasm_std::{to_json_binary, StdError};
+use cosmwasm_std::{to_binary, StdError};
 use cw_multi_test::{AddressGenerator, App};
 use cw_multi_test::{AppResponse, BankKeeper, BasicAppBuilder, CosmosRouter, DistributionKeeper, Module, Router, StakeKeeper, WasmKeeper};
 use injective_cosmwasm::{InjectiveMsgWrapper, InjectiveQueryWrapper};
@@ -84,7 +84,7 @@ pub struct ExecuteResponseContainer {
 impl ExecuteResponseContainer {
     pub fn with_ok_response<T: serde::ser::Serialize + Sized>(payload: &T) -> Self {
         ExecuteResponseContainer {
-            response: Some(Ok(Some(to_json_binary(payload).unwrap()))),
+            response: Some(Ok(Some(to_binary(payload).unwrap()))),
         }
     }
 
@@ -108,7 +108,7 @@ pub struct QueryResponseContainer {
 impl QueryResponseContainer {
     pub fn with_ok_response<T: serde::ser::Serialize + Sized>(payload: &T) -> Self {
         QueryResponseContainer {
-            response: Some(Ok(to_json_binary(payload).unwrap())),
+            response: Some(Ok(to_binary(payload).unwrap())),
         }
     }
 
