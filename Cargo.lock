@@ -888,6 +888,7 @@ dependencies = [
 name = "injective-cosmwasm"
 version = "0.2.18"
 dependencies = [
+ "cosmwasm-schema",
  "cosmwasm-std",
  "cw-storage-plus 1.2.0",
  "ethereum-types",
@@ -897,6 +898,7 @@ dependencies = [
  "serde 1.0.193",
  "serde-json-wasm 1.0.0",
  "serde_repr",
+ "serde_test",
  "subtle-encoding",
  "tiny-keccak",
 ]
