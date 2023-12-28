@@ -2,8 +2,8 @@ use std::str::FromStr;
 
 use cosmwasm_std::testing::{mock_info, MockApi, MockStorage};
 use cosmwasm_std::{
-    coins, to_binary, BankMsg, Binary, ContractResult, CosmosMsg, OwnedDeps, QuerierResult, Reply,
-    SubMsgResponse, SubMsgResult, SystemResult, Uint128,
+    coins, to_json_binary, BankMsg, Binary, ContractResult, CosmosMsg, OwnedDeps, QuerierResult,
+    Reply, SubMsgResponse, SubMsgResult, SystemResult, Uint128,
 };
 
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
@@ -138,7 +138,7 @@ fn create_spot_market_handler() -> impl HandlesMarketIdQuery {
                     min_quantity_tick_size: FPDecimal::from_str("1000000000000000").unwrap(),
                 }),
             };
-            SystemResult::Ok(ContractResult::from(to_binary(&response)))
+            SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
         }
     }
     Temp()
