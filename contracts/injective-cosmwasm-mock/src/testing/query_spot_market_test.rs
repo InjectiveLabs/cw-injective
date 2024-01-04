@@ -1,7 +1,16 @@
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use cosmwasm_std::{Addr, Binary, Coin};
 use injective_cosmwasm::{checked_address_to_subaccount_id, MarketId};
-use injective_test_tube::{Account, InjectiveTestApp, Module, Wasm};
+use injective_math::{scale::Scaled, FPDecimal};
+use injective_std::types::injective::exchange::v1beta1::{MsgInstantSpotMarketLaunch, QuerySpotMarketsRequest};
+use injective_test_tube::{Account, Exchange, InjectiveTestApp, Module, Wasm};
+
+pub const BASE_DENOM: &str = "inj";
+pub const QUOTE_DENOM: &str = "usdt";
+
+pub fn dec_to_proto(val: FPDecimal) -> String {
+    val.scaled(18).to_string()
+}
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
@@ -14,10 +23,12 @@ fn test_instantiation() {
 
     let seller = &accs[0];
     let buyer = &accs[1];
+    let signer = app.init_account(&[Coin::new(1_000_000_000_000_000_000_000_000_000, "inj")]).unwrap();
 
     // `Wasm` is the module we use to interact with cosmwasm releated logic on the appchain
     // it implements `Module` trait which you will see more later.
     let wasm = Wasm::new(&app);
+    let exchange = Exchange::new(&app);
 
     // Load compiled wasm bytecode
     let wasm_byte_code = std::fs::read("../../artifacts/injective_cosmwasm_mock-aarch64.wasm").unwrap();
@@ -44,13 +55,35 @@ fn test_instantiation() {
         )
         .unwrap();
 
-    // Query contract
-    let _res: Binary = wasm
-        .query(
-            &contract_address,
-            &QueryMsg::TestSpotMarketQuery {
-                market_id: MarketId::unchecked("0x01edfab47f124748dc89998eb33144af734484ba07099014594321729a0ca16b"),
+    // Instantiate spot market
+    let ticker = "INJ/USDT".to_string();
+    exchange
+        .instant_spot_market_launch(
+            MsgInstantSpotMarketLaunch {
+                sender: signer.address(),
+                ticker: ticker.clone(),
+                base_denom: BASE_DENOM.to_string(),
+                quote_denom: QUOTE_DENOM.to_string(),
+                min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.000000000000001")),
+                min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("1000000000000000")),
             },
+            &signer,
         )
         .unwrap();
+
+    let spot_markets = exchange
+        .query_spot_markets(&QuerySpotMarketsRequest {
+            status: "Active".to_string(),
+            market_ids: vec![],
+        })
+        .unwrap()
+        .markets;
+
+    let market = spot_markets.iter().find(|m| m.ticker == ticker).unwrap();
+    let spot_market_id = market.market_id.to_string();
+
+    // Query
+    let market_id = MarketId::new(spot_market_id).unwrap();
+    let query_msg = QueryMsg::TestSpotMarketQuery { market_id };
+    let _res: Binary = wasm.query(&contract_address, &query_msg).unwrap();
 }

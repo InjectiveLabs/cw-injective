@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, to_json_binary};
 use cw2::set_contract_version;
 
 use injective_cosmwasm::{create_deposit_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper};
@@ -36,6 +36,6 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> Std
     let querier = InjectiveQuerier::new(&deps.querier);
 
     match msg {
-        QueryMsg::TestSpotMarketQuery { market_id } => to_binary(&querier.query_spot_market(&market_id)?),
+        QueryMsg::TestSpotMarketQuery { market_id } => to_json_binary(&querier.query_spot_market(&market_id)?.market),
     }
 }
