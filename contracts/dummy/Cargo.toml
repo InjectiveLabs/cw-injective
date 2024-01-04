@@ -1,25 +1,25 @@
 [package]
-name = "dummy"
-version = "1.0.0"
-authors = ["Bartek Tofel <tofel.b@gmail.com>"]
-edition = "2018"
+authors = [ "Markus Waas <markus@injectivelabs.org>" ]
+edition = "2021"
+name    = "dummy"
+version = "1.1.0"
 
 exclude = [
-  # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
-  "contract.wasm",
-  "hash.txt",
+ # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
+ "contract.wasm",
+ "hash.txt",
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = [ "cdylib", "rlib" ]
 
 [features]
 # for more explicit tests, cargo test --features=backtraces
-backtraces = ["cosmwasm-std/backtraces"]
+backtraces = [ "cosmwasm-std/backtraces" ]
 # use library feature to disable all instantiate/execute/query exports
-library = []
+library = [  ]
 
 [package.metadata.scripts]
 optimize = """docker run --rm -v "$(pwd)":/code \
@@ -29,10 +29,10 @@ optimize = """docker run --rm -v "$(pwd)":/code \
 """
 
 [dependencies]
-cosmwasm-std        = { version = "1.2.7", features = [ "abort", "iterator", "stargate" ] }
-cw-storage-plus     = { version = "0.16.0" }
-cw2                 = { version = "0.16.0" }
-serde = { version = "1.0.136", default-features = false, features = ["derive"] }
-schemars = "0.8.8"
-thiserror = { version = "1.0.30" }
-injective-cosmwasm = { version = "0.2.16", path = "../../packages/injective-cosmwasm" }
+cosmwasm-std       = { version = "1.5.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "iterator", "stargate" ] }
+cw-storage-plus    = { version = "1.2.0" }
+cw2                = { version = "0.16.0" }
+injective-cosmwasm = { version = "0.2.18", path = "../../packages/injective-cosmwasm" }
+schemars           = "0.8.8"
+serde              = { version = "1.0.136", default-features = false, features = [ "derive" ] }
+thiserror          = { version = "1.0.30" }

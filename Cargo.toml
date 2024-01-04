@@ -1,22 +1,25 @@
 [workspace]
-members = ["packages/*", "contracts/*"]
+members  = [ "contracts/*", "packages/*" ]
 resolver = "2"
 
 [profile.release.package.injective-cosmwasm]
 codegen-units = 1
-incremental = false
+incremental   = false
 
 [profile.release]
-opt-level = 3
-debug = false
-rpath = false
-lto = true
+codegen-units    = 1
+debug            = false
 debug-assertions = false
-codegen-units = 1
-panic = 'abort'
-incremental = false
-overflow-checks = true
+incremental      = false
+lto              = true
+opt-level        = 3
+overflow-checks  = true
+panic            = 'abort'
+rpath            = false
 
 [patch.crates-io]
-#cw-multi-test = { path = "../cw-multi-test" }
-#cw-multi-test = { git = "https://github.com/InjectiveLabs/cw-multi-test.git", branch ="feature/custom_address_generator" }
+# injective-cosmwasm = { path = "./packages/injective-cosmwasm" }
+# injective-math     = { path = "./packages/injective-math" }
+# injective-protobuf = { path = "./packages/injective-protobuf" }
+# injective-std      = { path = "./packages/injective-std" }
+# injective-testing  = { path = "./packages/injective-testing" }

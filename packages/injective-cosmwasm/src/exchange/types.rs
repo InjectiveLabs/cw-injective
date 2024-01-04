@@ -404,24 +404,6 @@ impl AsRef<str> for SubaccountId {
     }
 }
 
-impl<'a> PrimaryKey<'a> for &'a SubaccountId {
-    type Prefix = ();
-    type SubPrefix = ();
-    type Suffix = Self;
-    type SuperSuffix = Self;
-
-    fn key(&self) -> Vec<Key> {
-        // this is simple, we don't add more prefixes
-        vec![Key::Ref(self.as_ref().as_bytes())]
-    }
-}
-
-impl<'a> Prefixer<'a> for &'a SubaccountId {
-    fn prefix(&self) -> Vec<Key> {
-        vec![Key::Ref(self.as_bytes())]
-    }
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, JsonSchema)]
 pub struct Hash([u8; 32]);
 
