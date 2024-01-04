@@ -40,10 +40,11 @@ fn test_instantiation() {
         .unwrap()
         .data
         .address;
+    assert!(contract_address.len() > 0, "Contract address is empty");
 
     // Execute contract
     let buyer_subaccount_id = checked_address_to_subaccount_id(&Addr::unchecked(buyer.address()), 1u32);
-    let _res = wasm
+    let res = wasm
         .execute(
             &contract_address,
             &ExecuteMsg::TestDepositMsg {
@@ -52,8 +53,8 @@ fn test_instantiation() {
             },
             &[Coin::new(100, "usdt")],
             &buyer,
-        )
-        .unwrap();
+        );
+    assert!(res.is_ok(), "Execution failed with error: {:?}", res.unwrap_err());
 
     // Instantiate spot market
     let ticker = "INJ/USDT".to_string();
@@ -83,7 +84,8 @@ fn test_instantiation() {
     let spot_market_id = market.market_id.to_string();
 
     // Query
-    let market_id = MarketId::new(spot_market_id).unwrap();
+    let market_id = MarketId::new(spot_market_id.clone()).unwrap();
     let query_msg = QueryMsg::TestSpotMarketQuery { market_id };
-    let _res: SpotMarketResponse = wasm.query(&contract_address, &query_msg).unwrap();
+    let res: SpotMarketResponse = wasm.query(&contract_address, &query_msg).unwrap();
+    assert_eq!(res.market.clone().unwrap().market_id.as_str(), spot_market_id.clone());
 }
