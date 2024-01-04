@@ -1,9 +1,9 @@
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use cosmwasm_std::{Addr, Binary, Coin};
+use cosmwasm_std::{Addr, Coin};
 use injective_cosmwasm::{checked_address_to_subaccount_id, MarketId};
 use injective_math::{scale::Scaled, FPDecimal};
 use injective_std::types::injective::exchange::v1beta1::{MsgInstantSpotMarketLaunch, QuerySpotMarketsRequest};
-use injective_test_tube::{Account, Exchange, InjectiveTestApp, Module, Wasm};
+use injective_test_tube::{Account, Exchange, InjectiveTestApp, Module, Wasm, injective_cosmwasm::SpotMarketResponse};
 
 pub const BASE_DENOM: &str = "inj";
 pub const QUOTE_DENOM: &str = "usdt";
@@ -85,5 +85,5 @@ fn test_instantiation() {
     // Query
     let market_id = MarketId::new(spot_market_id).unwrap();
     let query_msg = QueryMsg::TestSpotMarketQuery { market_id };
-    let _res: Binary = wasm.query(&contract_address, &query_msg).unwrap();
+    let _res: SpotMarketResponse = wasm.query(&contract_address, &query_msg).unwrap();
 }
