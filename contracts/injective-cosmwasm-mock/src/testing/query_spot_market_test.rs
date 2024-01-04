@@ -3,7 +3,7 @@ use cosmwasm_std::{Addr, Coin};
 use injective_cosmwasm::{checked_address_to_subaccount_id, MarketId};
 use injective_math::{scale::Scaled, FPDecimal};
 use injective_std::types::injective::exchange::v1beta1::{MsgInstantSpotMarketLaunch, QuerySpotMarketsRequest};
-use injective_test_tube::{Account, Exchange, InjectiveTestApp, Module, Wasm, injective_cosmwasm::SpotMarketResponse};
+use injective_test_tube::{injective_cosmwasm::SpotMarketResponse, Account, Exchange, InjectiveTestApp, Module, Wasm};
 
 pub const BASE_DENOM: &str = "inj";
 pub const QUOTE_DENOM: &str = "usdt";
@@ -44,16 +44,15 @@ fn test_instantiation() {
 
     // Execute contract
     let buyer_subaccount_id = checked_address_to_subaccount_id(&Addr::unchecked(buyer.address()), 1u32);
-    let res = wasm
-        .execute(
-            &contract_address,
-            &ExecuteMsg::TestDepositMsg {
-                subaccount_id: buyer_subaccount_id,
-                amount: Coin::new(100, "usdt"),
-            },
-            &[Coin::new(100, "usdt")],
-            &buyer,
-        );
+    let res = wasm.execute(
+        &contract_address,
+        &ExecuteMsg::TestDepositMsg {
+            subaccount_id: buyer_subaccount_id,
+            amount: Coin::new(100, "usdt"),
+        },
+        &[Coin::new(100, "usdt")],
+        &buyer,
+    );
     assert!(res.is_ok(), "Execution failed with error: {:?}", res.unwrap_err());
 
     // Instantiate spot market
