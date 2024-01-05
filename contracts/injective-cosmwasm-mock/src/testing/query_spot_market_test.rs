@@ -6,7 +6,7 @@ use cosmwasm_std::{Addr, Coin};
 use injective_cosmwasm::{checked_address_to_subaccount_id, MarketId};
 use injective_math::{scale::Scaled, FPDecimal};
 use injective_std::types::injective::exchange::v1beta1::{MsgInstantSpotMarketLaunch, QuerySpotMarketsRequest};
-use injective_test_tube::{injective_cosmwasm::SpotMarketResponse, Exchange, Module, Wasm, Account};
+use injective_test_tube::{injective_cosmwasm::SpotMarketResponse, Account, Exchange, Module, Wasm};
 
 pub const BASE_DENOM: &str = "inj";
 pub const QUOTE_DENOM: &str = "usdt";
@@ -50,7 +50,7 @@ fn test_instantiation() {
                 min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.000000000000001")),
                 min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("1000000000000000")),
             },
-            &signer,
+            signer,
         )
         .unwrap();
 
