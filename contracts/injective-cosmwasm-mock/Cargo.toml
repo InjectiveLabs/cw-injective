@@ -1,0 +1,41 @@
+[package]
+authors = [ "Markus Waas <markus@injectivelabs.org>" ]
+edition = "2018"
+name    = "injective-cosmwasm-mock"
+version = "1.0.0"
+
+exclude = [
+ # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
+ "contract.wasm",
+ "hash.txt",
+]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = [ "cdylib", "rlib" ]
+
+[features]
+# for more explicit tests, cargo test --features=backtraces
+backtraces = [ "cosmwasm-std/backtraces" ]
+# use library feature to disable all instantiate/execute/query exports
+library = [  ]
+
+[package.metadata.scripts]
+optimize = """docker run --rm -v "$(pwd)":/code \
+  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+  cosmwasm/workspace-optimizer-arm64:0.12.11
+"""
+
+[dependencies]
+cosmwasm-std        = { version = "1.5.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "iterator", "stargate" ] }
+cw-storage-plus     = "1.2.0"
+cw2                 = "0.16.0"
+injective-cosmwasm  = { path = "../../packages/injective-cosmwasm" }
+injective-math      = { path = "../../packages/injective-math" }
+injective-std       = { version = "0.1.5" }
+injective-test-tube = "1.1.6"
+schemars            = "0.8.8"
+serde               = { version = "1.0.137", default-features = false, features = [ "derive" ] }
+thiserror           = { version = "1.0.31" }
