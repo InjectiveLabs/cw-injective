@@ -1,25 +1,25 @@
 [package]
-authors = [ "Markus Waas <markus@injectivelabs.org>" ]
+authors = ["Markus Waas <markus@injectivelabs.org>"]
 edition = "2018"
-name    = "injective-cosmwasm-mock"
+name = "injective-cosmwasm-mock"
 version = "1.0.0"
 
 exclude = [
- # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
- "contract.wasm",
- "hash.txt",
+  # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
+  "contract.wasm",
+  "hash.txt",
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-crate-type = [ "cdylib", "rlib" ]
+crate-type = ["cdylib", "rlib"]
 
 [features]
 # for more explicit tests, cargo test --features=backtraces
-backtraces = [ "cosmwasm-std/backtraces" ]
+backtraces = ["cosmwasm-std/backtraces"]
 # use library feature to disable all instantiate/execute/query exports
-library = [  ]
+library = []
 
 [package.metadata.scripts]
 optimize = """docker run --rm -v "$(pwd)":/code \
@@ -29,14 +29,14 @@ optimize = """docker run --rm -v "$(pwd)":/code \
 """
 
 [dependencies]
-cosmwasm-std       = { version = "1.4.1" }
-cw-storage-plus    = "0.16.0"
-cw2                = "0.14.0"
+cosmwasm-std = { version = "1.5.0" }
+cw-storage-plus = "1.2.0"
+cw2 = "0.16.0"
 injective-cosmwasm = { path = "../../packages/injective-cosmwasm" }
-schemars           = "0.8.8"
-serde              = { version = "1.0.136", default-features = false, features = [ "derive" ] }
-thiserror          = { version = "1.0.30" }
+schemars = "0.8.8"
+serde = { version = "1.0.137", default-features = false, features = ["derive"] }
+thiserror = { version = "1.0.31" }
 injective-test-tube = { version = "1.1.6" }
-test-tube-inj       = "1.1.0"
-injective-std       = { version = "0.1.1" }
-injective-math      = { path = "../../packages/injective-math" }
+test-tube-inj = "1.1.0"
+injective-std = { version = "0.1.5" }
+injective-math = { path = "../../packages/injective-math" }

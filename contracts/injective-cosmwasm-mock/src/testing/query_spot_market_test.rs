@@ -1,9 +1,12 @@
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::{
+    msg::{ExecuteMsg, QueryMsg},
+    utils::test_setup,
+};
 use cosmwasm_std::{Addr, Coin};
 use injective_cosmwasm::{checked_address_to_subaccount_id, MarketId};
 use injective_math::{scale::Scaled, FPDecimal};
 use injective_std::types::injective::exchange::v1beta1::{MsgInstantSpotMarketLaunch, QuerySpotMarketsRequest};
-use injective_test_tube::{injective_cosmwasm::SpotMarketResponse, Account, Exchange, InjectiveTestApp, Module, Wasm};
+use injective_test_tube::{injective_cosmwasm::SpotMarketResponse, Account, Exchange, Module, Wasm};
 
 pub const BASE_DENOM: &str = "inj";
 pub const QUOTE_DENOM: &str = "usdt";
@@ -15,32 +18,12 @@ pub fn dec_to_proto(val: FPDecimal) -> String {
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
 fn test_instantiation() {
-    let app = InjectiveTestApp::new();
-    // create new account with initial funds
-    let accs = app
-        .init_accounts(&[Coin::new(1_000_000_000_000, "usdt"), Coin::new(1_000_000_000_000, "inj")], 2)
-        .unwrap();
+    let (app, accs, contract_address) = test_setup();
 
-    let seller = &accs[0];
-    let buyer = &accs[1];
-    let signer = app.init_account(&[Coin::new(1_000_000_000_000_000_000_000_000_000, "inj")]).unwrap();
-
-    // `Wasm` is the module we use to interact with cosmwasm releated logic on the appchain
-    // it implements `Module` trait which you will see more later.
     let wasm = Wasm::new(&app);
     let exchange = Exchange::new(&app);
-
-    // Load compiled wasm bytecode
-    let wasm_byte_code = std::fs::read("../../artifacts/injective_cosmwasm_mock-aarch64.wasm").unwrap();
-    let code_id = wasm.store_code(&wasm_byte_code, None, buyer).unwrap().data.code_id;
-
-    // Instantiate contract
-    let contract_address: String = wasm
-        .instantiate(code_id, &InstantiateMsg {}, Some(&seller.address()), Some("mock-contract"), &[], &seller)
-        .unwrap()
-        .data
-        .address;
-    assert!(contract_address.len() > 0, "Contract address is empty");
+    let buyer = &accs[1];
+    let signer = &accs[2];
 
     // Execute contract
     let buyer_subaccount_id = checked_address_to_subaccount_id(&Addr::unchecked(buyer.address()), 1u32);

@@ -3,6 +3,7 @@ mod error;
 pub mod msg;
 #[cfg(test)]
 mod testing;
+pub mod utils;
 
 pub use crate::error::ContractError;
 pub use test_tube_inj::account::{Account, FeeSetting, NonSigningAccount, SigningAccount};
