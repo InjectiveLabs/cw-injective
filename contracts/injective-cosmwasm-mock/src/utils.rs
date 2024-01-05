@@ -1,6 +1,6 @@
 use crate::msg::InstantiateMsg;
 use cosmwasm_std::Coin;
-use injective_test_tube::{Account, SigningAccount, InjectiveTestApp, Module, Wasm};
+use injective_test_tube::{Account, InjectiveTestApp, Module, SigningAccount, Wasm};
 
 pub fn test_setup() -> (InjectiveTestApp, Vec<SigningAccount>, String) {
     let app = InjectiveTestApp::new();
