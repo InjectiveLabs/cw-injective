@@ -36,7 +36,6 @@ injective-cosmwasm = { path = "../../packages/injective-cosmwasm" }
 schemars = "0.8.8"
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
-injective-test-tube = { version = "1.1.6" }
-test-tube-inj = "1.1.0"
-injective-std = { version = "0.1.5" }
+injective-test-tube = { git = "https://github.com/InjectiveLabs/test-tube", branch = "latest" }
+injective-std = { path = "../../packages/injective-std" }
 injective-math = { path = "../../packages/injective-math" }
