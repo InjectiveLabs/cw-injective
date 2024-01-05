@@ -17,13 +17,11 @@ pub fn dec_to_proto(val: FPDecimal) -> String {
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
-fn test_instantiation() {
+fn test_msg_deposit() {
     let (app, accs, contract_address) = test_setup();
 
     let wasm = Wasm::new(&app);
-    let exchange = Exchange::new(&app);
     let buyer = &accs[1];
-    let signer = &accs[2];
 
     // Execute contract
     let buyer_subaccount_id = checked_address_to_subaccount_id(&Addr::unchecked(buyer.address()), 1u32);
@@ -37,6 +35,15 @@ fn test_instantiation() {
         buyer,
     );
     assert!(res.is_ok(), "Execution failed with error: {:?}", res.unwrap_err());
+}
+
+#[test]
+#[cfg_attr(not(feature = "integration"), ignore)]
+fn test_query_spot_market() {
+    let (app, accs, contract_address) = test_setup();
+    let signer = &accs[2];
+    let wasm = Wasm::new(&app);
+    let exchange = Exchange::new(&app);
 
     // Instantiate spot market
     let ticker = "INJ/USDT".to_string();
