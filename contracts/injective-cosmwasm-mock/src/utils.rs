@@ -23,11 +23,11 @@ pub fn test_setup() -> (InjectiveTestApp, Vec<SigningAccount>, String) {
 
     // Instantiate contract
     let contract_address: String = wasm
-        .instantiate(code_id, &InstantiateMsg {}, Some(&seller.address()), Some("mock-contract"), &[], &seller)
+        .instantiate(code_id, &InstantiateMsg {}, Some(&seller.address()), Some("mock-contract"), &[], seller)
         .unwrap()
         .data
         .address;
-    assert!(contract_address.len() > 0, "Contract address is empty");
+    assert!(!contract_address.is_empty(), "Contract address is empty");
 
     (app, accs, contract_address)
 }
