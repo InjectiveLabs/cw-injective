@@ -4,7 +4,7 @@ use std::str::FromStr;
 use cosmwasm_std::testing::{MockApi, MockStorage};
 use cosmwasm_std::{
     from_json, to_json_binary, Addr, AllBalanceResponse, BalanceResponse, BankQuery, Binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult,
-    QueryRequest, SystemError, SystemResult, Uint128, WasmQuery,
+    QueryRequest, SupplyResponse, SystemError, SystemResult, Uint128, WasmQuery,
 };
 
 use injective_math::FPDecimal;
@@ -18,6 +18,7 @@ use crate::oracle::{
     types::{OracleHistoryOptions, OracleType, PriceState, PythPriceState},
     volatility::TradeHistoryOptions,
 };
+
 use crate::tokenfactory::response::{TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
 use crate::wasmx::response::QueryContractRegistrationInfoResponse;
 use crate::{
@@ -251,6 +252,14 @@ fn default_token_factory_denom_total_supply_handler() -> QuerierResult {
     let response = TokenFactoryDenomSupplyResponse {
         total_supply: Uint128::from(1000u128),
     };
+    SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
+}
+
+fn default_bank_total_supply_handler() -> QuerierResult {
+    let response = SupplyResponse::new(Coin {
+        denom: "inj".to_string(),
+        amount: Uint128::from(1000u128),
+    });
     SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
 }
 
@@ -495,6 +504,7 @@ pub struct WasmMockQuerier {
     pub token_factory_denom_creation_fee_handler: Option<Box<dyn HandlesFeeQuery>>,
     pub balance_query_handler: Option<Box<dyn HandlesBankBalanceQuery>>,
     pub all_balances_query_handler: Option<Box<dyn HandlesBankAllBalancesQuery>>,
+    pub total_supply_handler: Option<Box<dyn HandlesDenomSupplyQuery>>,
     pub registered_contract_info_query_handler: Option<Box<dyn HandlesByAddressQuery>>,
     pub spot_market_orderbook_response_handler: Option<Box<dyn HandlesPriceLevelsQuery>>,
     pub derivative_market_orderbook_response_handler: Option<Box<dyn HandlesDerivativePriceLevelsQuery>>,
@@ -532,6 +542,10 @@ impl WasmMockQuerier {
                 BankQuery::AllBalances { address } => match &self.all_balances_query_handler {
                     Some(handler) => handler.handle(address.to_string()),
                     None => default_all_balances_bank_query_handler(),
+                },
+                BankQuery::Supply { denom } => match &self.total_supply_handler {
+                    Some(handler) => handler.handle(denom.to_string()),
+                    None => default_bank_total_supply_handler(),
                 },
                 _ => panic!("unsupported"),
             },
@@ -753,6 +767,7 @@ impl WasmMockQuerier {
             spot_market_orderbook_response_handler: None,
             derivative_market_orderbook_response_handler: None,
             market_atomic_execution_fee_multiplier_response_handler: None,
+            total_supply_handler: None,
         }
     }
 }
@@ -781,8 +796,8 @@ impl TestDeposit {
 
 pub mod handlers {
     use cosmwasm_std::{
-        to_json_binary, AllBalanceResponse, BalanceResponse, Binary, Coin, ContractResult, QuerierResult, StdResult, SystemError, SystemResult,
-        Uint128,
+        to_json_binary, AllBalanceResponse, BalanceResponse, Binary, Coin, ContractResult, QuerierResult, StdResult, SupplyResponse, SystemError,
+        SystemResult, Uint128,
     };
     use std::collections::HashMap;
 
@@ -1178,6 +1193,19 @@ pub mod handlers {
             base_timestamp,
             quote_timestamp,
         }))
+    }
+
+    pub fn create_bank_supply_handler(supply: Uint128) -> Option<Box<dyn HandlesDenomSupplyQuery>> {
+        struct Temp {
+            supply: Uint128,
+        }
+        impl HandlesDenomSupplyQuery for Temp {
+            fn handle(&self, denom: String) -> QuerierResult {
+                let response = SupplyResponse::new(Coin { denom, amount: self.supply });
+                SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
+            }
+        }
+        Some(Box::new(Temp { supply }))
     }
 
     pub fn create_denom_supply_handler(supply: Uint128) -> Option<Box<dyn HandlesDenomSupplyQuery>> {
