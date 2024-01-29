@@ -101,6 +101,7 @@ pub enum InjectiveQuery {
     PerpetualMarketFunding {
         market_id: MarketId,
     },
+    // Make sure you are aware of the potential to run out of gas when using this query
     MarketVolatility {
         market_id: MarketId,
         trade_history_options: TradeHistoryOptions,
