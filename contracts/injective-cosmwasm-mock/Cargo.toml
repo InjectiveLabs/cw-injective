@@ -20,6 +20,7 @@ crate-type = [ "cdylib", "rlib" ]
 backtraces = [ "cosmwasm-std/backtraces" ]
 # use library feature to disable all instantiate/execute/query exports
 library = [  ]
+integration = [  ]
 
 [package.metadata.scripts]
 optimize = """docker run --rm -v "$(pwd)":/code \
@@ -29,13 +30,15 @@ optimize = """docker run --rm -v "$(pwd)":/code \
 """
 
 [dependencies]
-cosmwasm-std        = { version = "1.5.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "iterator", "stargate" ] }
-cw-storage-plus     = "1.2.0"
-cw2                 = "0.16.0"
-injective-cosmwasm  = { path = "../../packages/injective-cosmwasm" }
-injective-math      = { path = "../../packages/injective-math" }
-injective-std       = { version = "0.1.5" }
-injective-test-tube = "1.1.6"
-schemars            = "0.8.8"
-serde               = { version = "1.0.137", default-features = false, features = [ "derive" ] }
-thiserror           = { version = "1.0.31" }
+cosmwasm-std       = { version = "1.5.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "iterator", "stargate" ] }
+cw-storage-plus    = "1.2.0"
+cw2                = "0.16.0"
+injective-cosmwasm = { path = "../../packages/injective-cosmwasm" }
+injective-math     = { path = "../../packages/injective-math" }
+schemars           =  { version ="0.8.16"}
+serde              = { version = "1.0.196", default-features = false, features = [ "derive" ] }
+thiserror          = { version = "1.0.56" }
+
+[dev-dependencies]
+injective-test-tube = "1.1.7"
+injective-std      = { version = "0.1.5" }

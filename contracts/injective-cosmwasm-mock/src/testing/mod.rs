@@ -1,1 +1,1 @@
-mod query_spot_market_test;
+mod query_exchange_test;

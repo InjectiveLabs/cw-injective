@@ -15,5 +15,7 @@ pub enum ExecuteMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
+    TestExchangeParamsQuery {},
     TestSpotMarketQuery { market_id: MarketId },
+    TestSubAccountDepositQuery { subaccount_id: SubaccountId, denom: String },
 }
