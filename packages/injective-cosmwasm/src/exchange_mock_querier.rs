@@ -541,7 +541,7 @@ impl WasmMockQuerier {
                     None => panic!("Unknown smart query"),
                 },
                 WasmQuery::Raw { contract_addr, key } => match &self.raw_query_handler {
-                    Some(handler) => handler.handle(&contract_addr, key),
+                    Some(handler) => handler.handle(contract_addr, key),
                     None => panic!("Unknown raw query"),
                 },
                 _ => panic!("unsupported"),
