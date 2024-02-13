@@ -38,6 +38,8 @@ injective-math     = { path = "../../packages/injective-math" }
 schemars           =  { version ="0.8.16"}
 serde              = { version = "1.0.196", default-features = false, features = [ "derive" ] }
 thiserror          = { version = "1.0.56" }
+protobuf            = "3.3.0"
+prost              = "0.11.9"
 
 [dev-dependencies]
 injective-test-tube = "1.1.7"

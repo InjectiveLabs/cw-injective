@@ -17,5 +17,6 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     TestExchangeParamsQuery {},
     TestSpotMarketQuery { market_id: MarketId },
+    TestDerivativeMarketQuery { market_id: MarketId },
     TestSubAccountDepositQuery { subaccount_id: SubaccountId, denom: String },
 }

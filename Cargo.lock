@@ -93,7 +93,7 @@ dependencies = [
  "injective-cosmwasm 0.2.21",
  "injective-math 0.2.4",
  "injective-protobuf",
- "protobuf",
+ "protobuf 2.28.0",
  "schemars",
  "serde 1.0.196",
  "thiserror",
@@ -1564,6 +1564,8 @@ dependencies = [
  "injective-math 0.2.4",
  "injective-std 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "injective-test-tube",
+ "prost 0.11.9",
+ "protobuf 3.3.0",
  "schemars",
  "serde 1.0.196",
  "thiserror",
@@ -1604,7 +1606,7 @@ dependencies = [
  "cosmwasm-std",
  "ethereum-types",
  "num 0.4.1",
- "protobuf",
+ "protobuf 2.28.0",
  "protobuf-codegen-pure",
  "schemars",
  "serde 1.0.196",
@@ -2214,12 +2216,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "protobuf"
+version = "3.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b65f4a8ec18723a734e5dc09c173e0abf9690432da5340285d536edcb4dac190"
+dependencies = [
+ "once_cell",
+ "protobuf-support",
+ "thiserror",
+]
+
+[[package]]
 name = "protobuf-codegen"
 version = "2.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "033460afb75cf755fcfc16dfaed20b86468082a2ea24e05ac35ab4a099a017d6"
 dependencies = [
- "protobuf",
+ "protobuf 2.28.0",
 ]
 
 [[package]]
@@ -2228,8 +2241,17 @@ version = "2.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "95a29399fc94bcd3eeaa951c715f7bea69409b2445356b00519740bcd6ddd865"
 dependencies = [
- "protobuf",
+ "protobuf 2.28.0",
  "protobuf-codegen",
+]
+
+[[package]]
+name = "protobuf-support"
+version = "3.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6872f4d4f4b98303239a2b5838f5bbbb77b01ffc892d627957f37a22d7cfe69c"
+dependencies = [
+ "thiserror",
 ]
 
 [[package]]
