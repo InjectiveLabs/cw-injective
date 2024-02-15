@@ -1329,7 +1329,7 @@ pub mod handlers {
             result: Result<Binary, SystemError>,
         }
         impl HandlesRawQuery for Temp {
-            fn handle(&self, _contract_addr: &str, _msg: &Binary) -> QuerierResult {
+            fn handle(&self, _contract_addr: &str, _key: &Binary) -> QuerierResult {
                 match self.result.clone() {
                     Ok(resp) => SystemResult::Ok(ContractResult::from(StdResult::Ok(resp))),
                     Err(err) => SystemResult::Err(err),
