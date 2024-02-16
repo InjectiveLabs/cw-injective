@@ -360,6 +360,14 @@ pub trait HandlesRawQuery {
     fn handle(&self, contract_addr: &str, key: &Binary) -> QuerierResult;
 }
 
+pub trait HandlesContractInfo {
+    fn handle(&self, contract_addr: &str) -> QuerierResult;
+}
+
+pub trait HandlesCodeInfo {
+    fn handle(&self, code_id: u64) -> QuerierResult;
+}
+
 pub trait HandlesBankQuery {
     fn handle(&self, query: &BankQuery) -> QuerierResult;
 }
@@ -479,6 +487,8 @@ pub trait HandlesExchangeParamsQuery {
 pub struct WasmMockQuerier {
     pub smart_query_handler: Option<Box<dyn HandlesSmartQuery>>,
     pub raw_query_handler: Option<Box<dyn HandlesRawQuery>>,
+    pub contract_info_handler: Option<Box<dyn HandlesContractInfo>>,
+    pub code_info_handler: Option<Box<dyn HandlesCodeInfo>>,
     pub subaccount_deposit_response_handler: Option<Box<dyn HandlesSubaccountAndDenomQuery>>,
     pub exchange_params_response_handler: Option<Box<dyn HandlesExchangeParamsQuery>>,
     pub spot_market_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
@@ -543,6 +553,14 @@ impl WasmMockQuerier {
                 WasmQuery::Raw { contract_addr, key } => match &self.raw_query_handler {
                     Some(handler) => handler.handle(contract_addr, key),
                     None => panic!("Unknown raw query"),
+                },
+                WasmQuery::CodeInfo { code_id } => match &self.code_info_handler {
+                    Some(handler) => handler.handle(*code_id),
+                    None => panic!("Unknown code info query"),
+                },
+                WasmQuery::ContractInfo { contract_addr } => match &self.contract_info_handler {
+                    Some(handler) => handler.handle(contract_addr),
+                    None => panic!("Unknown contract info query"),
                 },
                 _ => panic!("unsupported"),
             },
@@ -746,6 +764,8 @@ impl WasmMockQuerier {
         WasmMockQuerier {
             smart_query_handler: None,
             raw_query_handler: None,
+            code_info_handler: None,
+            contract_info_handler: None,
             subaccount_deposit_response_handler: None,
             exchange_params_response_handler: None,
             spot_market_response_handler: None,
