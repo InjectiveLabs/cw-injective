@@ -829,8 +829,8 @@ impl TestDeposit {
 
 pub mod handlers {
     use cosmwasm_std::{
-        to_json_binary, AllBalanceResponse, BalanceResponse, Binary, Coin, ContractResult, QuerierResult, StdResult, SupplyResponse, SystemError,
-        SystemResult, Uint128,
+        to_json_binary, AllBalanceResponse, BalanceResponse, Binary, CodeInfoResponse, Coin, ContractInfoResponse, ContractResult, QuerierResult,
+        StdResult, SupplyResponse, SystemError, SystemResult, Uint128,
     };
     use std::collections::HashMap;
 
@@ -851,8 +851,8 @@ pub mod handlers {
         TrimmedSpotLimitOrder,
     };
     use crate::{
-        HandlesBankAllBalancesQuery, HandlesBankBalanceQuery, HandlesTraderDerivativeOrdersToCancelUpToAmountQuery, MarketMidPriceAndTOBResponse,
-        OracleType,
+        HandlesBankAllBalancesQuery, HandlesBankBalanceQuery, HandlesCodeInfo, HandlesContractInfo,
+        HandlesTraderDerivativeOrdersToCancelUpToAmountQuery, MarketMidPriceAndTOBResponse, OracleType,
     };
 
     use super::{HandlesOraclePriceQuery, TestDeposit};
@@ -1357,5 +1357,47 @@ pub mod handlers {
             }
         }
         Some(Box::new(Temp { result }))
+    }
+
+    pub fn create_contract_info_handler(code_id: u64, creator: impl ToString) -> Option<Box<dyn HandlesContractInfo>> {
+        struct Temp {
+            code_id: u64,
+            creator: String,
+        }
+
+        impl HandlesContractInfo for Temp {
+            fn handle(&self, _contract_addr: &str) -> QuerierResult {
+                let mut response = ContractInfoResponse::default();
+                response.code_id = self.code_id;
+                response.creator = self.creator.to_owned();
+
+                SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
+            }
+        }
+
+        Some(Box::new(Temp {
+            code_id,
+            creator: creator.to_string(),
+        }))
+    }
+
+    pub fn create_code_id_handler(creator: impl ToString) -> Option<Box<dyn HandlesCodeInfo>> {
+        struct Temp {
+            creator: String,
+        }
+
+        impl HandlesCodeInfo for Temp {
+            fn handle(&self, code_id: u64) -> QuerierResult {
+                let mut response = CodeInfoResponse::default();
+                response.code_id = code_id;
+                response.creator = self.creator.to_owned();
+
+                SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
+            }
+        }
+
+        Some(Box::new(Temp {
+            creator: creator.to_string(),
+        }))
     }
 }
