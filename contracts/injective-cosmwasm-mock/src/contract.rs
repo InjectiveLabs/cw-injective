@@ -41,5 +41,75 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> Std
         QueryMsg::TestSubAccountDepositQuery { subaccount_id, denom } => to_json_binary(&querier.query_subaccount_deposit(&subaccount_id, &denom)?),
         QueryMsg::TestSpotMarketQuery { market_id } => to_json_binary(&querier.query_spot_market(&market_id)?),
         QueryMsg::TestDerivativeMarketQuery { market_id } => to_json_binary(&querier.query_derivative_market(&market_id)?),
+        QueryMsg::TestEffectiveSubaccountPosition { market_id, subaccount_id } => {
+            to_json_binary(&querier.query_effective_subaccount_position(&market_id, &subaccount_id)?)
+        }
+        QueryMsg::TestVanillaSubaccountPosition { market_id, subaccount_id } => {
+            to_json_binary(&querier.query_vanilla_subaccount_position(&market_id, &subaccount_id)?)
+        }
+        QueryMsg::TestTraderDerivativeOrders { market_id, subaccount_id } => {
+            to_json_binary(&querier.query_trader_derivative_orders(&market_id, &subaccount_id)?)
+        }
+        QueryMsg::TestTraderTransientSpotOrders { market_id, subaccount_id } => {
+            to_json_binary(&querier.query_trader_transient_spot_orders(&market_id, &subaccount_id)?)
+        }
+        QueryMsg::TestTraderTransientDerivativeOrders { market_id, subaccount_id } => {
+            to_json_binary(&querier.query_trader_transient_derivative_orders(&market_id, &subaccount_id)?)
+        }
+        QueryMsg::TestTraderSpotOrders { market_id, subaccount_id } => to_json_binary(&querier.query_trader_spot_orders(&market_id, &subaccount_id)?),
+        QueryMsg::TestSpotOrdersToCancelUpToAmount {
+            market_id,
+            subaccount_id,
+            base_amount,
+            quote_amount,
+            strategy,
+            reference_price,
+        } => to_json_binary(&querier.query_spot_orders_to_cancel_up_to_amount(
+            &market_id,
+            &subaccount_id,
+            base_amount,
+            quote_amount,
+            strategy,
+            reference_price,
+        )?),
+        QueryMsg::TestDerivativeOrdersToCancelUpToAmount {
+            market_id,
+            subaccount_id,
+            quote_amount,
+            strategy,
+            reference_price,
+        } => to_json_binary(&querier.query_derivative_orders_to_cancel_up_to_amount(
+            &market_id,
+            &subaccount_id,
+            quote_amount,
+            strategy,
+            reference_price,
+        )?),
+        QueryMsg::TestPerpetualMarketInfo { market_id } => to_json_binary(&querier.query_perpetual_market_info(&market_id)?),
+        QueryMsg::TestPerpetualMarketFunding { market_id } => to_json_binary(&querier.query_perpetual_market_funding(&market_id)?),
+        QueryMsg::TestMarketVolatility {
+            market_id,
+            trade_grouping_sec,
+            max_age,
+            include_raw_history,
+            include_metadata,
+        } => to_json_binary(&querier.query_market_volatility(&market_id, trade_grouping_sec, max_age, include_raw_history, include_metadata)?),
+        QueryMsg::TestDerivativeMarketMidPriceAndTob { market_id } => to_json_binary(&querier.query_derivative_market_mid_price_and_tob(&market_id)?),
+        QueryMsg::TestAggregateMarketVolume { market_id } => to_json_binary(&querier.query_aggregate_market_volume(&market_id)?),
+        QueryMsg::TestAggregateAccountVolume { account_id } => to_json_binary(&querier.query_aggregate_account_volume(&account_id)?),
+        QueryMsg::TestSpotMarketMidPriceAndTob { market_id } => to_json_binary(&querier.query_spot_market_mid_price_and_tob(&market_id)?),
+        QueryMsg::TestSpotMarketOrderbook {
+            market_id,
+            side,
+            limit_cumulative_quantity,
+            limit_cumulative_notional,
+        } => to_json_binary(&querier.query_spot_market_orderbook(&market_id, side, limit_cumulative_quantity, limit_cumulative_notional)?),
+        QueryMsg::TestDerivativeMarketOrderbook {
+            market_id,
+            limit_cumulative_notional,
+        } => to_json_binary(&querier.query_derivative_market_orderbook(&market_id, limit_cumulative_notional)?),
+        QueryMsg::TestMarketAtomicExecutionFeeMultiplier { market_id } => {
+            to_json_binary(&querier.query_market_atomic_execution_fee_multiplier(&market_id)?)
+        }
     }
 }

@@ -2,11 +2,12 @@ use crate::msg::InstantiateMsg;
 use cosmwasm_std::{coin, Addr, Coin};
 use injective_cosmwasm::{checked_address_to_subaccount_id, SubaccountId};
 use injective_math::{scale::Scaled, FPDecimal};
-use injective_test_tube::{Account, Bank, Gov, InjectiveTestApp, Insurance, Module, Oracle, SigningAccount, Wasm};
+use injective_test_tube::{Account, Bank, Exchange, Gov, InjectiveTestApp, Insurance, Module, Oracle, SigningAccount, Wasm};
 
 use prost::Message;
 use std::{collections::HashMap, str::FromStr};
 
+use injective_std::types::injective::exchange::v1beta1::{DerivativeOrder, MsgCreateDerivativeLimitOrder, MsgCreateSpotLimitOrder, MsgInstantPerpetualMarketLaunch, MsgInstantSpotMarketLaunch, OrderInfo, OrderType, QueryDerivativeMarketsRequest, QuerySpotMarketsRequest, SpotOrder};
 use injective_std::types::injective::insurance::v1beta1::MsgCreateInsuranceFund;
 use injective_std::types::injective::oracle::v1beta1::OracleType;
 use injective_std::{
@@ -20,6 +21,7 @@ use injective_std::{
         injective::oracle::v1beta1::{GrantPriceFeederPrivilegeProposal, MsgRelayPriceFeedPrice},
     },
 };
+use injective_test_tube::injective_cosmwasm::get_default_subaccount_id_for_checked_address;
 
 pub const EXCHANGE_DECIMALS: i32 = 18i32;
 pub const BASE_DECIMALS: i32 = 18i32;
@@ -43,12 +45,20 @@ pub struct Setup {
     pub denoms: HashMap<String, String>,
     pub contract_address: String,
     pub code_id: u64,
+    pub market_id: Option<String>,
+}
+
+pub enum ExchangeType {
+    Spot,
+    Derivative,
+    None,
 }
 
 impl Setup {
-    pub fn new() -> Self {
+    pub fn new(exchange_type: ExchangeType) -> Self {
         let app = InjectiveTestApp::new();
         let wasm = Wasm::new(&app);
+        let mut market_id = None;
 
         let mut denoms = HashMap::new();
         denoms.insert("atom".to_string(), ATOM_DENOM.to_string());
@@ -118,6 +128,18 @@ impl Setup {
             human_to_dec("10.01", BASE_DECIMALS).to_string(),
         );
 
+        match exchange_type {
+            ExchangeType::Spot => {
+                let exchange = Exchange::new(&app);
+                market_id = Some(launch_spot_market(&exchange, &owner, "INJ/USDT".to_string()));
+            }
+            ExchangeType::Derivative => {
+                let exchange = Exchange::new(&app);
+                market_id = Some(launch_perp_market(&exchange, &owner, "INJ/USDT".to_string()));
+            }
+            ExchangeType::None => {}
+        }
+
         Self {
             app,
             owner,
@@ -127,13 +149,14 @@ impl Setup {
             denoms,
             contract_address,
             code_id,
+            market_id,
         }
     }
 }
 
 impl Default for Setup {
     fn default() -> Self {
-        Self::new()
+        Self::new(ExchangeType::None)
     }
 }
 
@@ -159,14 +182,6 @@ pub fn str_coin(human_amount: &str, denom: &str, decimals: i32) -> Coin {
     let scaled_amount = human_to_dec(human_amount, decimals);
     let as_int: u128 = scaled_amount.into();
     coin(as_int, denom)
-}
-
-pub fn human_to_proto(raw_number: &str, decimals: i32) -> String {
-    FPDecimal::must_from_str(&raw_number.replace('_', "")).scaled(18 + decimals).to_string()
-}
-
-pub fn human_to_dec(raw_number: &str, decimals: i32) -> FPDecimal {
-    FPDecimal::must_from_str(&raw_number.replace('_', "")).scaled(decimals)
 }
 
 pub fn send(bank: &Bank<InjectiveTestApp>, amount: &str, denom: &str, from: &SigningAccount, to: &SigningAccount) {
@@ -285,4 +300,205 @@ pub fn launch_insurance_fund(
             signer,
         )
         .unwrap();
+}
+
+pub fn launch_spot_market(exchange: &Exchange<InjectiveTestApp>, signer: &SigningAccount, ticker: String) -> String {
+    exchange
+        .instant_spot_market_launch(
+            MsgInstantSpotMarketLaunch {
+                sender: signer.address(),
+                ticker: ticker.clone(),
+                base_denom: BASE_DENOM.to_string(),
+                quote_denom: QUOTE_DENOM.to_string(),
+                min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.000000000000001")),
+                min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("1000000000000000")),
+            },
+            signer,
+        )
+        .unwrap();
+
+    get_spot_market_id(exchange, ticker)
+}
+
+pub fn get_spot_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: String) -> String {
+    let spot_markets = exchange
+        .query_spot_markets(&QuerySpotMarketsRequest {
+            status: "Active".to_string(),
+            market_ids: vec![],
+        })
+        .unwrap()
+        .markets;
+
+    let market = spot_markets.iter().find(|m| m.ticker == ticker).unwrap();
+    market.market_id.to_string()
+}
+
+pub fn launch_perp_market(exchange: &Exchange<InjectiveTestApp>, signer: &SigningAccount, ticker: String) -> String {
+    exchange
+        .instant_perpetual_market_launch(
+            MsgInstantPerpetualMarketLaunch {
+                sender: signer.address(),
+                ticker: ticker.to_owned(),
+                quote_denom: "usdt".to_string(),
+                oracle_base: "inj".to_string(),
+                oracle_quote: "usdt".to_string(),
+                oracle_scale_factor: 6u32,
+                oracle_type: 2i32,
+                maker_fee_rate: "0".to_owned(),
+                taker_fee_rate: "0".to_owned(),
+                initial_margin_ratio: "195000000000000000".to_owned(),
+                maintenance_margin_ratio: "50000000000000000".to_owned(),
+                min_price_tick_size: "1000000000000000000000".to_owned(),
+                min_quantity_tick_size: "1000000000000000".to_owned(),
+            },
+            signer,
+        )
+        .unwrap();
+
+    get_perpetual_market_id(exchange, ticker)
+}
+
+pub fn get_perpetual_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: String) -> String {
+    let perpetual_markets = exchange
+        .query_derivative_markets(&QueryDerivativeMarketsRequest {
+            status: "Active".to_string(),
+            market_ids: vec![],
+            with_mid_price_and_tob: false,
+        })
+        .unwrap()
+        .markets;
+
+    let market = perpetual_markets
+        .iter()
+        .filter(|m| m.market.is_some())
+        .find(|m| m.market.as_ref().unwrap().ticker == ticker)
+        .unwrap()
+        .market
+        .as_ref()
+        .unwrap();
+
+    market.market_id.to_string()
+}
+
+#[derive(Clone)]
+pub struct HumanOrder {
+    pub price: String,
+    pub quantity: String,
+    pub order_type: OrderType,
+}
+pub fn add_spot_orders(app: &InjectiveTestApp, market_id: String, orders: Vec<HumanOrder>) {
+    let trader = app
+        .init_account(&[
+            str_coin("1000000", BASE_DENOM, BASE_DECIMALS),
+            str_coin("1000000", QUOTE_DENOM, QUOTE_DECIMALS),
+        ])
+        .unwrap();
+
+    let exchange = Exchange::new(app);
+
+    for order in orders {
+        let (price, quantity) = scale_price_quantity_for_spot_market(order.price.as_str(), order.quantity.as_str(), &BASE_DECIMALS, &QUOTE_DECIMALS);
+        exchange
+            .create_spot_limit_order(
+                MsgCreateSpotLimitOrder {
+                    sender: trader.address(),
+                    order: Some(SpotOrder {
+                        market_id: market_id.to_owned(),
+                        order_info: Some(OrderInfo {
+                            subaccount_id: get_default_subaccount_id_for_checked_address(&Addr::unchecked(trader.address()))
+                                .as_str()
+                                .to_string(),
+                            fee_recipient: trader.address(),
+                            price,
+                            quantity,
+                        }),
+                        order_type: order.order_type.into(),
+                        trigger_price: "".to_string(),
+                    }),
+                },
+                &trader,
+            )
+            .unwrap();
+    }
+}
+
+
+pub fn add_derivative_orders(app: &InjectiveTestApp, market_id: String, orders: Vec<HumanOrder>, margin:Option<String>) {
+
+    let trader = app
+        .init_account(&[
+            str_coin("1000000", BASE_DENOM, BASE_DECIMALS),
+            str_coin("1000000", QUOTE_DENOM, QUOTE_DECIMALS),
+        ])
+        .unwrap();
+
+    let exchange = Exchange::new(app);
+    let margin = margin.unwrap_or("2".into());
+
+    for order in orders {
+        let (price, quantity, order_margin) = scale_price_quantity_perp_market(order.price.as_str(), order.quantity.as_str(), &margin, &QUOTE_DECIMALS);
+        exchange
+            .create_derivative_limit_order(
+                MsgCreateDerivativeLimitOrder {
+                    sender: trader.address(),
+                    order: Some(DerivativeOrder {
+                        market_id: market_id.to_owned(),
+                        order_info: Some(OrderInfo {
+                            subaccount_id: get_default_subaccount_id_for_checked_address(
+                                &Addr::unchecked(trader.address()),
+                            )
+                                .as_str()
+                                .to_string(),
+                            fee_recipient: trader.address(),
+                            price,
+                            quantity,
+                        }),
+                        margin: order_margin,
+                        order_type: order.order_type.into(),
+                        trigger_price: "".to_string(),
+                    }),
+                },
+                &trader,
+            )
+            .unwrap();
+    }
+}
+
+
+// Human Utils
+pub fn human_to_proto(raw_number: &str, decimals: i32) -> String {
+    FPDecimal::must_from_str(&raw_number.replace('_', "")).scaled(18 + decimals).to_string()
+}
+
+pub fn human_to_dec(raw_number: &str, decimals: i32) -> FPDecimal {
+    FPDecimal::must_from_str(&raw_number.replace('_', "")).scaled(decimals)
+}
+
+pub fn dec_to_proto(val: FPDecimal) -> String {
+    val.scaled(18).to_string()
+}
+
+
+
+pub fn scale_price_quantity_for_spot_market(price: &str, quantity: &str, base_decimals: &i32, quote_decimals: &i32) -> (String, String) {
+    let price_dec = FPDecimal::must_from_str(price.replace('_', "").as_str());
+    let quantity_dec = FPDecimal::must_from_str(quantity.replace('_', "").as_str());
+
+    let scaled_price = price_dec.scaled(quote_decimals - base_decimals);
+    let scaled_quantity = quantity_dec.scaled(*base_decimals);
+
+    (dec_to_proto(scaled_price), dec_to_proto(scaled_quantity))
+}
+
+pub fn scale_price_quantity_perp_market(price: &str, quantity: &str, margin_ratio: &str, quote_decimals: &i32) -> (String, String, String) {
+    let price_dec = FPDecimal::must_from_str(price.replace('_', "").as_str());
+    let quantity_dec = FPDecimal::must_from_str(quantity.replace('_', "").as_str());
+    let margin_ratio_dec = FPDecimal::must_from_str(margin_ratio.replace('_', "").as_str());
+
+    let scaled_price = price_dec.scaled(*quote_decimals);
+    let scaled_quantity = quantity_dec;
+
+    let scaled_margin = (price_dec * quantity_dec * margin_ratio_dec).scaled(*quote_decimals);
+
+    (dec_to_proto(scaled_price), dec_to_proto(scaled_quantity), dec_to_proto(scaled_margin))
 }

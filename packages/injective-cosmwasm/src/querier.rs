@@ -9,10 +9,10 @@ use crate::exchange::{
     order::OrderSide,
     response::{
         DerivativeMarketResponse, ExchangeParamsResponse, MarketMidPriceAndTOBResponse, MarketVolatilityResponse, OracleVolatilityResponse,
-        PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, QueryAggregateVolumeResponse, QueryDenomDecimalResponse,
-        QueryDenomDecimalsResponse, QueryMarketAtomicExecutionFeeMultiplierResponse, QueryOrderbookResponse, SpotMarketResponse,
-        SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse,
-        TraderSpotOrdersResponse,
+        PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse,
+        QueryDenomDecimalResponse, QueryDenomDecimalsResponse, QueryMarketAtomicExecutionFeeMultiplierResponse, QueryOrderbookResponse,
+        SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse,
+        TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
     },
     types::{MarketId, SubaccountId},
 };
@@ -340,7 +340,7 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_aggregate_market_volume<T: Into<MarketId> + Clone>(&self, market_id: &'a T) -> StdResult<QueryAggregateVolumeResponse> {
+    pub fn query_aggregate_market_volume<T: Into<MarketId> + Clone>(&self, market_id: &'a T) -> StdResult<QueryAggregateMarketVolumeResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Exchange,
             query_data: InjectiveQuery::AggregateMarketVolume {
@@ -348,7 +348,7 @@ impl<'a> InjectiveQuerier<'a> {
             },
         };
 
-        let res: QueryAggregateVolumeResponse = self.querier.query(&request.into())?;
+        let res: QueryAggregateMarketVolumeResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
 
@@ -359,7 +359,6 @@ impl<'a> InjectiveQuerier<'a> {
                 account: account_id.clone().into(),
             },
         };
-
         let res: QueryAggregateVolumeResponse = self.querier.query(&request.into())?;
         Ok(res)
     }
