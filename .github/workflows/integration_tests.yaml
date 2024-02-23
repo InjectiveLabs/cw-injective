@@ -28,7 +28,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release --target wasm32-unknown-unknown --locked --package grid
+          args:  --locked
         env:
           RUSTFLAGS: "-C link-arg=-s"
 
