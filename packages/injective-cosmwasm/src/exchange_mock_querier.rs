@@ -191,7 +191,7 @@ fn default_aggregate_market_volume_handler() -> QuerierResult {
 
 fn default_aggregate_account_volume_handler() -> QuerierResult {
     let response = QueryAggregateVolumeResponse {
-        aggregate_volumes: vec![
+        aggregate_volumes: Some(vec![
             MarketVolume {
                 market_id: MarketId::unchecked("market_id_1"),
                 volume: VolumeByType {
@@ -206,7 +206,7 @@ fn default_aggregate_account_volume_handler() -> QuerierResult {
                     taker_volume: FPDecimal::from(25000000u128),
                 },
             },
-        ],
+        ]),
     };
     SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
 }
