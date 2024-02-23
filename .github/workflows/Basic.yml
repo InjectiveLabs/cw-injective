@@ -28,6 +28,15 @@ jobs:
           target: wasm32-unknown-unknown
           override: true
 
+      - name: Compile contracts
+        run: |
+          for dir in contracts/*/
+          do
+            cd "$dir"
+            RUSTFLAGS='-C link-arg=-s' cargo wasm
+            cd -
+          done
+
       - name: Run unit tests
         uses: actions-rs/cargo@v1
         with:
