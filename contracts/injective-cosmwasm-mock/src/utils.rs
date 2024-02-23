@@ -7,7 +7,10 @@ use injective_test_tube::{Account, Bank, Exchange, Gov, InjectiveTestApp, Insura
 use prost::Message;
 use std::{collections::HashMap, str::FromStr};
 
-use injective_std::types::injective::exchange::v1beta1::{DerivativeOrder, MsgCreateDerivativeLimitOrder, MsgCreateSpotLimitOrder, MsgInstantPerpetualMarketLaunch, MsgInstantSpotMarketLaunch, OrderInfo, OrderType, QueryDerivativeMarketsRequest, QuerySpotMarketsRequest, SpotOrder};
+use injective_std::types::injective::exchange::v1beta1::{
+    DerivativeOrder, MsgCreateDerivativeLimitOrder, MsgCreateSpotLimitOrder, MsgInstantPerpetualMarketLaunch, MsgInstantSpotMarketLaunch, OrderInfo,
+    OrderType, QueryDerivativeMarketsRequest, QuerySpotMarketsRequest, SpotOrder,
+};
 use injective_std::types::injective::insurance::v1beta1::MsgCreateInsuranceFund;
 use injective_std::types::injective::oracle::v1beta1::OracleType;
 use injective_std::{
@@ -87,7 +90,7 @@ impl Setup {
                 ])
                 .unwrap();
 
-            let user_subaccount_id = checked_address_to_subaccount_id(&Addr::unchecked(user.address()), 1u32);
+            let user_subaccount_id = checked_address_to_subaccount_id(&Addr::unchecked(user.address()), 0u32);
 
             users.push(UserInfo {
                 account: user,
@@ -386,45 +389,136 @@ pub struct HumanOrder {
     pub quantity: String,
     pub order_type: OrderType,
 }
+pub fn add_spot_order_as(app: &InjectiveTestApp, market_id: String, trader: &UserInfo, price: String, quantity: String, order_type: OrderType) {
+    let exchange = Exchange::new(app);
+    exchange
+        .create_spot_limit_order(
+            MsgCreateSpotLimitOrder {
+                sender: trader.account.address().clone(),
+                order: Some(SpotOrder {
+                    market_id: market_id.to_owned(),
+                    order_info: Some(OrderInfo {
+                        subaccount_id: trader.subaccount_id.to_string(),
+                        fee_recipient: trader.account.address(),
+                        price,
+                        quantity,
+                    }),
+                    order_type: order_type.into(),
+                    trigger_price: "".to_string(),
+                }),
+            },
+            &trader.account,
+        )
+        .unwrap();
+}
+
 pub fn add_spot_orders(app: &InjectiveTestApp, market_id: String, orders: Vec<HumanOrder>) {
-    let trader = app
+    let account = app
         .init_account(&[
             str_coin("1000000", BASE_DENOM, BASE_DECIMALS),
             str_coin("1000000", QUOTE_DENOM, QUOTE_DECIMALS),
         ])
         .unwrap();
 
-    let exchange = Exchange::new(app);
+    let subaccount_id = checked_address_to_subaccount_id(&Addr::unchecked(account.address()), 0u32);
+
+    let trader = UserInfo { account, subaccount_id };
 
     for order in orders {
         let (price, quantity) = scale_price_quantity_for_spot_market(order.price.as_str(), order.quantity.as_str(), &BASE_DECIMALS, &QUOTE_DECIMALS);
-        exchange
-            .create_spot_limit_order(
-                MsgCreateSpotLimitOrder {
-                    sender: trader.address(),
-                    order: Some(SpotOrder {
-                        market_id: market_id.to_owned(),
-                        order_info: Some(OrderInfo {
-                            subaccount_id: get_default_subaccount_id_for_checked_address(&Addr::unchecked(trader.address()))
-                                .as_str()
-                                .to_string(),
-                            fee_recipient: trader.address(),
-                            price,
-                            quantity,
-                        }),
-                        order_type: order.order_type.into(),
-                        trigger_price: "".to_string(),
-                    }),
-                },
-                &trader,
-            )
-            .unwrap();
+        add_spot_order_as(app, market_id.to_owned(), &trader, price, quantity, order.order_type);
     }
 }
 
+pub fn get_initial_liquidity_orders_vector() -> Vec<HumanOrder> {
+    vec![
+        HumanOrder {
+            price: "10.2".to_string(),
+            quantity: "5".to_string(),
+            order_type: OrderType::Sell,
+        },
+        HumanOrder {
+            price: "10.1".to_string(),
+            quantity: "10".to_string(),
+            order_type: OrderType::Sell,
+        },
+        HumanOrder {
+            price: "9.9".to_string(),
+            quantity: "10".to_string(),
+            order_type: OrderType::Buy,
+        },
+        HumanOrder {
+            price: "9.8".to_string(),
+            quantity: "5".to_string(),
+            order_type: OrderType::Buy,
+        },
+    ]
+}
 
-pub fn add_derivative_orders(app: &InjectiveTestApp, market_id: String, orders: Vec<HumanOrder>, margin:Option<String>) {
+pub fn add_spot_initial_liquidity(app: &InjectiveTestApp, market_id: String) {
+    add_spot_orders(app, market_id, get_initial_liquidity_orders_vector());
+}
 
+pub fn get_initial_perp_liquidity_orders_vector() -> Vec<HumanOrder> {
+    vec![
+        HumanOrder {
+            price: "10.2".to_string(),
+            quantity: "2".to_string(),
+            order_type: OrderType::Sell,
+        },
+        HumanOrder {
+            price: "10.1".to_string(),
+            quantity: "1".to_string(),
+            order_type: OrderType::Sell,
+        },
+        HumanOrder {
+            price: "9.9".to_string(),
+            quantity: "1".to_string(),
+            order_type: OrderType::Buy,
+        },
+        HumanOrder {
+            price: "9.8".to_string(),
+            quantity: "2".to_string(),
+            order_type: OrderType::Buy,
+        },
+    ]
+}
+
+pub fn add_derivative_order_as(
+    app: &InjectiveTestApp,
+    market_id: String,
+    trader: &SigningAccount,
+    price: String,
+    quantity: String,
+    order_type: OrderType,
+    margin: String,
+) {
+    let exchange = Exchange::new(app);
+    exchange
+        .create_derivative_limit_order(
+            MsgCreateDerivativeLimitOrder {
+                sender: trader.address(),
+                order: Some(DerivativeOrder {
+                    market_id: market_id.to_owned(),
+                    order_info: Some(OrderInfo {
+                        subaccount_id: get_default_subaccount_id_for_checked_address(&Addr::unchecked(trader.address()))
+                            .as_str()
+                            .to_string(),
+                        fee_recipient: trader.address(),
+                        price,
+                        quantity,
+                    }),
+                    margin,
+                    order_type: order_type.into(),
+                    trigger_price: "".to_string(),
+                }),
+            },
+            trader,
+        )
+        .unwrap();
+}
+
+pub fn add_derivative_orders(app: &InjectiveTestApp, market_id: String, orders: Vec<HumanOrder>, margin: Option<String>) {
     let trader = app
         .init_account(&[
             str_coin("1000000", BASE_DENOM, BASE_DECIMALS),
@@ -432,38 +526,18 @@ pub fn add_derivative_orders(app: &InjectiveTestApp, market_id: String, orders: 
         ])
         .unwrap();
 
-    let exchange = Exchange::new(app);
     let margin = margin.unwrap_or("2".into());
 
     for order in orders {
-        let (price, quantity, order_margin) = scale_price_quantity_perp_market(order.price.as_str(), order.quantity.as_str(), &margin, &QUOTE_DECIMALS);
-        exchange
-            .create_derivative_limit_order(
-                MsgCreateDerivativeLimitOrder {
-                    sender: trader.address(),
-                    order: Some(DerivativeOrder {
-                        market_id: market_id.to_owned(),
-                        order_info: Some(OrderInfo {
-                            subaccount_id: get_default_subaccount_id_for_checked_address(
-                                &Addr::unchecked(trader.address()),
-                            )
-                                .as_str()
-                                .to_string(),
-                            fee_recipient: trader.address(),
-                            price,
-                            quantity,
-                        }),
-                        margin: order_margin,
-                        order_type: order.order_type.into(),
-                        trigger_price: "".to_string(),
-                    }),
-                },
-                &trader,
-            )
-            .unwrap();
+        let (price, quantity, order_margin) =
+            scale_price_quantity_perp_market(order.price.as_str(), order.quantity.as_str(), &margin, &QUOTE_DECIMALS);
+        add_derivative_order_as(app, market_id.to_owned(), &trader, price, quantity, order.order_type, order_margin);
     }
 }
 
+pub fn add_perp_initial_liquidity(app: &InjectiveTestApp, market_id: String) {
+    add_derivative_orders(app, market_id, get_initial_perp_liquidity_orders_vector(), None);
+}
 
 // Human Utils
 pub fn human_to_proto(raw_number: &str, decimals: i32) -> String {
@@ -477,8 +551,6 @@ pub fn human_to_dec(raw_number: &str, decimals: i32) -> FPDecimal {
 pub fn dec_to_proto(val: FPDecimal) -> String {
     val.scaled(18).to_string()
 }
-
-
 
 pub fn scale_price_quantity_for_spot_market(price: &str, quantity: &str, base_decimals: &i32, quote_decimals: &i32) -> (String, String) {
     let price_dec = FPDecimal::must_from_str(price.replace('_', "").as_str());

@@ -1,26 +1,27 @@
 use crate::{
     msg::{ExecuteMsg, QueryMsg},
     utils::{
-        dec_to_proto, get_spot_market_id, human_to_dec, human_to_proto, str_coin, Setup, BASE_DECIMALS, BASE_DENOM, QUOTE_DECIMALS, QUOTE_DENOM,
+        add_derivative_order_as, add_derivative_orders, add_perp_initial_liquidity, add_spot_initial_liquidity, add_spot_order_as, add_spot_orders,
+        dec_to_proto, get_initial_liquidity_orders_vector, get_initial_perp_liquidity_orders_vector, get_perpetual_market_id, get_spot_market_id,
+        human_to_dec, human_to_proto, scale_price_quantity_for_spot_market, scale_price_quantity_perp_market, str_coin, ExchangeType, HumanOrder,
+        Setup, BASE_DECIMALS, BASE_DENOM, QUOTE_DECIMALS, QUOTE_DENOM,
     },
 };
 
-use crate::utils::{
-    add_derivative_orders, add_spot_orders, get_perpetual_market_id, scale_price_quantity_for_spot_market, scale_price_quantity_perp_market,
-    ExchangeType, HumanOrder,
-};
 use cosmwasm_std::{Addr, Coin};
-use injective_cosmwasm::exchange::response::{QueryAggregateVolumeResponse, QueryOrderbookResponse};
+use injective_cosmwasm::exchange::response::QueryOrderbookResponse;
+use injective_cosmwasm::exchange::types::VolumeByType;
 use injective_cosmwasm::{
-    DerivativeMarketResponse, ExchangeParamsResponse, MarketId, MarketMidPriceAndTOBResponse, MarketVolatilityResponse, OrderSide,
-    PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PriceLevel, QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarketResponse,
-    SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountId, SubaccountPositionInMarketResponse,
-    TraderDerivativeOrdersResponse, TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder, TrimmedSpotLimitOrder,
+    checked_address_to_subaccount_id, DerivativeMarketResponse, ExchangeParamsResponse, MarketId, MarketMidPriceAndTOBResponse,
+    MarketVolatilityResponse, OrderSide, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PriceLevel, QueryAggregateVolumeResponse,
+    QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse,
+    SubaccountId, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder,
+    TrimmedSpotLimitOrder,
 };
 use injective_math::FPDecimal;
 use injective_std::types::injective::exchange::v1beta1::{
-    Deposit, DerivativeOrder, MsgCreateDerivativeLimitOrder, MsgCreateSpotLimitOrder, MsgDeposit, MsgInstantPerpetualMarketLaunch,
-    MsgInstantSpotMarketLaunch, OrderInfo, OrderType, QueryAggregateMarketVolumeResponse, QuerySubaccountDepositsRequest, SpotOrder,
+    Deposit, MsgDeposit, MsgInstantPerpetualMarketLaunch, MsgInstantSpotMarketLaunch, OrderType, QueryAggregateMarketVolumeResponse,
+    QuerySubaccountDepositsRequest,
 };
 use injective_test_tube::injective_cosmwasm::get_default_subaccount_id_for_checked_address;
 use injective_test_tube::{Account, Exchange, Module, RunnerResult, Wasm};
@@ -33,11 +34,12 @@ fn test_msg_deposit() {
     let wasm = Wasm::new(&env.app);
     let user = &env.users[0];
 
+    let subaccount_id = checked_address_to_subaccount_id(&Addr::unchecked(user.account.address()), 1u32);
     // Execute contract
     let res = wasm.execute(
         &env.contract_address,
         &ExecuteMsg::TestDepositMsg {
-            subaccount_id: user.subaccount_id.clone(),
+            subaccount_id: subaccount_id.clone(),
             amount: Coin::new(100, "usdt"),
         },
         &[Coin::new(100, "usdt")],
@@ -70,12 +72,14 @@ fn test_query_subaccount_deposit() {
     let exchange = Exchange::new(&env.app);
     let wasm = Wasm::new(&env.app);
 
+    let subaccount_id = checked_address_to_subaccount_id(&Addr::unchecked(env.users[0].account.address()), 1u32);
+
     {
         exchange
             .deposit(
                 MsgDeposit {
                     sender: env.users[0].account.address(),
-                    subaccount_id: env.users[0].subaccount_id.to_string(),
+                    subaccount_id: subaccount_id.to_string(),
                     amount: Some(injective_std::types::cosmos::base::v1beta1::Coin {
                         amount: "10000000000000000000".to_string(),
                         denom: env.denoms["base"].clone(),
@@ -91,7 +95,7 @@ fn test_query_subaccount_deposit() {
             .deposit(
                 MsgDeposit {
                     sender: env.users[0].account.address(),
-                    subaccount_id: env.users[0].subaccount_id.to_string(),
+                    subaccount_id: subaccount_id.to_string(),
                     amount: Some(injective_std::types::cosmos::base::v1beta1::Coin {
                         amount: "100000000".to_string(),
                         denom: env.denoms["quote"].clone(),
@@ -104,7 +108,7 @@ fn test_query_subaccount_deposit() {
 
     let response = exchange
         .query_subaccount_deposits(&QuerySubaccountDepositsRequest {
-            subaccount_id: env.users[0].subaccount_id.clone().to_string(),
+            subaccount_id: subaccount_id.to_string(),
             subaccount: None,
         })
         .unwrap();
@@ -125,14 +129,14 @@ fn test_query_subaccount_deposit() {
     );
 
     let query_msg = QueryMsg::TestSubAccountDepositQuery {
-        subaccount_id: env.users[0].subaccount_id.clone(),
+        subaccount_id: subaccount_id.clone(),
         denom: BASE_DENOM.to_string(),
     };
     let contract_response: SubaccountDepositResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
     assert_eq!(contract_response.deposits.total_balance, human_to_dec("10.0", BASE_DECIMALS));
 
     let query_msg = QueryMsg::TestSubAccountDepositQuery {
-        subaccount_id: env.users[0].subaccount_id.clone(),
+        subaccount_id: subaccount_id.clone(),
         denom: QUOTE_DENOM.to_string(),
     };
     let contract_response: SubaccountDepositResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
@@ -253,60 +257,25 @@ fn test_query_derivative_market() {
 fn test_query_effective_subaccount_position() {
     let env = Setup::new(ExchangeType::Derivative);
     let wasm = Wasm::new(&env.app);
-    let exchange = Exchange::new(&env.app);
     let market_id = env.market_id.unwrap();
 
-    let liquidity_orders: Vec<HumanOrder> = vec![
-        HumanOrder {
-            price: "10.2".to_string(),
-            quantity: "1".to_string(),
-            order_type: OrderType::Sell,
-        },
-        HumanOrder {
-            price: "10.1".to_string(),
-            quantity: "2".to_string(),
-            order_type: OrderType::Sell,
-        },
-        HumanOrder {
-            price: "9.9".to_string(),
-            quantity: "1".to_string(),
-            order_type: OrderType::Buy,
-        },
-        HumanOrder {
-            price: "9.8".to_string(),
-            quantity: "2".to_string(),
-            order_type: OrderType::Buy,
-        },
-    ];
-    add_derivative_orders(&env.app, market_id.clone(), liquidity_orders.to_owned(), None);
+    add_perp_initial_liquidity(&env.app, market_id.clone());
 
     let (price, quantity, margin) = scale_price_quantity_perp_market("9.7", "1", "2", &QUOTE_DECIMALS);
 
-    let trader = &env.users[1];
-    let subaccount_id = get_default_subaccount_id_for_checked_address(&Addr::unchecked(trader.account.address()))
+    let subaccount_id = get_default_subaccount_id_for_checked_address(&Addr::unchecked(env.users[1].account.address()))
         .as_str()
         .to_string();
 
-    exchange
-        .create_derivative_limit_order(
-            MsgCreateDerivativeLimitOrder {
-                sender: trader.account.address(),
-                order: Some(DerivativeOrder {
-                    market_id: market_id.to_owned(),
-                    order_info: Some(OrderInfo {
-                        subaccount_id: subaccount_id.to_owned(),
-                        fee_recipient: trader.account.address(),
-                        price,
-                        quantity,
-                    }),
-                    margin,
-                    order_type: OrderType::Sell.into(),
-                    trigger_price: "".to_string(),
-                }),
-            },
-            &trader.account,
-        )
-        .unwrap();
+    add_derivative_order_as(
+        &env.app,
+        market_id.to_owned(),
+        &env.users[1].account,
+        price,
+        quantity,
+        OrderType::Sell,
+        margin,
+    );
 
     let query_msg = QueryMsg::TestEffectiveSubaccountPosition {
         market_id: MarketId::new(market_id.clone()).unwrap(),
@@ -321,32 +290,9 @@ fn test_query_effective_subaccount_position() {
 fn test_query_vanilla_subaccount_position() {
     let env = Setup::new(ExchangeType::Derivative);
     let wasm = Wasm::new(&env.app);
-    let exchange = Exchange::new(&env.app);
     let market_id = env.market_id.unwrap();
 
-    let liquidity_orders: Vec<HumanOrder> = vec![
-        HumanOrder {
-            price: "10.2".to_string(),
-            quantity: "1".to_string(),
-            order_type: OrderType::Sell,
-        },
-        HumanOrder {
-            price: "10.1".to_string(),
-            quantity: "2".to_string(),
-            order_type: OrderType::Sell,
-        },
-        HumanOrder {
-            price: "9.9".to_string(),
-            quantity: "1".to_string(),
-            order_type: OrderType::Buy,
-        },
-        HumanOrder {
-            price: "9.8".to_string(),
-            quantity: "2".to_string(),
-            order_type: OrderType::Buy,
-        },
-    ];
-    add_derivative_orders(&env.app, market_id.clone(), liquidity_orders.to_owned(), None);
+    add_perp_initial_liquidity(&env.app, market_id.clone());
 
     let (price, quantity, margin) = scale_price_quantity_perp_market("9.7", "1", "2", &QUOTE_DECIMALS);
 
@@ -355,26 +301,15 @@ fn test_query_vanilla_subaccount_position() {
         .as_str()
         .to_string();
 
-    exchange
-        .create_derivative_limit_order(
-            MsgCreateDerivativeLimitOrder {
-                sender: trader.account.address(),
-                order: Some(DerivativeOrder {
-                    market_id: market_id.to_owned(),
-                    order_info: Some(OrderInfo {
-                        subaccount_id: subaccount_id.to_owned(),
-                        fee_recipient: trader.account.address(),
-                        price,
-                        quantity,
-                    }),
-                    margin,
-                    order_type: OrderType::Sell.into(),
-                    trigger_price: "".to_string(),
-                }),
-            },
-            &trader.account,
-        )
-        .unwrap();
+    add_derivative_order_as(
+        &env.app,
+        market_id.to_owned(),
+        &env.users[1].account,
+        price,
+        quantity,
+        OrderType::Sell,
+        margin,
+    );
 
     let query_msg = QueryMsg::TestVanillaSubaccountPosition {
         market_id: MarketId::new(market_id.clone()).unwrap(),
@@ -390,7 +325,7 @@ fn test_query_vanilla_subaccount_position() {
     }];
     add_derivative_orders(&env.app, market_id.clone(), liquidity_orders.to_owned(), None);
 
-    let res: SubaccountPositionInMarketResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
+    let _res: SubaccountPositionInMarketResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
 }
 
 #[test]
@@ -398,41 +333,21 @@ fn test_query_vanilla_subaccount_position() {
 fn test_query_trader_spot_orders() {
     let env = Setup::new(ExchangeType::Spot);
     let wasm = Wasm::new(&env.app);
-    let exchange = Exchange::new(&env.app);
     let market_id = env.market_id.unwrap();
+
+    let subaccount_id = get_default_subaccount_id_for_checked_address(&Addr::unchecked(env.users[0].account.address()))
+        .as_str()
+        .to_string();
+
+    let query_msg = QueryMsg::TestTraderSpotOrders {
+        market_id: MarketId::new(market_id.clone()).unwrap(),
+        subaccount_id: SubaccountId::new(subaccount_id).unwrap(),
+    };
 
     {
         let (price, quantity) = scale_price_quantity_for_spot_market("10.01", "5.1", &BASE_DECIMALS, &QUOTE_DECIMALS);
-        let trader = &env.users[0];
+        add_spot_order_as(&env.app, market_id.to_owned(), &env.users[0], price, quantity, OrderType::Sell);
 
-        let subaccount_id = get_default_subaccount_id_for_checked_address(&Addr::unchecked(trader.account.address()))
-            .as_str()
-            .to_string();
-
-        exchange
-            .create_spot_limit_order(
-                MsgCreateSpotLimitOrder {
-                    sender: trader.account.address(),
-                    order: Some(SpotOrder {
-                        market_id: market_id.clone(),
-                        order_info: Some(OrderInfo {
-                            subaccount_id: subaccount_id.to_owned(),
-                            fee_recipient: trader.account.address(),
-                            price,
-                            quantity,
-                        }),
-                        order_type: OrderType::Sell.into(),
-                        trigger_price: "".to_string(),
-                    }),
-                },
-                &trader.account,
-            )
-            .unwrap();
-
-        let query_msg = QueryMsg::TestTraderSpotOrders {
-            market_id: MarketId::new(market_id.clone()).unwrap(),
-            subaccount_id: SubaccountId::new(subaccount_id).unwrap(),
-        };
         let res: TraderSpotOrdersResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
         let orders = res.orders.clone().unwrap();
 
@@ -452,36 +367,8 @@ fn test_query_trader_spot_orders() {
 
     {
         let (price, quantity) = scale_price_quantity_for_spot_market("9.90", "0.5", &BASE_DECIMALS, &QUOTE_DECIMALS);
-        let trader = &env.users[0];
+        add_spot_order_as(&env.app, market_id.to_owned(), &env.users[0], price, quantity, OrderType::Buy);
 
-        let subaccount_id = get_default_subaccount_id_for_checked_address(&Addr::unchecked(trader.account.address()))
-            .as_str()
-            .to_string();
-
-        exchange
-            .create_spot_limit_order(
-                MsgCreateSpotLimitOrder {
-                    sender: trader.account.address(),
-                    order: Some(SpotOrder {
-                        market_id: market_id.clone(),
-                        order_info: Some(OrderInfo {
-                            subaccount_id: subaccount_id.to_owned(),
-                            fee_recipient: trader.account.address(),
-                            price,
-                            quantity,
-                        }),
-                        order_type: OrderType::Buy.into(),
-                        trigger_price: "".to_string(),
-                    }),
-                },
-                &trader.account,
-            )
-            .unwrap();
-
-        let query_msg = QueryMsg::TestTraderSpotOrders {
-            market_id: MarketId::new(market_id.clone()).unwrap(),
-            subaccount_id: SubaccountId::new(subaccount_id).unwrap(),
-        };
         let res: TraderSpotOrdersResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
         let orders = res.orders.clone().unwrap();
 
@@ -504,36 +391,23 @@ fn test_query_trader_spot_orders() {
 fn test_query_trader_derivative_orders() {
     let env = Setup::new(ExchangeType::Derivative);
     let wasm = Wasm::new(&env.app);
-    let exchange = Exchange::new(&env.app);
     let market_id = env.market_id.unwrap();
 
     let (price, quantity, margin) = scale_price_quantity_perp_market("10.1", "1", "2", &QUOTE_DECIMALS);
 
-    let trader = &env.users[0];
-    let subaccount_id = get_default_subaccount_id_for_checked_address(&Addr::unchecked(trader.account.address()))
+    let subaccount_id = get_default_subaccount_id_for_checked_address(&Addr::unchecked(env.users[1].account.address()))
         .as_str()
         .to_string();
 
-    exchange
-        .create_derivative_limit_order(
-            MsgCreateDerivativeLimitOrder {
-                sender: trader.account.address(),
-                order: Some(DerivativeOrder {
-                    market_id: market_id.to_owned(),
-                    order_info: Some(OrderInfo {
-                        subaccount_id: subaccount_id.to_owned(),
-                        fee_recipient: trader.account.address(),
-                        price,
-                        quantity,
-                    }),
-                    margin,
-                    order_type: OrderType::Sell.into(),
-                    trigger_price: "".to_string(),
-                }),
-            },
-            &trader.account,
-        )
-        .unwrap();
+    add_derivative_order_as(
+        &env.app,
+        market_id.to_owned(),
+        &env.users[1].account,
+        price,
+        quantity,
+        OrderType::Sell,
+        margin,
+    );
 
     let query_msg = QueryMsg::TestTraderDerivativeOrders {
         market_id: MarketId::new(market_id.clone()).unwrap(),
@@ -566,30 +440,7 @@ fn test_query_spot_market_mid_price_and_tob() {
     let wasm = Wasm::new(&env.app);
     let market_id = env.market_id.unwrap();
 
-    let liquidity_orders: Vec<HumanOrder> = vec![
-        HumanOrder {
-            price: "10.2".to_string(),
-            quantity: "5".to_string(),
-            order_type: OrderType::Sell,
-        },
-        HumanOrder {
-            price: "10.1".to_string(),
-            quantity: "10".to_string(),
-            order_type: OrderType::Sell,
-        },
-        HumanOrder {
-            price: "9.9".to_string(),
-            quantity: "10".to_string(),
-            order_type: OrderType::Buy,
-        },
-        HumanOrder {
-            price: "9.8".to_string(),
-            quantity: "5".to_string(),
-            order_type: OrderType::Buy,
-        },
-    ];
-
-    add_spot_orders(&env.app, market_id.clone(), liquidity_orders);
+    add_spot_initial_liquidity(&env.app, market_id.clone());
 
     let query_msg = QueryMsg::TestSpotMarketMidPriceAndTob {
         market_id: MarketId::new(market_id.clone()).unwrap(),
@@ -608,29 +459,7 @@ fn test_query_spot_market_orderbook() {
     let wasm = Wasm::new(&env.app);
     let market_id = env.market_id.unwrap();
 
-    let liquidity_orders: Vec<HumanOrder> = vec![
-        HumanOrder {
-            price: "10.2".to_string(),
-            quantity: "5".to_string(),
-            order_type: OrderType::Sell,
-        },
-        HumanOrder {
-            price: "10.1".to_string(),
-            quantity: "10".to_string(),
-            order_type: OrderType::Sell,
-        },
-        HumanOrder {
-            price: "9.9".to_string(),
-            quantity: "10".to_string(),
-            order_type: OrderType::Buy,
-        },
-        HumanOrder {
-            price: "9.8".to_string(),
-            quantity: "5".to_string(),
-            order_type: OrderType::Buy,
-        },
-    ];
-
+    let liquidity_orders = get_initial_liquidity_orders_vector();
     add_spot_orders(&env.app, market_id.clone(), liquidity_orders.clone());
 
     let query_msg = QueryMsg::TestSpotMarketOrderbook {
@@ -724,30 +553,7 @@ fn test_query_market_volatility() {
     let wasm = Wasm::new(&env.app);
     let market_id = env.market_id.unwrap();
 
-    let liquidity_orders: Vec<HumanOrder> = vec![
-        HumanOrder {
-            price: "10.2".to_string(),
-            quantity: "5".to_string(),
-            order_type: OrderType::Sell,
-        },
-        HumanOrder {
-            price: "10.1".to_string(),
-            quantity: "10".to_string(),
-            order_type: OrderType::Sell,
-        },
-        HumanOrder {
-            price: "9.9".to_string(),
-            quantity: "10".to_string(),
-            order_type: OrderType::Buy,
-        },
-        HumanOrder {
-            price: "9.8".to_string(),
-            quantity: "5".to_string(),
-            order_type: OrderType::Buy,
-        },
-    ];
-
-    add_spot_orders(&env.app, market_id.clone(), liquidity_orders.clone());
+    add_spot_initial_liquidity(&env.app, market_id.clone());
 
     let query_msg = QueryMsg::TestMarketVolatility {
         market_id: MarketId::new(market_id.clone()).unwrap(),
@@ -760,10 +566,9 @@ fn test_query_market_volatility() {
     let res: MarketVolatilityResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
     assert_eq!(res.volatility, None);
 
-    // consume liquidity
     let new_orders: Vec<HumanOrder> = vec![
         HumanOrder {
-            price: "10.2".to_string(),
+            price: "10.4".to_string(),
             quantity: "15".to_string(),
             order_type: OrderType::Buy,
         },
@@ -784,32 +589,9 @@ fn test_query_market_volatility() {
 fn test_query_derivative_market_mid_price_and_tob() {
     let env = Setup::new(ExchangeType::Derivative);
     let wasm = Wasm::new(&env.app);
-    let exchange = Exchange::new(&env.app);
     let market_id = env.market_id.unwrap();
 
-    let liquidity_orders: Vec<HumanOrder> = vec![
-        HumanOrder {
-            price: "10.2".to_string(),
-            quantity: "1".to_string(),
-            order_type: OrderType::Sell,
-        },
-        HumanOrder {
-            price: "10.1".to_string(),
-            quantity: "2".to_string(),
-            order_type: OrderType::Sell,
-        },
-        HumanOrder {
-            price: "9.9".to_string(),
-            quantity: "1".to_string(),
-            order_type: OrderType::Buy,
-        },
-        HumanOrder {
-            price: "9.8".to_string(),
-            quantity: "2".to_string(),
-            order_type: OrderType::Buy,
-        },
-    ];
-    add_derivative_orders(&env.app, market_id.clone(), liquidity_orders, None);
+    add_perp_initial_liquidity(&env.app, market_id.to_owned());
 
     let query_msg = QueryMsg::TestDerivativeMarketMidPriceAndTob {
         market_id: MarketId::new(market_id.clone()).unwrap(),
@@ -828,30 +610,7 @@ fn test_query_aggregate_market_volume() {
     let wasm = Wasm::new(&env.app);
     let market_id = env.market_id.unwrap();
 
-    let liquidity_orders: Vec<HumanOrder> = vec![
-        HumanOrder {
-            price: "10.2".to_string(),
-            quantity: "5".to_string(),
-            order_type: OrderType::Sell,
-        },
-        HumanOrder {
-            price: "10.1".to_string(),
-            quantity: "10".to_string(),
-            order_type: OrderType::Sell,
-        },
-        HumanOrder {
-            price: "9.9".to_string(),
-            quantity: "10".to_string(),
-            order_type: OrderType::Buy,
-        },
-        HumanOrder {
-            price: "9.8".to_string(),
-            quantity: "5".to_string(),
-            order_type: OrderType::Buy,
-        },
-    ];
-
-    add_spot_orders(&env.app, market_id.clone(), liquidity_orders);
+    add_spot_initial_liquidity(&env.app, market_id.clone());
 
     let query_msg = QueryMsg::TestAggregateMarketVolume {
         market_id: MarketId::new(market_id.clone()).unwrap(),
@@ -888,38 +647,22 @@ fn test_query_aggregate_account_volume() {
     let wasm = Wasm::new(&env.app);
     let market_id = env.market_id.unwrap();
 
-    let liquidity_orders: Vec<HumanOrder> = vec![
-        HumanOrder {
-            price: "10.2".to_string(),
-            quantity: "5".to_string(),
-            order_type: OrderType::Sell,
-        },
-        HumanOrder {
-            price: "10.1".to_string(),
-            quantity: "10".to_string(),
-            order_type: OrderType::Sell,
-        },
-        HumanOrder {
-            price: "9.9".to_string(),
-            quantity: "10".to_string(),
-            order_type: OrderType::Buy,
-        },
-        HumanOrder {
-            price: "9.8".to_string(),
-            quantity: "5".to_string(),
-            order_type: OrderType::Buy,
-        },
-    ];
-
-    add_spot_orders(&env.app, market_id.clone(), liquidity_orders);
+    add_spot_initial_liquidity(&env.app, market_id.clone());
 
     let query_msg = QueryMsg::TestAggregateAccountVolume {
-        account_id: env.users[0].subaccount_id.to_string(),
+        account_id: env.users[1].subaccount_id.to_string(),
     };
 
-    let res: RunnerResult<QueryAggregateVolumeResponse> = wasm.query(&env.contract_address, &query_msg);
-    println!("{:?}", res);
-    assert_eq!(1, 2);
+    let res: QueryAggregateVolumeResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
+    assert!(res.aggregate_volumes.is_none());
+
+    let (price, quantity) = scale_price_quantity_for_spot_market("9.9", "1", &BASE_DECIMALS, &QUOTE_DECIMALS);
+    add_spot_order_as(&env.app, market_id.clone(), &env.users[1], price, quantity, OrderType::Sell);
+
+    let res: QueryAggregateVolumeResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
+    let volume: &VolumeByType = &res.aggregate_volumes.unwrap()[0].volume;
+    assert_eq!(volume.maker_volume, FPDecimal::ZERO);
+    assert_eq!(volume.taker_volume, human_to_dec("9.9", QUOTE_DECIMALS));
 }
 
 #[test]
@@ -927,31 +670,9 @@ fn test_query_aggregate_account_volume() {
 fn test_query_derivative_market_orderbook() {
     let env = Setup::new(ExchangeType::Derivative);
     let wasm = Wasm::new(&env.app);
-    let exchange = Exchange::new(&env.app);
     let market_id = env.market_id.unwrap();
 
-    let liquidity_orders: Vec<HumanOrder> = vec![
-        HumanOrder {
-            price: "10.2".to_string(),
-            quantity: "1".to_string(),
-            order_type: OrderType::Sell,
-        },
-        HumanOrder {
-            price: "10.1".to_string(),
-            quantity: "2".to_string(),
-            order_type: OrderType::Sell,
-        },
-        HumanOrder {
-            price: "9.9".to_string(),
-            quantity: "1".to_string(),
-            order_type: OrderType::Buy,
-        },
-        HumanOrder {
-            price: "9.8".to_string(),
-            quantity: "2".to_string(),
-            order_type: OrderType::Buy,
-        },
-    ];
+    let liquidity_orders = get_initial_perp_liquidity_orders_vector();
     add_derivative_orders(&env.app, market_id.clone(), liquidity_orders.to_owned(), None);
 
     let query_msg = QueryMsg::TestDerivativeMarketOrderbook {
