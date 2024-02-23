@@ -1,0 +1,39 @@
+# Based on https://github.com/actions-rs/example/blob/master/.github/workflows/quickstart.yml
+
+on:
+  push:
+  pull_request:
+    types: [opened]
+
+name: integration tests
+
+jobs:
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.73.0
+          target: wasm32-unknown-unknown
+          override: true
+          components: llvm-tools-preview
+
+      - name: Compile WASM contracts
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --target wasm32-unknown-unknown --locked --package grid
+        env:
+          RUSTFLAGS: "-C link-arg=-s"
+
+      - name: Run Integration Tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --features integration
