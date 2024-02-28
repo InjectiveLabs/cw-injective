@@ -11,6 +11,14 @@ pub struct InstantiateMsg {}
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
     TestDepositMsg { subaccount_id: SubaccountId, amount: Coin },
+    TestTraderTransientSpotOrders {
+        market_id: MarketId,
+        subaccount_id: SubaccountId,
+    },
+    TestTraderTransientDerivativeOrders {
+        market_id: MarketId,
+        subaccount_id: SubaccountId,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -36,14 +44,6 @@ pub enum QueryMsg {
         subaccount_id: SubaccountId,
     },
     TestTraderDerivativeOrders {
-        market_id: MarketId,
-        subaccount_id: SubaccountId,
-    },
-    TestTraderTransientSpotOrders {
-        market_id: MarketId,
-        subaccount_id: SubaccountId,
-    },
-    TestTraderTransientDerivativeOrders {
         market_id: MarketId,
         subaccount_id: SubaccountId,
     },

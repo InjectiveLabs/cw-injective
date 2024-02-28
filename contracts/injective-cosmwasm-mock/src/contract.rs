@@ -2,15 +2,19 @@ use crate::{
     error::ContractError,
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
 };
-use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, SubMsg};
 use cw2::set_contract_version;
 use injective_cosmwasm::{create_deposit_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper};
 
+
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
+use injective_std::types::injective::exchange::v1beta1::MsgCreateSpotLimitOrder;
 
 const CONTRACT_NAME: &str = "crates.io:injective:dummy";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+pub const CREATE_SPOT_ORDER_REPLY_ID: u64 = 0u64;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(deps: DepsMut, _env: Env, _info: MessageInfo, _msg: InstantiateMsg) -> Result<Response, ContractError> {
@@ -22,12 +26,37 @@ pub fn instantiate(deps: DepsMut, _env: Env, _info: MessageInfo, _msg: Instantia
 pub fn execute(
     _deps: DepsMut<InjectiveQueryWrapper>,
     env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     match msg {
         ExecuteMsg::TestDepositMsg { subaccount_id, amount } => {
             Ok(Response::new().add_message(create_deposit_msg(env.contract.address, subaccount_id, amount)))
+        }
+        ExecuteMsg::TestTraderTransientSpotOrders { market_id, subaccount_id } => {
+            Ok(Response::new().add_submessage( SubMsg::reply_on_success {
+                id: CREATE_SPOT_ORDER_REPLY_ID,
+                msg:
+                MsgCreateSpotLimitOrder {
+                    sender: info.sender.to_string(),
+                    order: Some(injective_std::types::injective::exchange::v1beta1::SpotOrder {
+                        market_id: market_id.into(),
+                        order_info: Some(injective_std::types::injective::exchange::v1beta1::OrderInfo {
+                            subaccount_id: subaccount_id.to_string(),
+                            fee_recipient: info.sender.to_string(),
+                            price: "10".to_string(),
+                            quantity: "10".to_string(),
+                        }),
+                        order_type: 1,
+                        trigger_price: "".to_string(),
+                    }),
+                },
+            }))
+            
+        }
+        ExecuteMsg::TestTraderTransientDerivativeOrders { market_id, subaccount_id } => {
+            // to_json_binary(&querier.query_trader_transient_derivative_orders(&market_id, &subaccount_id)?)
+            Ok(Default::default())
         }
     }
 }
@@ -49,12 +78,6 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> Std
         }
         QueryMsg::TestTraderDerivativeOrders { market_id, subaccount_id } => {
             to_json_binary(&querier.query_trader_derivative_orders(&market_id, &subaccount_id)?)
-        }
-        QueryMsg::TestTraderTransientSpotOrders { market_id, subaccount_id } => {
-            to_json_binary(&querier.query_trader_transient_spot_orders(&market_id, &subaccount_id)?)
-        }
-        QueryMsg::TestTraderTransientDerivativeOrders { market_id, subaccount_id } => {
-            to_json_binary(&querier.query_trader_transient_derivative_orders(&market_id, &subaccount_id)?)
         }
         QueryMsg::TestTraderSpotOrders { market_id, subaccount_id } => to_json_binary(&querier.query_trader_spot_orders(&market_id, &subaccount_id)?),
         QueryMsg::TestSpotOrdersToCancelUpToAmount {

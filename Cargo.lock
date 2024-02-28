@@ -1562,6 +1562,7 @@ dependencies = [
  "cw2 0.16.0",
  "injective-cosmwasm 0.2.21",
  "injective-math 0.2.4",
+ "injective-protobuf",
  "injective-std 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "injective-test-tube",
  "prost 0.11.9",
