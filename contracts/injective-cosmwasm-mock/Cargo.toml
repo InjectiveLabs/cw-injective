@@ -40,7 +40,7 @@ serde              = { version = "1.0.196", default-features = false, features =
 thiserror          = { version = "1.0.56" }
 protobuf            = "3.3.0"
 prost              = "0.11.9"
-injective-protobuf = { path = "../../packages/injective-protobuf" }
+injective-std      = { version = "0.1.5" }
 
 [dev-dependencies]
 injective-test-tube = "1.1.7"

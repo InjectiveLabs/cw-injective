@@ -25,6 +25,7 @@ use injective_std::types::injective::exchange::v1beta1::{
 };
 use injective_test_tube::injective_cosmwasm::get_default_subaccount_id_for_checked_address;
 use injective_test_tube::{Account, Exchange, Module, RunnerResult, Wasm};
+use crate::utils::execute_all_authorizations;
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
@@ -739,7 +740,34 @@ fn test_query_derivative_orders_to_cancel_up_to_amount() {}
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
-fn test_query_trader_transient_spot_orders() {}
+fn test_query_trader_transient_spot_orders() {
+    let env = Setup::new(ExchangeType::Spot);
+    let wasm = Wasm::new(&env.app);
+    let market_id = env.market_id.unwrap();
+
+    let subaccount_id = checked_address_to_subaccount_id(&Addr::unchecked(env.users[0].account.address()), 0u32);
+
+    execute_all_authorizations(
+        &env.app,
+        &env.users[0].account,
+        env.contract_address.clone(),
+    );
+
+    let res = wasm.execute(
+        &env.contract_address,
+        &ExecuteMsg::TestTraderTransientSpotOrders {
+            market_id: MarketId::new(market_id).unwrap(),
+            subaccount_id: subaccount_id.clone(),
+
+        },
+        &[],
+        &env.users[0].account,
+    );
+
+    println!("{:?}", res);
+    assert_eq!(1,2);
+
+}
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]

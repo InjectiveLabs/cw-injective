@@ -2,14 +2,14 @@ use crate::{
     error::ContractError,
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
 };
-use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, SubMsg};
+use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, SubMsg, ReplyOn, Reply};
 use cw2::set_contract_version;
-use injective_cosmwasm::{create_deposit_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper};
+use injective_cosmwasm::{create_deposit_msg, create_spot_market_order_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, OrderInfo, OrderType, SpotOrder};
 
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use injective_std::types::injective::exchange::v1beta1::MsgCreateSpotLimitOrder;
+use injective_math::FPDecimal;
 
 const CONTRACT_NAME: &str = "crates.io:injective:dummy";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -34,25 +34,28 @@ pub fn execute(
             Ok(Response::new().add_message(create_deposit_msg(env.contract.address, subaccount_id, amount)))
         }
         ExecuteMsg::TestTraderTransientSpotOrders { market_id, subaccount_id } => {
-            Ok(Response::new().add_submessage( SubMsg::reply_on_success {
+            let order_info = OrderInfo{
+                subaccount_id,
+                fee_recipient: None,
+                price: FPDecimal::must_from_str("1"),
+                quantity: FPDecimal::must_from_str("1"),
+                cid: None,
+            };
+            let spot_order = SpotOrder{
+                market_id,
+                order_info,
+                order_type: OrderType::Buy,
+                trigger_price: None
+            };
+            let spot_order_message = create_spot_market_order_msg(info.sender, spot_order);
+
+            let spot_order_message = SubMsg{
                 id: CREATE_SPOT_ORDER_REPLY_ID,
-                msg:
-                MsgCreateSpotLimitOrder {
-                    sender: info.sender.to_string(),
-                    order: Some(injective_std::types::injective::exchange::v1beta1::SpotOrder {
-                        market_id: market_id.into(),
-                        order_info: Some(injective_std::types::injective::exchange::v1beta1::OrderInfo {
-                            subaccount_id: subaccount_id.to_string(),
-                            fee_recipient: info.sender.to_string(),
-                            price: "10".to_string(),
-                            quantity: "10".to_string(),
-                        }),
-                        order_type: 1,
-                        trigger_price: "".to_string(),
-                    }),
-                },
-            }))
-            
+                msg: spot_order_message,
+                gas_limit: None,
+                reply_on: ReplyOn::Success,
+            };
+            Ok(Response::new().add_submessage(spot_order_message))
         }
         ExecuteMsg::TestTraderTransientDerivativeOrders { market_id, subaccount_id } => {
             // to_json_binary(&querier.query_trader_transient_derivative_orders(&market_id, &subaccount_id)?)
@@ -134,5 +137,21 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> Std
         QueryMsg::TestMarketAtomicExecutionFeeMultiplier { market_id } => {
             to_json_binary(&querier.query_market_atomic_execution_fee_multiplier(&market_id)?)
         }
+    }
+}
+
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn reply(
+    deps: DepsMut<InjectiveQueryWrapper>,
+    env: Env,
+    msg: Reply,
+) -> Result<Response, ContractError> {
+    match msg.id {
+        CREATE_SPOT_ORDER_REPLY_ID => {
+            deps.api.debug("I am here");
+            Ok(Default::default())
+        },
+        _ => Err(ContractError::UnrecognizedReply(msg.id)),
     }
 }

@@ -2,7 +2,7 @@ use crate::msg::InstantiateMsg;
 use cosmwasm_std::{coin, Addr, Coin};
 use injective_cosmwasm::{checked_address_to_subaccount_id, SubaccountId};
 use injective_math::{scale::Scaled, FPDecimal};
-use injective_test_tube::{Account, Bank, Exchange, Gov, InjectiveTestApp, Insurance, Module, Oracle, SigningAccount, Wasm};
+use injective_test_tube::{Account, Authz, Bank, Exchange, ExecuteResponse, Gov, InjectiveTestApp, Insurance, Module, Oracle, Runner, SigningAccount, Wasm};
 
 use prost::Message;
 use std::{collections::HashMap, str::FromStr};
@@ -24,6 +24,9 @@ use injective_std::{
         injective::oracle::v1beta1::{GrantPriceFeederPrivilegeProposal, MsgRelayPriceFeedPrice},
     },
 };
+use injective_std::shim::Timestamp;
+use injective_std::types::cosmos::authz::v1beta1::{GenericAuthorization, Grant, MsgGrant, MsgRevoke, MsgRevokeResponse};
+use injective_std::types::cosmos::bank::v1beta1::SendAuthorization;
 use injective_test_tube::injective_cosmwasm::get_default_subaccount_id_for_checked_address;
 
 pub const EXCHANGE_DECIMALS: i32 = 18i32;
@@ -537,6 +540,124 @@ pub fn add_derivative_orders(app: &InjectiveTestApp, market_id: String, orders: 
 
 pub fn add_perp_initial_liquidity(app: &InjectiveTestApp, market_id: String) {
     add_derivative_orders(app, market_id, get_initial_perp_liquidity_orders_vector(), None);
+}
+
+pub fn revoke_authorization(
+    app: &InjectiveTestApp,
+    granter: &SigningAccount,
+    grantee: String,
+    msg_type_url: String,
+) {
+    let _res: ExecuteResponse<MsgRevokeResponse> = app
+        .execute_multiple(
+            &[(
+                MsgRevoke {
+                    granter: granter.address(),
+                    grantee,
+                    msg_type_url,
+                },
+                MsgRevoke::TYPE_URL,
+            )],
+            granter,
+        )
+        .unwrap();
+}
+
+pub fn create_generic_authorization(
+    app: &InjectiveTestApp,
+    granter: &SigningAccount,
+    grantee: String,
+    msg: String,
+    expiration: Option<Timestamp>,
+) {
+    let authz = Authz::new(app);
+
+    let mut buf = vec![];
+    GenericAuthorization::encode(&GenericAuthorization { msg }, &mut buf).unwrap();
+
+    authz
+        .grant(
+            MsgGrant {
+                granter: granter.address(),
+                grantee,
+                grant: Some(Grant {
+                    authorization: Some(Any {
+                        type_url: "/cosmos.authz.v1beta1.GenericAuthorization".to_string(),
+                        value: buf.clone(),
+                    }),
+                    expiration,
+                }),
+            },
+            granter,
+        )
+        .unwrap();
+}
+
+pub fn create_send_authorization(
+    app: &InjectiveTestApp,
+    granter: &SigningAccount,
+    grantee: String,
+    amount: BaseCoin,
+    expiration: Option<Timestamp>,
+) {
+    let authz = Authz::new(app);
+
+    let mut buf = vec![];
+    SendAuthorization::encode(
+        &SendAuthorization {
+            spend_limit: vec![amount],
+            allow_list: vec![],
+        },
+        &mut buf,
+    )
+        .unwrap();
+
+    authz
+        .grant(
+            MsgGrant {
+                granter: granter.address(),
+                grantee,
+                grant: Some(Grant {
+                    authorization: Some(Any {
+                        type_url: "/cosmos.bank.v1beta1.SendAuthorization".to_string(),
+                        value: buf.clone(),
+                    }),
+                    expiration,
+                }),
+            },
+            granter,
+        )
+        .unwrap();
+}
+
+pub fn execute_all_authorizations(
+    app: &InjectiveTestApp,
+    granter: &SigningAccount,
+    grantee: String,
+) {
+    create_generic_authorization(
+        app,
+        granter,
+        grantee.clone(),
+        "/injective.exchange.v1beta1.MsgCreateSpotMarketOrder".to_string(),
+        None,
+    );
+
+    create_generic_authorization(
+        app,
+        granter,
+        grantee.clone(),
+        "/injective.exchange.v1beta1.MsgCreateDerivativeMarketOrder".to_string(),
+        None,
+    );
+
+    create_generic_authorization(
+        app,
+        granter,
+        grantee,
+        "/injective.exchange.v1beta1.MsgWithdraw".to_string(),
+        None,
+    );
 }
 
 // Human Utils

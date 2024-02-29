@@ -5,4 +5,6 @@ use thiserror::Error;
 pub enum ContractError {
     #[error("{0}")]
     Std(#[from] StdError),
+    #[error("Unrecognized reply id: {0}")]
+    UnrecognizedReply(u64),
 }
