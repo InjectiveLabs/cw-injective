@@ -1,21 +1,24 @@
-use crate::{error::ContractError, msg::{ExecuteMsg, InstantiateMsg, QueryMsg}, types};
-use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn, Response, StdResult, SubMsg};
-use cw2::set_contract_version;
-use injective_cosmwasm::{
-    create_deposit_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, OrderType
-};
-use prost::Message;
-
-use crate::order_management::{create_spot_market_order, create_stargate_msg};
-#[cfg(not(feature = "library"))]
-use cosmwasm_std::entry_point;
-use injective_math::FPDecimal;
 use crate::msg::MSG_CREATE_SPOT_MARKET_ORDER_ENDPOINT;
+use crate::order_management::{create_spot_market_order, create_stargate_msg};
+use crate::{
+    error::ContractError,
+    msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
+    types,
+};
+
+use cosmos_sdk_proto::{cosmos::authz::v1beta1::MsgExec, traits::Message, Any};
+use cosmwasm_std::{entry_point, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn, Response, StdResult, SubMsg};
+use cw2::set_contract_version;
+use injective_cosmwasm::{create_deposit_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, OrderType};
+use injective_math::FPDecimal;
+use prost::Message;
 
 const CONTRACT_NAME: &str = "crates.io:injective:dummy";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub const CREATE_SPOT_ORDER_REPLY_ID: u64 = 0u64;
+
+pub const MSG_EXEC: &str = "/cosmos.authz.v1beta1.MsgExec";
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(deps: DepsMut, _env: Env, _info: MessageInfo, _msg: InstantiateMsg) -> Result<Response, ContractError> {
@@ -51,13 +54,20 @@ pub fn execute(
             let mut order_bytes = vec![];
             types::MsgCreateSpotMarketOrder::encode(&order_msg, &mut order_bytes).unwrap();
 
+            let msg_exec = MsgExec {
+                grantee: env.contract.address.to_string(),
+                msgs: vec![Any {
+                    type_url: MSG_CREATE_SPOT_MARKET_ORDER_ENDPOINT.to_string(),
+                    value: order_bytes,
+                }],
+            };
+
             let order_submessage = SubMsg::reply_on_success(
-                create_stargate_msg(MSG_CREATE_SPOT_MARKET_ORDER_ENDPOINT, order_bytes).unwrap(),
+                create_stargate_msg(MSG_EXEC, msg_exec.encode_to_vec().into()).unwrap(),
                 CREATE_SPOT_ORDER_REPLY_ID,
             );
 
             Ok(Response::new().add_submessage(order_submessage))
-
         }
         ExecuteMsg::TestTraderTransientDerivativeOrders { market_id, subaccount_id } => {
             // to_json_binary(&querier.query_trader_transient_derivative_orders(&market_id, &subaccount_id)?)
