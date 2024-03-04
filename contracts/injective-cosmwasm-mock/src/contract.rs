@@ -1,15 +1,16 @@
-use crate::{
-    error::ContractError,
-    msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
-};
-use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, SubMsg, ReplyOn, Reply};
+use crate::{error::ContractError, msg::{ExecuteMsg, InstantiateMsg, QueryMsg}, types};
+use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn, Response, StdResult, SubMsg};
 use cw2::set_contract_version;
-use injective_cosmwasm::{create_deposit_msg, create_spot_market_order_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, OrderInfo, OrderType, SpotOrder};
+use injective_cosmwasm::{
+    create_deposit_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, OrderType
+};
+use prost::Message;
 
-
+use crate::order_management::{create_spot_market_order, create_stargate_msg};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use injective_math::FPDecimal;
+use crate::msg::MSG_CREATE_SPOT_MARKET_ORDER_ENDPOINT;
 
 const CONTRACT_NAME: &str = "crates.io:injective:dummy";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -24,7 +25,7 @@ pub fn instantiate(deps: DepsMut, _env: Env, _info: MessageInfo, _msg: Instantia
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
-    _deps: DepsMut<InjectiveQueryWrapper>,
+    deps: DepsMut<InjectiveQueryWrapper>,
     env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
@@ -34,28 +35,29 @@ pub fn execute(
             Ok(Response::new().add_message(create_deposit_msg(env.contract.address, subaccount_id, amount)))
         }
         ExecuteMsg::TestTraderTransientSpotOrders { market_id, subaccount_id } => {
-            let order_info = OrderInfo{
-                subaccount_id,
-                fee_recipient: None,
-                price: FPDecimal::must_from_str("1"),
-                quantity: FPDecimal::must_from_str("1"),
-                cid: None,
-            };
-            let spot_order = SpotOrder{
-                market_id,
-                order_info,
-                order_type: OrderType::Buy,
-                trigger_price: None
-            };
-            let spot_order_message = create_spot_market_order_msg(info.sender, spot_order);
+            let querier: InjectiveQuerier = InjectiveQuerier::new(&deps.querier);
+            let spot_market = querier.query_spot_market(&market_id).unwrap().market.unwrap();
 
-            let spot_order_message = SubMsg{
-                id: CREATE_SPOT_ORDER_REPLY_ID,
-                msg: spot_order_message,
-                gas_limit: None,
-                reply_on: ReplyOn::Success,
-            };
-            Ok(Response::new().add_submessage(spot_order_message))
+            deps.api.debug(&info.sender.as_str());
+            let order_msg = create_spot_market_order(
+                FPDecimal::must_from_str("1"),
+                FPDecimal::must_from_str("1"),
+                OrderType::Buy,
+                &info.sender.as_str(),
+                subaccount_id.as_str(),
+                &spot_market,
+            );
+
+            let mut order_bytes = vec![];
+            types::MsgCreateSpotMarketOrder::encode(&order_msg, &mut order_bytes).unwrap();
+
+            let order_submessage = SubMsg::reply_on_success(
+                create_stargate_msg(MSG_CREATE_SPOT_MARKET_ORDER_ENDPOINT, order_bytes).unwrap(),
+                CREATE_SPOT_ORDER_REPLY_ID,
+            );
+
+            Ok(Response::new().add_submessage(order_submessage))
+
         }
         ExecuteMsg::TestTraderTransientDerivativeOrders { market_id, subaccount_id } => {
             // to_json_binary(&querier.query_trader_transient_derivative_orders(&market_id, &subaccount_id)?)
@@ -140,18 +142,13 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> Std
     }
 }
 
-
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn reply(
-    deps: DepsMut<InjectiveQueryWrapper>,
-    env: Env,
-    msg: Reply,
-) -> Result<Response, ContractError> {
+pub fn reply(deps: DepsMut<InjectiveQueryWrapper>, env: Env, msg: Reply) -> Result<Response, ContractError> {
     match msg.id {
         CREATE_SPOT_ORDER_REPLY_ID => {
             deps.api.debug("I am here");
             Ok(Default::default())
-        },
+        }
         _ => Err(ContractError::UnrecognizedReply(msg.id)),
     }
 }

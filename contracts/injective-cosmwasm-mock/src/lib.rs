@@ -4,6 +4,8 @@ pub mod msg;
 #[cfg(test)]
 mod testing;
 
+mod order_management;
+mod types;
 #[cfg(test)]
 pub mod utils;
 

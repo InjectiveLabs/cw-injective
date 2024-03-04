@@ -1,12 +1,17 @@
-use crate::msg::InstantiateMsg;
+use crate::msg::{InstantiateMsg, MSG_CREATE_SPOT_MARKET_ORDER_ENDPOINT};
 use cosmwasm_std::{coin, Addr, Coin};
 use injective_cosmwasm::{checked_address_to_subaccount_id, SubaccountId};
 use injective_math::{scale::Scaled, FPDecimal};
-use injective_test_tube::{Account, Authz, Bank, Exchange, ExecuteResponse, Gov, InjectiveTestApp, Insurance, Module, Oracle, Runner, SigningAccount, Wasm};
+use injective_test_tube::{
+    Account, Authz, Bank, Exchange, ExecuteResponse, Gov, InjectiveTestApp, Insurance, Module, Oracle, Runner, SigningAccount, Wasm,
+};
 
 use prost::Message;
 use std::{collections::HashMap, str::FromStr};
 
+use injective_std::shim::Timestamp;
+use injective_std::types::cosmos::authz::v1beta1::{GenericAuthorization, Grant, MsgGrant, MsgRevoke, MsgRevokeResponse};
+use injective_std::types::cosmos::bank::v1beta1::SendAuthorization;
 use injective_std::types::injective::exchange::v1beta1::{
     DerivativeOrder, MsgCreateDerivativeLimitOrder, MsgCreateSpotLimitOrder, MsgInstantPerpetualMarketLaunch, MsgInstantSpotMarketLaunch, OrderInfo,
     OrderType, QueryDerivativeMarketsRequest, QuerySpotMarketsRequest, SpotOrder,
@@ -24,9 +29,6 @@ use injective_std::{
         injective::oracle::v1beta1::{GrantPriceFeederPrivilegeProposal, MsgRelayPriceFeedPrice},
     },
 };
-use injective_std::shim::Timestamp;
-use injective_std::types::cosmos::authz::v1beta1::{GenericAuthorization, Grant, MsgGrant, MsgRevoke, MsgRevokeResponse};
-use injective_std::types::cosmos::bank::v1beta1::SendAuthorization;
 use injective_test_tube::injective_cosmwasm::get_default_subaccount_id_for_checked_address;
 
 pub const EXCHANGE_DECIMALS: i32 = 18i32;
@@ -542,12 +544,7 @@ pub fn add_perp_initial_liquidity(app: &InjectiveTestApp, market_id: String) {
     add_derivative_orders(app, market_id, get_initial_perp_liquidity_orders_vector(), None);
 }
 
-pub fn revoke_authorization(
-    app: &InjectiveTestApp,
-    granter: &SigningAccount,
-    grantee: String,
-    msg_type_url: String,
-) {
+pub fn revoke_authorization(app: &InjectiveTestApp, granter: &SigningAccount, grantee: String, msg_type_url: String) {
     let _res: ExecuteResponse<MsgRevokeResponse> = app
         .execute_multiple(
             &[(
@@ -563,13 +560,7 @@ pub fn revoke_authorization(
         .unwrap();
 }
 
-pub fn create_generic_authorization(
-    app: &InjectiveTestApp,
-    granter: &SigningAccount,
-    grantee: String,
-    msg: String,
-    expiration: Option<Timestamp>,
-) {
+pub fn create_generic_authorization(app: &InjectiveTestApp, granter: &SigningAccount, grantee: String, msg: String, expiration: Option<Timestamp>) {
     let authz = Authz::new(app);
 
     let mut buf = vec![];
@@ -593,13 +584,7 @@ pub fn create_generic_authorization(
         .unwrap();
 }
 
-pub fn create_send_authorization(
-    app: &InjectiveTestApp,
-    granter: &SigningAccount,
-    grantee: String,
-    amount: BaseCoin,
-    expiration: Option<Timestamp>,
-) {
+pub fn create_send_authorization(app: &InjectiveTestApp, granter: &SigningAccount, grantee: String, amount: BaseCoin, expiration: Option<Timestamp>) {
     let authz = Authz::new(app);
 
     let mut buf = vec![];
@@ -610,7 +595,7 @@ pub fn create_send_authorization(
         },
         &mut buf,
     )
-        .unwrap();
+    .unwrap();
 
     authz
         .grant(
@@ -630,16 +615,12 @@ pub fn create_send_authorization(
         .unwrap();
 }
 
-pub fn execute_all_authorizations(
-    app: &InjectiveTestApp,
-    granter: &SigningAccount,
-    grantee: String,
-) {
+pub fn execute_all_authorizations(app: &InjectiveTestApp, granter: &SigningAccount, grantee: String) {
     create_generic_authorization(
         app,
         granter,
         grantee.clone(),
-        "/injective.exchange.v1beta1.MsgCreateSpotMarketOrder".to_string(),
+        MSG_CREATE_SPOT_MARKET_ORDER_ENDPOINT.to_string(),
         None,
     );
 
@@ -648,6 +629,15 @@ pub fn execute_all_authorizations(
         granter,
         grantee.clone(),
         "/injective.exchange.v1beta1.MsgCreateDerivativeMarketOrder".to_string(),
+        None,
+    );
+
+
+    create_generic_authorization(
+        app,
+        granter,
+        grantee.clone(),
+        "/injective.exchange.v1beta1.MsgBatchUpdateOrders".to_string(),
         None,
     );
 

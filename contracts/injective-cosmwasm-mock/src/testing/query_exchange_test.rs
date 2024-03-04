@@ -8,6 +8,7 @@ use crate::{
     },
 };
 
+use crate::utils::execute_all_authorizations;
 use cosmwasm_std::{Addr, Coin};
 use injective_cosmwasm::exchange::response::QueryOrderbookResponse;
 use injective_cosmwasm::exchange::types::VolumeByType;
@@ -25,7 +26,6 @@ use injective_std::types::injective::exchange::v1beta1::{
 };
 use injective_test_tube::injective_cosmwasm::get_default_subaccount_id_for_checked_address;
 use injective_test_tube::{Account, Exchange, Module, RunnerResult, Wasm};
-use crate::utils::execute_all_authorizations;
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
@@ -747,26 +747,21 @@ fn test_query_trader_transient_spot_orders() {
 
     let subaccount_id = checked_address_to_subaccount_id(&Addr::unchecked(env.users[0].account.address()), 0u32);
 
-    execute_all_authorizations(
-        &env.app,
-        &env.users[0].account,
-        env.contract_address.clone(),
-    );
+    execute_all_authorizations(&env.app, &env.users[0].account, env.contract_address.clone());
+    println!("{}", &env.users[0].account.address());
 
     let res = wasm.execute(
         &env.contract_address,
         &ExecuteMsg::TestTraderTransientSpotOrders {
             market_id: MarketId::new(market_id).unwrap(),
             subaccount_id: subaccount_id.clone(),
-
         },
         &[],
         &env.users[0].account,
     );
 
     println!("{:?}", res);
-    assert_eq!(1,2);
-
+    assert_eq!(1, 2);
 }
 
 #[test]
