@@ -25,9 +25,8 @@ use crate::{
     CancellationStrategy, Deposit, DerivativeMarketResponse, ExchangeParamsResponse, FullDerivativeMarket, InjectiveQuery, InjectiveQueryWrapper,
     MarketMidPriceAndTOBResponse, MarketStatus, MarketVolatilityResponse, OracleInfo, OracleVolatilityResponse, OrderSide,
     PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PythPriceResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse,
-    QueryDenomDecimalResponse, QueryDenomDecimalsResponse, QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarket, SpotMarketResponse,
-    SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse,
-    TraderSpotOrdersResponse,
+    QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarket, SpotMarketResponse, SubaccountDepositResponse,
+    SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
 };
 use crate::{MarketId, SubaccountId};
 
@@ -208,16 +207,6 @@ fn default_aggregate_account_volume_handler() -> QuerierResult {
             },
         ]),
     };
-    SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
-}
-
-fn default_denom_decimal_handler() -> QuerierResult {
-    let response = QueryDenomDecimalResponse { decimals: 6 };
-    SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
-}
-
-fn default_denom_decimals_handler() -> QuerierResult {
-    let response = QueryDenomDecimalsResponse { denom_decimals: vec![] };
     SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
 }
 
@@ -550,14 +539,6 @@ impl WasmMockQuerier {
                 _ => panic!("unsupported"),
             },
             QueryRequest::Custom(query) => match query.query_data.clone() {
-                InjectiveQuery::Grants {
-                    granter: _,
-                    grantee: _,
-                    msg_type_url: _,
-                    pagination: _,
-                } => todo!(),
-                InjectiveQuery::GranteeGrants { grantee: _, pagination: _ } => todo!(),
-                InjectiveQuery::GranterGrants { granter: _, pagination: _ } => todo!(),
                 InjectiveQuery::SubaccountDeposit { subaccount_id, denom } => match &self.subaccount_deposit_response_handler {
                     Some(handler) => handler.handle(subaccount_id, denom),
                     None => default_subaccount_deposit_response_handler(),
@@ -659,14 +640,6 @@ impl WasmMockQuerier {
                 InjectiveQuery::AggregateAccountVolume { account } => match &self.aggregate_account_volume_handler {
                     Some(handler) => handler.handle(account),
                     None => default_aggregate_account_volume_handler(),
-                },
-                InjectiveQuery::DenomDecimal { denom } => match &self.denom_decimal_handler {
-                    Some(handler) => handler.handle(denom),
-                    None => default_denom_decimal_handler(),
-                },
-                InjectiveQuery::DenomDecimals { denoms } => match &self.denom_decimals_handler {
-                    Some(handler) => handler.handle(denoms),
-                    None => default_denom_decimals_handler(),
                 },
                 InjectiveQuery::StakedAmount {
                     delegator_address,

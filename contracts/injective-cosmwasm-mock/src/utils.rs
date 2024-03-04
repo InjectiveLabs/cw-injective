@@ -1,35 +1,38 @@
-use crate::msg::{InstantiateMsg, MSG_CREATE_SPOT_MARKET_ORDER_ENDPOINT};
+use crate::msg::{InstantiateMsg, MSG_CREATE_DERIVATIVE_LIMIT_ORDER_ENDPOINT, MSG_CREATE_SPOT_LIMIT_ORDER_ENDPOINT};
 use cosmwasm_std::{coin, Addr, Coin};
 use injective_cosmwasm::{checked_address_to_subaccount_id, SubaccountId};
 use injective_math::{scale::Scaled, FPDecimal};
-use injective_test_tube::{
-    Account, Authz, Bank, Exchange, ExecuteResponse, Gov, InjectiveTestApp, Insurance, Module, Oracle, Runner, SigningAccount, Wasm,
-};
-
-use prost::Message;
-use std::{collections::HashMap, str::FromStr};
-
-use injective_std::shim::Timestamp;
-use injective_std::types::cosmos::authz::v1beta1::{GenericAuthorization, Grant, MsgGrant, MsgRevoke, MsgRevokeResponse};
-use injective_std::types::cosmos::bank::v1beta1::SendAuthorization;
-use injective_std::types::injective::exchange::v1beta1::{
-    DerivativeOrder, MsgCreateDerivativeLimitOrder, MsgCreateSpotLimitOrder, MsgInstantPerpetualMarketLaunch, MsgInstantSpotMarketLaunch, OrderInfo,
-    OrderType, QueryDerivativeMarketsRequest, QuerySpotMarketsRequest, SpotOrder,
-};
-use injective_std::types::injective::insurance::v1beta1::MsgCreateInsuranceFund;
-use injective_std::types::injective::oracle::v1beta1::OracleType;
 use injective_std::{
-    shim::Any,
+    shim::{Any, Timestamp},
     types::{
         cosmos::{
-            bank::v1beta1::MsgSend,
+            authz::v1beta1::{GenericAuthorization, Grant, MsgGrant, MsgRevoke, MsgRevokeResponse},
+            bank::v1beta1::{MsgSend, SendAuthorization},
             base::v1beta1::Coin as BaseCoin,
-            gov::{v1::MsgVote, v1beta1::MsgSubmitProposal as MsgSubmitProposalV1Beta1},
+            gov::{
+                v1::{MsgSubmitProposal, MsgVote},
+                v1beta1::MsgSubmitProposal as MsgSubmitProposalV1Beta1,
+            },
         },
-        injective::oracle::v1beta1::{GrantPriceFeederPrivilegeProposal, MsgRelayPriceFeedPrice},
+        injective::{
+            exchange::v1beta1::{
+                DerivativeOrder, MsgCreateDerivativeLimitOrder, MsgCreateSpotLimitOrder, MsgInstantPerpetualMarketLaunch, MsgInstantSpotMarketLaunch,
+                OrderInfo, OrderType, QueryDerivativeMarketsRequest, QuerySpotMarketsRequest, SpotOrder,
+            },
+            insurance::v1beta1::MsgCreateInsuranceFund,
+            oracle::v1beta1::{
+                GrantPriceFeederPrivilegeProposal, MsgRelayPriceFeedPrice, MsgRelayPythPrices, MsgUpdateParams, OracleType, Params, PriceAttestation,
+            },
+        },
     },
 };
-use injective_test_tube::injective_cosmwasm::get_default_subaccount_id_for_checked_address;
+use injective_test_tube::{
+    injective_cosmwasm::get_default_subaccount_id_for_checked_address, Account, Authz, Bank, Exchange, ExecuteResponse, Gov, InjectiveTestApp,
+    Insurance, Module, Oracle, Runner, SigningAccount, Wasm,
+};
+use injective_testing::human_to_i64;
+use prost::Message;
+use std::{collections::HashMap, ops::Neg, str::FromStr};
 
 pub const EXCHANGE_DECIMALS: i32 = 18i32;
 pub const BASE_DECIMALS: i32 = 18i32;
@@ -39,6 +42,9 @@ pub const QUOTE_DECIMALS: i32 = 6i32;
 pub const ATOM_DENOM: &str = "atom";
 pub const BASE_DENOM: &str = "inj";
 pub const QUOTE_DENOM: &str = "usdt";
+pub const INJ_PYTH_PRICE_ID: &str = "0x7a5bc1d2b56ad029048cd63964b3ad2776eadf812edc1a43a31406cb54bff592";
+pub const USDT_PYTH_PRICE_ID: &str = "0x1fc18861232290221461220bd4e2acd1dcdfbc89c84092c93c18bdc7756c1588";
+pub const GOV_MODULE_ADDRESS: &str = "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt";
 
 pub struct UserInfo {
     pub account: SigningAccount,
@@ -319,7 +325,7 @@ pub fn launch_spot_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
                 base_denom: BASE_DENOM.to_string(),
                 quote_denom: QUOTE_DENOM.to_string(),
                 min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.000000000000001")),
-                min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("1000000000000000")),
+                min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("1")),
             },
             signer,
         )
@@ -438,6 +444,16 @@ pub fn add_spot_orders(app: &InjectiveTestApp, market_id: String, orders: Vec<Hu
 pub fn get_initial_liquidity_orders_vector() -> Vec<HumanOrder> {
     vec![
         HumanOrder {
+            price: "15".to_string(),
+            quantity: "10".to_string(),
+            order_type: OrderType::Sell,
+        },
+        HumanOrder {
+            price: "12".to_string(),
+            quantity: "5".to_string(),
+            order_type: OrderType::Sell,
+        },
+        HumanOrder {
             price: "10.2".to_string(),
             quantity: "5".to_string(),
             order_type: OrderType::Sell,
@@ -455,6 +471,16 @@ pub fn get_initial_liquidity_orders_vector() -> Vec<HumanOrder> {
         HumanOrder {
             price: "9.8".to_string(),
             quantity: "5".to_string(),
+            order_type: OrderType::Buy,
+        },
+        HumanOrder {
+            price: "8".to_string(),
+            quantity: "5".to_string(),
+            order_type: OrderType::Buy,
+        },
+        HumanOrder {
+            price: "5".to_string(),
+            quantity: "10".to_string(),
             order_type: OrderType::Buy,
         },
     ]
@@ -616,11 +642,13 @@ pub fn create_send_authorization(app: &InjectiveTestApp, granter: &SigningAccoun
 }
 
 pub fn execute_all_authorizations(app: &InjectiveTestApp, granter: &SigningAccount, grantee: String) {
+    create_generic_authorization(app, granter, grantee.clone(), MSG_CREATE_SPOT_LIMIT_ORDER_ENDPOINT.to_string(), None);
+
     create_generic_authorization(
         app,
         granter,
         grantee.clone(),
-        MSG_CREATE_SPOT_MARKET_ORDER_ENDPOINT.to_string(),
+        MSG_CREATE_DERIVATIVE_LIMIT_ORDER_ENDPOINT.to_string(),
         None,
     );
 
@@ -632,7 +660,6 @@ pub fn execute_all_authorizations(app: &InjectiveTestApp, granter: &SigningAccou
         None,
     );
 
-
     create_generic_authorization(
         app,
         granter,
@@ -641,13 +668,7 @@ pub fn execute_all_authorizations(app: &InjectiveTestApp, granter: &SigningAccou
         None,
     );
 
-    create_generic_authorization(
-        app,
-        granter,
-        grantee,
-        "/injective.exchange.v1beta1.MsgWithdraw".to_string(),
-        None,
-    );
+    create_generic_authorization(app, granter, grantee, "/injective.exchange.v1beta1.MsgWithdraw".to_string(), None);
 }
 
 // Human Utils
@@ -664,16 +685,32 @@ pub fn dec_to_proto(val: FPDecimal) -> String {
 }
 
 pub fn scale_price_quantity_for_spot_market(price: &str, quantity: &str, base_decimals: &i32, quote_decimals: &i32) -> (String, String) {
+    let (scaled_price, scaled_quantity) = scale_price_quantity_for_spot_market_dec(price, quantity, base_decimals, quote_decimals);
+    (dec_to_proto(scaled_price), dec_to_proto(scaled_quantity))
+}
+
+pub fn scale_price_quantity_for_spot_market_dec(price: &str, quantity: &str, base_decimals: &i32, quote_decimals: &i32) -> (FPDecimal, FPDecimal) {
     let price_dec = FPDecimal::must_from_str(price.replace('_', "").as_str());
     let quantity_dec = FPDecimal::must_from_str(quantity.replace('_', "").as_str());
 
     let scaled_price = price_dec.scaled(quote_decimals - base_decimals);
     let scaled_quantity = quantity_dec.scaled(*base_decimals);
 
-    (dec_to_proto(scaled_price), dec_to_proto(scaled_quantity))
+    (scaled_price, scaled_quantity)
 }
 
 pub fn scale_price_quantity_perp_market(price: &str, quantity: &str, margin_ratio: &str, quote_decimals: &i32) -> (String, String, String) {
+    let (scaled_price, scaled_quantity, scaled_margin) = scale_price_quantity_perp_market_dec(price, quantity, margin_ratio, quote_decimals);
+
+    (dec_to_proto(scaled_price), dec_to_proto(scaled_quantity), dec_to_proto(scaled_margin))
+}
+
+pub fn scale_price_quantity_perp_market_dec(
+    price: &str,
+    quantity: &str,
+    margin_ratio: &str,
+    quote_decimals: &i32,
+) -> (FPDecimal, FPDecimal, FPDecimal) {
     let price_dec = FPDecimal::must_from_str(price.replace('_', "").as_str());
     let quantity_dec = FPDecimal::must_from_str(quantity.replace('_', "").as_str());
     let margin_ratio_dec = FPDecimal::must_from_str(margin_ratio.replace('_', "").as_str());
@@ -683,5 +720,114 @@ pub fn scale_price_quantity_perp_market(price: &str, quantity: &str, margin_rati
 
     let scaled_margin = (price_dec * quantity_dec * margin_ratio_dec).scaled(*quote_decimals);
 
-    (dec_to_proto(scaled_price), dec_to_proto(scaled_quantity), dec_to_proto(scaled_margin))
+    (scaled_price, scaled_quantity, scaled_margin)
+}
+
+pub fn set_address_of_pyth_contract(app: &InjectiveTestApp, validator: &SigningAccount, pyth_address: &SigningAccount) {
+    let gov = Gov::new(app);
+
+    let mut buf = vec![];
+    MsgUpdateParams::encode(
+        &MsgUpdateParams {
+            authority: GOV_MODULE_ADDRESS.to_string(),
+            params: Some(Params {
+                pyth_contract: pyth_address.address(),
+            }),
+        },
+        &mut buf,
+    )
+    .unwrap();
+
+    let res = gov
+        .submit_proposal(
+            MsgSubmitProposal {
+                messages: vec![Any {
+                    type_url: "/injective.oracle.v1beta1.MsgUpdateParams".to_string(),
+                    value: buf,
+                }],
+                initial_deposit: vec![BaseCoin {
+                    amount: "100000000000000000000".to_string(),
+                    denom: "inj".to_string(),
+                }],
+                proposer: validator.address(),
+                metadata: "".to_string(),
+                title: "Set Pyth contract address".to_string(),
+                summary: "Set Pyth contract address".to_string(),
+            },
+            validator,
+        )
+        .unwrap();
+
+    let proposal_id = res.events.iter().find(|e| e.ty == "submit_proposal").unwrap().attributes[0]
+        .value
+        .to_owned();
+
+    gov.vote(
+        MsgVote {
+            proposal_id: u64::from_str(&proposal_id).unwrap(),
+            voter: validator.address(),
+            option: 1i32,
+            metadata: "".to_string(),
+        },
+        validator,
+    )
+    .unwrap();
+
+    // NOTE: increase the block time in order to move past the voting period
+    app.increase_time(11u64);
+}
+
+pub fn relay_pyth_price(oracle: &Oracle<InjectiveTestApp>, price_attestations: Vec<PriceAttestation>, pyth_address: &SigningAccount) {
+    let pyth_price_msg = MsgRelayPythPrices {
+        sender: pyth_address.address(),
+        price_attestations,
+    };
+
+    oracle.relay_pyth_prices(pyth_price_msg, pyth_address).unwrap();
+}
+
+pub fn create_some_inj_price_attestation(human_price: &str, decimal_precision: i32, publish_time: i64) -> PriceAttestation {
+    if decimal_precision < 0 {
+        panic!("Desired exponent cannot be negative")
+    };
+
+    let (price_i64, exponent_to_use) = if decimal_precision == 1 {
+        (human_price.parse::<i64>().unwrap(), 1)
+    } else {
+        (human_to_i64(human_price, decimal_precision), decimal_precision.neg())
+    };
+
+    PriceAttestation {
+        price_id: INJ_PYTH_PRICE_ID.to_string(),
+        price: price_i64,
+        conf: 500,
+        expo: exponent_to_use,
+        ema_price: price_i64,
+        ema_conf: 2000,
+        ema_expo: exponent_to_use,
+        publish_time,
+    }
+}
+
+pub fn create_some_usdt_price_attestation(human_price: &str, decimal_precision: i32, publish_time: i64) -> PriceAttestation {
+    if decimal_precision < 0 {
+        panic!("Desired exponent cannot be negative")
+    };
+
+    let (price_i64, exponent_to_use) = if decimal_precision == 0 {
+        (human_price.parse::<i64>().unwrap(), 0)
+    } else {
+        (human_to_i64(human_price, decimal_precision), decimal_precision.neg())
+    };
+
+    PriceAttestation {
+        price_id: USDT_PYTH_PRICE_ID.to_string(),
+        price: price_i64,
+        conf: 500,
+        expo: exponent_to_use,
+        ema_price: price_i64,
+        ema_conf: 2000,
+        ema_expo: exponent_to_use,
+        publish_time,
+    }
 }

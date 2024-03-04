@@ -1,11 +1,10 @@
 use cosmwasm_std::Coin;
-use injective_cosmwasm::{CancellationStrategy, MarketId, OrderSide, SubaccountId};
+use injective_cosmwasm::{CancellationStrategy, MarketId, OracleInfo, OracleType, OrderSide, SubaccountId};
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-
-pub const MSG_CREATE_SPOT_MARKET_ORDER_ENDPOINT: &str =
-    "/injective.exchange.v1beta1.MsgCreateSpotMarketOrder";
+pub const MSG_CREATE_SPOT_LIMIT_ORDER_ENDPOINT: &str = "/injective.exchange.v1beta1.MsgCreateSpotLimitOrder";
+pub const MSG_CREATE_DERIVATIVE_LIMIT_ORDER_ENDPOINT: &str = "/injective.exchange.v1beta1.MsgCreateDerivativeLimitOrder";
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct InstantiateMsg {}
@@ -13,9 +12,23 @@ pub struct InstantiateMsg {}
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    TestDepositMsg { subaccount_id: SubaccountId, amount: Coin },
-    TestTraderTransientSpotOrders { market_id: MarketId, subaccount_id: SubaccountId },
-    TestTraderTransientDerivativeOrders { market_id: MarketId, subaccount_id: SubaccountId },
+    TestDepositMsg {
+        subaccount_id: SubaccountId,
+        amount: Coin,
+    },
+    TestTraderTransientSpotOrders {
+        market_id: MarketId,
+        subaccount_id: SubaccountId,
+        price: String,
+        quantity: String,
+    },
+    TestTraderTransientDerivativeOrders {
+        market_id: MarketId,
+        subaccount_id: SubaccountId,
+        price: String,
+        quantity: String,
+        margin: String,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -100,5 +113,31 @@ pub enum QueryMsg {
     },
     TestMarketAtomicExecutionFeeMultiplier {
         market_id: MarketId,
+    },
+    TestQueryOracleVolatility {
+        base_info: Option<OracleInfo>,
+        quote_info: Option<OracleInfo>,
+        max_age: u64,
+        include_raw_history: bool,
+        include_metadata: bool,
+    },
+    TestQueryOraclePrice {
+        oracle_type: OracleType,
+        base: String,
+        quote: String,
+    },
+    TestQueryPythPrice {
+        price_id: String,
+    },
+    TestQueryStakedAmount {
+        delegator_address: String,
+        max_delegations: u16,
+    },
+    TestQueryTokenFactoryDenomTotalSupply {
+        denom: String,
+    },
+    TestQueryTokenFactoryCreationFee {},
+    TestQueryContractRegistrationInfo {
+        contract_address: String,
     },
 }

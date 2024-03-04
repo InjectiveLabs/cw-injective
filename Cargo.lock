@@ -385,8 +385,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73c9d2043a9e617b0d602fbc0a0ecd621568edbf3a9774890a6d562389bd8e1c"
 dependencies = [
  "prost 0.11.9",
- "prost-types",
- "tendermint-proto",
+ "prost-types 0.11.9",
+ "tendermint-proto 0.32.2",
+]
+
+[[package]]
+name = "cosmos-sdk-proto"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32560304ab4c365791fd307282f76637213d8083c1a98490c35159cd67852237"
+dependencies = [
+ "prost 0.12.3",
+ "prost-types 0.12.3",
+ "tendermint-proto 0.34.1",
 ]
 
 [[package]]
@@ -396,7 +407,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af13955d6f356272e6def9ff5e2450a7650df536d8934f47052a20c76513d2f6"
 dependencies = [
  "bip32",
- "cosmos-sdk-proto",
+ "cosmos-sdk-proto 0.19.0",
  "ecdsa 0.16.9",
  "eyre",
  "getrandom",
@@ -1557,13 +1568,17 @@ dependencies = [
 name = "injective-cosmwasm-mock"
 version = "1.0.0"
 dependencies = [
+ "cosmos-sdk-proto 0.20.0",
+ "cosmwasm-schema",
  "cosmwasm-std",
  "cw-storage-plus 1.2.0",
  "cw2 0.16.0",
  "injective-cosmwasm 0.2.21",
  "injective-math 0.2.4",
+ "injective-protobuf",
  "injective-std 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "injective-test-tube",
+ "injective-testing 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "prost 0.11.9",
  "protobuf 3.3.0",
  "schemars",
@@ -1621,7 +1636,7 @@ dependencies = [
  "cosmwasm-std",
  "osmosis-std-derive",
  "prost 0.11.9",
- "prost-types",
+ "prost-types 0.11.9",
  "schemars",
  "serde 1.0.196",
  "serde-cw-value",
@@ -1637,7 +1652,7 @@ dependencies = [
  "cosmwasm-std",
  "osmosis-std-derive",
  "prost 0.11.9",
- "prost-types",
+ "prost-types 0.11.9",
  "schemars",
  "serde 1.0.196",
  "serde-cw-value",
@@ -1673,6 +1688,24 @@ dependencies = [
  "cw-multi-test",
  "injective-cosmwasm 0.2.21",
  "injective-math 0.2.4",
+ "rand 0.4.6",
+ "secp256k1",
+ "serde 1.0.196",
+ "tiny-keccak",
+]
+
+[[package]]
+name = "injective-testing"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "49dc1d881d0b7726745ed776a87d1e6f93e877d2d5ebd0fe8be759f5424a091a"
+dependencies = [
+ "anyhow",
+ "base64 0.13.1",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "injective-cosmwasm 0.2.18",
+ "injective-math 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.4.6",
  "secp256k1",
  "serde 1.0.196",
@@ -2172,6 +2205,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "prost"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "146c289cda302b98a28d40c8b3b90498d6e526dd24ac2ecea73e4e491685b94a"
+dependencies = [
+ "bytes",
+ "prost-derive 0.12.3",
+]
+
+[[package]]
 name = "prost-derive"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2198,12 +2241,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "prost-derive"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "efb6c9a1dd1def8e2124d17e83a20af56f1570d6c2d2bd9e266ccb768df3840e"
+dependencies = [
+ "anyhow",
+ "itertools",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.48",
+]
+
+[[package]]
 name = "prost-types"
 version = "0.11.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "213622a1460818959ac1181aaeb2dc9c7f63df720db7d788b3e24eacd1983e13"
 dependencies = [
  "prost 0.11.9",
+]
+
+[[package]]
+name = "prost-types"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "193898f59edcf43c26227dcd4c8427f00d99d61e95dcde58dabd49fa291d470e"
+dependencies = [
+ "prost 0.12.3",
 ]
 
 [[package]]
@@ -2914,7 +2979,7 @@ dependencies = [
  "num-traits",
  "once_cell",
  "prost 0.11.9",
- "prost-types",
+ "prost-types 0.11.9",
  "ripemd",
  "serde 1.0.196",
  "serde_bytes",
@@ -2924,7 +2989,7 @@ dependencies = [
  "signature 2.2.0",
  "subtle",
  "subtle-encoding",
- "tendermint-proto",
+ "tendermint-proto 0.32.2",
  "time",
  "zeroize",
 ]
@@ -2954,7 +3019,25 @@ dependencies = [
  "num-derive",
  "num-traits",
  "prost 0.11.9",
- "prost-types",
+ "prost-types 0.11.9",
+ "serde 1.0.196",
+ "serde_bytes",
+ "subtle-encoding",
+ "time",
+]
+
+[[package]]
+name = "tendermint-proto"
+version = "0.34.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b797dd3d2beaaee91d2f065e7bdf239dc8d80bba4a183a288bc1279dd5a69a1e"
+dependencies = [
+ "bytes",
+ "flex-error",
+ "num-derive",
+ "num-traits",
+ "prost 0.12.3",
+ "prost-types 0.12.3",
  "serde 1.0.196",
  "serde_bytes",
  "subtle-encoding",
@@ -2986,7 +3069,7 @@ dependencies = [
  "subtle-encoding",
  "tendermint",
  "tendermint-config",
- "tendermint-proto",
+ "tendermint-proto 0.32.2",
  "thiserror",
  "time",
  "tokio",
@@ -3017,7 +3100,7 @@ dependencies = [
  "prost 0.11.9",
  "serde 1.0.196",
  "serde_json 1.0.111",
- "tendermint-proto",
+ "tendermint-proto 0.32.2",
  "thiserror",
 ]
 

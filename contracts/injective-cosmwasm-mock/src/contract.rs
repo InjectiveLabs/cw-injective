@@ -1,23 +1,28 @@
-use crate::msg::MSG_CREATE_SPOT_MARKET_ORDER_ENDPOINT;
-use crate::order_management::{create_spot_market_order, create_stargate_msg};
 use crate::{
     error::ContractError,
+    handle::{handle_test_transient_derivative_order, handle_test_transient_spot_order},
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
-    types,
+    query::{
+        handle_aggregate_account_volume_query, handle_aggregate_market_volume_query, handle_contract_registration_info_query,
+        handle_derivative_market_mid_price_and_tob_query, handle_derivative_market_orderbook_query, handle_derivative_market_query,
+        handle_derivative_orders_to_cancel_up_to_amount_query, handle_effective_subaccount_position_query, handle_exchange_params_query,
+        handle_market_atomic_execution_fee_multiplier_query, handle_market_volatility_query, handle_oracle_price_query,
+        handle_oracle_volatility_query, handle_perpetual_market_funding_query, handle_perpetual_market_info_query, handle_pyth_price_query,
+        handle_spot_market_mid_price_and_tob_query, handle_spot_market_orderbook_query, handle_spot_market_query,
+        handle_spot_orders_to_cancel_up_to_amount_query, handle_staked_amount_query, handle_subaccount_deposit_query,
+        handle_token_factory_creation_fee, handle_token_factory_denom_total_supply, handle_trader_derivative_orders_query,
+        handle_trader_spot_orders_query, handle_vanilla_subaccount_position_query,
+    },
+    reply::{handle_create_derivative_order_reply, handle_create_order_reply},
 };
-
-use cosmos_sdk_proto::{cosmos::authz::v1beta1::MsgExec, traits::Message, Any};
-use cosmwasm_std::{entry_point, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn, Response, StdResult, SubMsg};
+use cosmwasm_std::{entry_point, Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult};
 use cw2::set_contract_version;
-use injective_cosmwasm::{create_deposit_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, OrderType};
-use injective_math::FPDecimal;
-use prost::Message;
+use injective_cosmwasm::{create_deposit_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper};
 
 const CONTRACT_NAME: &str = "crates.io:injective:dummy";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
-
 pub const CREATE_SPOT_ORDER_REPLY_ID: u64 = 0u64;
-
+pub const CREATE_DERIVATIVE_ORDER_REPLY_ID: u64 = 1u64;
 pub const MSG_EXEC: &str = "/cosmos.authz.v1beta1.MsgExec";
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -37,64 +42,40 @@ pub fn execute(
         ExecuteMsg::TestDepositMsg { subaccount_id, amount } => {
             Ok(Response::new().add_message(create_deposit_msg(env.contract.address, subaccount_id, amount)))
         }
-        ExecuteMsg::TestTraderTransientSpotOrders { market_id, subaccount_id } => {
-            let querier: InjectiveQuerier = InjectiveQuerier::new(&deps.querier);
-            let spot_market = querier.query_spot_market(&market_id).unwrap().market.unwrap();
-
-            deps.api.debug(&info.sender.as_str());
-            let order_msg = create_spot_market_order(
-                FPDecimal::must_from_str("1"),
-                FPDecimal::must_from_str("1"),
-                OrderType::Buy,
-                &info.sender.as_str(),
-                subaccount_id.as_str(),
-                &spot_market,
-            );
-
-            let mut order_bytes = vec![];
-            types::MsgCreateSpotMarketOrder::encode(&order_msg, &mut order_bytes).unwrap();
-
-            let msg_exec = MsgExec {
-                grantee: env.contract.address.to_string(),
-                msgs: vec![Any {
-                    type_url: MSG_CREATE_SPOT_MARKET_ORDER_ENDPOINT.to_string(),
-                    value: order_bytes,
-                }],
-            };
-
-            let order_submessage = SubMsg::reply_on_success(
-                create_stargate_msg(MSG_EXEC, msg_exec.encode_to_vec().into()).unwrap(),
-                CREATE_SPOT_ORDER_REPLY_ID,
-            );
-
-            Ok(Response::new().add_submessage(order_submessage))
-        }
-        ExecuteMsg::TestTraderTransientDerivativeOrders { market_id, subaccount_id } => {
-            // to_json_binary(&querier.query_trader_transient_derivative_orders(&market_id, &subaccount_id)?)
-            Ok(Default::default())
-        }
+        ExecuteMsg::TestTraderTransientSpotOrders {
+            market_id,
+            subaccount_id,
+            price,
+            quantity,
+        } => handle_test_transient_spot_order(deps, env, &info, market_id, subaccount_id, price, quantity),
+        ExecuteMsg::TestTraderTransientDerivativeOrders {
+            market_id,
+            subaccount_id,
+            price,
+            quantity,
+            margin,
+        } => handle_test_transient_derivative_order(deps, env, &info, market_id, subaccount_id, price, quantity, margin),
     }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
-    let querier: InjectiveQuerier = InjectiveQuerier::new(&deps.querier);
-
+    let querier = InjectiveQuerier::new(&deps.querier);
     match msg {
-        QueryMsg::TestExchangeParamsQuery {} => to_json_binary(&querier.query_exchange_params()?),
-        QueryMsg::TestSubAccountDepositQuery { subaccount_id, denom } => to_json_binary(&querier.query_subaccount_deposit(&subaccount_id, &denom)?),
-        QueryMsg::TestSpotMarketQuery { market_id } => to_json_binary(&querier.query_spot_market(&market_id)?),
-        QueryMsg::TestDerivativeMarketQuery { market_id } => to_json_binary(&querier.query_derivative_market(&market_id)?),
+        QueryMsg::TestExchangeParamsQuery {} => handle_exchange_params_query(&querier),
+        QueryMsg::TestSubAccountDepositQuery { subaccount_id, denom } => handle_subaccount_deposit_query(&querier, &subaccount_id, denom),
+        QueryMsg::TestSpotMarketQuery { market_id } => handle_spot_market_query(&querier, &market_id),
+        QueryMsg::TestDerivativeMarketQuery { market_id } => handle_derivative_market_query(&querier, &market_id),
         QueryMsg::TestEffectiveSubaccountPosition { market_id, subaccount_id } => {
-            to_json_binary(&querier.query_effective_subaccount_position(&market_id, &subaccount_id)?)
+            handle_effective_subaccount_position_query(&querier, &market_id, &subaccount_id)
         }
         QueryMsg::TestVanillaSubaccountPosition { market_id, subaccount_id } => {
-            to_json_binary(&querier.query_vanilla_subaccount_position(&market_id, &subaccount_id)?)
+            handle_vanilla_subaccount_position_query(&querier, &market_id, &subaccount_id)
         }
         QueryMsg::TestTraderDerivativeOrders { market_id, subaccount_id } => {
-            to_json_binary(&querier.query_trader_derivative_orders(&market_id, &subaccount_id)?)
+            handle_trader_derivative_orders_query(&querier, &market_id, &subaccount_id)
         }
-        QueryMsg::TestTraderSpotOrders { market_id, subaccount_id } => to_json_binary(&querier.query_trader_spot_orders(&market_id, &subaccount_id)?),
+        QueryMsg::TestTraderSpotOrders { market_id, subaccount_id } => handle_trader_spot_orders_query(&querier, &market_id, &subaccount_id),
         QueryMsg::TestSpotOrdersToCancelUpToAmount {
             market_id,
             subaccount_id,
@@ -102,63 +83,70 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> Std
             quote_amount,
             strategy,
             reference_price,
-        } => to_json_binary(&querier.query_spot_orders_to_cancel_up_to_amount(
+        } => handle_spot_orders_to_cancel_up_to_amount_query(
+            &querier,
             &market_id,
             &subaccount_id,
             base_amount,
             quote_amount,
             strategy,
             reference_price,
-        )?),
+        ),
         QueryMsg::TestDerivativeOrdersToCancelUpToAmount {
             market_id,
             subaccount_id,
             quote_amount,
             strategy,
             reference_price,
-        } => to_json_binary(&querier.query_derivative_orders_to_cancel_up_to_amount(
-            &market_id,
-            &subaccount_id,
-            quote_amount,
-            strategy,
-            reference_price,
-        )?),
-        QueryMsg::TestPerpetualMarketInfo { market_id } => to_json_binary(&querier.query_perpetual_market_info(&market_id)?),
-        QueryMsg::TestPerpetualMarketFunding { market_id } => to_json_binary(&querier.query_perpetual_market_funding(&market_id)?),
+        } => handle_derivative_orders_to_cancel_up_to_amount_query(&querier, &market_id, &subaccount_id, quote_amount, strategy, reference_price),
+        QueryMsg::TestPerpetualMarketInfo { market_id } => handle_perpetual_market_info_query(&querier, &market_id),
+        QueryMsg::TestPerpetualMarketFunding { market_id } => handle_perpetual_market_funding_query(&querier, &market_id),
         QueryMsg::TestMarketVolatility {
             market_id,
             trade_grouping_sec,
             max_age,
             include_raw_history,
             include_metadata,
-        } => to_json_binary(&querier.query_market_volatility(&market_id, trade_grouping_sec, max_age, include_raw_history, include_metadata)?),
-        QueryMsg::TestDerivativeMarketMidPriceAndTob { market_id } => to_json_binary(&querier.query_derivative_market_mid_price_and_tob(&market_id)?),
-        QueryMsg::TestAggregateMarketVolume { market_id } => to_json_binary(&querier.query_aggregate_market_volume(&market_id)?),
-        QueryMsg::TestAggregateAccountVolume { account_id } => to_json_binary(&querier.query_aggregate_account_volume(&account_id)?),
-        QueryMsg::TestSpotMarketMidPriceAndTob { market_id } => to_json_binary(&querier.query_spot_market_mid_price_and_tob(&market_id)?),
+        } => handle_market_volatility_query(&querier, &market_id, trade_grouping_sec, max_age, include_raw_history, include_metadata),
+        QueryMsg::TestDerivativeMarketMidPriceAndTob { market_id } => handle_derivative_market_mid_price_and_tob_query(&querier, &market_id),
+        QueryMsg::TestAggregateMarketVolume { market_id } => handle_aggregate_market_volume_query(&querier, &market_id),
+        QueryMsg::TestAggregateAccountVolume { account_id } => handle_aggregate_account_volume_query(&querier, account_id),
+        QueryMsg::TestSpotMarketMidPriceAndTob { market_id } => handle_spot_market_mid_price_and_tob_query(&querier, &market_id),
         QueryMsg::TestSpotMarketOrderbook {
             market_id,
             side,
             limit_cumulative_quantity,
             limit_cumulative_notional,
-        } => to_json_binary(&querier.query_spot_market_orderbook(&market_id, side, limit_cumulative_quantity, limit_cumulative_notional)?),
+        } => handle_spot_market_orderbook_query(&querier, &market_id, side, limit_cumulative_quantity, limit_cumulative_notional),
         QueryMsg::TestDerivativeMarketOrderbook {
             market_id,
             limit_cumulative_notional,
-        } => to_json_binary(&querier.query_derivative_market_orderbook(&market_id, limit_cumulative_notional)?),
-        QueryMsg::TestMarketAtomicExecutionFeeMultiplier { market_id } => {
-            to_json_binary(&querier.query_market_atomic_execution_fee_multiplier(&market_id)?)
-        }
+        } => handle_derivative_market_orderbook_query(&querier, &market_id, limit_cumulative_notional),
+        QueryMsg::TestMarketAtomicExecutionFeeMultiplier { market_id } => handle_market_atomic_execution_fee_multiplier_query(&querier, &market_id),
+        QueryMsg::TestQueryOracleVolatility {
+            base_info,
+            quote_info,
+            max_age,
+            include_raw_history,
+            include_metadata,
+        } => handle_oracle_volatility_query(&querier, base_info, quote_info, max_age, include_raw_history, include_metadata),
+        QueryMsg::TestQueryOraclePrice { oracle_type, base, quote } => handle_oracle_price_query(&querier, &oracle_type, base, quote),
+        QueryMsg::TestQueryPythPrice { price_id } => handle_pyth_price_query(&querier, price_id),
+        QueryMsg::TestQueryStakedAmount {
+            delegator_address,
+            max_delegations,
+        } => handle_staked_amount_query(&querier, deps.api.addr_validate(delegator_address.as_str())?, max_delegations),
+        QueryMsg::TestQueryTokenFactoryDenomTotalSupply { denom } => handle_token_factory_denom_total_supply(&querier, denom),
+        QueryMsg::TestQueryTokenFactoryCreationFee {} => handle_token_factory_creation_fee(&querier),
+        QueryMsg::TestQueryContractRegistrationInfo { contract_address } => handle_contract_registration_info_query(&querier, contract_address),
     }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn reply(deps: DepsMut<InjectiveQueryWrapper>, env: Env, msg: Reply) -> Result<Response, ContractError> {
+pub fn reply(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, msg: Reply) -> Result<Response, ContractError> {
     match msg.id {
-        CREATE_SPOT_ORDER_REPLY_ID => {
-            deps.api.debug("I am here");
-            Ok(Default::default())
-        }
+        CREATE_SPOT_ORDER_REPLY_ID => handle_create_order_reply(deps, &msg),
+        CREATE_DERIVATIVE_ORDER_REPLY_ID => handle_create_derivative_order_reply(deps, &msg),
         _ => Err(ContractError::UnrecognizedReply(msg.id)),
     }
 }
