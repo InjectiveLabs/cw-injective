@@ -385,7 +385,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73c9d2043a9e617b0d602fbc0a0ecd621568edbf3a9774890a6d562389bd8e1c"
 dependencies = [
  "prost 0.11.9",
- "prost-types",
+ "prost-types 0.11.9",
  "tendermint-proto",
 ]
 
@@ -1562,7 +1562,7 @@ dependencies = [
  "cw2 0.16.0",
  "injective-cosmwasm 0.2.22",
  "injective-math 0.2.4",
- "injective-std 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-std 0.1.5",
  "injective-test-tube",
  "schemars",
  "serde 1.0.194",
@@ -1614,12 +1614,14 @@ dependencies = [
 [[package]]
 name = "injective-std"
 version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cd7a5b52d19dca05823c7e4b481d41b49c04a0e56f66a5c92396a6fdd3314710"
 dependencies = [
  "chrono",
  "cosmwasm-std",
- "osmosis-std-derive",
+ "osmosis-std-derive 0.15.3",
  "prost 0.11.9",
- "prost-types",
+ "prost-types 0.11.9",
  "schemars",
  "serde 1.0.194",
  "serde-cw-value",
@@ -1627,15 +1629,13 @@ dependencies = [
 
 [[package]]
 name = "injective-std"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd7a5b52d19dca05823c7e4b481d41b49c04a0e56f66a5c92396a6fdd3314710"
+version = "0.1.6"
 dependencies = [
  "chrono",
  "cosmwasm-std",
- "osmosis-std-derive",
- "prost 0.11.9",
- "prost-types",
+ "osmosis-std-derive 0.20.1",
+ "prost 0.12.3",
+ "prost-types 0.12.3",
  "schemars",
  "serde 1.0.194",
  "serde-cw-value",
@@ -1653,7 +1653,7 @@ dependencies = [
  "cosmwasm-std",
  "hex",
  "injective-cosmwasm 0.2.18",
- "injective-std 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-std 0.1.5",
  "prost 0.11.9",
  "serde 1.0.194",
  "serde_json 1.0.111",
@@ -2018,6 +2018,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "osmosis-std-derive"
+version = "0.20.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c5ebdfd1bc8ed04db596e110c6baa9b174b04f6ed1ec22c666ddc5cb3fa91bd7"
+dependencies = [
+ "itertools",
+ "proc-macro2",
+ "prost-types 0.11.9",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "paste"
 version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2170,6 +2183,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "prost"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "146c289cda302b98a28d40c8b3b90498d6e526dd24ac2ecea73e4e491685b94a"
+dependencies = [
+ "bytes",
+ "prost-derive 0.12.3",
+]
+
+[[package]]
 name = "prost-derive"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2196,12 +2219,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "prost-derive"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "efb6c9a1dd1def8e2124d17e83a20af56f1570d6c2d2bd9e266ccb768df3840e"
+dependencies = [
+ "anyhow",
+ "itertools",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.48",
+]
+
+[[package]]
 name = "prost-types"
 version = "0.11.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "213622a1460818959ac1181aaeb2dc9c7f63df720db7d788b3e24eacd1983e13"
 dependencies = [
  "prost 0.11.9",
+]
+
+[[package]]
+name = "prost-types"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "193898f59edcf43c26227dcd4c8427f00d99d61e95dcde58dabd49fa291d470e"
+dependencies = [
+ "prost 0.12.3",
 ]
 
 [[package]]
@@ -2892,7 +2937,7 @@ dependencies = [
  "num-traits",
  "once_cell",
  "prost 0.11.9",
- "prost-types",
+ "prost-types 0.11.9",
  "ripemd",
  "serde 1.0.194",
  "serde_bytes",
@@ -2932,7 +2977,7 @@ dependencies = [
  "num-derive",
  "num-traits",
  "prost 0.11.9",
- "prost-types",
+ "prost-types 0.11.9",
  "serde 1.0.194",
  "serde_bytes",
  "subtle-encoding",
