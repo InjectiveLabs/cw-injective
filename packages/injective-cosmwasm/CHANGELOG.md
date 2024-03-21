@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 
-## [Unreleased] - 2024-03-18
+## [0.2.22] - 2024-03-21
 
 ### Added
 - Tests queries (injective-cosmwasm-mock) covering functionality of querier.rs 
