@@ -345,6 +345,18 @@ pub trait HandlesSmartQuery {
     fn handle(&self, contract_addr: &str, msg: &Binary) -> QuerierResult;
 }
 
+pub trait HandlesRawQuery {
+    fn handle(&self, contract_addr: &str, key: &Binary) -> QuerierResult;
+}
+
+pub trait HandlesContractInfo {
+    fn handle(&self, contract_addr: &str) -> QuerierResult;
+}
+
+pub trait HandlesCodeInfo {
+    fn handle(&self, code_id: u64) -> QuerierResult;
+}
+
 pub trait HandlesBankQuery {
     fn handle(&self, query: &BankQuery) -> QuerierResult;
 }
@@ -463,6 +475,9 @@ pub trait HandlesExchangeParamsQuery {
 
 pub struct WasmMockQuerier {
     pub smart_query_handler: Option<Box<dyn HandlesSmartQuery>>,
+    pub raw_query_handler: Option<Box<dyn HandlesRawQuery>>,
+    pub contract_info_handler: Option<Box<dyn HandlesContractInfo>>,
+    pub code_info_handler: Option<Box<dyn HandlesCodeInfo>>,
     pub subaccount_deposit_response_handler: Option<Box<dyn HandlesSubaccountAndDenomQuery>>,
     pub exchange_params_response_handler: Option<Box<dyn HandlesExchangeParamsQuery>>,
     pub spot_market_response_handler: Option<Box<dyn HandlesMarketIdQuery>>,
@@ -519,9 +534,24 @@ impl Querier for WasmMockQuerier {
 impl WasmMockQuerier {
     pub fn handle_query(&self, request: &QueryRequest<InjectiveQueryWrapper>) -> QuerierResult {
         match &request {
-            QueryRequest::Wasm(WasmQuery::Smart { contract_addr, msg }) => match &self.smart_query_handler {
-                Some(handler) => handler.handle(contract_addr, msg),
-                None => panic!("Unknown smart query"),
+            QueryRequest::Wasm(query) => match query {
+                WasmQuery::Smart { contract_addr, msg } => match &self.smart_query_handler {
+                    Some(handler) => handler.handle(contract_addr, msg),
+                    None => panic!("Unknown smart query"),
+                },
+                WasmQuery::Raw { contract_addr, key } => match &self.raw_query_handler {
+                    Some(handler) => handler.handle(contract_addr, key),
+                    None => panic!("Unknown raw query"),
+                },
+                WasmQuery::CodeInfo { code_id } => match &self.code_info_handler {
+                    Some(handler) => handler.handle(*code_id),
+                    None => panic!("Unknown code info query"),
+                },
+                WasmQuery::ContractInfo { contract_addr } => match &self.contract_info_handler {
+                    Some(handler) => handler.handle(contract_addr),
+                    None => panic!("Unknown contract info query"),
+                },
+                _ => panic!("unsupported"),
             },
             QueryRequest::Bank(query) => match query {
                 BankQuery::Balance { address, denom } => match &self.balance_query_handler {
@@ -706,6 +736,9 @@ impl WasmMockQuerier {
     pub fn new() -> Self {
         WasmMockQuerier {
             smart_query_handler: None,
+            raw_query_handler: None,
+            code_info_handler: None,
+            contract_info_handler: None,
             subaccount_deposit_response_handler: None,
             exchange_params_response_handler: None,
             spot_market_response_handler: None,
@@ -769,8 +802,8 @@ impl TestDeposit {
 
 pub mod handlers {
     use cosmwasm_std::{
-        to_json_binary, AllBalanceResponse, BalanceResponse, Binary, Coin, ContractResult, QuerierResult, StdResult, SupplyResponse, SystemError,
-        SystemResult, Uint128,
+        to_json_binary, AllBalanceResponse, BalanceResponse, Binary, CodeInfoResponse, Coin, ContractInfoResponse, ContractResult, QuerierResult,
+        StdResult, SupplyResponse, SystemError, SystemResult, Uint128,
     };
     use std::collections::HashMap;
 
@@ -784,14 +817,15 @@ pub mod handlers {
     use crate::{
         exchange_mock_querier::TestCoin, CancellationStrategy, Deposit, DerivativeMarket, DerivativeMarketResponse, EffectivePosition,
         FullDerivativeMarket, FullDerivativeMarketPerpetualInfo, HandlesMarketAndSubaccountQuery, HandlesMarketIdQuery, HandlesOracleVolatilityQuery,
-        HandlesPriceLevelsQuery, HandlesSmartQuery, HandlesSubaccountAndDenomQuery, HandlesTraderSpotOrdersToCancelUpToAmountQuery, MarketId,
-        MetadataStatistics, OracleVolatilityResponse, OrderSide, Position, PriceLevel, QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarket,
-        SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountId, SubaccountPositionInMarketResponse,
-        TradeRecord, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder, TrimmedSpotLimitOrder,
+        HandlesPriceLevelsQuery, HandlesRawQuery, HandlesSmartQuery, HandlesSubaccountAndDenomQuery, HandlesTraderSpotOrdersToCancelUpToAmountQuery,
+        MarketId, MetadataStatistics, OracleVolatilityResponse, OrderSide, Position, PriceLevel, QueryMarketAtomicExecutionFeeMultiplierResponse,
+        SpotMarket, SpotMarketResponse, SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountId,
+        SubaccountPositionInMarketResponse, TradeRecord, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse, TrimmedDerivativeLimitOrder,
+        TrimmedSpotLimitOrder,
     };
     use crate::{
-        HandlesBankAllBalancesQuery, HandlesBankBalanceQuery, HandlesTraderDerivativeOrdersToCancelUpToAmountQuery, MarketMidPriceAndTOBResponse,
-        OracleType,
+        HandlesBankAllBalancesQuery, HandlesBankBalanceQuery, HandlesCodeInfo, HandlesContractInfo,
+        HandlesTraderDerivativeOrdersToCancelUpToAmountQuery, MarketMidPriceAndTOBResponse, OracleType,
     };
 
     use super::{HandlesOraclePriceQuery, TestDeposit};
@@ -1281,5 +1315,62 @@ pub mod handlers {
             }
         }
         Some(Box::new(Temp { result }))
+    }
+
+    pub fn create_raw_query_handler(result: Result<Binary, SystemError>) -> Option<Box<dyn HandlesRawQuery>> {
+        struct Temp {
+            result: Result<Binary, SystemError>,
+        }
+        impl HandlesRawQuery for Temp {
+            fn handle(&self, _contract_addr: &str, _key: &Binary) -> QuerierResult {
+                match self.result.clone() {
+                    Ok(resp) => SystemResult::Ok(ContractResult::from(StdResult::Ok(resp))),
+                    Err(err) => SystemResult::Err(err),
+                }
+            }
+        }
+        Some(Box::new(Temp { result }))
+    }
+
+    pub fn create_contract_info_handler(code_id: u64, creator: impl ToString) -> Option<Box<dyn HandlesContractInfo>> {
+        struct Temp {
+            code_id: u64,
+            creator: String,
+        }
+
+        impl HandlesContractInfo for Temp {
+            fn handle(&self, _contract_addr: &str) -> QuerierResult {
+                let mut response = ContractInfoResponse::default();
+                response.code_id = self.code_id;
+                response.creator = self.creator.to_owned();
+
+                SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
+            }
+        }
+
+        Some(Box::new(Temp {
+            code_id,
+            creator: creator.to_string(),
+        }))
+    }
+
+    pub fn create_code_id_handler(creator: impl ToString) -> Option<Box<dyn HandlesCodeInfo>> {
+        struct Temp {
+            creator: String,
+        }
+
+        impl HandlesCodeInfo for Temp {
+            fn handle(&self, code_id: u64) -> QuerierResult {
+                let mut response = CodeInfoResponse::default();
+                response.code_id = code_id;
+                response.creator = self.creator.to_owned();
+
+                SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
+            }
+        }
+
+        Some(Box::new(Temp {
+            creator: creator.to_string(),
+        }))
     }
 }
