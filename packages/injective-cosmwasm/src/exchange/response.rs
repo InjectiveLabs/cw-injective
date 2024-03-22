@@ -99,7 +99,7 @@ pub struct QueryOrderbookResponse {
 /// Response to query for aggregate volumes of a given account/subaccount - divided by markets
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct QueryAggregateVolumeResponse {
-    pub aggregate_volumes: Vec<MarketVolume>,
+    pub aggregate_volumes: Option<Vec<MarketVolume>>,
 }
 
 /// Response to query for aggregate volume for a given market

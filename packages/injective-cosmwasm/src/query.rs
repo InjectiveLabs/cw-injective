@@ -26,21 +26,6 @@ pub struct InjectiveQueryWrapper {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum InjectiveQuery {
-    // Authz
-    Grants {
-        granter: String,
-        grantee: String,
-        msg_type_url: String,
-        pagination: Option<u32>,
-    },
-    GranteeGrants {
-        grantee: String,
-        pagination: Option<u32>,
-    },
-    GranterGrants {
-        granter: String,
-        pagination: Option<u32>,
-    },
     // Exchange
     ExchangeParams {},
     SubaccountDeposit {
@@ -129,12 +114,6 @@ pub enum InjectiveQuery {
     },
     AggregateAccountVolume {
         account: String,
-    },
-    DenomDecimal {
-        denom: String,
-    },
-    DenomDecimals {
-        denoms: Vec<String>,
     },
     MarketAtomicExecutionFeeMultiplier {
         market_id: MarketId,

@@ -24,7 +24,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.72.0
+          toolchain: 1.73.0
           target: wasm32-unknown-unknown
           override: true
 
@@ -41,7 +41,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: unit-test
-          toolchain: 1.72.0
+          toolchain: 1.73.0
           args: --locked
         env:
           RUST_BACKTRACE: 1
@@ -65,7 +65,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.72.0
+          toolchain: 1.73.0
           override: true
           components: rustfmt, clippy
 
@@ -73,12 +73,12 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: fmt
-          toolchain: 1.72.0
+          toolchain: 1.73.0
           args: --all -- --check
 
       - name: Run cargo clippy
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          toolchain: 1.72.0
+          toolchain: 1.73.0
           args: -- -D warnings
