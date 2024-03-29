@@ -72,6 +72,12 @@ impl From<Uint128> for FPDecimal {
     }
 }
 
+impl From<FPDecimal> for Uint256 {
+    fn from(value: FPDecimal) -> Self {
+        value.to_u256()
+    }
+}
+
 impl From<Uint256> for FPDecimal {
     fn from(x: Uint256) -> FPDecimal {
         FPDecimal::from_str(&x.to_string()).unwrap()
