@@ -5,7 +5,7 @@ use crate::{
         handle_query_stargate,
     },
 };
-use cosmwasm_std::{entry_point, Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult};
+use cosmwasm_std::{entry_point, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 use injective_cosmwasm::{create_deposit_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper};
 
@@ -37,7 +37,6 @@ pub fn execute(
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
-    let querier = InjectiveQuerier::new(&deps.querier);
     match msg {
         QueryMsg::QueryStargate { path, query_request } => handle_query_stargate(&deps.querier, path, query_request),
     }
