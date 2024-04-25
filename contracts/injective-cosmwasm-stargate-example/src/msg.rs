@@ -2,7 +2,7 @@ use cosmwasm_std::Coin;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use injective_cosmwasm::{CancellationStrategy, MarketId, OracleInfo, OracleType, OrderSide, SubaccountId};
+use injective_cosmwasm::{ SubaccountId};
 
 pub const MSG_CREATE_SPOT_LIMIT_ORDER_ENDPOINT: &str = "/injective.exchange.v1beta1.MsgCreateSpotLimitOrder";
 pub const MSG_CREATE_DERIVATIVE_LIMIT_ORDER_ENDPOINT: &str = "/injective.exchange.v1beta1.MsgCreateDerivativeLimitOrder";

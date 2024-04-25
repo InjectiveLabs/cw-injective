@@ -7,9 +7,9 @@ use crate::{
 };
 use cosmwasm_std::{entry_point, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
-use injective_cosmwasm::{create_deposit_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper};
+use injective_cosmwasm::{create_deposit_msg, InjectiveMsgWrapper, InjectiveQueryWrapper};
 
-const CONTRACT_NAME: &str = "crates.io:injective:dummy";
+const CONTRACT_NAME: &str = "crates.io:injective:dummy-stargate-contract";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const CREATE_SPOT_ORDER_REPLY_ID: u64 = 0u64;
 pub const CREATE_DERIVATIVE_ORDER_REPLY_ID: u64 = 1u64;
@@ -23,7 +23,7 @@ pub fn instantiate(deps: DepsMut, _env: Env, _info: MessageInfo, _msg: Instantia
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
-    deps: DepsMut<InjectiveQueryWrapper>,
+    _deps: DepsMut<InjectiveQueryWrapper>,
     env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,

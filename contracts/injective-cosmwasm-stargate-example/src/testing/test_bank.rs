@@ -17,7 +17,7 @@ use crate::utils::{BASE_DECIMALS, BASE_DENOM, str_coin};
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
-fn test_msg_deposit() {
+fn test_query_exchange_params() {
     let env = Setup::new(ExchangeType::None);
 
     let wasm = Wasm::new(&env.app);
@@ -35,11 +35,7 @@ fn test_msg_deposit() {
     let contract_response =  contract_response.value;
     let response: ParamResponse<AuthParams> = serde_json::from_str(&contract_response).unwrap();
     assert_eq!(response.params.max_memo_characters, "256");
-    // let response: Value = serde_json::from_str(&contract_response).unwrap();
-    // let response = response.as_object().unwrap();
-    // println!("{:?}", response);
-    // assert_eq!(response.get("params").unwrap().as_object().unwrap().get("max_memo_characters").unwrap().as_str().unwrap(), "256");
-}
+ }
 
 
 

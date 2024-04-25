@@ -33,6 +33,8 @@ use injective_test_tube::{
 use injective_testing::human_to_i64;
 use prost::Message;
 use std::{collections::HashMap, ops::Neg, str::FromStr};
+use base64::Engine;
+use base64::prelude::BASE64_STANDARD;
 
 pub const EXCHANGE_DECIMALS: i32 = 18i32;
 pub const BASE_DECIMALS: i32 = 18i32;
@@ -830,4 +832,11 @@ pub fn create_some_usdt_price_attestation(human_price: &str, decimal_precision: 
         ema_expo: exponent_to_use,
         publish_time,
     }
+}
+
+
+pub fn encode_proto_message<T: Message>(msg: T) -> String {
+    let mut buf = vec![];
+    T::encode(&msg, &mut buf).unwrap();
+    BASE64_STANDARD.encode(&buf)
 }
