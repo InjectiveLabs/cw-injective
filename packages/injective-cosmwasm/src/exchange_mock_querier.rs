@@ -65,6 +65,7 @@ fn default_spot_market_response_handler(market_id: MarketId) -> QuerierResult {
             status: MarketStatus::Active,
             min_price_tick_size: FPDecimal::from_str("0.01").unwrap(),
             min_quantity_tick_size: FPDecimal::from_str("1000000000000000.0").unwrap(),
+            min_notional: FPDecimal::from_str("0.01").unwrap(),
         }),
     };
     SystemResult::Ok(ContractResult::from(to_json_binary(&response)))

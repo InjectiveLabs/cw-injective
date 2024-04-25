@@ -1,4 +1,4 @@
-use crate::msg::{InstantiateMsg, MSG_CREATE_DERIVATIVE_LIMIT_ORDER_ENDPOINT, MSG_CREATE_SPOT_LIMIT_ORDER_ENDPOINT};
+use crate::msg::{InstantiateMsg, QueryStargateResponse, MSG_CREATE_DERIVATIVE_LIMIT_ORDER_ENDPOINT, MSG_CREATE_SPOT_LIMIT_ORDER_ENDPOINT};
 use cosmwasm_std::{coin, Addr, Coin};
 use injective_cosmwasm::{checked_address_to_subaccount_id, SubaccountId};
 use injective_math::{scale::Scaled, FPDecimal};
@@ -28,13 +28,12 @@ use injective_std::{
 };
 use injective_test_tube::{
     injective_cosmwasm::get_default_subaccount_id_for_checked_address, Account, Authz, Bank, Exchange, ExecuteResponse, Gov, InjectiveTestApp,
-    Insurance, Module, Oracle, Runner, SigningAccount, Wasm,
+    Insurance, Module, Oracle, Runner, RunnerResult, SigningAccount, Wasm,
 };
 use injective_testing::human_to_i64;
 use prost::Message;
+use serde::de::DeserializeOwned;
 use std::{collections::HashMap, ops::Neg, str::FromStr};
-use base64::Engine;
-use base64::prelude::BASE64_STANDARD;
 
 pub const EXCHANGE_DECIMALS: i32 = 18i32;
 pub const BASE_DECIMALS: i32 = 18i32;
@@ -328,6 +327,7 @@ pub fn launch_spot_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
                 quote_denom: QUOTE_DENOM.to_string(),
                 min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.000000000000001")),
                 min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("1")),
+                min_notional: dec_to_proto(FPDecimal::must_from_str("0.000000000000002")),
             },
             signer,
         )
@@ -366,6 +366,7 @@ pub fn launch_perp_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
                 maintenance_margin_ratio: "50000000000000000".to_owned(),
                 min_price_tick_size: "1000000000000000000000".to_owned(),
                 min_quantity_tick_size: "1000000000000000".to_owned(),
+                min_notional: "1000000000000000".to_string(),
             },
             signer,
         )
@@ -834,9 +835,10 @@ pub fn create_some_usdt_price_attestation(human_price: &str, decimal_precision: 
     }
 }
 
-
-pub fn encode_proto_message<T: Message>(msg: T) -> String {
-    let mut buf = vec![];
-    T::encode(&msg, &mut buf).unwrap();
-    BASE64_STANDARD.encode(&buf)
+pub fn get_stargate_query_result<T: DeserializeOwned>(contract_response: RunnerResult<QueryStargateResponse>) -> serde_json::Result<T> {
+    let contract_response = contract_response.unwrap().value;
+    serde_json::from_str::<T>(&contract_response).map_err(|error| {
+        println!("{} \n {}", error.to_string(), contract_response);
+        error
+    })
 }

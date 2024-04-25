@@ -1851,6 +1851,10 @@ pub struct MsgInstantSpotMarketLaunch {
     /// quantity
     #[prost(string, tag = "6")]
     pub min_quantity_tick_size: ::prost::alloc::string::String,
+    // min_notional defines the minimum notional (in quote asset) required for
+    // orders in the market
+    #[prost(string, tag = "7")]
+    pub min_notional: ::prost::alloc::string::String,
 }
 /// MsgInstantSpotMarketLaunchResponse defines the Msg/InstantSpotMarketLaunch
 /// response type.
@@ -1916,6 +1920,8 @@ pub struct MsgInstantPerpetualMarketLaunch {
     /// quantity
     #[prost(string, tag = "13")]
     pub min_quantity_tick_size: ::prost::alloc::string::String,
+    #[prost(string, tag = "14")]
+    pub min_notional: ::prost::alloc::string::String,
 }
 /// MsgInstantPerpetualMarketLaunchResponse defines the
 /// Msg/InstantPerpetualMarketLaunchResponse response type.

@@ -1,11 +1,14 @@
-use crate::utils::encode_proto_message;
 use crate::{
-    msg::{QueryMsg, QueryStargateResponse},
+    encode_helper::encode_proto_message,
+    msg::{ExecuteMsg, QueryMsg, QueryStargateResponse},
     testing::type_helpers::{ExchangeParams, ParamResponse},
-    utils::{human_to_dec, human_to_proto, str_coin, ExchangeType, Setup, BASE_DECIMALS, BASE_DENOM, QUOTE_DECIMALS},
+    utils::{
+        add_spot_initial_liquidity, execute_all_authorizations, human_to_dec, human_to_proto, scale_price_quantity_for_spot_market_dec, str_coin,
+        ExchangeType, Setup, BASE_DECIMALS, BASE_DENOM, QUOTE_DECIMALS,
+    },
 };
 use cosmwasm_std::{from_json, Addr};
-use injective_cosmwasm::{checked_address_to_subaccount_id, SubaccountDepositResponse};
+use injective_cosmwasm::{checked_address_to_subaccount_id, MarketId, SubaccountDepositResponse};
 use injective_std::types::injective::exchange::v1beta1::{Deposit, MsgDeposit, QuerySubaccountDepositRequest, QuerySubaccountDepositsRequest};
 use injective_test_tube::{Account, Exchange, Module, Wasm};
 
@@ -89,7 +92,45 @@ fn test_query_subaccount_deposit() {
     let contract_response: QueryStargateResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
     let contract_response = contract_response.value;
     let contract_response: SubaccountDepositResponse = serde_json::from_str(&contract_response).unwrap();
-    println!("{:?}", contract_response);
     let deposit = contract_response.deposits;
     assert_eq!(deposit.total_balance, human_to_dec("10.0", BASE_DECIMALS));
+}
+
+#[test]
+#[cfg_attr(not(feature = "integration"), ignore)]
+fn test_query_trader_transient_spot_orders() {
+    let env = Setup::new(ExchangeType::Spot);
+    let wasm = Wasm::new(&env.app);
+    let market_id = env.market_id.unwrap();
+
+    let subaccount_id = checked_address_to_subaccount_id(&Addr::unchecked(env.users[0].account.address()), 0u32);
+
+    execute_all_authorizations(&env.app, &env.users[0].account, env.contract_address.clone());
+    add_spot_initial_liquidity(&env.app, market_id.clone());
+
+    let (scale_price, scale_quantity) = scale_price_quantity_for_spot_market_dec("9.8", "1", &BASE_DECIMALS, &QUOTE_DECIMALS);
+
+    let res = wasm
+        .execute(
+            &env.contract_address,
+            &ExecuteMsg::TestTraderTransientSpotOrders {
+                market_id: MarketId::new(market_id).unwrap(),
+                subaccount_id: subaccount_id.clone(),
+                price: scale_price.to_string(),
+                quantity: scale_quantity.to_string(),
+            },
+            &[],
+            &env.users[0].account,
+        )
+        .unwrap();
+
+    let transient_query = res
+        .events
+        .iter()
+        .find(|e| e.ty == "wasm-transient_order")
+        .and_then(|event| event.attributes.iter().find(|a| a.key == "query_str"));
+
+    assert!(transient_query.is_some());
+    let expected_order_info = "{\"value\":\"{\\\"orders\\\":[{\\\"price\\\":\\\"0.000000000009800000\\\",\\\"quantity\\\":\\\"1000000000000000000.000000000000000000\\\",\\\"fillable\\\":\\\"1000000000000000000.000000000000000000\\\",\\\"isBuy\\\":false,";
+    assert!(transient_query.unwrap().value.contains(expected_order_info));
 }
