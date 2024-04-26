@@ -1,37 +1,19 @@
-use base64::{encode, Engine};
-use base64::prelude::BASE64_STANDARD;
-use crate::{
-    msg::{QueryStargateResponse, QueryMsg},
-    utils::{
-        add_spot_initial_liquidity, add_spot_order_as, add_spot_orders, dec_to_proto, execute_all_authorizations,
-        get_initial_liquidity_orders_vector, get_spot_market_id, human_to_dec, human_to_proto, scale_price_quantity_for_spot_market,
-        scale_price_quantity_for_spot_market_dec, str_coin, ExchangeType, HumanOrder, Setup, BASE_DECIMALS, BASE_DENOM, QUOTE_DECIMALS, QUOTE_DENOM,
-    },
-    testing::type_helpers::{ParamResponse, ExchangeParams},
-};
-
-use injective_std::types::injective::exchange::v1beta1::{Deposit, MsgDeposit, MsgInstantSpotMarketLaunch, OrderType, QueryAggregateMarketVolumeResponse, QuerySubaccountDepositRequest, QuerySubaccountDepositResponse, QuerySubaccountDepositsRequest};
-
-use cosmwasm_std::{Addr, from_json, to_json_string};
-use injective_test_tube::{injective_cosmwasm::get_default_subaccount_id_for_checked_address, Account, Exchange, Module, RunnerResult, Wasm};
-use injective_cosmwasm::{checked_address_to_subaccount_id, SubaccountDepositResponse, SubaccountId};
-use prost::Message;
-use serde_json::to_vec;
-use injective_std::types::injective::oracle::v1beta1::GrantPriceFeederPrivilegeProposal;
-use crate::order_management::encode_bytes_message;
-use crate::testing::type_helpers::AuthParams;
 use crate::utils::encode_proto_message;
+use crate::{
+    msg::{QueryMsg, QueryStargateResponse},
+    testing::type_helpers::{ExchangeParams, ParamResponse},
+    utils::{human_to_dec, human_to_proto, str_coin, ExchangeType, Setup, BASE_DECIMALS, BASE_DENOM, QUOTE_DECIMALS},
+};
+use cosmwasm_std::{from_json, Addr};
+use injective_cosmwasm::{checked_address_to_subaccount_id, SubaccountDepositResponse};
+use injective_std::types::injective::exchange::v1beta1::{Deposit, MsgDeposit, QuerySubaccountDepositRequest, QuerySubaccountDepositsRequest};
+use injective_test_tube::{Account, Exchange, Module, Wasm};
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
 fn test_exchange_param() {
     let env = Setup::new(ExchangeType::None);
-
     let wasm = Wasm::new(&env.app);
-    let user = &env.users[0];
-
-    let subaccount_id = checked_address_to_subaccount_id(&Addr::unchecked(user.account.address()), 1u32);
-    // Execute contract
 
     let query_msg = QueryMsg::QueryStargate {
         path: "/injective.exchange.v1beta1.Query/QueryExchangeParams".to_string(),
@@ -39,7 +21,7 @@ fn test_exchange_param() {
     };
 
     let contract_response: QueryStargateResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
-    let contract_response =  contract_response.value;
+    let contract_response = contract_response.value;
     println!("{:?}", contract_response);
     let response: ParamResponse<ExchangeParams> = from_json(&contract_response).unwrap();
     println!("{:?}", response);
@@ -97,7 +79,6 @@ fn test_query_subaccount_deposit() {
         }
     );
 
-
     let query_msg = QueryMsg::QueryStargate {
         path: "/injective.exchange.v1beta1.Query/SubaccountDeposit".to_string(),
         query_request: encode_proto_message(QuerySubaccountDepositRequest {
@@ -106,10 +87,9 @@ fn test_query_subaccount_deposit() {
         }),
     };
     let contract_response: QueryStargateResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
-    let contract_response =  contract_response.value;
+    let contract_response = contract_response.value;
     let contract_response: SubaccountDepositResponse = serde_json::from_str(&contract_response).unwrap();
     println!("{:?}", contract_response);
     let deposit = contract_response.deposits;
     assert_eq!(deposit.total_balance, human_to_dec("10.0", BASE_DECIMALS));
 }
-

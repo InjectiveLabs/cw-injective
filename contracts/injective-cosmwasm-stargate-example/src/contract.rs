@@ -1,9 +1,7 @@
 use crate::{
     error::ContractError,
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
-    query::{
-        handle_query_stargate,
-    },
+    query::handle_query_stargate,
 };
 use cosmwasm_std::{entry_point, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
@@ -25,7 +23,7 @@ pub fn instantiate(deps: DepsMut, _env: Env, _info: MessageInfo, _msg: Instantia
 pub fn execute(
     _deps: DepsMut<InjectiveQueryWrapper>,
     env: Env,
-    info: MessageInfo,
+    _info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     match msg {
@@ -41,5 +39,3 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> Std
         QueryMsg::QueryStargate { path, query_request } => handle_query_stargate(&deps.querier, path, query_request),
     }
 }
-
-
