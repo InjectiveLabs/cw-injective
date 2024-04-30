@@ -22,6 +22,12 @@ In order to generate an individual proto file run:
 buf generate [/path/to/injective-core] --template [/path/to/buf.gen.yaml] --output [output-path] --path [/path/to/module/proto]
 ```
 
+Follow by:
+
+```shell
+buf build [/path/to/injective-core] --as-file-descriptor-set -o [/tmp/path/injective/descriptor_injective.bin] --path [/path/to/module/proto]
+```
+
 Example `buf.gen.yaml` file:
 
 ```yaml
