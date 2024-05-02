@@ -1,3 +1,4 @@
+pub mod auction;
 pub mod exchange;
 pub mod insurance;
 pub mod oracle;

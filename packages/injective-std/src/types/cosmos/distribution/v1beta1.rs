@@ -119,20 +119,20 @@ pub struct FeePool {
 /// longer a need for an explicit CommunityPoolSpendProposal. To spend community
 /// pool funds, a simple MsgCommunityPoolSpend can be invoked from the x/gov
 /// module via a v1 governance proposal.
-// #[allow(clippy::derive_partial_eq_without_eq)]
-// #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-// #[proto_message(type_url = "/cosmos.distribution.v1beta1.CommunityPoolSpendProposalCommunityPoolSpendProposal")]
-// #[deprecated]
-// pub struct CommunityPoolSpendProposal {
-//     #[prost(string, tag = "1")]
-//     pub title: ::prost::alloc::string::String,
-//     #[prost(string, tag = "2")]
-//     pub description: ::prost::alloc::string::String,
-//     #[prost(string, tag = "3")]
-//     pub recipient: ::prost::alloc::string::String,
-//     #[prost(message, repeated, tag = "4")]
-//     pub amount: ::prost::alloc::vec::Vec<super::super::base::v1beta1::Coin>,
-// }
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/cosmos.distribution.v1beta1.CommunityPoolSpendProposalCommunityPoolSpendProposal")]
+#[deprecated]
+pub struct CommunityPoolSpendProposal {
+    #[prost(string, tag = "1")]
+    pub title: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub description: ::prost::alloc::string::String,
+    #[prost(string, tag = "3")]
+    pub recipient: ::prost::alloc::string::String,
+    #[prost(message, repeated, tag = "4")]
+    pub amount: ::prost::alloc::vec::Vec<super::super::base::v1beta1::Coin>,
+}
 /// DelegatorStartingInfo represents the starting info for a delegator reward
 /// period. It tracks the previous validator period, the delegation's amount of
 /// staking token, and the creation height (to check later on if any slashes have
