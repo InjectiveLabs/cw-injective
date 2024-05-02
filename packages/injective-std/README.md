@@ -8,7 +8,7 @@ Injective's proto-generated types and helpers built using [Buf](https://github.c
 
 ## Supported Version
 
-- Injective-Core@e38d508c746a9b90d6e8a261ec2b03f99cc49351
+- Injective-Core@aa61552b5225f76f284811004925d83531e23311
 
 ## Build Instructions
 
@@ -46,7 +46,7 @@ Lets try to create the bindings for
 
 First create a directory with the dependencies as below:
 
-```
+```bash
 ├── README.md
 └── dependencies
     ├── cosmos-sdk
@@ -56,10 +56,10 @@ First create a directory with the dependencies as below:
 
 Next generate the proto:
 
-```
+```shell
 buf generate /Users/wandlitz/go/src/github.com/osmosis-labs/osmosis-rust/packages/proto-build-injective/../../dependencies/injective-core/proto --template /Users/wandlitz/go/src/github.com/osmosis-labs/osmosis-rust/packages/proto-build-injective/buf.gen.yaml --output ./tmp/tmp-protobuf/injective --path /Users/wandlitz/go/src/github.com/osmosis-labs/osmosis-rust/packages/proto-build-injective/../../dependencies/injective-core/proto/injective/auction
 ```
 
-```
+```shell
 buf build /Users/wandlitz/go/src/github.com/osmosis-labs/osmosis-rust/packages/proto-build-injective/../../dependencies/injective-core/proto  --path /Users/wandlitz/go/src/github.com/osmosis-labs/osmosis-rust/packages/proto-build-injective/../../dependencies/injective-core/proto/injective/auction
 ```
