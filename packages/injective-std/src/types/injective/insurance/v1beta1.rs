@@ -130,18 +130,6 @@ pub struct EventUnderwrite {
     #[prost(message, optional, tag = "4")]
     pub shares: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
 }
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.insurance.v1beta1.EventInsuranceWithdraw")]
-pub struct EventInsuranceWithdraw {
-    #[prost(string, tag = "1")]
-    #[serde(alias = "marketID")]
-    pub market_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub market_ticker: ::prost::alloc::string::String,
-    #[prost(message, optional, tag = "3")]
-    pub withdrawal: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
-}
 /// GenesisState defines the insurance module's genesis state.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
