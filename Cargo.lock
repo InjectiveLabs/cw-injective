@@ -90,7 +90,7 @@ dependencies = [
  "cw-storage-plus 1.2.0",
  "cw-utils 0.16.0",
  "cw2 0.16.0",
- "injective-cosmwasm 0.2.22",
+ "injective-cosmwasm 0.2.23-rc1",
  "injective-math 0.2.4",
  "injective-protobuf",
  "protobuf 2.28.0",
@@ -785,7 +785,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus 1.2.0",
  "cw2 0.16.0",
- "injective-cosmwasm 0.2.22",
+ "injective-cosmwasm 0.2.23-rc1",
  "schemars",
  "serde 1.0.197",
  "thiserror",
@@ -1547,7 +1547,7 @@ dependencies = [
 
 [[package]]
 name = "injective-cosmwasm"
-version = "0.2.22"
+version = "0.2.23-rc1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -1573,7 +1573,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus 1.2.0",
  "cw2 0.16.0",
- "injective-cosmwasm 0.2.22",
+ "injective-cosmwasm 0.2.23-rc1",
  "injective-math 0.2.4",
  "injective-protobuf",
  "injective-std 0.1.5",
@@ -1646,7 +1646,7 @@ dependencies = [
 
 [[package]]
 name = "injective-std"
-version = "1.12.10-testnet"
+version = "1.12.11-testnet-rc1"
 dependencies = [
  "chrono",
  "cosmwasm-std",
@@ -1686,7 +1686,7 @@ dependencies = [
  "base64 0.13.1",
  "cosmwasm-std",
  "cw-multi-test",
- "injective-cosmwasm 0.2.22",
+ "injective-cosmwasm 0.2.23-rc1",
  "injective-math 0.2.4",
  "rand 0.4.6",
  "secp256k1",

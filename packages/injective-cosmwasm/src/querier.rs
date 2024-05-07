@@ -1,14 +1,3 @@
-use crate::exchange::{
-    cancel::CancellationStrategy,
-    order::OrderSide,
-    response::{
-        DerivativeMarketResponse, ExchangeParamsResponse, MarketMidPriceAndTOBResponse, MarketVolatilityResponse, OracleVolatilityResponse,
-        PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse,
-        QueryMarketAtomicExecutionFeeMultiplierResponse, QueryOrderbookResponse, SpotMarketResponse, StakedAmountResponse, SubaccountDepositResponse,
-        SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
-    },
-    types::{MarketId, SubaccountId},
-};
 use crate::oracle::{
     response::{OraclePriceResponse, PythPriceResponse},
     types::{OracleHistoryOptions, OracleInfo, OracleType},
@@ -18,6 +7,21 @@ use crate::query::{InjectiveQuery, InjectiveQueryWrapper};
 use crate::route::InjectiveRoute;
 use crate::tokenfactory::response::{TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
 use crate::wasmx::response::QueryContractRegistrationInfoResponse;
+use crate::{
+    exchange::{
+        cancel::CancellationStrategy,
+        order::OrderSide,
+        response::{
+            DerivativeMarketResponse, ExchangeParamsResponse, MarketMidPriceAndTOBResponse, MarketVolatilityResponse, OracleVolatilityResponse,
+            PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, QueryAggregateMarketVolumeResponse, QueryAggregateVolumeResponse,
+            QueryMarketAtomicExecutionFeeMultiplierResponse, QueryOrderbookResponse, SpotMarketResponse, StakedAmountResponse,
+            SubaccountDepositResponse, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse,
+            TraderDerivativeOrdersResponse, TraderSpotOrdersResponse,
+        },
+        types::{MarketId, SubaccountId},
+    },
+    oracle::types::ScalingOptions,
+};
 use cosmwasm_std::{Addr, QuerierWrapper, StdResult};
 use injective_math::FPDecimal;
 
@@ -421,13 +425,20 @@ impl<'a> InjectiveQuerier<'a> {
         Ok(res)
     }
 
-    pub fn query_oracle_price(&self, oracle_type: &'a OracleType, base: &str, quote: &str) -> StdResult<OraclePriceResponse> {
+    pub fn query_oracle_price(
+        &self,
+        oracle_type: &'a OracleType,
+        base: &str,
+        quote: &str,
+        scaling_options: Option<ScalingOptions>,
+    ) -> StdResult<OraclePriceResponse> {
         let request = InjectiveQueryWrapper {
             route: InjectiveRoute::Oracle,
             query_data: InjectiveQuery::OraclePrice {
                 oracle_type: *oracle_type,
                 base: base.into(),
                 quote: quote.into(),
+                scaling_options,
             },
         };
 
