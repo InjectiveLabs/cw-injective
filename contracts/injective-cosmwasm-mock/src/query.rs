@@ -1,5 +1,7 @@
 use cosmwasm_std::{to_json_binary, Addr, Binary, StdResult};
-use injective_cosmwasm::{CancellationStrategy, InjectiveQuerier, MarketId, OracleInfo, OracleType, OrderSide, SubaccountId};
+use injective_cosmwasm::{
+    oracle::types::ScalingOptions, CancellationStrategy, InjectiveQuerier, MarketId, OracleInfo, OracleType, OrderSide, SubaccountId,
+};
 use injective_math::FPDecimal;
 
 pub fn handle_exchange_params_query(querier: &InjectiveQuerier) -> StdResult<Binary> {
@@ -136,8 +138,14 @@ pub fn handle_oracle_volatility_query(
     to_json_binary(&querier.query_oracle_volatility(&base_info, &quote_info, max_age, include_raw_history, include_metadata)?)
 }
 
-pub fn handle_oracle_price_query(querier: &InjectiveQuerier, oracle_type: &OracleType, base: String, quote: String) -> StdResult<Binary> {
-    to_json_binary(&querier.query_oracle_price(oracle_type, &base, &quote)?)
+pub fn handle_oracle_price_query(
+    querier: &InjectiveQuerier,
+    oracle_type: &OracleType,
+    base: String,
+    quote: String,
+    scaling_options: Option<ScalingOptions>,
+) -> StdResult<Binary> {
+    to_json_binary(&querier.query_oracle_price(oracle_type, &base, &quote, scaling_options)?)
 }
 
 pub fn handle_pyth_price_query(querier: &InjectiveQuerier, price_id: String) -> StdResult<Binary> {

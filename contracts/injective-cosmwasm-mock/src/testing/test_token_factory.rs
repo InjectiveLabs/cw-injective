@@ -16,6 +16,8 @@ fn test_query_token_factory_denom_total_supply() {
     let msg_create_denom = MsgCreateDenom {
         sender: env.owner.address(),
         subdenom: "test".to_string(),
+        name: "Test".to_string(),
+        symbol: "TST".to_string(),
     };
 
     factory.create_denom(msg_create_denom, &env.owner).unwrap();
