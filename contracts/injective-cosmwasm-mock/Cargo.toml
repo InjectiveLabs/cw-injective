@@ -19,8 +19,8 @@ crate-type = [ "cdylib", "rlib" ]
 # for more explicit tests, cargo test --features=backtraces
 backtraces = [ "cosmwasm-std/backtraces" ]
 # use library feature to disable all instantiate/execute/query exports
-library = [  ]
 integration = [  ]
+library     = [  ]
 
 [package.metadata.scripts]
 optimize = """docker run --rm -v "$(pwd)":/code \
@@ -30,24 +30,22 @@ optimize = """docker run --rm -v "$(pwd)":/code \
 """
 
 [dependencies]
+cosmos-sdk-proto   = { version = "0.20.0", default-features = false }
+cosmwasm-schema    = { version = "1.5.0" }
 cosmwasm-std       = { version = "1.5.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "iterator", "stargate" ] }
 cw-storage-plus    = { version = "1.2.0" }
 cw2                = { version = "0.16.0" }
 injective-cosmwasm = { path = "../../packages/injective-cosmwasm" }
 injective-math     = { path = "../../packages/injective-math" }
-injective-protobuf = { path = "../../packages/injective-protobuf"}
-schemars           = { version ="0.8.16"}
+injective-protobuf = { path = "../../packages/injective-protobuf" }
+injective-std      = { version = "0.1.5" }
+prost              = { version = "0.12.4" }
+protobuf           = { version = "3.3.0" }
+schemars           = { version = "0.8.16" }
 serde              = { version = "1.0.196", default-features = false, features = [ "derive" ] }
 thiserror          = { version = "1.0.56" }
-protobuf           = { version = "3.3.0" }
-prost              = { version = "0.11.9" }
-injective-std      = { version = "0.1.5" }
-cosmos-sdk-proto   = { version = "0.20.0", default-features = false }
-cosmwasm-schema    = { version = "1.5.0" }
-
-
 
 [dev-dependencies]
-injective-test-tube = { version = "1.1.7" }
 injective-std       = { version = "0.1.5" }
+injective-test-tube = { version = "1.1.7" }
 injective-testing   = { version = "0.1.6" }
