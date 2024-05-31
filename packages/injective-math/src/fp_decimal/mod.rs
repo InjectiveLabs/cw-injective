@@ -463,6 +463,18 @@ mod tests {
     }
 
     #[test]
+    fn test_into_u256() {
+        let fp_decimal: Uint256 = FPDecimal {
+            num: U256::from(12345u64),
+            sign: 1, // Assuming it's always positive
+        }
+        .into();
+        let u256 = Uint256::from(12345u64);
+
+        assert_eq!(u256, fp_decimal)
+    }
+
+    #[test]
     fn into_uint256_floor() {
         let fp_decimal = FPDecimal {
             num: U256::from_dec_str("12345").unwrap(),
