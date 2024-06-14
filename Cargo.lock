@@ -1555,7 +1555,7 @@ dependencies = [
 
 [[package]]
 name = "injective-std"
-version = "1.12.10-testnet-rc2"
+version = "1.12.10-testnet-rc2.1"
 dependencies = [
  "chrono",
  "cosmwasm-std",
