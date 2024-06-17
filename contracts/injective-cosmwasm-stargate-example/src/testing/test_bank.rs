@@ -35,6 +35,8 @@ fn test_query_denom_metadata() {
     let create_denom_msg = MsgCreateDenom {
         sender: env.users[0].account.address().to_string(),
         subdenom: "cw".to_string(),
+        name: "TEST_DENOM".to_string(),
+        symbol: "TDM".to_string(),
     };
 
     let denom = token_factory.create_denom(create_denom_msg, &env.users[0].account).unwrap();

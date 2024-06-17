@@ -59,13 +59,11 @@ fn test_query_oracle_volatility() {
     let base_info = Some(OracleInfo {
         symbol: env.denoms["base"].to_owned(),
         oracle_type: OracleType::PriceFeed as i32,
-        scale_factor: 6u32,
     });
 
     let quote_info = Some(OracleInfo {
         symbol: env.denoms["quote"].to_owned(),
         oracle_type: OracleType::PriceFeed as i32,
-        scale_factor: 6u32,
     });
 
     let oracle_history_options = Some(OracleHistoryOptions {
