@@ -2,6 +2,7 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![forbid(unsafe_code)]
 #![warn(trivial_casts, trivial_numeric_casts, unused_import_braces)]
+#![allow(unused_imports, deprecated)]
 
 mod serde;
 pub mod shim;

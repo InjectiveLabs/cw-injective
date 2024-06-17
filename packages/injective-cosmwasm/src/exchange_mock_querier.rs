@@ -687,7 +687,9 @@ impl WasmMockQuerier {
                     Some(handler) => handler.handle(base_info, quote_info, oracle_history_options),
                     None => default_oracle_volatility_response_handler(),
                 },
-                InjectiveQuery::OraclePrice { oracle_type, base, quote } => match &self.oracle_price_response_handler {
+                InjectiveQuery::OraclePrice {
+                    oracle_type, base, quote, ..
+                } => match &self.oracle_price_response_handler {
                     Some(handler) => handler.handle(oracle_type, base, quote),
                     None => default_oracle_volatility_response_handler(),
                 },

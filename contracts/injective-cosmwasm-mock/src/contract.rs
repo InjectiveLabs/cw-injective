@@ -130,7 +130,7 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> Std
             include_raw_history,
             include_metadata,
         } => handle_oracle_volatility_query(&querier, base_info, quote_info, max_age, include_raw_history, include_metadata),
-        QueryMsg::TestQueryOraclePrice { oracle_type, base, quote } => handle_oracle_price_query(&querier, &oracle_type, base, quote),
+        QueryMsg::TestQueryOraclePrice { oracle_type, base, quote } => handle_oracle_price_query(&querier, &oracle_type, base, quote, None),
         QueryMsg::TestQueryPythPrice { price_id } => handle_pyth_price_query(&querier, price_id),
         QueryMsg::TestQueryStakedAmount {
             delegator_address,

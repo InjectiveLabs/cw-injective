@@ -29,6 +29,12 @@ pub struct OracleVolatilityResponse {
     pub raw_history: Vec<TradeRecord>,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct ScalingOptions {
+    pub base_decimals: u8,
+    pub quote_decimals: u8,
+}
+
 #[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema, Copy)]
 #[repr(i32)]
 #[derive(Default)]

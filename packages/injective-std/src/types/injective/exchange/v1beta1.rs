@@ -242,6 +242,12 @@ pub struct Params {
     /// derivative market launch is enabled
     #[prost(bool, tag = "24")]
     pub is_instant_derivative_market_launch_enabled: bool,
+    #[prost(int64, tag = "25")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub post_only_mode_height_threshold: i64,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -609,6 +615,8 @@ pub struct OrderInfo {
     /// quantity of the order
     #[prost(string, tag = "4")]
     pub quantity: ::prost::alloc::string::String,
+    #[prost(string, tag = "5")]
+    pub cid: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -859,6 +867,8 @@ pub struct TradeLog {
     pub order_hash: ::prost::alloc::vec::Vec<u8>,
     #[prost(bytes = "vec", tag = "6")]
     pub fee_recipient_address: ::prost::alloc::vec::Vec<u8>,
+    #[prost(string, tag = "7")]
+    pub cid: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -890,6 +900,8 @@ pub struct DerivativeTradeLog {
     pub order_hash: ::prost::alloc::vec::Vec<u8>,
     #[prost(bytes = "vec", tag = "6")]
     pub fee_recipient_address: ::prost::alloc::vec::Vec<u8>,
+    #[prost(string, tag = "7")]
+    pub cid: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -1851,8 +1863,6 @@ pub struct MsgInstantSpotMarketLaunch {
     /// quantity
     #[prost(string, tag = "6")]
     pub min_quantity_tick_size: ::prost::alloc::string::String,
-    // min_notional defines the minimum notional (in quote asset) required for
-    // orders in the market
     #[prost(string, tag = "7")]
     pub min_notional: ::prost::alloc::string::String,
 }
@@ -1920,6 +1930,10 @@ pub struct MsgInstantPerpetualMarketLaunch {
     /// quantity
     #[prost(string, tag = "13")]
     pub min_quantity_tick_size: ::prost::alloc::string::String,
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2d7e3f37cd11c43fd1ac4b3ae0908ad0d915e360
     #[prost(string, tag = "14")]
     pub min_notional: ::prost::alloc::string::String,
 }
@@ -2180,6 +2194,8 @@ pub struct MsgCancelSpotOrder {
     pub subaccount_id: ::prost::alloc::string::String,
     #[prost(string, tag = "4")]
     pub order_hash: ::prost::alloc::string::String,
+    #[prost(string, tag = "5")]
+    pub cid: ::prost::alloc::string::String,
 }
 /// MsgCancelSpotOrderResponse defines the Msg/CancelSpotOrder response type.
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -2356,6 +2372,8 @@ pub struct MsgCancelDerivativeOrder {
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
     pub order_mask: i32,
+    #[prost(string, tag = "6")]
+    pub cid: ::prost::alloc::string::String,
 }
 /// MsgCancelDerivativeOrderResponse defines the
 /// Msg/CancelDerivativeOrderResponse response type.
@@ -2386,6 +2404,8 @@ pub struct MsgCancelBinaryOptionsOrder {
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
     pub order_mask: i32,
+    #[prost(string, tag = "6")]
+    pub cid: ::prost::alloc::string::String,
 }
 /// MsgCancelBinaryOptionsOrderResponse defines the
 /// Msg/CancelBinaryOptionsOrderResponse response type.
@@ -2412,6 +2432,8 @@ pub struct OrderData {
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
     pub order_mask: i32,
+    #[prost(string, tag = "5")]
+    pub cid: ::prost::alloc::string::String,
 }
 /// MsgBatchCancelDerivativeOrders defines the Msg/CancelDerivativeOrders
 /// response type.
@@ -2498,6 +2520,26 @@ pub struct MsgLiquidatePosition {
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.exchange.v1beta1.MsgLiquidatePositionResponse")]
 pub struct MsgLiquidatePositionResponse {}
+/// A Cosmos-SDK MsgEmergencySettleMarket
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.MsgEmergencySettleMarket")]
+pub struct MsgEmergencySettleMarket {
+    #[prost(string, tag = "1")]
+    pub sender: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    #[serde(alias = "subaccountID")]
+    pub subaccount_id: ::prost::alloc::string::String,
+    #[prost(string, tag = "3")]
+    #[serde(alias = "marketID")]
+    pub market_id: ::prost::alloc::string::String,
+}
+/// MsgEmergencySettleMarketResponse defines the Msg/EmergencySettleMarket
+/// response type.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.MsgEmergencySettleMarketResponse")]
+pub struct MsgEmergencySettleMarketResponse {}
 /// A Cosmos-SDK MsgIncreasePositionMargin
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -2549,6 +2591,384 @@ pub struct MsgPrivilegedExecuteContract {
 pub struct MsgPrivilegedExecuteContractResponse {
     #[prost(message, repeated, tag = "1")]
     pub funds_diff: ::prost::alloc::vec::Vec<super::super::super::cosmos::base::v1beta1::Coin>,
+}
+/// A Cosmos-SDK MsgRewardsOptOut
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.MsgRewardsOptOut")]
+pub struct MsgRewardsOptOut {
+    #[prost(string, tag = "1")]
+    pub sender: ::prost::alloc::string::String,
+}
+/// MsgRewardsOptOutResponse defines the Msg/RewardsOptOut response type.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.MsgRewardsOptOutResponse")]
+pub struct MsgRewardsOptOutResponse {}
+/// A Cosmos-SDK MsgReclaimLockedFunds
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.MsgReclaimLockedFunds")]
+pub struct MsgReclaimLockedFunds {
+    #[prost(string, tag = "1")]
+    pub sender: ::prost::alloc::string::String,
+    #[prost(bytes = "vec", tag = "2")]
+    pub locked_account_pub_key: ::prost::alloc::vec::Vec<u8>,
+    #[prost(bytes = "vec", tag = "3")]
+    pub signature: ::prost::alloc::vec::Vec<u8>,
+}
+/// MsgReclaimLockedFundsResponse defines the Msg/ReclaimLockedFunds response
+/// type.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.MsgReclaimLockedFundsResponse")]
+pub struct MsgReclaimLockedFundsResponse {}
+/// MsgSignData defines an arbitrary, general-purpose, off-chain message
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.MsgSignData")]
+pub struct MsgSignData {
+    /// Signer is the sdk.AccAddress of the message signer
+    #[prost(bytes = "vec", tag = "1")]
+    pub signer: ::prost::alloc::vec::Vec<u8>,
+    /// Data represents the raw bytes of the content that is signed (text, json,
+    /// etc)
+    #[prost(bytes = "vec", tag = "2")]
+    pub data: ::prost::alloc::vec::Vec<u8>,
+}
+/// MsgSignDoc defines an arbitrary, general-purpose, off-chain message
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.MsgSignDoc")]
+pub struct MsgSignDoc {
+    #[prost(string, tag = "1")]
+    pub sign_type: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "2")]
+    pub value: ::core::option::Option<MsgSignData>,
+}
+/// MsgAdminUpdateBinaryOptionsMarket is used by the market Admin to operate the
+/// market
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.MsgAdminUpdateBinaryOptionsMarket")]
+pub struct MsgAdminUpdateBinaryOptionsMarket {
+    #[prost(string, tag = "1")]
+    pub sender: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    #[serde(alias = "marketID")]
+    pub market_id: ::prost::alloc::string::String,
+    /// new price at which market will be settled
+    #[prost(string, tag = "3")]
+    pub settlement_price: ::prost::alloc::string::String,
+    /// expiration timestamp
+    #[prost(int64, tag = "4")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub expiration_timestamp: i64,
+    /// expiration timestamp
+    #[prost(int64, tag = "5")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub settlement_timestamp: i64,
+    /// Status of the market
+    #[prost(enumeration = "MarketStatus", tag = "6")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub status: i32,
+}
+/// MsgAdminUpdateBinaryOptionsMarketResponse is the response for
+/// AdminUpdateBinaryOptionsMarket rpc method
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.MsgAdminUpdateBinaryOptionsMarketResponse")]
+pub struct MsgAdminUpdateBinaryOptionsMarketResponse {}
+/// GenesisState defines the exchange module's genesis state.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.GenesisState")]
+pub struct GenesisState {
+    /// params defines all the parameters of related to exchange.
+    #[prost(message, optional, tag = "1")]
+    pub params: ::core::option::Option<Params>,
+    /// spot_markets is an array containing the genesis trade pairs
+    #[prost(message, repeated, tag = "2")]
+    pub spot_markets: ::prost::alloc::vec::Vec<SpotMarket>,
+    /// derivative_markets is an array containing the genesis derivative markets
+    #[prost(message, repeated, tag = "3")]
+    pub derivative_markets: ::prost::alloc::vec::Vec<DerivativeMarket>,
+    /// spot_orderbook defines the spot exchange limit orderbook active at genesis.
+    #[prost(message, repeated, tag = "4")]
+    pub spot_orderbook: ::prost::alloc::vec::Vec<SpotOrderBook>,
+    /// derivative_orderbook defines the derivative exchange limit orderbook active
+    /// at genesis.
+    #[prost(message, repeated, tag = "5")]
+    pub derivative_orderbook: ::prost::alloc::vec::Vec<DerivativeOrderBook>,
+    /// balances defines the exchange users balances active at genesis.
+    #[prost(message, repeated, tag = "6")]
+    pub balances: ::prost::alloc::vec::Vec<Balance>,
+    /// positions defines the exchange derivative positions at genesis
+    #[prost(message, repeated, tag = "7")]
+    pub positions: ::prost::alloc::vec::Vec<DerivativePosition>,
+    /// subaccount_trade_nonces defines the subaccount trade nonces for the
+    /// subaccounts at genesis
+    #[prost(message, repeated, tag = "8")]
+    pub subaccount_trade_nonces: ::prost::alloc::vec::Vec<SubaccountNonce>,
+    /// expiry_futures_market_info defines the market info for the expiry futures
+    /// markets at genesis
+    #[prost(message, repeated, tag = "9")]
+    pub expiry_futures_market_info_state: ::prost::alloc::vec::Vec<ExpiryFuturesMarketInfoState>,
+    /// perpetual_market_info defines the market info for the perpetual derivative
+    /// markets at genesis
+    #[prost(message, repeated, tag = "10")]
+    pub perpetual_market_info: ::prost::alloc::vec::Vec<PerpetualMarketInfo>,
+    /// perpetual_market_funding_state defines the funding state for the perpetual
+    /// derivative markets at genesis
+    #[prost(message, repeated, tag = "11")]
+    pub perpetual_market_funding_state: ::prost::alloc::vec::Vec<PerpetualMarketFundingState>,
+    /// derivative_market_settlement_scheduled defines the scheduled markets for
+    /// settlement at genesis
+    #[prost(message, repeated, tag = "12")]
+    pub derivative_market_settlement_scheduled: ::prost::alloc::vec::Vec<DerivativeMarketSettlementInfo>,
+    /// sets spot markets as enabled
+    #[prost(bool, tag = "13")]
+    pub is_spot_exchange_enabled: bool,
+    /// sets derivative markets as enabled
+    #[prost(bool, tag = "14")]
+    pub is_derivatives_exchange_enabled: bool,
+    /// the current trading reward campaign info
+    #[prost(message, optional, tag = "15")]
+    pub trading_reward_campaign_info: ::core::option::Option<TradingRewardCampaignInfo>,
+    /// the current and upcoming trading reward campaign pools
+    #[prost(message, repeated, tag = "16")]
+    pub trading_reward_pool_campaign_schedule: ::prost::alloc::vec::Vec<CampaignRewardPool>,
+    /// the current trading reward account points
+    #[prost(message, repeated, tag = "17")]
+    pub trading_reward_campaign_account_points: ::prost::alloc::vec::Vec<TradingRewardCampaignAccountPoints>,
+    /// the fee discount schedule
+    #[prost(message, optional, tag = "18")]
+    pub fee_discount_schedule: ::core::option::Option<FeeDiscountSchedule>,
+    /// the cached fee discount account tiers with TTL
+    #[prost(message, repeated, tag = "19")]
+    pub fee_discount_account_tier_ttl: ::prost::alloc::vec::Vec<FeeDiscountAccountTierTtl>,
+    /// the fee discount paid by accounts in all buckets
+    #[prost(message, repeated, tag = "20")]
+    pub fee_discount_bucket_volume_accounts: ::prost::alloc::vec::Vec<FeeDiscountBucketVolumeAccounts>,
+    /// sets the first fee cycle as finished
+    #[prost(bool, tag = "21")]
+    pub is_first_fee_cycle_finished: bool,
+    /// the current and upcoming trading reward campaign pending pools
+    #[prost(message, repeated, tag = "22")]
+    pub pending_trading_reward_pool_campaign_schedule: ::prost::alloc::vec::Vec<CampaignRewardPool>,
+    /// the pending trading reward account points
+    #[prost(message, repeated, tag = "23")]
+    pub pending_trading_reward_campaign_account_points: ::prost::alloc::vec::Vec<TradingRewardCampaignAccountPendingPoints>,
+    /// the addresses opting out of trading rewards
+    #[prost(string, repeated, tag = "24")]
+    pub rewards_opt_out_addresses: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(message, repeated, tag = "25")]
+    pub historical_trade_records: ::prost::alloc::vec::Vec<TradeRecords>,
+    /// binary_options_markets is an array containing the genesis binary options
+    /// markets
+    #[prost(message, repeated, tag = "26")]
+    pub binary_options_markets: ::prost::alloc::vec::Vec<BinaryOptionsMarket>,
+    /// binary_options_markets_scheduled_for_settlement contains the marketIDs of
+    /// binary options markets scheduled for next-block settlement
+    #[prost(string, repeated, tag = "27")]
+    #[serde(alias = "binary_options_marketIDs_scheduled_for_settlement")]
+    pub binary_options_market_ids_scheduled_for_settlement: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// spot_market_ids_scheduled_to_force_close defines the scheduled markets for
+    /// forced closings at genesis
+    #[prost(string, repeated, tag = "28")]
+    #[serde(alias = "spot_marketIDs_scheduled_to_force_close")]
+    pub spot_market_ids_scheduled_to_force_close: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// denom_decimals defines the denom decimals for the exchange.
+    #[prost(message, repeated, tag = "29")]
+    pub denom_decimals: ::prost::alloc::vec::Vec<DenomDecimals>,
+    /// conditional_derivative_orderbook contains conditional orderbooks for all
+    /// markets (both lmit and market conditional orders)
+    #[prost(message, repeated, tag = "30")]
+    pub conditional_derivative_orderbooks: ::prost::alloc::vec::Vec<ConditionalDerivativeOrderBook>,
+    /// market_fee_multipliers contains any non-default atomic order fee
+    /// multipliers
+    #[prost(message, repeated, tag = "31")]
+    pub market_fee_multipliers: ::prost::alloc::vec::Vec<MarketFeeMultiplier>,
+    #[prost(message, repeated, tag = "32")]
+    pub orderbook_sequences: ::prost::alloc::vec::Vec<OrderbookSequence>,
+    #[prost(message, repeated, tag = "33")]
+    pub subaccount_volumes: ::prost::alloc::vec::Vec<AggregateSubaccountVolumeRecord>,
+    #[prost(message, repeated, tag = "34")]
+    pub market_volumes: ::prost::alloc::vec::Vec<MarketVolume>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.OrderbookSequence")]
+pub struct OrderbookSequence {
+    #[prost(uint64, tag = "1")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub sequence: u64,
+    #[prost(string, tag = "2")]
+    #[serde(alias = "marketID")]
+    pub market_id: ::prost::alloc::string::String,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.FeeDiscountAccountTierTTL")]
+pub struct FeeDiscountAccountTierTtl {
+    #[prost(string, tag = "1")]
+    pub account: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "2")]
+    pub tier_ttl: ::core::option::Option<FeeDiscountTierTtl>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.FeeDiscountBucketVolumeAccounts")]
+pub struct FeeDiscountBucketVolumeAccounts {
+    #[prost(int64, tag = "1")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub bucket_start_timestamp: i64,
+    #[prost(message, repeated, tag = "2")]
+    pub account_volume: ::prost::alloc::vec::Vec<AccountVolume>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.AccountVolume")]
+pub struct AccountVolume {
+    #[prost(string, tag = "1")]
+    pub account: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub volume: ::prost::alloc::string::String,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.TradingRewardCampaignAccountPoints")]
+pub struct TradingRewardCampaignAccountPoints {
+    #[prost(string, tag = "1")]
+    pub account: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub points: ::prost::alloc::string::String,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.TradingRewardCampaignAccountPendingPoints")]
+pub struct TradingRewardCampaignAccountPendingPoints {
+    #[prost(int64, tag = "1")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub reward_pool_start_timestamp: i64,
+    #[prost(message, repeated, tag = "2")]
+    pub account_points: ::prost::alloc::vec::Vec<TradingRewardCampaignAccountPoints>,
+}
+/// Spot Exchange Limit Orderbook
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.SpotOrderBook")]
+pub struct SpotOrderBook {
+    #[prost(string, tag = "1")]
+    #[serde(alias = "marketID")]
+    pub market_id: ::prost::alloc::string::String,
+    #[prost(bool, tag = "2")]
+    pub is_buy_side: bool,
+    #[prost(message, repeated, tag = "3")]
+    pub orders: ::prost::alloc::vec::Vec<SpotLimitOrder>,
+}
+/// Derivative Exchange Limit Orderbook
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.DerivativeOrderBook")]
+pub struct DerivativeOrderBook {
+    #[prost(string, tag = "1")]
+    #[serde(alias = "marketID")]
+    pub market_id: ::prost::alloc::string::String,
+    #[prost(bool, tag = "2")]
+    pub is_buy_side: bool,
+    #[prost(message, repeated, tag = "3")]
+    pub orders: ::prost::alloc::vec::Vec<DerivativeLimitOrder>,
+}
+/// Orderbook containing limit & market conditional orders
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.ConditionalDerivativeOrderBook")]
+pub struct ConditionalDerivativeOrderBook {
+    #[prost(string, tag = "1")]
+    #[serde(alias = "marketID")]
+    pub market_id: ::prost::alloc::string::String,
+    #[prost(message, repeated, tag = "2")]
+    pub limit_buy_orders: ::prost::alloc::vec::Vec<DerivativeLimitOrder>,
+    #[prost(message, repeated, tag = "3")]
+    pub market_buy_orders: ::prost::alloc::vec::Vec<DerivativeMarketOrder>,
+    #[prost(message, repeated, tag = "4")]
+    pub limit_sell_orders: ::prost::alloc::vec::Vec<DerivativeLimitOrder>,
+    #[prost(message, repeated, tag = "5")]
+    pub market_sell_orders: ::prost::alloc::vec::Vec<DerivativeMarketOrder>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.Balance")]
+pub struct Balance {
+    #[prost(string, tag = "1")]
+    #[serde(alias = "subaccountID")]
+    pub subaccount_id: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub denom: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "3")]
+    pub deposits: ::core::option::Option<Deposit>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.DerivativePosition")]
+pub struct DerivativePosition {
+    #[prost(string, tag = "1")]
+    #[serde(alias = "subaccountID")]
+    pub subaccount_id: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    #[serde(alias = "marketID")]
+    pub market_id: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "3")]
+    pub position: ::core::option::Option<Position>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.SubaccountNonce")]
+pub struct SubaccountNonce {
+    #[prost(string, tag = "1")]
+    #[serde(alias = "subaccountID")]
+    pub subaccount_id: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "2")]
+    pub subaccount_trade_nonce: ::core::option::Option<SubaccountTradeNonce>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.ExpiryFuturesMarketInfoState")]
+pub struct ExpiryFuturesMarketInfoState {
+    #[prost(string, tag = "1")]
+    #[serde(alias = "marketID")]
+    pub market_id: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "2")]
+    pub market_info: ::core::option::Option<ExpiryFuturesMarketInfo>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.exchange.v1beta1.PerpetualMarketFundingState")]
+pub struct PerpetualMarketFundingState {
+    #[prost(string, tag = "1")]
+    #[serde(alias = "marketID")]
+    pub market_id: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "2")]
+    pub funding: ::core::option::Option<PerpetualMarketFunding>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -2627,6 +3047,10 @@ pub struct BatchExchangeModificationProposal {
     pub binary_options_param_update_proposals: ::prost::alloc::vec::Vec<BinaryOptionsMarketParamUpdateProposal>,
     #[prost(message, optional, tag = "11")]
     pub denom_decimals_update_proposal: ::core::option::Option<UpdateDenomDecimalsProposal>,
+    #[prost(message, optional, tag = "12")]
+    pub fee_discount_proposal: ::core::option::Option<FeeDiscountProposal>,
+    #[prost(message, repeated, tag = "13")]
+    pub market_forced_settlement_proposals: ::prost::alloc::vec::Vec<MarketForcedSettlementProposal>,
 }
 /// SpotMarketLaunchProposal defines a SDK message for proposing a new spot
 /// market through governance
@@ -3112,113 +3536,17 @@ pub struct FeeDiscountProposal {
     #[prost(message, optional, tag = "3")]
     pub schedule: ::core::option::Option<FeeDiscountSchedule>,
 }
-// #[allow(clippy::derive_partial_eq_without_eq)]
-// #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-// #[proto_message(type_url = "/injective.exchange.v1beta1.BatchCommunityPoolSpendProposal")]
-// pub struct BatchCommunityPoolSpendProposal {
-//     #[prost(string, tag = "1")]
-//     pub title: ::prost::alloc::string::String,
-//     #[prost(string, tag = "2")]
-//     pub description: ::prost::alloc::string::String,
-//     #[prost(message, repeated, tag = "3")]
-//     pub proposals: ::prost::alloc::vec::Vec<super::super::super::cosmos::distribution::v1beta1::CommunityPoolSpendProposal>,
-// }
-/// A Cosmos-SDK MsgRewardsOptOut
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.MsgRewardsOptOut")]
-pub struct MsgRewardsOptOut {
+#[proto_message(type_url = "/injective.exchange.v1beta1.BatchCommunityPoolSpendProposal")]
+pub struct BatchCommunityPoolSpendProposal {
     #[prost(string, tag = "1")]
-    pub sender: ::prost::alloc::string::String,
-}
-/// MsgRewardsOptOutResponse defines the Msg/RewardsOptOut response type.
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.MsgRewardsOptOutResponse")]
-pub struct MsgRewardsOptOutResponse {}
-/// A Cosmos-SDK MsgReclaimLockedFunds
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.MsgReclaimLockedFunds")]
-pub struct MsgReclaimLockedFunds {
-    #[prost(string, tag = "1")]
-    pub sender: ::prost::alloc::string::String,
-    #[prost(bytes = "vec", tag = "2")]
-    pub locked_account_pub_key: ::prost::alloc::vec::Vec<u8>,
-    #[prost(bytes = "vec", tag = "3")]
-    pub signature: ::prost::alloc::vec::Vec<u8>,
-}
-/// MsgReclaimLockedFundsResponse defines the Msg/ReclaimLockedFunds response
-/// type.
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.MsgReclaimLockedFundsResponse")]
-pub struct MsgReclaimLockedFundsResponse {}
-/// MsgSignData defines an arbitrary, general-purpose, off-chain message
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.MsgSignData")]
-pub struct MsgSignData {
-    /// Signer is the sdk.AccAddress of the message signer
-    #[prost(bytes = "vec", tag = "1")]
-    pub signer: ::prost::alloc::vec::Vec<u8>,
-    /// Data represents the raw bytes of the content that is signed (text, json,
-    /// etc)
-    #[prost(bytes = "vec", tag = "2")]
-    pub data: ::prost::alloc::vec::Vec<u8>,
-}
-/// MsgSignDoc defines an arbitrary, general-purpose, off-chain message
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.MsgSignDoc")]
-pub struct MsgSignDoc {
-    #[prost(string, tag = "1")]
-    pub sign_type: ::prost::alloc::string::String,
-    #[prost(message, optional, tag = "2")]
-    pub value: ::core::option::Option<MsgSignData>,
-}
-/// MsgAdminUpdateBinaryOptionsMarket is used by the market Admin to operate the
-/// market
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.MsgAdminUpdateBinaryOptionsMarket")]
-pub struct MsgAdminUpdateBinaryOptionsMarket {
-    #[prost(string, tag = "1")]
-    pub sender: ::prost::alloc::string::String,
+    pub title: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
-    #[serde(alias = "marketID")]
-    pub market_id: ::prost::alloc::string::String,
-    /// new price at which market will be settled
-    #[prost(string, tag = "3")]
-    pub settlement_price: ::prost::alloc::string::String,
-    /// expiration timestamp
-    #[prost(int64, tag = "4")]
-    #[serde(
-        serialize_with = "crate::serde::as_str::serialize",
-        deserialize_with = "crate::serde::as_str::deserialize"
-    )]
-    pub expiration_timestamp: i64,
-    /// expiration timestamp
-    #[prost(int64, tag = "5")]
-    #[serde(
-        serialize_with = "crate::serde::as_str::serialize",
-        deserialize_with = "crate::serde::as_str::deserialize"
-    )]
-    pub settlement_timestamp: i64,
-    /// Status of the market
-    #[prost(enumeration = "MarketStatus", tag = "6")]
-    #[serde(
-        serialize_with = "crate::serde::as_str::serialize",
-        deserialize_with = "crate::serde::as_str::deserialize"
-    )]
-    pub status: i32,
+    pub description: ::prost::alloc::string::String,
+    #[prost(message, repeated, tag = "3")]
+    pub proposals: ::prost::alloc::vec::Vec<super::super::super::cosmos::distribution::v1beta1::CommunityPoolSpendProposal>,
 }
-/// MsgAdminUpdateBinaryOptionsMarketResponse is the response for
-/// AdminUpdateBinaryOptionsMarket rpc method
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.MsgAdminUpdateBinaryOptionsMarketResponse")]
-pub struct MsgAdminUpdateBinaryOptionsMarketResponse {}
 /// AtomicMarketOrderFeeMultiplierScheduleProposal defines a SDK message for
 /// proposing new atomic take fee multipliers for specified markets
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -3261,288 +3589,6 @@ impl ExchangeType {
             _ => None,
         }
     }
-}
-/// GenesisState defines the exchange module's genesis state.
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.GenesisState")]
-pub struct GenesisState {
-    /// params defines all the parameters of related to exchange.
-    #[prost(message, optional, tag = "1")]
-    pub params: ::core::option::Option<Params>,
-    /// spot_markets is an array containing the genesis trade pairs
-    #[prost(message, repeated, tag = "2")]
-    pub spot_markets: ::prost::alloc::vec::Vec<SpotMarket>,
-    /// derivative_markets is an array containing the genesis derivative markets
-    #[prost(message, repeated, tag = "3")]
-    pub derivative_markets: ::prost::alloc::vec::Vec<DerivativeMarket>,
-    /// spot_orderbook defines the spot exchange limit orderbook active at genesis.
-    #[prost(message, repeated, tag = "4")]
-    pub spot_orderbook: ::prost::alloc::vec::Vec<SpotOrderBook>,
-    /// derivative_orderbook defines the derivative exchange limit orderbook active
-    /// at genesis.
-    #[prost(message, repeated, tag = "5")]
-    pub derivative_orderbook: ::prost::alloc::vec::Vec<DerivativeOrderBook>,
-    /// balances defines the exchange users balances active at genesis.
-    #[prost(message, repeated, tag = "6")]
-    pub balances: ::prost::alloc::vec::Vec<Balance>,
-    /// positions defines the exchange derivative positions at genesis
-    #[prost(message, repeated, tag = "7")]
-    pub positions: ::prost::alloc::vec::Vec<DerivativePosition>,
-    /// subaccount_trade_nonces defines the subaccount trade nonces for the
-    /// subaccounts at genesis
-    #[prost(message, repeated, tag = "8")]
-    pub subaccount_trade_nonces: ::prost::alloc::vec::Vec<SubaccountNonce>,
-    /// expiry_futures_market_info defines the market info for the expiry futures
-    /// markets at genesis
-    #[prost(message, repeated, tag = "9")]
-    pub expiry_futures_market_info_state: ::prost::alloc::vec::Vec<ExpiryFuturesMarketInfoState>,
-    /// perpetual_market_info defines the market info for the perpetual derivative
-    /// markets at genesis
-    #[prost(message, repeated, tag = "10")]
-    pub perpetual_market_info: ::prost::alloc::vec::Vec<PerpetualMarketInfo>,
-    /// perpetual_market_funding_state defines the funding state for the perpetual
-    /// derivative markets at genesis
-    #[prost(message, repeated, tag = "11")]
-    pub perpetual_market_funding_state: ::prost::alloc::vec::Vec<PerpetualMarketFundingState>,
-    /// derivative_market_settlement_scheduled defines the scheduled markets for
-    /// settlement at genesis
-    #[prost(message, repeated, tag = "12")]
-    pub derivative_market_settlement_scheduled: ::prost::alloc::vec::Vec<DerivativeMarketSettlementInfo>,
-    /// sets spot markets as enabled
-    #[prost(bool, tag = "13")]
-    pub is_spot_exchange_enabled: bool,
-    /// sets derivative markets as enabled
-    #[prost(bool, tag = "14")]
-    pub is_derivatives_exchange_enabled: bool,
-    /// the current trading reward campaign info
-    #[prost(message, optional, tag = "15")]
-    pub trading_reward_campaign_info: ::core::option::Option<TradingRewardCampaignInfo>,
-    /// the current and upcoming trading reward campaign pools
-    #[prost(message, repeated, tag = "16")]
-    pub trading_reward_pool_campaign_schedule: ::prost::alloc::vec::Vec<CampaignRewardPool>,
-    /// the current trading reward account points
-    #[prost(message, repeated, tag = "17")]
-    pub trading_reward_campaign_account_points: ::prost::alloc::vec::Vec<TradingRewardCampaignAccountPoints>,
-    /// the fee discount schedule
-    #[prost(message, optional, tag = "18")]
-    pub fee_discount_schedule: ::core::option::Option<FeeDiscountSchedule>,
-    /// the cached fee discount account tiers with TTL
-    #[prost(message, repeated, tag = "19")]
-    pub fee_discount_account_tier_ttl: ::prost::alloc::vec::Vec<FeeDiscountAccountTierTtl>,
-    /// the fee discount paid by accounts in all buckets
-    #[prost(message, repeated, tag = "20")]
-    pub fee_discount_bucket_volume_accounts: ::prost::alloc::vec::Vec<FeeDiscountBucketVolumeAccounts>,
-    /// sets the first fee cycle as finished
-    #[prost(bool, tag = "21")]
-    pub is_first_fee_cycle_finished: bool,
-    /// the current and upcoming trading reward campaign pending pools
-    #[prost(message, repeated, tag = "22")]
-    pub pending_trading_reward_pool_campaign_schedule: ::prost::alloc::vec::Vec<CampaignRewardPool>,
-    /// the pending trading reward account points
-    #[prost(message, repeated, tag = "23")]
-    pub pending_trading_reward_campaign_account_points: ::prost::alloc::vec::Vec<TradingRewardCampaignAccountPendingPoints>,
-    /// the addresses opting out of trading rewards
-    #[prost(string, repeated, tag = "24")]
-    pub rewards_opt_out_addresses: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
-    #[prost(message, repeated, tag = "25")]
-    pub historical_trade_records: ::prost::alloc::vec::Vec<TradeRecords>,
-    /// binary_options_markets is an array containing the genesis binary options
-    /// markets
-    #[prost(message, repeated, tag = "26")]
-    pub binary_options_markets: ::prost::alloc::vec::Vec<BinaryOptionsMarket>,
-    /// binary_options_markets_scheduled_for_settlement contains the marketIDs of
-    /// binary options markets scheduled for next-block settlement
-    #[prost(string, repeated, tag = "27")]
-    #[serde(alias = "binary_options_marketIDs_scheduled_for_settlement")]
-    pub binary_options_market_ids_scheduled_for_settlement: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
-    /// spot_market_ids_scheduled_to_force_close defines the scheduled markets for
-    /// forced closings at genesis
-    #[prost(string, repeated, tag = "28")]
-    #[serde(alias = "spot_marketIDs_scheduled_to_force_close")]
-    pub spot_market_ids_scheduled_to_force_close: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
-    /// denom_decimals defines the denom decimals for the exchange.
-    #[prost(message, repeated, tag = "29")]
-    pub denom_decimals: ::prost::alloc::vec::Vec<DenomDecimals>,
-    /// conditional_derivative_orderbook contains conditional orderbooks for all
-    /// markets (both lmit and market conditional orders)
-    #[prost(message, repeated, tag = "30")]
-    pub conditional_derivative_orderbooks: ::prost::alloc::vec::Vec<ConditionalDerivativeOrderBook>,
-    /// market_fee_multipliers contains any non-default atomic order fee
-    /// multipliers
-    #[prost(message, repeated, tag = "31")]
-    pub market_fee_multipliers: ::prost::alloc::vec::Vec<MarketFeeMultiplier>,
-    #[prost(message, repeated, tag = "32")]
-    pub orderbook_sequences: ::prost::alloc::vec::Vec<OrderbookSequence>,
-    #[prost(message, repeated, tag = "33")]
-    pub subaccount_volumes: ::prost::alloc::vec::Vec<AggregateSubaccountVolumeRecord>,
-    #[prost(message, repeated, tag = "34")]
-    pub market_volumes: ::prost::alloc::vec::Vec<MarketVolume>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.OrderbookSequence")]
-pub struct OrderbookSequence {
-    #[prost(uint64, tag = "1")]
-    #[serde(
-        serialize_with = "crate::serde::as_str::serialize",
-        deserialize_with = "crate::serde::as_str::deserialize"
-    )]
-    pub sequence: u64,
-    #[prost(string, tag = "2")]
-    #[serde(alias = "marketID")]
-    pub market_id: ::prost::alloc::string::String,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.FeeDiscountAccountTierTTL")]
-pub struct FeeDiscountAccountTierTtl {
-    #[prost(string, tag = "1")]
-    pub account: ::prost::alloc::string::String,
-    #[prost(message, optional, tag = "2")]
-    pub tier_ttl: ::core::option::Option<FeeDiscountTierTtl>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.FeeDiscountBucketVolumeAccounts")]
-pub struct FeeDiscountBucketVolumeAccounts {
-    #[prost(int64, tag = "1")]
-    #[serde(
-        serialize_with = "crate::serde::as_str::serialize",
-        deserialize_with = "crate::serde::as_str::deserialize"
-    )]
-    pub bucket_start_timestamp: i64,
-    #[prost(message, repeated, tag = "2")]
-    pub account_volume: ::prost::alloc::vec::Vec<AccountVolume>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.AccountVolume")]
-pub struct AccountVolume {
-    #[prost(string, tag = "1")]
-    pub account: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub volume: ::prost::alloc::string::String,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.TradingRewardCampaignAccountPoints")]
-pub struct TradingRewardCampaignAccountPoints {
-    #[prost(string, tag = "1")]
-    pub account: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub points: ::prost::alloc::string::String,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.TradingRewardCampaignAccountPendingPoints")]
-pub struct TradingRewardCampaignAccountPendingPoints {
-    #[prost(int64, tag = "1")]
-    #[serde(
-        serialize_with = "crate::serde::as_str::serialize",
-        deserialize_with = "crate::serde::as_str::deserialize"
-    )]
-    pub reward_pool_start_timestamp: i64,
-    #[prost(message, repeated, tag = "2")]
-    pub account_points: ::prost::alloc::vec::Vec<TradingRewardCampaignAccountPoints>,
-}
-/// Spot Exchange Limit Orderbook
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.SpotOrderBook")]
-pub struct SpotOrderBook {
-    #[prost(string, tag = "1")]
-    #[serde(alias = "marketID")]
-    pub market_id: ::prost::alloc::string::String,
-    #[prost(bool, tag = "2")]
-    pub is_buy_side: bool,
-    #[prost(message, repeated, tag = "3")]
-    pub orders: ::prost::alloc::vec::Vec<SpotLimitOrder>,
-}
-/// Derivative Exchange Limit Orderbook
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.DerivativeOrderBook")]
-pub struct DerivativeOrderBook {
-    #[prost(string, tag = "1")]
-    #[serde(alias = "marketID")]
-    pub market_id: ::prost::alloc::string::String,
-    #[prost(bool, tag = "2")]
-    pub is_buy_side: bool,
-    #[prost(message, repeated, tag = "3")]
-    pub orders: ::prost::alloc::vec::Vec<DerivativeLimitOrder>,
-}
-/// Orderbook containing limit & market conditional orders
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.ConditionalDerivativeOrderBook")]
-pub struct ConditionalDerivativeOrderBook {
-    #[prost(string, tag = "1")]
-    #[serde(alias = "marketID")]
-    pub market_id: ::prost::alloc::string::String,
-    #[prost(message, repeated, tag = "2")]
-    pub limit_buy_orders: ::prost::alloc::vec::Vec<DerivativeLimitOrder>,
-    #[prost(message, repeated, tag = "3")]
-    pub market_buy_orders: ::prost::alloc::vec::Vec<DerivativeMarketOrder>,
-    #[prost(message, repeated, tag = "4")]
-    pub limit_sell_orders: ::prost::alloc::vec::Vec<DerivativeLimitOrder>,
-    #[prost(message, repeated, tag = "5")]
-    pub market_sell_orders: ::prost::alloc::vec::Vec<DerivativeMarketOrder>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.Balance")]
-pub struct Balance {
-    #[prost(string, tag = "1")]
-    #[serde(alias = "subaccountID")]
-    pub subaccount_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub denom: ::prost::alloc::string::String,
-    #[prost(message, optional, tag = "3")]
-    pub deposits: ::core::option::Option<Deposit>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.DerivativePosition")]
-pub struct DerivativePosition {
-    #[prost(string, tag = "1")]
-    #[serde(alias = "subaccountID")]
-    pub subaccount_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    #[serde(alias = "marketID")]
-    pub market_id: ::prost::alloc::string::String,
-    #[prost(message, optional, tag = "3")]
-    pub position: ::core::option::Option<Position>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.SubaccountNonce")]
-pub struct SubaccountNonce {
-    #[prost(string, tag = "1")]
-    #[serde(alias = "subaccountID")]
-    pub subaccount_id: ::prost::alloc::string::String,
-    #[prost(message, optional, tag = "2")]
-    pub subaccount_trade_nonce: ::core::option::Option<SubaccountTradeNonce>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.ExpiryFuturesMarketInfoState")]
-pub struct ExpiryFuturesMarketInfoState {
-    #[prost(string, tag = "1")]
-    #[serde(alias = "marketID")]
-    pub market_id: ::prost::alloc::string::String,
-    #[prost(message, optional, tag = "2")]
-    pub market_info: ::core::option::Option<ExpiryFuturesMarketInfo>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.PerpetualMarketFundingState")]
-pub struct PerpetualMarketFundingState {
-    #[prost(string, tag = "1")]
-    #[serde(alias = "marketID")]
-    pub market_id: ::prost::alloc::string::String,
-    #[prost(message, optional, tag = "2")]
-    pub funding: ::core::option::Option<PerpetualMarketFunding>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -4424,7 +4470,7 @@ pub struct FullDerivativeMarket {
 }
 /// Nested message and enum types in `FullDerivativeMarket`.
 pub mod full_derivative_market {
-    // use osmosis_std_derive::CosmwasmExt;
+    use osmosis_std_derive::CosmwasmExt;
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, Eq, ::prost::Oneof, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema)]
     pub enum Info {
@@ -5027,7 +5073,8 @@ pub struct MitoVaultInfosResponse {
     #[prost(string, repeated, tag = "4")]
     pub cw20_addresses: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
-/// QueryMarketIDFromVaultRequest is the request type for the Query/QueryMarketIDFromVault RPC method.
+/// QueryMarketIDFromVaultRequest is the request type for the
+/// Query/QueryMarketIDFromVault RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.exchange.v1beta1.QueryMarketIDFromVaultRequest")]
@@ -5081,8 +5128,9 @@ pub struct TradeHistoryOptions {
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
     pub trade_grouping_sec: u64,
-    /// MaxAge restricts the trade records oldest age in seconds from the current block time to consider.
-    /// A value of 0 means use all the records present on the chain.
+    /// MaxAge restricts the trade records oldest age in seconds from the current
+    /// block time to consider. A value of 0 means use all the records present on
+    /// the chain.
     #[prost(uint64, tag = "2")]
     #[serde(
         serialize_with = "crate::serde::as_str::serialize",
