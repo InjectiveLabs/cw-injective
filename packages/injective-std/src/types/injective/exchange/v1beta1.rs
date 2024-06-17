@@ -1930,10 +1930,6 @@ pub struct MsgInstantPerpetualMarketLaunch {
     /// quantity
     #[prost(string, tag = "13")]
     pub min_quantity_tick_size: ::prost::alloc::string::String,
-<<<<<<< HEAD
-=======
-
->>>>>>> 2d7e3f37cd11c43fd1ac4b3ae0908ad0d915e360
     #[prost(string, tag = "14")]
     pub min_notional: ::prost::alloc::string::String,
 }
