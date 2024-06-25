@@ -1578,7 +1578,7 @@ dependencies = [
  "injective-protobuf",
  "injective-std 0.1.5",
  "injective-test-tube",
- "injective-testing 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-testing 0.1.6",
  "prost 0.11.9",
  "protobuf 3.4.0",
  "schemars",
@@ -1680,7 +1680,7 @@ dependencies = [
 
 [[package]]
 name = "injective-testing"
-version = "0.1.6"
+version = "0.1.6-rc1"
 dependencies = [
  "anyhow",
  "base64 0.13.1",

@@ -15,7 +15,8 @@ use crate::{
     },
     reply::{handle_create_derivative_order_reply, handle_create_order_reply},
 };
-use cosmwasm_std::{entry_point, Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult};
+use cosmwasm_std::{entry_point, Addr, Binary, CodeInfoResponse, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdError, StdResult, WasmMsg};
+use cosmwasm_std::{instantiate2_address, to_json_binary};
 use cw2::set_contract_version;
 use injective_cosmwasm::{create_deposit_msg, InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper};
 
@@ -55,11 +56,12 @@ pub fn execute(
             quantity,
             margin,
         } => handle_test_transient_derivative_order(deps, env, &info, market_id, subaccount_id, price, quantity, margin),
+        ExecuteMsg::TestInstantiate2 { code_id } => generate_instantiation_message(&deps, info.sender.as_str(), code_id, env.contract.address),
     }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps<InjectiveQueryWrapper>, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     let querier = InjectiveQuerier::new(&deps.querier);
     match msg {
         QueryMsg::TestExchangeParamsQuery {} => handle_exchange_params_query(&querier),
@@ -139,6 +141,7 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> Std
         QueryMsg::TestQueryTokenFactoryDenomTotalSupply { denom } => handle_token_factory_denom_total_supply(&querier, denom),
         QueryMsg::TestQueryTokenFactoryCreationFee {} => handle_token_factory_creation_fee(&querier),
         QueryMsg::TestQueryContractRegistrationInfo { contract_address } => handle_contract_registration_info_query(&querier, contract_address),
+        QueryMsg::TestInstantiate2 { code_id } => get_instantiate_address(&deps, env.contract.address, code_id),
     }
 }
 
@@ -149,4 +152,45 @@ pub fn reply(deps: DepsMut<InjectiveQueryWrapper>, _env: Env, msg: Reply) -> Res
         CREATE_DERIVATIVE_ORDER_REPLY_ID => handle_create_derivative_order_reply(deps, &msg),
         _ => Err(ContractError::UnrecognizedReply(msg.id)),
     }
+}
+
+pub fn generate_instantiation_message(
+    deps: &DepsMut<InjectiveQueryWrapper>,
+    sender: &str,
+    code_id: u64,
+    contract_address: Addr,
+) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
+    let msg = WasmMsg::Instantiate2 {
+        admin: Some(sender.to_string()),
+        code_id,
+        label: "Instantiate".to_string(),
+        msg: Binary("{}".as_bytes().to_vec()),
+        funds: vec![],
+        salt: Binary("123".as_bytes().to_vec()),
+    };
+
+    let CodeInfoResponse { checksum, .. } = deps.querier.query_wasm_code_info(code_id)?;
+    deps.api.debug(&format!("checksum: {:?}", checksum));
+
+    let canonical_creator = deps.api.addr_canonicalize(contract_address.as_str())?;
+    deps.api.debug(&format!("canonical_creator: {}", canonical_creator.0));
+
+    let salt = b"123";
+    let canonical_addr = instantiate2_address(&checksum, &canonical_creator, salt).map_err(|_| StdError::generic_err("Could not calculate addr"))?;
+    deps.api.debug(&format!("canonical_addr: {:?}", canonical_addr));
+
+    let addr = Addr::unchecked("inj16qyc46tal0343nul269ugnf03e5d7z48jnd2cq");
+    let canon_contract_addr = deps.api.addr_canonicalize(addr.as_str())?;
+    deps.api.debug(&format!("canon_contract_addr: {}", canon_contract_addr.0));
+
+    Ok(Response::new().add_message(msg))
+}
+
+pub fn get_instantiate_address(deps: &Deps<InjectiveQueryWrapper>, contract_address: Addr, code_id: u64) -> StdResult<Binary> {
+    let canonical_creator = deps.api.addr_canonicalize(contract_address.as_str())?;
+    let CodeInfoResponse { checksum, .. } = deps.querier.query_wasm_code_info(code_id)?;
+    let salt = b"123";
+    let canonical_addr = instantiate2_address(&checksum, &canonical_creator, salt).map_err(|_| StdError::generic_err("Could not calculate addr"))?;
+    let addr = deps.api.addr_humanize(&canonical_addr)?;
+    to_json_binary(&addr)
 }

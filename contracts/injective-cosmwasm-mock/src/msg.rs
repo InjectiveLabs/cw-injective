@@ -29,6 +29,9 @@ pub enum ExecuteMsg {
         quantity: String,
         margin: String,
     },
+    TestInstantiate2 {
+        code_id: u64,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -139,5 +142,8 @@ pub enum QueryMsg {
     TestQueryTokenFactoryCreationFee {},
     TestQueryContractRegistrationInfo {
         contract_address: String,
+    },
+    TestInstantiate2 {
+        code_id: u64,
     },
 }
