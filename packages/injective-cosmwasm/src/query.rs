@@ -4,16 +4,19 @@ use serde::{Deserialize, Serialize};
 
 use injective_math::FPDecimal;
 
-use crate::exchange::{
-    cancel::CancellationStrategy,
-    order::OrderSide,
-    types::{MarketId, SubaccountId},
-};
 use crate::oracle::{
     types::{OracleHistoryOptions, OracleInfo, OracleType},
     volatility::TradeHistoryOptions,
 };
 use crate::route::InjectiveRoute;
+use crate::{
+    exchange::{
+        cancel::CancellationStrategy,
+        order::OrderSide,
+        types::{MarketId, SubaccountId},
+    },
+    oracle::types::ScalingOptions,
+};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -133,6 +136,7 @@ pub enum InjectiveQuery {
         oracle_type: OracleType,
         base: String,
         quote: String,
+        scaling_options: Option<ScalingOptions>,
     },
     PythPrice {
         price_id: String,
