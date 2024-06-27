@@ -19,12 +19,7 @@ backtraces = [ "cosmwasm-std/backtraces" ]
 
 [dependencies]
 cosmwasm-std    = { version = "1.5.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "iterator", "stargate" ] }
-ethereum-types  = "0.5.2"
-num             = "0.4.0"
 protobuf        = { version = "2", features = [ "with-bytes" ] }
-schemars        = "0.8.8"
-serde           = { version = "1.0.136", default-features = false, features = [ "derive" ] }
-subtle-encoding = { version = "0.5.1", features = [ "bech32-preview" ] }
 
 [dev-dependencies]
 cosmwasm-schema = { version = "1.5.0" }
