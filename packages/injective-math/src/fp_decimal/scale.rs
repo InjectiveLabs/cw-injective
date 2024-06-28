@@ -1,5 +1,7 @@
 use crate::fp_decimal::FPDecimal;
 
+pub const DEC_SCALE_FACTOR: i32 = 18;
+
 pub trait Scaled {
     fn scaled(self, digits: i32) -> Self;
 }
@@ -11,7 +13,7 @@ impl Scaled for FPDecimal {
 }
 
 pub fn dec_scale_factor() -> FPDecimal {
-    FPDecimal::ONE.scaled(18)
+    FPDecimal::ONE.scaled(DEC_SCALE_FACTOR)
 }
 
 #[cfg(test)]

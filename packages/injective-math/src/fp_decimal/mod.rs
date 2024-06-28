@@ -383,7 +383,7 @@ impl FPDecimal {
 
 mod arithmetic;
 mod comparison;
-mod display;
+pub mod display;
 pub mod error;
 mod exp;
 mod factorial;
