@@ -148,6 +148,7 @@ fn test_query_spot_market() {
     let ticker = "INJ/USDT".to_string();
     let min_price_tick_size = FPDecimal::must_from_str("0.000000000000001");
     let min_quantity_tick_size = FPDecimal::must_from_str("1000000000000000");
+    let min_notional = FPDecimal::must_from_str("1");
 
     exchange
         .instant_spot_market_launch(
@@ -158,6 +159,7 @@ fn test_query_spot_market() {
                 quote_denom: QUOTE_DENOM.to_string(),
                 min_price_tick_size: dec_to_proto(min_price_tick_size),
                 min_quantity_tick_size: dec_to_proto(min_quantity_tick_size),
+                min_notional: dec_to_proto(min_notional),
             },
             &env.signer,
         )

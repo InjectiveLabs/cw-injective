@@ -25,12 +25,20 @@ pub enum ExecuteMsg {
         quantity: String,
         margin: String,
     },
+    TestMarketOrderStargate {
+        market_id: MarketId,
+        subaccount_id: SubaccountId,
+        price: String,
+        quantity: String,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
-    QueryStargate { path: String, query_request: String },
+    QueryStargateRaw { path: String, query_request: String },
+    QueryBankParams {},
+    QuerySpotMarket { market_id: String },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]

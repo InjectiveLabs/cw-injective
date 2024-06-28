@@ -12,7 +12,7 @@ use injective_test_tube::{Account, Module, Wasm};
 fn test_query_auth_params() {
     let env = Setup::new(ExchangeType::None);
     let wasm = Wasm::new(&env.app);
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/cosmos.auth.v1beta1.Query/Params".to_string(),
         query_request: "".to_string(),
     };
@@ -30,7 +30,7 @@ fn test_query_auth_account() {
     let wasm = Wasm::new(&env.app);
 
     let user_address = env.users[0].account.address().to_string();
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/cosmos.auth.v1beta1.Query/Account".to_string(),
         query_request: encode_proto_message(QueryAccountRequest {
             address: user_address.to_owned(),

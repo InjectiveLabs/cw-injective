@@ -21,7 +21,7 @@ fn test_query_oracle_price() {
     let wasm = Wasm::new(&env.app);
     let oracle = Oracle::new(&env.app);
 
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/injective.oracle.v1beta1.Query/OraclePrice".to_string(),
         query_request: encode_proto_message(QueryOraclePriceRequest {
             oracle_type: OracleType::PriceFeed as i32,
@@ -59,13 +59,11 @@ fn test_query_oracle_volatility() {
     let base_info = Some(OracleInfo {
         symbol: env.denoms["base"].to_owned(),
         oracle_type: OracleType::PriceFeed as i32,
-        scale_factor: 6u32,
     });
 
     let quote_info = Some(OracleInfo {
         symbol: env.denoms["quote"].to_owned(),
         oracle_type: OracleType::PriceFeed as i32,
-        scale_factor: 6u32,
     });
 
     let oracle_history_options = Some(OracleHistoryOptions {
@@ -74,7 +72,7 @@ fn test_query_oracle_volatility() {
         include_metadata: true,
     });
 
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/injective.oracle.v1beta1.Query/OracleVolatility".to_string(),
         query_request: encode_proto_message(QueryOracleVolatilityRequest {
             base_info,
@@ -108,7 +106,7 @@ fn test_query_pyth_oracle_price() {
         .unwrap();
     let price_pyth_oracle_response = FPDecimal::must_from_str(price_pyth_oracle_response.price_state.unwrap().ema_price.as_str());
 
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/injective.oracle.v1beta1.Query/PythPrice".to_string(),
         query_request: encode_proto_message(QueryPythPriceRequest {
             price_id: INJ_PYTH_PRICE_ID.to_string(),

@@ -1,8 +1,8 @@
 use crate::{
     error::ContractError,
-    handle::{handle_test_transient_derivative_order, handle_test_transient_spot_order},
+    handle::{handle_test_market_spot_order, handle_test_transient_derivative_order, handle_test_transient_spot_order},
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
-    query::handle_query_stargate,
+    query::{handle_query_bank_params, handle_query_spot_market, handle_query_stargate_raw},
     reply::{handle_create_derivative_order_reply_stargate, handle_create_order_reply_stargate},
 };
 use cosmwasm_std::{entry_point, Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult};
@@ -34,6 +34,12 @@ pub fn execute(
             price,
             quantity,
         } => handle_test_transient_spot_order(deps, env, &info, market_id, subaccount_id, price, quantity),
+        ExecuteMsg::TestMarketOrderStargate {
+            market_id,
+            subaccount_id,
+            price,
+            quantity,
+        } => handle_test_market_spot_order(deps, env.contract.address.as_str(), market_id, subaccount_id, price, quantity),
         ExecuteMsg::TestTraderTransientDerivativeOrders {
             market_id,
             subaccount_id,
@@ -47,7 +53,9 @@ pub fn execute(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::QueryStargate { path, query_request } => handle_query_stargate(&deps.querier, path, query_request),
+        QueryMsg::QueryStargateRaw { path, query_request } => handle_query_stargate_raw(&deps.querier, path, query_request),
+        QueryMsg::QueryBankParams {} => handle_query_bank_params(deps),
+        QueryMsg::QuerySpotMarket { market_id } => handle_query_spot_market(deps, &market_id),
     }
 }
 

@@ -6,6 +6,7 @@ pub mod msg;
 mod order_management;
 mod query;
 mod reply;
+mod spot_market_order_msg;
 mod state;
 #[cfg(test)]
 mod testing;

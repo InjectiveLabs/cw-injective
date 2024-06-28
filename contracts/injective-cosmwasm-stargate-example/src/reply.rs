@@ -1,4 +1,4 @@
-use crate::{encode_helper::encode_proto_message, query::handle_query_stargate, state::ORDER_CALL_CACHE, ContractError};
+use crate::{encode_helper::encode_proto_message, query::handle_query_stargate_raw, state::ORDER_CALL_CACHE, ContractError};
 use cosmwasm_std::{DepsMut, Event, Reply, Response};
 use injective_cosmwasm::InjectiveQueryWrapper;
 
@@ -37,7 +37,7 @@ pub fn handle_create_order_reply_stargate(deps: DepsMut<InjectiveQueryWrapper>, 
                 market_id: order_info.market_id.clone().into(),
                 subaccount_id: order_info.subaccount.clone().into(),
             });
-            let stargate_response = handle_query_stargate(
+            let stargate_response = handle_query_stargate_raw(
                 &deps.querier,
                 "/injective.exchange.v1beta1.Query/TraderSpotTransientOrders".to_string(),
                 encode_query_message,
@@ -64,7 +64,7 @@ pub fn handle_create_derivative_order_reply_stargate(deps: DepsMut<InjectiveQuer
                 market_id: order_info.market_id.clone().into(),
                 subaccount_id: order_info.subaccount.clone().into(),
             });
-            let stargate_response = handle_query_stargate(
+            let stargate_response = handle_query_stargate_raw(
                 &deps.querier,
                 "/injective.exchange.v1beta1.Query/TraderDerivativeTransientOrders".to_string(),
                 encode_query_message,

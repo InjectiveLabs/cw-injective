@@ -136,6 +136,7 @@ fn create_spot_market_handler() -> impl HandlesMarketIdQuery {
                     status: MarketStatus::Active,
                     min_price_tick_size: FPDecimal::from_str("0.000000000000001").unwrap(),
                     min_quantity_tick_size: FPDecimal::from_str("1000000000000000").unwrap(),
+                    min_notional: FPDecimal::ONE,
                 }),
             };
             SystemResult::Ok(ContractResult::from(to_json_binary(&response)))

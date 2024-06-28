@@ -32,7 +32,7 @@ fn test_query_perpetual_market_info() {
     let derivative_market_id = get_perpetual_market_id(&exchange, ticker.to_owned());
     let market_id = MarketId::new(derivative_market_id.clone()).unwrap();
 
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/injective.exchange.v1beta1.Query/PerpetualMarketInfo".to_string(),
         query_request: encode_proto_message(QueryPerpetualMarketInfoRequest {
             market_id: market_id.to_owned().into(),
@@ -86,7 +86,7 @@ fn test_query_derivative_market() {
         .unwrap();
 
     let derivative_market_id = get_perpetual_market_id(&exchange, ticker.to_owned());
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/injective.exchange.v1beta1.Query/DerivativeMarket".to_string(),
         query_request: encode_proto_message(QueryDerivativeMarketRequest {
             market_id: derivative_market_id.to_owned(),
@@ -130,7 +130,7 @@ fn test_query_effective_subaccount_position() {
         margin,
     );
 
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/injective.exchange.v1beta1.Query/SubaccountEffectivePositionInMarket".to_string(),
         query_request: encode_proto_message(QuerySubaccountEffectivePositionInMarketRequest {
             market_id: market_id.to_owned(),
@@ -167,7 +167,7 @@ fn test_query_vanilla_subaccount_position() {
         margin,
     );
 
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/injective.exchange.v1beta1.Query/SubaccountPositionInMarket".to_string(),
         query_request: encode_proto_message(QuerySubaccountPositionInMarketRequest {
             subaccount_id: subaccount_id.to_string(),
@@ -214,7 +214,7 @@ fn test_query_trader_derivative_orders() {
         margin,
     );
 
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/injective.exchange.v1beta1.Query/TraderDerivativeOrders".to_string(),
         query_request: encode_proto_message(QueryTraderDerivativeOrdersRequest {
             subaccount_id: subaccount_id.to_string(),
@@ -250,7 +250,7 @@ fn test_query_perpetual_market_funding() {
     let exchange = Exchange::new(&env.app);
     let ticker = "INJ/USDT".to_string();
     let derivative_market_id = get_perpetual_market_id(&exchange, ticker.to_owned());
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/injective.exchange.v1beta1.Query/PerpetualMarketFunding".to_string(),
         query_request: encode_proto_message(QueryPerpetualMarketFundingRequest {
             market_id: derivative_market_id.to_owned(),
@@ -271,7 +271,7 @@ fn test_query_derivative_market_mid_price_and_tob() {
     let market_id = env.market_id.unwrap();
 
     add_perp_initial_liquidity(&env.app, market_id.to_owned());
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/injective.exchange.v1beta1.Query/DerivativeMidPriceAndTOB".to_string(),
         query_request: encode_proto_message(QueryDerivativeMidPriceAndTobRequest {
             market_id: market_id.to_owned(),
@@ -293,7 +293,7 @@ fn test_query_derivative_market_orderbook() {
     let liquidity_orders = get_initial_perp_liquidity_orders_vector();
     add_derivative_orders(&env.app, market_id.clone(), liquidity_orders.to_owned(), None);
 
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/injective.exchange.v1beta1.Query/DerivativeOrderbook".to_string(),
         query_request: encode_proto_message(QueryDerivativeOrderbookRequest {
             market_id: market_id.to_owned(),

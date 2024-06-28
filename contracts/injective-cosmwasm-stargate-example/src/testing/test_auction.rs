@@ -48,7 +48,7 @@ pub struct LastAuctionResult {
 fn test_current_auction_basket() {
     let env = Setup::new(ExchangeType::None);
     let wasm = Wasm::new(&env.app);
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/injective.auction.v1beta1.Query/CurrentAuctionBasket".to_string(),
         query_request: "".to_string(),
     };
@@ -69,7 +69,7 @@ fn test_current_auction_basket() {
 fn test_auction_params() {
     let env = Setup::new(ExchangeType::None);
     let wasm = Wasm::new(&env.app);
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/injective.auction.v1beta1.Query/AuctionParams".to_string(),
         query_request: "".to_string(),
     };
@@ -87,7 +87,7 @@ fn test_auction_params() {
 fn test_last_auction_result() {
     let env = Setup::new(ExchangeType::None);
     let wasm = Wasm::new(&env.app);
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/injective.auction.v1beta1.Query/LastAuctionResult".to_string(),
         query_request: "".to_string(),
     };

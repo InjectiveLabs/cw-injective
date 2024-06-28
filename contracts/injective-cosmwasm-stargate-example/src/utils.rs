@@ -416,6 +416,7 @@ pub fn add_spot_order_as(app: &InjectiveTestApp, market_id: String, trader: &Use
                         fee_recipient: trader.account.address(),
                         price,
                         quantity,
+                        cid: "".to_string(),
                     }),
                     order_type: order_type.into(),
                     trigger_price: "".to_string(),
@@ -541,6 +542,7 @@ pub fn add_derivative_order_as(
                         fee_recipient: trader.address(),
                         price,
                         quantity,
+                        cid: "".to_string(),
                     }),
                     margin,
                     order_type: order_type.into(),
@@ -838,7 +840,7 @@ pub fn create_some_usdt_price_attestation(human_price: &str, decimal_precision: 
 pub fn get_stargate_query_result<T: DeserializeOwned>(contract_response: RunnerResult<QueryStargateResponse>) -> serde_json::Result<T> {
     let contract_response = contract_response.unwrap().value;
     serde_json::from_str::<T>(&contract_response).map_err(|error| {
-        println!("{} \n {}", error.to_string(), contract_response);
+        println!("{} \n {}", error, contract_response);
         error
     })
 }

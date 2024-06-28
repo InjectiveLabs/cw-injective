@@ -49,6 +49,7 @@ fn test_query_derivative_market() {
     let maintenance_margin_ratio = FPDecimal::must_from_str("0.05");
     let min_price_tick_size = FPDecimal::must_from_str("1000.0");
     let min_quantity_tick_size = FPDecimal::must_from_str("1000000000000000");
+    let min_notional = FPDecimal::must_from_str("1");
     let quote_denom = QUOTE_DENOM.to_string();
     let maker_fee_rate = FPDecimal::ZERO;
     let taker_fee_rate = FPDecimal::ZERO;
@@ -69,6 +70,7 @@ fn test_query_derivative_market() {
                 maintenance_margin_ratio: dec_to_proto(maintenance_margin_ratio),
                 min_price_tick_size: dec_to_proto(min_price_tick_size),
                 min_quantity_tick_size: dec_to_proto(min_quantity_tick_size),
+                min_notional: dec_to_proto(min_notional),
             },
             &env.signer,
         )
