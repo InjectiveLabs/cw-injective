@@ -47,5 +47,5 @@ thiserror          = { version = "1.0.56" }
 
 [dev-dependencies]
 injective-std       = { path = "../../packages/injective-std" }
-injective-test-tube = { path = "/Users/markuswaas/work/injective/test-tube/packages/injective-test-tube" }
-injective-testing   = { version = "0.1.6" }
+injective-test-tube = { git = "https://github.com/InjectiveLabs/test-tube", package = "injective-test-tube", branch = "latest" }
+injective-testing   = { path = "../../packages/injective-testing" }
