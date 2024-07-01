@@ -234,3 +234,29 @@ pub struct DenomUnit {
 pub struct Pagination {
     // Define fields based on your pagination structure, if any
 }
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct StargateQueryGranteeGrantsResponse {
+    pub grants: Vec<Grants>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct StargateQueryGranterGrantsResponse {
+    pub grants: Vec<Grants>,
+}
+
+
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Grants {
+    pub granter: String,
+    pub grantee: String,
+    pub authorization: Authorization,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Authorization {
+    #[serde(rename = "@type")]
+    pub type_str: String,
+    pub msg: String,
+}
