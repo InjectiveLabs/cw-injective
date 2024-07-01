@@ -205,7 +205,6 @@ pub struct QuerySupplyOffResponse {
     pub amount: Coin,
 }
 
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct QueryDenomMetadataResponse {
     pub metadatas: Vec<Metadata>,
@@ -244,8 +243,6 @@ pub struct StargateQueryGranteeGrantsResponse {
 pub struct StargateQueryGranterGrantsResponse {
     pub grants: Vec<Grants>,
 }
-
-
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Grants {

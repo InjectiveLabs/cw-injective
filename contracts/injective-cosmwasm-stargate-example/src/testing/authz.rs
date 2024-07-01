@@ -1,18 +1,14 @@
-use cosmos_sdk_proto::cosmos::authz::v1beta1::{QueryGranteeGrantsRequest, QueryGranterGrantsRequest, QueryGrantsRequest };
 use crate::{
     encode_helper::encode_proto_message,
     msg::{QueryMsg, QueryStargateResponse},
-    utils::{
-        execute_all_authorizations,
-        ExchangeType, Setup,
-    },
+    utils::{execute_all_authorizations, ExchangeType, Setup},
 };
-use injective_test_tube::{Account, Module, RunnerResult, Wasm};
+use cosmos_sdk_proto::cosmos::authz::v1beta1::{QueryGranteeGrantsRequest, QueryGranterGrantsRequest, QueryGrantsRequest};
 use injective_test_tube::RunnerError::QueryError;
+use injective_test_tube::{Account, Module, RunnerResult, Wasm};
 
 use crate::testing::type_helpers::{Authorization, Grants, StargateQueryGranteeGrantsResponse, StargateQueryGranterGrantsResponse};
 use crate::utils::get_stargate_query_result;
-
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
@@ -39,10 +35,22 @@ fn test_query_grantee_grants() {
         "/injective.exchange.v1beta1.MsgWithdraw",
     ];
 
-    let response_user0 = create_stargate_response(messages.clone(), env.users[0].account.address().to_string(), env.users[1].account.address().to_string());
-    let response_user2 = create_stargate_response(messages, env.users[2].account.address().to_string(), env.users[1].account.address().to_string());
+    let response_user0 = create_stargate_response(
+        messages.clone(),
+        env.users[0].account.address().to_string(),
+        env.users[1].account.address().to_string(),
+    );
+    let response_user2 = create_stargate_response(
+        messages,
+        env.users[2].account.address().to_string(),
+        env.users[1].account.address().to_string(),
+    );
 
-    let combined_grants = response_user0.grants.into_iter().chain(response_user2.grants.into_iter()).collect::<Vec<_>>();
+    let combined_grants = response_user0
+        .grants
+        .into_iter()
+        .chain(response_user2.grants.into_iter())
+        .collect::<Vec<_>>();
     let query_result = get_stargate_query_result::<StargateQueryGranteeGrantsResponse>(wasm.query(&env.contract_address, &query_msg)).unwrap();
 
     let all_grants_present = combined_grants.iter().all(|grant| query_result.grants.contains(grant));
@@ -81,9 +89,7 @@ fn test_query_granter_grants() {
 
     let query_result = get_stargate_query_result::<StargateQueryGranterGrantsResponse>(wasm.query(&env.contract_address, &query_msg)).unwrap();
     assert_eq!(query_result.grants.len(), 0);
-
 }
-
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
@@ -123,28 +129,26 @@ fn test_query_grants() {
 
     if let Err(QueryError { msg }) = contract_response {
         assert_eq!(
-            msg,
-            "Generic error: Querier contract error: codespace: authz, code: 2: query wasm contract failed",
+            msg, "Generic error: Querier contract error: codespace: authz, code: 2: query wasm contract failed",
             "The error message does not match the expected value"
         );
     } else {
         assert!(false, "Expected an error, but got a success: {:?}", contract_response);
     }
-
-
 }
 
 fn create_stargate_response(messages: Vec<&str>, granter: String, grantee: String) -> StargateQueryGranteeGrantsResponse {
-    let grants = messages.into_iter().map(|msg| {
-        Grants {
+    let grants = messages
+        .into_iter()
+        .map(|msg| Grants {
             granter: granter.clone(),
             grantee: grantee.clone(),
             authorization: Authorization {
                 type_str: "/cosmos.authz.v1beta1.GenericAuthorization".to_string(),
                 msg: msg.to_string(),
             },
-        }
-    }).collect();
+        })
+        .collect();
 
     StargateQueryGranteeGrantsResponse { grants }
 }
