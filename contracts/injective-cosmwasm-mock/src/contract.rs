@@ -1,6 +1,6 @@
 use crate::{
     error::ContractError,
-    handle::{handle_test_market_spot_order, handle_test_transient_derivative_order, handle_test_transient_spot_order},
+    handle::{handle_test_transient_derivative_order, handle_test_transient_spot_order},
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
     query::{
         handle_aggregate_account_volume_query, handle_aggregate_market_volume_query, handle_contract_registration_info_query,

@@ -2,7 +2,6 @@ use crate::{
     contract::{CREATE_DERIVATIVE_ORDER_REPLY_ID, CREATE_SPOT_ORDER_REPLY_ID, MSG_EXEC},
     msg::{MSG_CREATE_DERIVATIVE_LIMIT_ORDER_ENDPOINT, MSG_CREATE_SPOT_LIMIT_ORDER_ENDPOINT},
     order_management::{create_derivative_limit_order, create_spot_limit_order, create_stargate_msg, encode_bytes_message},
-    spot_market_order_msg::create_spot_market_order_message,
     state::{CacheOrderInfo, ORDER_CALL_CACHE},
     ContractError,
 };
