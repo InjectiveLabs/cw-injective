@@ -147,6 +147,27 @@ pub struct CoinbasePriceState {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.oracle.v1beta1.StorkPriceState")]
+pub struct StorkPriceState {
+    /// timestamp of the when the price was signed by stork
+    #[prost(uint64, tag = "1")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub timestamp: u64,
+    /// the symbol of the price, e.g. BTC
+    #[prost(string, tag = "2")]
+    pub symbol: ::prost::alloc::string::String,
+    /// the value of the price scaled by 1e18
+    #[prost(string, tag = "3")]
+    pub value: ::prost::alloc::string::String,
+    /// the price state
+    #[prost(message, optional, tag = "5")]
+    pub price_state: ::core::option::Option<PriceState>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.PriceState")]
 pub struct PriceState {
     #[prost(string, tag = "1")]
@@ -441,6 +462,33 @@ pub struct PriceAttestation {
     )]
     pub publish_time: i64,
 }
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.oracle.v1beta1.AssetPair")]
+pub struct AssetPair {
+    #[prost(string, tag = "1")]
+    #[serde(alias = "assetID")]
+    pub asset_id: ::prost::alloc::string::String,
+    #[prost(message, repeated, tag = "2")]
+    pub signed_prices: ::prost::alloc::vec::Vec<SignedPriceOfAssetPair>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.oracle.v1beta1.SignedPriceOfAssetPair")]
+pub struct SignedPriceOfAssetPair {
+    #[prost(string, tag = "1")]
+    pub publisher_key: ::prost::alloc::string::String,
+    #[prost(uint64, tag = "2")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub timestamp: u64,
+    #[prost(string, tag = "3")]
+    pub price: ::prost::alloc::string::String,
+    #[prost(bytes = "vec", tag = "4")]
+    pub signature: ::prost::alloc::vec::Vec<u8>,
+}
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
 #[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema)]
@@ -457,6 +505,7 @@ pub enum OracleType {
     Pyth = 9,
     BandIbc = 10,
     Provider = 11,
+    Stork = 12,
 }
 impl OracleType {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -477,6 +526,7 @@ impl OracleType {
             OracleType::Pyth => "Pyth",
             OracleType::BandIbc => "BandIBC",
             OracleType::Provider => "Provider",
+            OracleType::Stork => "Stork",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
@@ -494,6 +544,7 @@ impl OracleType {
             "Pyth" => Some(Self::Pyth),
             "BandIBC" => Some(Self::BandIbc),
             "Provider" => Some(Self::Provider),
+            "Stork" => Some(Self::Stork),
             _ => None,
         }
     }
@@ -654,6 +705,13 @@ pub struct SetCoinbasePriceEvent {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.oracle.v1beta1.EventSetStorkPrices")]
+pub struct EventSetStorkPrices {
+    #[prost(message, repeated, tag = "1")]
+    pub prices: ::prost::alloc::vec::Vec<StorkPriceState>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.EventSetPythPrices")]
 pub struct EventSetPythPrices {
     #[prost(message, repeated, tag = "1")]
@@ -705,6 +763,10 @@ pub struct GenesisState {
     pub provider_states: ::prost::alloc::vec::Vec<ProviderState>,
     #[prost(message, repeated, tag = "15")]
     pub pyth_price_states: ::prost::alloc::vec::Vec<PythPriceState>,
+    #[prost(message, repeated, tag = "16")]
+    pub stork_price_states: ::prost::alloc::vec::Vec<StorkPriceState>,
+    #[prost(string, repeated, tag = "17")]
+    pub stork_publishers: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -833,6 +895,28 @@ pub struct EnableBandIbcProposal {
     pub description: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "3")]
     pub band_ibc_params: ::core::option::Option<BandIbcParams>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.oracle.v1beta1.GrantStorkPublisherPrivilegeProposal")]
+pub struct GrantStorkPublisherPrivilegeProposal {
+    #[prost(string, tag = "1")]
+    pub title: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub description: ::prost::alloc::string::String,
+    #[prost(string, repeated, tag = "3")]
+    pub stork_publishers: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.oracle.v1beta1.RevokeStorkPublisherPrivilegeProposal")]
+pub struct RevokeStorkPublisherPrivilegeProposal {
+    #[prost(string, tag = "1")]
+    pub title: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub description: ::prost::alloc::string::String,
+    #[prost(string, repeated, tag = "3")]
+    pub stork_publishers: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -985,6 +1069,44 @@ pub struct QueryPythPriceStatesRequest {}
 pub struct QueryPythPriceStatesResponse {
     #[prost(message, repeated, tag = "1")]
     pub price_states: ::prost::alloc::vec::Vec<PythPriceState>,
+}
+/// QueryStorkPriceStatesRequest is the request type for the
+/// Query/StorkPriceStates RPC method.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.oracle.v1beta1.QueryStorkPriceStatesRequest")]
+#[proto_query(
+    path = "/injective.oracle.v1beta1.Query/StorkPriceStates",
+    response_type = QueryStorkPriceStatesResponse
+)]
+pub struct QueryStorkPriceStatesRequest {}
+/// QueryStorkPriceStatesResponse is the response type for the
+/// Query/StorkPriceStates RPC method.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.oracle.v1beta1.QueryStorkPriceStatesResponse")]
+pub struct QueryStorkPriceStatesResponse {
+    #[prost(message, repeated, tag = "1")]
+    pub price_states: ::prost::alloc::vec::Vec<StorkPriceState>,
+}
+/// QueryStorkPublishersRequest is the request type for the
+/// Query/StorkPublishers RPC method.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.oracle.v1beta1.QueryStorkPublishersRequest")]
+#[proto_query(
+    path = "/injective.oracle.v1beta1.Query/StorkPublishers",
+    response_type = QueryStorkPublishersResponse
+)]
+pub struct QueryStorkPublishersRequest {}
+/// QueryStorkPublishersResponse is the response type for the
+/// Query/StorkPublishers RPC method.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.oracle.v1beta1.QueryStorkPublishersResponse")]
+pub struct QueryStorkPublishersResponse {
+    #[prost(string, repeated, tag = "1")]
+    pub publishers: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 /// QueryProviderPriceStateRequest is the request type for the
 /// Query/ProviderPriceState RPC method.
@@ -1139,6 +1261,26 @@ pub struct QueryOracleProviderPricesResponse {
     #[prost(message, repeated, tag = "1")]
     pub provider_state: ::prost::alloc::vec::Vec<ProviderState>,
 }
+/// ScalingOptions defines optional configuration to avoid precision loss. The
+/// oracle result will be returned as base_price * 10^base_decimals / quote_price
+/// * 10^quote_decimals
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.oracle.v1beta1.ScalingOptions")]
+pub struct ScalingOptions {
+    #[prost(uint32, tag = "1")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub base_decimals: u32,
+    #[prost(uint32, tag = "2")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub quote_decimals: u32,
+}
 /// QueryOraclePriceRequest is the request type for the Query/OraclePrice RPC
 /// method.
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -1159,6 +1301,8 @@ pub struct QueryOraclePriceRequest {
     pub base: ::prost::alloc::string::String,
     #[prost(string, tag = "3")]
     pub quote: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "4")]
+    pub scaling_options: ::core::option::Option<ScalingOptions>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -1271,6 +1415,21 @@ pub struct MsgRelayCoinbaseMessages {
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.MsgRelayCoinbaseMessagesResponse")]
 pub struct MsgRelayCoinbaseMessagesResponse {}
+/// MsgRelayStorkPrices defines a SDK message for relaying price message
+/// from Stork API.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.oracle.v1beta1.MsgRelayStorkPrices")]
+pub struct MsgRelayStorkPrices {
+    #[prost(string, tag = "1")]
+    pub sender: ::prost::alloc::string::String,
+    #[prost(message, repeated, tag = "2")]
+    pub asset_pairs: ::prost::alloc::vec::Vec<AssetPair>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.oracle.v1beta1.MsgRelayStorkPricesResponse")]
+pub struct MsgRelayStorkPricesResponse {}
 /// MsgRequestBandIBCRates defines a SDK message for requesting data from
 /// BandChain using IBC.
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -1352,6 +1511,12 @@ impl<'a, Q: cosmwasm_std::CustomQuery> OracleQuerier<'a, Q> {
     pub fn pyth_price_states(&self) -> Result<QueryPythPriceStatesResponse, cosmwasm_std::StdError> {
         QueryPythPriceStatesRequest {}.query(self.querier)
     }
+    pub fn stork_price_states(&self) -> Result<QueryStorkPriceStatesResponse, cosmwasm_std::StdError> {
+        QueryStorkPriceStatesRequest {}.query(self.querier)
+    }
+    pub fn stork_publishers(&self) -> Result<QueryStorkPublishersResponse, cosmwasm_std::StdError> {
+        QueryStorkPublishersRequest {}.query(self.querier)
+    }
     pub fn provider_price_state(
         &self,
         provider: ::prost::alloc::string::String,
@@ -1396,8 +1561,15 @@ impl<'a, Q: cosmwasm_std::CustomQuery> OracleQuerier<'a, Q> {
         oracle_type: i32,
         base: ::prost::alloc::string::String,
         quote: ::prost::alloc::string::String,
+        scaling_options: ::core::option::Option<ScalingOptions>,
     ) -> Result<QueryOraclePriceResponse, cosmwasm_std::StdError> {
-        QueryOraclePriceRequest { oracle_type, base, quote }.query(self.querier)
+        QueryOraclePriceRequest {
+            oracle_type,
+            base,
+            quote,
+            scaling_options,
+        }
+        .query(self.querier)
     }
     pub fn pyth_price(&self, price_id: ::prost::alloc::string::String) -> Result<QueryPythPriceResponse, cosmwasm_std::StdError> {
         QueryPythPriceRequest { price_id }.query(self.querier)

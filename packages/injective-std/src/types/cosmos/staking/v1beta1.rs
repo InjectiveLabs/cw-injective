@@ -178,10 +178,10 @@ pub struct DvvTriplets {
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.staking.v1beta1.Delegation")]
 pub struct Delegation {
-    /// delegator_address is the bech32-encoded address of the delegator.
+    /// delegator_address is the encoded address of the delegator.
     #[prost(string, tag = "1")]
     pub delegator_address: ::prost::alloc::string::String,
-    /// validator_address is the bech32-encoded address of the validator.
+    /// validator_address is the encoded address of the validator.
     #[prost(string, tag = "2")]
     pub validator_address: ::prost::alloc::string::String,
     /// shares define the delegation shares received.
@@ -194,10 +194,10 @@ pub struct Delegation {
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.staking.v1beta1.UnbondingDelegation")]
 pub struct UnbondingDelegation {
-    /// delegator_address is the bech32-encoded address of the delegator.
+    /// delegator_address is the encoded address of the delegator.
     #[prost(string, tag = "1")]
     pub delegator_address: ::prost::alloc::string::String,
-    /// validator_address is the bech32-encoded address of the validator.
+    /// validator_address is the encoded address of the validator.
     #[prost(string, tag = "2")]
     pub validator_address: ::prost::alloc::string::String,
     /// entries are the unbonding delegation entries.
@@ -476,7 +476,7 @@ pub struct GenesisState {
     /// of the last-block's bonded validators.
     #[prost(message, repeated, tag = "3")]
     pub last_validator_powers: ::prost::alloc::vec::Vec<LastValidatorPower>,
-    /// delegations defines the validator set at genesis.
+    /// validators defines the validator set at genesis.
     #[prost(message, repeated, tag = "4")]
     pub validators: ::prost::alloc::vec::Vec<Validator>,
     /// delegations defines the delegations active at genesis.
@@ -488,6 +488,7 @@ pub struct GenesisState {
     /// redelegations defines the redelegations active at genesis.
     #[prost(message, repeated, tag = "7")]
     pub redelegations: ::prost::alloc::vec::Vec<Redelegation>,
+    /// exported defines a bool to identify whether the chain dealing with exported or initialized genesis.
     #[prost(bool, tag = "8")]
     pub exported: bool,
 }
@@ -518,6 +519,10 @@ pub struct MsgCreateValidator {
     pub commission: ::core::option::Option<CommissionRates>,
     #[prost(string, tag = "3")]
     pub min_self_delegation: ::prost::alloc::string::String,
+    /// Deprecated: Use of Delegator Address in MsgCreateValidator is deprecated.
+    /// The validator address bytes and delegator address bytes refer to the same account while creating validator (defer
+    /// only in bech32 notation).
+    #[deprecated]
     #[prost(string, tag = "4")]
     pub delegator_address: ::prost::alloc::string::String,
     #[prost(string, tag = "5")]
@@ -616,6 +621,11 @@ pub struct MsgUndelegate {
 pub struct MsgUndelegateResponse {
     #[prost(message, optional, tag = "1")]
     pub completion_time: ::core::option::Option<crate::shim::Timestamp>,
+    /// amount returns the amount of undelegated coins
+    ///
+    /// Since: cosmos-sdk 0.50
+    #[prost(message, optional, tag = "2")]
+    pub amount: ::core::option::Option<super::super::base::v1beta1::Coin>,
 }
 /// MsgCancelUnbondingDelegation defines the SDK message for performing a cancel unbonding delegation for delegator
 ///

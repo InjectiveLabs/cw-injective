@@ -144,7 +144,7 @@ pub struct QueryGranterGrantsResponse {
     #[prost(message, optional, tag = "2")]
     pub pagination: ::core::option::Option<super::super::base::query::v1beta1::PageResponse>,
 }
-/// QueryGranteeGrantsRequest is the request type for the Query/IssuedGrants RPC method.
+/// QueryGranteeGrantsRequest is the request type for the Query/GranteeGrants RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.authz.v1beta1.QueryGranteeGrantsRequest")]
@@ -184,14 +184,11 @@ pub struct MsgGrant {
     #[prost(message, optional, tag = "3")]
     pub grant: ::core::option::Option<Grant>,
 }
-/// MsgExecResponse defines the Msg/MsgExecResponse response type.
+/// MsgGrantResponse defines the Msg/MsgGrant response type.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmos.authz.v1beta1.MsgExecResponse")]
-pub struct MsgExecResponse {
-    #[prost(bytes = "vec", repeated, tag = "1")]
-    pub results: ::prost::alloc::vec::Vec<::prost::alloc::vec::Vec<u8>>,
-}
+#[proto_message(type_url = "/cosmos.authz.v1beta1.MsgGrantResponse")]
+pub struct MsgGrantResponse {}
 /// MsgExec attempts to execute the provided messages using
 /// authorizations granted to the grantee. Each message should have only
 /// one signer corresponding to the granter of the authorization.
@@ -207,11 +204,14 @@ pub struct MsgExec {
     #[prost(message, repeated, tag = "2")]
     pub msgs: ::prost::alloc::vec::Vec<crate::shim::Any>,
 }
-/// MsgGrantResponse defines the Msg/MsgGrant response type.
+/// MsgExecResponse defines the Msg/MsgExecResponse response type.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmos.authz.v1beta1.MsgGrantResponse")]
-pub struct MsgGrantResponse {}
+#[proto_message(type_url = "/cosmos.authz.v1beta1.MsgExecResponse")]
+pub struct MsgExecResponse {
+    #[prost(bytes = "vec", repeated, tag = "1")]
+    pub results: ::prost::alloc::vec::Vec<::prost::alloc::vec::Vec<u8>>,
+}
 /// MsgRevoke revokes any authorization with the provided sdk.Msg type on the
 /// granter's account with that has been granted to the grantee.
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -230,6 +230,25 @@ pub struct MsgRevoke {
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.authz.v1beta1.MsgRevokeResponse")]
 pub struct MsgRevokeResponse {}
+/// MsgExecCompatResponse defines the Msg/MsgExecCompatResponse response type.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/cosmos.authz.v1beta1.MsgExecCompatResponse")]
+pub struct MsgExecCompatResponse {
+    #[prost(bytes = "vec", repeated, tag = "1")]
+    pub results: ::prost::alloc::vec::Vec<::prost::alloc::vec::Vec<u8>>,
+}
+/// MsgExecCompat supports legacy amino codec for frontend metamask signing
+/// Functions are same as MsgExec, but input for msgs is array of strings
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/cosmos.authz.v1beta1.MsgExecCompat")]
+pub struct MsgExecCompat {
+    #[prost(string, tag = "1")]
+    pub grantee: ::prost::alloc::string::String,
+    #[prost(string, repeated, tag = "2")]
+    pub msgs: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
 pub struct AuthzQuerier<'a, Q: cosmwasm_std::CustomQuery> {
     querier: &'a cosmwasm_std::QuerierWrapper<'a, Q>,
 }

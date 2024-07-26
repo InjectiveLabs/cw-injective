@@ -138,6 +138,36 @@ pub struct Metadata {
     /// Since: cosmos-sdk 0.46
     #[prost(string, tag = "8")]
     pub uri_hash: ::prost::alloc::string::String,
+    /// Decimals represent the number of decimals use to represent token amount on chain
+    ///
+    /// Since: cosmos-sdk 0.50
+    #[prost(uint32, tag = "9")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub decimals: u32,
+}
+/// EventSetBalance is an event that tracks the latest bank balance.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/cosmos.bank.v1beta1.EventSetBalances")]
+pub struct EventSetBalances {
+    #[prost(message, repeated, tag = "1")]
+    pub balance_updates: ::prost::alloc::vec::Vec<BalanceUpdate>,
+}
+/// BalanceUpdate contains a given address's latest balance
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/cosmos.bank.v1beta1.BalanceUpdate")]
+pub struct BalanceUpdate {
+    #[prost(bytes = "vec", tag = "1")]
+    pub addr: ::prost::alloc::vec::Vec<u8>,
+    #[prost(bytes = "vec", tag = "2")]
+    pub denom: ::prost::alloc::vec::Vec<u8>,
+    /// the latest amount
+    #[prost(string, tag = "3")]
+    pub amt: ::prost::alloc::string::String,
 }
 /// GenesisState defines the bank module's genesis state.
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -216,6 +246,11 @@ pub struct QueryAllBalancesRequest {
     /// pagination defines an optional pagination for the request.
     #[prost(message, optional, tag = "2")]
     pub pagination: ::core::option::Option<super::super::base::query::v1beta1::PageRequest>,
+    /// resolve_denom is the flag to resolve the denom into a human-readable form from the metadata.
+    ///
+    /// Since: cosmos-sdk 0.50
+    #[prost(bool, tag = "3")]
+    pub resolve_denom: bool,
 }
 /// QueryAllBalancesResponse is the response type for the Query/AllBalances RPC
 /// method.
@@ -362,6 +397,7 @@ pub struct QueryParamsRequest {}
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.bank.v1beta1.QueryParamsResponse")]
 pub struct QueryParamsResponse {
+    /// params provides the parameters of the bank module.
     #[prost(message, optional, tag = "1")]
     pub params: ::core::option::Option<Params>,
 }
@@ -414,6 +450,30 @@ pub struct QueryDenomMetadataResponse {
     #[prost(message, optional, tag = "1")]
     pub metadata: ::core::option::Option<Metadata>,
 }
+/// QueryDenomMetadataByQueryStringRequest is the request type for the Query/DenomMetadata RPC method.
+/// Identical with QueryDenomMetadataRequest but receives denom as query string.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/cosmos.bank.v1beta1.QueryDenomMetadataByQueryStringRequest")]
+#[proto_query(
+    path = "/cosmos.bank.v1beta1.Query/DenomMetadataByQueryString",
+    response_type = QueryDenomMetadataByQueryStringResponse
+)]
+pub struct QueryDenomMetadataByQueryStringRequest {
+    /// denom is the coin denom to query the metadata for.
+    #[prost(string, tag = "1")]
+    pub denom: ::prost::alloc::string::String,
+}
+/// QueryDenomMetadataByQueryStringResponse is the response type for the Query/DenomMetadata RPC
+/// method. Identical with QueryDenomMetadataResponse but receives denom as query string in request.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/cosmos.bank.v1beta1.QueryDenomMetadataByQueryStringResponse")]
+pub struct QueryDenomMetadataByQueryStringResponse {
+    /// metadata describes and provides all the client information for the requested token.
+    #[prost(message, optional, tag = "1")]
+    pub metadata: ::core::option::Option<Metadata>,
+}
 /// QueryDenomOwnersRequest defines the request type for the DenomOwners RPC query,
 /// which queries for a paginated set of all account holders of a particular
 /// denomination.
@@ -455,6 +515,39 @@ pub struct DenomOwner {
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.bank.v1beta1.QueryDenomOwnersResponse")]
 pub struct QueryDenomOwnersResponse {
+    #[prost(message, repeated, tag = "1")]
+    pub denom_owners: ::prost::alloc::vec::Vec<DenomOwner>,
+    /// pagination defines the pagination in the response.
+    #[prost(message, optional, tag = "2")]
+    pub pagination: ::core::option::Option<super::super::base::query::v1beta1::PageResponse>,
+}
+/// QueryDenomOwnersByQueryRequest defines the request type for the DenomOwnersByQuery RPC query,
+/// which queries for a paginated set of all account holders of a particular
+/// denomination.
+///
+/// Since: cosmos-sdk 0.50.3
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/cosmos.bank.v1beta1.QueryDenomOwnersByQueryRequest")]
+#[proto_query(
+    path = "/cosmos.bank.v1beta1.Query/DenomOwnersByQuery",
+    response_type = QueryDenomOwnersByQueryResponse
+)]
+pub struct QueryDenomOwnersByQueryRequest {
+    /// denom defines the coin denomination to query all account holders for.
+    #[prost(string, tag = "1")]
+    pub denom: ::prost::alloc::string::String,
+    /// pagination defines an optional pagination for the request.
+    #[prost(message, optional, tag = "2")]
+    pub pagination: ::core::option::Option<super::super::base::query::v1beta1::PageRequest>,
+}
+/// QueryDenomOwnersByQueryResponse defines the RPC response of a DenomOwnersByQuery RPC query.
+///
+/// Since: cosmos-sdk 0.50.3
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/cosmos.bank.v1beta1.QueryDenomOwnersByQueryResponse")]
+pub struct QueryDenomOwnersByQueryResponse {
     #[prost(message, repeated, tag = "1")]
     pub denom_owners: ::prost::alloc::vec::Vec<DenomOwner>,
     /// pagination defines the pagination in the response.
@@ -563,6 +656,7 @@ pub struct MsgUpdateParamsResponse {}
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.bank.v1beta1.MsgSetSendEnabled")]
 pub struct MsgSetSendEnabled {
+    /// authority is the address that controls the module.
     #[prost(string, tag = "1")]
     pub authority: ::prost::alloc::string::String,
     /// send_enabled is the list of entries to add or update.
@@ -600,8 +694,14 @@ impl<'a, Q: cosmwasm_std::CustomQuery> BankQuerier<'a, Q> {
         &self,
         address: ::prost::alloc::string::String,
         pagination: ::core::option::Option<super::super::base::query::v1beta1::PageRequest>,
+        resolve_denom: bool,
     ) -> Result<QueryAllBalancesResponse, cosmwasm_std::StdError> {
-        QueryAllBalancesRequest { address, pagination }.query(self.querier)
+        QueryAllBalancesRequest {
+            address,
+            pagination,
+            resolve_denom,
+        }
+        .query(self.querier)
     }
     pub fn spendable_balances(
         &self,
@@ -632,6 +732,12 @@ impl<'a, Q: cosmwasm_std::CustomQuery> BankQuerier<'a, Q> {
     pub fn denom_metadata(&self, denom: ::prost::alloc::string::String) -> Result<QueryDenomMetadataResponse, cosmwasm_std::StdError> {
         QueryDenomMetadataRequest { denom }.query(self.querier)
     }
+    pub fn denom_metadata_by_query_string(
+        &self,
+        denom: ::prost::alloc::string::String,
+    ) -> Result<QueryDenomMetadataByQueryStringResponse, cosmwasm_std::StdError> {
+        QueryDenomMetadataByQueryStringRequest { denom }.query(self.querier)
+    }
     pub fn denoms_metadata(
         &self,
         pagination: ::core::option::Option<super::super::base::query::v1beta1::PageRequest>,
@@ -644,6 +750,13 @@ impl<'a, Q: cosmwasm_std::CustomQuery> BankQuerier<'a, Q> {
         pagination: ::core::option::Option<super::super::base::query::v1beta1::PageRequest>,
     ) -> Result<QueryDenomOwnersResponse, cosmwasm_std::StdError> {
         QueryDenomOwnersRequest { denom, pagination }.query(self.querier)
+    }
+    pub fn denom_owners_by_query(
+        &self,
+        denom: ::prost::alloc::string::String,
+        pagination: ::core::option::Option<super::super::base::query::v1beta1::PageRequest>,
+    ) -> Result<QueryDenomOwnersByQueryResponse, cosmwasm_std::StdError> {
+        QueryDenomOwnersByQueryRequest { denom, pagination }.query(self.querier)
     }
     pub fn send_enabled(
         &self,

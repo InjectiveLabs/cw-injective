@@ -5,7 +5,7 @@ license     = "MIT OR Apache-2.0"
 name        = "injective-std"
 readme      = "README.md"
 repository  = "https://github.com/InjectiveLabs/cw-injective/tree/dev/packages/injective-std"
-version     = "1.12.10-testnet-rc2.2"
+version     = "1.13.2-testnet"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

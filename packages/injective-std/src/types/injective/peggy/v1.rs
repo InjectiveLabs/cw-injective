@@ -702,6 +702,8 @@ pub struct Params {
     pub bridge_contract_start_height: u64,
     #[prost(message, optional, tag = "21")]
     pub valset_reward: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
+    #[prost(string, repeated, tag = "22")]
+    pub admins: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 /// MsgSetOrchestratorAddresses
 /// this message allows validators to delegate their voting responsibilities
@@ -1053,6 +1055,44 @@ pub struct MsgUpdateParams {
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.MsgUpdateParamsResponse")]
 pub struct MsgUpdateParamsResponse {}
+/// MsgBlacklistEthereumAddresses defines the message used to add Ethereum
+/// addresses to peggy blacklist.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.peggy.v1.MsgBlacklistEthereumAddresses")]
+pub struct MsgBlacklistEthereumAddresses {
+    /// signer address
+    #[prost(string, tag = "1")]
+    pub signer: ::prost::alloc::string::String,
+    /// Ethereum addresses to include in the blacklist
+    #[prost(string, repeated, tag = "2")]
+    pub blacklist_addresses: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+/// MsgBlacklistEthereumAddressesResponse defines the
+/// MsgBlacklistEthereumAddresses response type.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.peggy.v1.MsgBlacklistEthereumAddressesResponse")]
+pub struct MsgBlacklistEthereumAddressesResponse {}
+/// MsgRevokeEthereumBlacklist defines the message used to remove Ethereum
+/// addresses from peggy blacklist.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.peggy.v1.MsgRevokeEthereumBlacklist")]
+pub struct MsgRevokeEthereumBlacklist {
+    /// signer address
+    #[prost(string, tag = "1")]
+    pub signer: ::prost::alloc::string::String,
+    /// Ethereum addresses to include in the blacklist
+    #[prost(string, repeated, tag = "2")]
+    pub blacklist_addresses: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+/// MsgRevokeEthereumBlacklistResponse defines the MsgRevokeEthereumBlacklist
+/// response type.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.peggy.v1.MsgRevokeEthereumBlacklistResponse")]
+pub struct MsgRevokeEthereumBlacklistResponse {}
 /// GenesisState struct
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -1123,28 +1163,6 @@ pub struct BatchFees {
     pub token: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
     pub total_fees: ::prost::alloc::string::String,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.peggy.v1.BlacklistEthereumAddressesProposal")]
-pub struct BlacklistEthereumAddressesProposal {
-    #[prost(string, tag = "1")]
-    pub title: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub description: ::prost::alloc::string::String,
-    #[prost(string, repeated, tag = "3")]
-    pub blacklist_addresses: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.peggy.v1.RevokeEthereumBlacklistProposal")]
-pub struct RevokeEthereumBlacklistProposal {
-    #[prost(string, tag = "1")]
-    pub title: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub description: ::prost::alloc::string::String,
-    #[prost(string, repeated, tag = "3")]
-    pub blacklist_addresses: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]

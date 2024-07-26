@@ -25,6 +25,24 @@ pub struct Bid {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.auction.v1beta1.LastAuctionResult")]
+pub struct LastAuctionResult {
+    /// winner describes the address of the winner
+    #[prost(string, tag = "1")]
+    pub winner: ::prost::alloc::string::String,
+    /// amount describes the amount the winner get from the auction
+    #[prost(string, tag = "2")]
+    pub amount: ::prost::alloc::string::String,
+    /// round defines the round number of auction
+    #[prost(uint64, tag = "3")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub round: u64,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.auction.v1beta1.EventBid")]
 pub struct EventBid {
     /// bidder describes the address of bidder
@@ -107,6 +125,9 @@ pub struct GenesisState {
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
     pub auction_ending_timestamp: i64,
+    /// last auction result
+    #[prost(message, optional, tag = "5")]
+    pub last_auction_result: ::core::option::Option<LastAuctionResult>,
 }
 /// QueryAuctionParamsRequest is the request type for the Query/AuctionParams RPC
 /// method.
@@ -186,6 +207,21 @@ pub struct QueryModuleStateResponse {
     #[prost(message, optional, tag = "1")]
     pub state: ::core::option::Option<GenesisState>,
 }
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.auction.v1beta1.QueryLastAuctionResultRequest")]
+#[proto_query(
+    path = "/injective.auction.v1beta1.Query/LastAuctionResult",
+    response_type = QueryLastAuctionResultResponse
+)]
+pub struct QueryLastAuctionResultRequest {}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.auction.v1beta1.QueryLastAuctionResultResponse")]
+pub struct QueryLastAuctionResultResponse {
+    #[prost(message, optional, tag = "1")]
+    pub last_auction_result: ::core::option::Option<LastAuctionResult>,
+}
 /// Bid defines a SDK message for placing a bid for an auction
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -240,5 +276,8 @@ impl<'a, Q: cosmwasm_std::CustomQuery> AuctionQuerier<'a, Q> {
     }
     pub fn auction_module_state(&self) -> Result<QueryModuleStateResponse, cosmwasm_std::StdError> {
         QueryModuleStateRequest {}.query(self.querier)
+    }
+    pub fn last_auction_result(&self) -> Result<QueryLastAuctionResultResponse, cosmwasm_std::StdError> {
+        QueryLastAuctionResultRequest {}.query(self.querier)
     }
 }

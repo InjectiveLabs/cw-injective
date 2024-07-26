@@ -89,6 +89,12 @@ pub struct GenesisDenom {
     pub name: ::prost::alloc::string::String,
     #[prost(string, tag = "4")]
     pub symbol: ::prost::alloc::string::String,
+    #[prost(uint32, tag = "5")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub decimals: u32,
 }
 /// QueryParamsRequest is the request type for the Query/Params RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -195,6 +201,12 @@ pub struct MsgCreateDenom {
     pub name: ::prost::alloc::string::String,
     #[prost(string, tag = "4")]
     pub symbol: ::prost::alloc::string::String,
+    #[prost(uint32, tag = "5")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub decimals: u32,
 }
 /// MsgCreateDenomResponse is the return value of MsgCreateDenom
 /// It returns the full string of the newly created denom

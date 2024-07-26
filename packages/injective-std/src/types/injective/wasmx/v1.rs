@@ -160,6 +160,8 @@ pub struct Params {
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
     pub min_gas_price: u64,
+    #[prost(message, optional, tag = "5")]
+    pub register_contract_access: ::core::option::Option<super::super::super::cosmwasm::wasm::v1::AccessConfig>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]

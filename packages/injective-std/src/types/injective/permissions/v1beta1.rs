@@ -1,9 +1,25 @@
 use osmosis_std_derive::CosmwasmExt;
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.permissions.v1beta1.EventSetVoucher")]
+pub struct EventSetVoucher {
+    #[prost(string, tag = "1")]
+    pub addr: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "2")]
+    pub voucher: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
+}
 /// Params defines the parameters for the permissions module.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.permissions.v1beta1.Params")]
-pub struct Params {}
+pub struct Params {
+    #[prost(uint64, tag = "1")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub wasm_hook_query_max_gas: u64,
+}
 /// Namespace defines a permissions namespace
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -22,10 +38,19 @@ pub struct Namespace {
     #[prost(bool, tag = "5")]
     pub burns_paused: bool,
     /// permissions for each role
-    #[prost(map = "string, uint32", tag = "6")]
-    pub role_permissions: ::std::collections::HashMap<::prost::alloc::string::String, u32>,
-    #[prost(map = "string, message", tag = "7")]
-    pub address_roles: ::std::collections::HashMap<::prost::alloc::string::String, Roles>,
+    #[prost(message, repeated, tag = "6")]
+    pub role_permissions: ::prost::alloc::vec::Vec<Role>,
+    #[prost(message, repeated, tag = "7")]
+    pub address_roles: ::prost::alloc::vec::Vec<AddressRoles>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.permissions.v1beta1.AddressRoles")]
+pub struct AddressRoles {
+    #[prost(string, tag = "1")]
+    pub address: ::prost::alloc::string::String,
+    #[prost(string, repeated, tag = "2")]
+    pub roles: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 /// Role is only used for storage
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -33,20 +58,13 @@ pub struct Namespace {
 #[proto_message(type_url = "/injective.permissions.v1beta1.Role")]
 pub struct Role {
     #[prost(string, tag = "1")]
-    pub name: ::prost::alloc::string::String,
+    pub role: ::prost::alloc::string::String,
     #[prost(uint32, tag = "2")]
     #[serde(
         serialize_with = "crate::serde::as_str::serialize",
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
     pub permissions: u32,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.permissions.v1beta1.Roles")]
-pub struct Roles {
-    #[prost(string, repeated, tag = "1")]
-    pub roles: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 /// used in storage
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -63,6 +81,15 @@ pub struct RoleIDs {
 pub struct Voucher {
     #[prost(message, repeated, tag = "1")]
     pub coins: ::prost::alloc::vec::Vec<super::super::super::cosmos::base::v1beta1::Coin>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.permissions.v1beta1.AddressVoucher")]
+pub struct AddressVoucher {
+    #[prost(string, tag = "1")]
+    pub address: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "2")]
+    pub voucher: ::core::option::Option<Voucher>,
 }
 /// each Action enum value should be a power of two
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
@@ -229,8 +256,8 @@ pub struct QueryVouchersForAddressRequest {
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.permissions.v1beta1.QueryVouchersForAddressResponse")]
 pub struct QueryVouchersForAddressResponse {
-    #[prost(map = "string, message", tag = "1")]
-    pub vouchers: ::std::collections::HashMap<::prost::alloc::string::String, Voucher>,
+    #[prost(message, repeated, tag = "1")]
+    pub vouchers: ::prost::alloc::vec::Vec<super::super::super::cosmos::base::v1beta1::Coin>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -340,11 +367,11 @@ pub struct MsgUpdateNamespaceRoles {
     #[prost(string, tag = "2")]
     pub namespace_denom: ::prost::alloc::string::String,
     /// new role definitions or updated permissions for existing roles
-    #[prost(map = "string, uint32", tag = "3")]
-    pub role_permissions: ::std::collections::HashMap<::prost::alloc::string::String, u32>,
+    #[prost(message, repeated, tag = "3")]
+    pub role_permissions: ::prost::alloc::vec::Vec<Role>,
     /// new addresses to add or new roles for existing addresses to
-    #[prost(map = "string, message", tag = "4")]
-    pub address_roles: ::std::collections::HashMap<::prost::alloc::string::String, Roles>,
+    #[prost(message, repeated, tag = "4")]
+    pub address_roles: ::prost::alloc::vec::Vec<AddressRoles>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -359,9 +386,9 @@ pub struct MsgRevokeNamespaceRoles {
     /// namespace denom to which this updates are applied
     #[prost(string, tag = "2")]
     pub namespace_denom: ::prost::alloc::string::String,
-    /// map of {"address" => array of roles to revoke from this address}
-    #[prost(map = "string, message", tag = "3")]
-    pub address_roles_to_revoke: ::std::collections::HashMap<::prost::alloc::string::String, Roles>,
+    /// {"address" => array of roles to revoke from this address}
+    #[prost(message, repeated, tag = "3")]
+    pub address_roles_to_revoke: ::prost::alloc::vec::Vec<AddressRoles>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -373,9 +400,8 @@ pub struct MsgRevokeNamespaceRolesResponse {}
 pub struct MsgClaimVoucher {
     #[prost(string, tag = "1")]
     pub sender: ::prost::alloc::string::String,
-    /// address of the original voucher sender (typically a module address,
     #[prost(string, tag = "2")]
-    pub originator: ::prost::alloc::string::String,
+    pub denom: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
