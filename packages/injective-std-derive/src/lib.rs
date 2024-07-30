@@ -33,9 +33,7 @@ pub fn derive_cosmwasm_ext(input: TokenStream) -> TokenStream {
     // provided buffer had insufficient capacity. Message encoding is otherwise
     // infallible.
 
-    let (query_request_conversion, cosmwasm_query) = if get_attr("proto_query", &input.attrs)
-        .is_some()
-    {
+    let (query_request_conversion, cosmwasm_query) = if get_attr("proto_query", &input.attrs).is_some() {
         let path = get_query_attrs(&input.attrs, match_kv_attr!("path", Literal));
         let res = get_query_attrs(&input.attrs, match_kv_attr!("response_type", Ident));
 
@@ -121,7 +119,8 @@ pub fn derive_cosmwasm_ext(input: TokenStream) -> TokenStream {
                     .try_into()
             }
         }
-    }).into()
+    })
+    .into()
 }
 
 fn get_type_url(attrs: &[syn::Attribute]) -> proc_macro2::TokenStream {
@@ -158,13 +157,10 @@ where
         }
 
         if let Some(TokenTree::Group(group)) = attr.tokens.clone().into_iter().next() {
-            let kv_groups = group.stream().into_iter().group_by(|t| {
-                if let TokenTree::Punct(punct) = t {
-                    punct.as_char() != ','
-                } else {
-                    true
-                }
-            });
+            let kv_groups = group
+                .stream()
+                .into_iter()
+                .group_by(|t| if let TokenTree::Punct(punct) = t { punct.as_char() != ',' } else { true });
             let mut key_values: Vec<Vec<TokenTree>> = vec![];
 
             for (non_sep, g) in &kv_groups {
@@ -173,10 +169,7 @@ where
                 }
             }
 
-            return key_values
-                .iter()
-                .find_map(f)
-                .unwrap_or_else(|| proto_query_attr_error(proto_query));
+            return key_values.iter().find_map(f).unwrap_or_else(|| proto_query_attr_error(proto_query));
         }
 
         proto_query_attr_error(proto_query)
@@ -192,14 +185,9 @@ fn get_attr<'a>(attr_ident: &str, attrs: &'a [syn::Attribute]) -> Option<&'a syn
 }
 
 fn proto_message_attr_error<T: quote::ToTokens>(tokens: T) -> proc_macro2::TokenStream {
-    syn::Error::new_spanned(tokens, "expected `proto_message(type_url = \"...\")`")
-        .to_compile_error()
+    syn::Error::new_spanned(tokens, "expected `proto_message(type_url = \"...\")`").to_compile_error()
 }
 
 fn proto_query_attr_error<T: quote::ToTokens>(tokens: T) -> proc_macro2::TokenStream {
-    syn::Error::new_spanned(
-        tokens,
-        "expected `proto_query(path = \"...\", response_type = ...)`",
-    )
-    .to_compile_error()
+    syn::Error::new_spanned(tokens, "expected `proto_query(path = \"...\", response_type = ...)`").to_compile_error()
 }

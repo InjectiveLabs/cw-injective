@@ -1047,6 +1047,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "dissimilar"
+version = "1.0.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59f8e79d1fbf76bdfbde321e902714bf6c49df88a7dda6fc682fc2979226962d"
+
+[[package]]
 name = "dummy"
 version = "1.1.0"
 dependencies = [
@@ -1886,12 +1892,39 @@ version = "1.13.0"
 dependencies = [
  "chrono",
  "cosmwasm-std 2.1.1",
- "osmosis-std-derive",
+ "injective-std-derive 1.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "prost 0.12.4",
  "prost-types 0.12.4",
  "schemars",
  "serde 1.0.202",
  "serde-cw-value",
+]
+
+[[package]]
+name = "injective-std-derive"
+version = "1.13.0"
+dependencies = [
+ "cosmwasm-std 2.1.1",
+ "itertools 0.10.5",
+ "proc-macro2",
+ "prost 0.12.4",
+ "quote",
+ "serde 1.0.202",
+ "syn 1.0.109",
+ "trybuild",
+]
+
+[[package]]
+name = "injective-std-derive"
+version = "1.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2721d8c2fed1fd1dff4cd6d119711a74acf27a6eeea6bf09cd44d192119e52ea"
+dependencies = [
+ "cosmwasm-std 2.1.1",
+ "itertools 0.10.5",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -3169,6 +3202,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_spanned"
+version = "0.6.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb5b1b31579f3811bf615c144393417496f152e12ac8b7663bf664f4a815306d"
+dependencies = [
+ "serde 1.0.202",
+]
+
+[[package]]
 name = "serde_test"
 version = "1.0.176"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3413,7 +3455,7 @@ dependencies = [
  "serde 1.0.202",
  "serde_json 1.0.117",
  "tendermint",
- "toml",
+ "toml 0.5.11",
  "url",
 ]
 
@@ -3652,6 +3694,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "toml"
+version = "0.8.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a44eede9b727419af8095cb2d72fab15487a541f54647ad4414b34096ee4631"
+dependencies = [
+ "serde 1.0.202",
+ "serde_spanned",
+ "toml_datetime",
+ "toml_edit",
+]
+
+[[package]]
+name = "toml_datetime"
+version = "0.6.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0dd7358ecb8fc2f8d014bf86f6f638ce72ba252a2c3a2572f2a795f1d23efb41"
+dependencies = [
+ "serde 1.0.202",
+]
+
+[[package]]
+name = "toml_edit"
+version = "0.22.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1490595c74d930da779e944f5ba2ecdf538af67df1a9848cbd156af43c1b7cf0"
+dependencies = [
+ "indexmap 2.2.6",
+ "serde 1.0.202",
+ "serde_spanned",
+ "toml_datetime",
+ "winnow",
+]
+
+[[package]]
 name = "tower-service"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3681,6 +3757,21 @@ name = "try-lock"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
+
+[[package]]
+name = "trybuild"
+version = "1.0.98"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b55265878356bdd85c9baa15859c87de93b2bf1f33acf752040a561e4a228f62"
+dependencies = [
+ "dissimilar",
+ "glob",
+ "serde 1.0.202",
+ "serde_derive",
+ "serde_json 1.0.117",
+ "termcolor",
+ "toml 0.8.17",
+]
 
 [[package]]
 name = "typenum"
@@ -4059,6 +4150,15 @@ name = "windows_x86_64_msvc"
 version = "0.52.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bec47e5bfd1bff0eeaf6d8b485cc1074891a197ab4225d504cb7a1ab88b02bf0"
+
+[[package]]
+name = "winnow"
+version = "0.6.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b480ae9340fc261e6be3e95a1ba86d54ae3f9171132a73ce8d4bbaf68339507c"
+dependencies = [
+ "memchr",
+]
 
 [[package]]
 name = "winreg"
