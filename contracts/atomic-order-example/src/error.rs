@@ -16,7 +16,7 @@ pub enum ContractError {
     SubMsgFailure(String),
 
     #[error("Unrecognised reply id: {0}")]
-    UnrecognisedReply(u64),
+    UnrecognizedReply(u64),
 
     #[error("Invalid reply from sub-message {id}, {err}")]
     ReplyParseFailure { id: u64, err: String },

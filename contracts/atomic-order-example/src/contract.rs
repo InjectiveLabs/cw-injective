@@ -138,7 +138,7 @@ pub fn reply(
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     match msg.id {
         ATOMIC_ORDER_REPLY_ID => handle_atomic_order_reply(deps, env, msg),
-        _ => Err(ContractError::UnrecognisedReply(msg.id)),
+        _ => Err(ContractError::UnrecognizedReply(msg.id)),
     }
 }
 
@@ -153,11 +153,13 @@ fn handle_atomic_order_reply(
         msg.result
             .into_result()
             .map_err(ContractError::SubMsgFailure)?
-            .data
+            .msg_responses
+            .first()
             .ok_or_else(|| ContractError::ReplyParseFailure {
                 id,
                 err: "Missing reply data".to_owned(),
             })?
+            .value
             .as_slice(),
     )
     .map_err(|err| ContractError::ReplyParseFailure {

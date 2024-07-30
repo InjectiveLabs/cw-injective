@@ -69,6 +69,7 @@ fn test_query_derivative_market() {
                 maintenance_margin_ratio: dec_to_proto(maintenance_margin_ratio),
                 min_price_tick_size: dec_to_proto(min_price_tick_size),
                 min_quantity_tick_size: dec_to_proto(min_quantity_tick_size),
+                min_notional: "1".to_string(),
             },
             &env.signer,
         )

@@ -81,13 +81,13 @@ impl FPDecimal {
 
         assert_ne!(y.num, U256::zero());
 
-        let num = FPDecimal::ONE.num.full_mul(x.num) / U512::try_from(y.num).unwrap();
+        let num = FPDecimal::ONE.num.full_mul(x.num) / U512::from(y.num);
         if num.is_zero() {
             return FPDecimal::ZERO;
         }
 
         FPDecimal {
-            num: U256::try_from(num).unwrap(), // panic only in MIN_FPDeciaml/-1
+            num: U256::try_from(num).unwrap(), // panic only in MIN_FPDecimal/-1
             sign: 1 ^ x.sign ^ y.sign,
         }
     }

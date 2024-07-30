@@ -326,6 +326,7 @@ pub fn launch_spot_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
                 quote_denom: QUOTE_DENOM.to_string(),
                 min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.000000000000001")),
                 min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("1")),
+                min_notional: "1".to_string(),
             },
             signer,
         )
@@ -364,6 +365,7 @@ pub fn launch_perp_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
                 maintenance_margin_ratio: "50000000000000000".to_owned(),
                 min_price_tick_size: "1000000000000000000000".to_owned(),
                 min_quantity_tick_size: "1000000000000000".to_owned(),
+                min_notional: "1".to_string(),
             },
             signer,
         )
@@ -755,6 +757,7 @@ pub fn set_address_of_pyth_contract(app: &InjectiveTestApp, validator: &SigningA
                 metadata: "".to_string(),
                 title: "Set Pyth contract address".to_string(),
                 summary: "Set Pyth contract address".to_string(),
+                expedited: false,
             },
             validator,
         )

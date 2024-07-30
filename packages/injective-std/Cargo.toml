@@ -11,7 +11,7 @@ version     = "1.13.2-testnet"
 
 [dependencies]
 chrono             = { version = "0.4.27", default-features = false }
-cosmwasm-std       = { version = "1.5.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "iterator", "stargate" ] }
+cosmwasm-std       = { version = "2.1.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
 osmosis-std-derive = { version = "0.20.1" }
 prost              = { version = "0.12.4", features = [ "prost-derive" ] }
 prost-types        = { version = "0.12.4", default-features = false }

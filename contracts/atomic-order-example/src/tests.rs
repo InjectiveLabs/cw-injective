@@ -1,9 +1,9 @@
 use std::str::FromStr;
 
-use cosmwasm_std::testing::{mock_info, MockApi, MockStorage};
+use cosmwasm_std::testing::{message_info, MockApi, MockStorage};
 use cosmwasm_std::{
-    coins, to_json_binary, BankMsg, Binary, ContractResult, CosmosMsg, OwnedDeps, QuerierResult,
-    Reply, SubMsgResponse, SubMsgResult, SystemResult, Uint128,
+    coins, to_json_binary, Addr, BankMsg, Binary, ContractResult, CosmosMsg, OwnedDeps,
+    QuerierResult, Reply, SubMsgResponse, SubMsgResult, SystemResult, Uint128,
 };
 
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
@@ -26,14 +26,14 @@ fn test_deps() -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier, InjectiveQuer
 
 #[test]
 fn proper_initialization() {
-    let sender_addr = "inj1x2ck0ql2ngyxqtw8jteyc0tchwnwxv7npaungt";
+    let sender_addr = Addr::unchecked("inj1x2ck0ql2ngyxqtw8jteyc0tchwnwxv7npaungt");
     let msg = InstantiateMsg {
         market_id: MarketId::new(
             "0x78c2d3af98c517b164070a739681d4bd4d293101e7ffc3a30968945329b47ec6".to_string(),
         )
         .expect("failed to create market_id"),
     };
-    let info = mock_info(sender_addr, &coins(1000, "earth"));
+    let info = message_info(&sender_addr, &coins(1000, "earth"));
 
     // we can just call .unwrap() to assert this was a success
     let res = instantiate(test_deps().as_mut_deps(), inj_mock_env(), info, msg).unwrap();
@@ -42,8 +42,8 @@ fn proper_initialization() {
 
 #[test]
 fn test_swap() {
-    let contract_addr = "inj14hj2tavq8fpesdwxxcu44rty3hh90vhujaxlnz";
-    let sender_addr = "inj1x2ck0ql2ngyxqtw8jteyc0tchwnwxv7npaungt";
+    let contract_addr = Addr::unchecked("inj14hj2tavq8fpesdwxxcu44rty3hh90vhujaxlnz");
+    let sender_addr = Addr::unchecked("inj1x2ck0ql2ngyxqtw8jteyc0tchwnwxv7npaungt");
     let market_id = MarketId::new(
         "0x78c2d3af98c517b164070a739681d4bd4d293101e7ffc3a30968945329b47ec6".to_string(),
     )
@@ -52,12 +52,12 @@ fn test_swap() {
     let msg = InstantiateMsg {
         market_id: market_id.clone(),
     };
-    let info = mock_info(contract_addr, &coins(1000, "earth"));
+    let info = message_info(&contract_addr, &coins(1000, "earth"));
     let mut deps = test_deps();
     let env = inj_mock_env();
     let _ = instantiate(deps.as_mut_deps(), env.clone(), info, msg);
 
-    let info = mock_info(sender_addr, &coins(9000, "usdt"));
+    let info = message_info(&sender_addr, &coins(9000, "usdt"));
     let msg = ExecuteMsg::SwapSpot {
         quantity: i32_to_dec(8),
         price: i32_to_dec(1000),
@@ -96,12 +96,17 @@ fn test_swap() {
     );
 
     let binary_response = Binary::from_base64("CkIweGRkNzI5MmY2ODcwMzIwOTc2YTUxYTUwODBiMGQ2NDU5M2NhZjE3OWViM2YxOTNjZWVlZGFiNGVhNWUxNDljZWISQwoTODAwMDAwMDAwMDAwMDAwMDAwMBIWMTAwMDAwMDAwMDAwMDAwMDAwMDAwMBoUMzYwMDAwMDAwMDAwMDAwMDAwMDA=").unwrap();
+
+    #[allow(deprecated)]
     let reply_msg = Reply {
         id: ATOMIC_ORDER_REPLY_ID,
         result: SubMsgResult::Ok(SubMsgResponse {
             events: vec![],
-            data: Some(binary_response),
+            msg_responses: vec![],
+            data: None,
         }),
+        payload: binary_response,
+        gas_used: 1,
     };
 
     let transfers_response = reply(deps.as_mut_deps(), inj_mock_env(), reply_msg);
@@ -109,7 +114,7 @@ fn test_swap() {
     assert_eq!(messages.len(), 1);
 
     if let CosmosMsg::Bank(BankMsg::Send { to_address, amount }) = &messages[0].msg {
-        assert_eq!(to_address, sender_addr);
+        assert_eq!(*to_address, sender_addr.to_string());
         assert_eq!(2, amount.len());
         assert_eq!(amount[0].denom, "INJ");
         assert_eq!(amount[0].amount, Uint128::from(8u128));
