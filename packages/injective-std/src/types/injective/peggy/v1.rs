@@ -1308,7 +1308,7 @@ pub struct QueryBatchFeeRequest {}
 #[proto_message(type_url = "/injective.peggy.v1.QueryBatchFeeResponse")]
 pub struct QueryBatchFeeResponse {
     #[prost(message, repeated, tag = "1")]
-    pub batch_fees: ::prost::alloc::vec::Vec<BatchFees>,
+    pub batchFees: ::prost::alloc::vec::Vec<BatchFees>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
