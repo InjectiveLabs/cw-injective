@@ -99,6 +99,6 @@ mod tests {
             &mock_dependencies().as_ref(),
         );
 
-        assert_eq!(address.unwrap(), "inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv");
+        assert_eq!(address.unwrap().to_string(), "inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv".to_string());
     }
 }

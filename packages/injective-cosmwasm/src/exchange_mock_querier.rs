@@ -254,7 +254,7 @@ fn default_bank_total_supply_handler() -> QuerierResult {
 
 fn default_token_factory_denom_creation_fee_handler() -> QuerierResult {
     let response = TokenFactoryCreateDenomFeeResponse {
-        fee: vec![Coin::new(10, "inj")],
+        fee: vec![Coin::new(10u128, "inj")],
     };
     SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
 }
@@ -265,16 +265,12 @@ fn default_contract_registration_info_response_handler() -> QuerierResult {
 }
 
 fn default_balance_bank_query_handler(denom: impl Into<String>) -> QuerierResult {
-    let response = BalanceResponse {
-        amount: Coin::new(1000000000000000, denom),
-    };
+    let response = BalanceResponse::new(Coin::new(1000000000000000u128, denom));
     SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
 }
 
 fn default_all_balances_bank_query_handler() -> QuerierResult {
-    let response = AllBalanceResponse {
-        amount: vec![Coin::new(1000000000000000, "inj")],
-    };
+    let response = AllBalanceResponse::new(vec![Coin::new(1000000000000000u128, "inj")]);
     SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
 }
 
@@ -283,8 +279,8 @@ fn default_exchange_params_response_handler() -> QuerierResult {
 
     let response = ExchangeParamsResponse {
         params: Some(Params {
-            spot_market_instant_listing_fee: Coin::new(100000000000000000000, denom),
-            derivative_market_instant_listing_fee: Coin::new(1000000000000000000000, denom),
+            spot_market_instant_listing_fee: Coin::new(100000000000000000000u128, denom),
+            derivative_market_instant_listing_fee: Coin::new(1000000000000000000000u128, denom),
             default_spot_maker_fee_rate: FPDecimal::must_from_str("-0.0001"),
             default_spot_taker_fee_rate: FPDecimal::must_from_str("0.001"),
             default_derivative_maker_fee_rate: FPDecimal::must_from_str("-0.0001"),
@@ -300,7 +296,7 @@ fn default_exchange_params_response_handler() -> QuerierResult {
             inj_reward_staked_requirement_threshold: FPDecimal::must_from_str("25000000000000000000"),
             trading_rewards_vesting_duration: 1209600i64,
             liquidator_reward_share_rate: FPDecimal::must_from_str("0.05"),
-            binary_options_market_instant_listing_fee: Coin::new(10000000000000000000, denom),
+            binary_options_market_instant_listing_fee: Coin::new(10000000000000000000u128, denom),
             atomic_market_order_access_level: AtomicMarketOrderAccessLevel::SmartContractsOnly,
             spot_atomic_market_order_fee_multiplier: FPDecimal::must_from_str("2.0"),
             derivative_atomic_market_order_fee_multiplier: FPDecimal::must_from_str("2.0"),
@@ -804,8 +800,8 @@ impl TestDeposit {
 
 pub mod handlers {
     use cosmwasm_std::{
-        to_json_binary, AllBalanceResponse, BalanceResponse, Binary, CodeInfoResponse, Coin, ContractInfoResponse, ContractResult, QuerierResult,
-        StdResult, SupplyResponse, SystemError, SystemResult, Uint128,
+        to_json_binary, Addr, AllBalanceResponse, BalanceResponse, Binary, Checksum, CodeInfoResponse, Coin, ContractInfoResponse, ContractResult,
+        QuerierResult, StdResult, SupplyResponse, SystemError, SystemResult, Uint128,
     };
     use std::collections::HashMap;
 
@@ -1265,9 +1261,9 @@ pub mod handlers {
         impl HandlesBankBalanceQuery for Temp {
             fn handle(&self, _: String, denom: String) -> QuerierResult {
                 let balances = self.balances.to_owned();
-                let empty = Coin::new(0, denom.clone());
+                let empty = Coin::new(0u128, denom.clone());
                 let balance = balances.iter().find(|b| -> bool { b.denom == denom }).unwrap_or(&empty);
-                let res = BalanceResponse { amount: balance.to_owned() };
+                let res = BalanceResponse::new(balance.to_owned());
 
                 SystemResult::Ok(ContractResult::from(to_json_binary(&res)))
             }
@@ -1281,9 +1277,7 @@ pub mod handlers {
         }
         impl HandlesBankAllBalancesQuery for Temp {
             fn handle(&self, _: String) -> QuerierResult {
-                let res = AllBalanceResponse {
-                    amount: self.balances.to_owned(),
-                };
+                let res = AllBalanceResponse::new(self.balances.to_owned());
 
                 SystemResult::Ok(ContractResult::from(to_json_binary(&res)))
             }
@@ -1334,45 +1328,36 @@ pub mod handlers {
         Some(Box::new(Temp { result }))
     }
 
-    pub fn create_contract_info_handler(code_id: u64, creator: impl ToString) -> Option<Box<dyn HandlesContractInfo>> {
+    pub fn create_contract_info_handler(code_id: u64, creator: Addr) -> Option<Box<dyn HandlesContractInfo>> {
         struct Temp {
             code_id: u64,
-            creator: String,
+            creator: Addr,
         }
 
         impl HandlesContractInfo for Temp {
             fn handle(&self, _contract_addr: &str) -> QuerierResult {
-                let mut response = ContractInfoResponse::default();
-                response.code_id = self.code_id;
-                response.creator = self.creator.to_owned();
+                let response = ContractInfoResponse::new(self.code_id, self.creator.to_owned(), None, false, None);
 
                 SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
             }
         }
 
-        Some(Box::new(Temp {
-            code_id,
-            creator: creator.to_string(),
-        }))
+        Some(Box::new(Temp { code_id, creator }))
     }
 
-    pub fn create_code_id_handler(creator: impl ToString) -> Option<Box<dyn HandlesCodeInfo>> {
+    pub fn create_code_id_handler(creator: Addr) -> Option<Box<dyn HandlesCodeInfo>> {
         struct Temp {
-            creator: String,
+            creator: Addr,
         }
 
         impl HandlesCodeInfo for Temp {
             fn handle(&self, code_id: u64) -> QuerierResult {
-                let mut response = CodeInfoResponse::default();
-                response.code_id = code_id;
-                response.creator = self.creator.to_owned();
+                let response = CodeInfoResponse::new(code_id, self.creator.to_owned(), Checksum::generate(b"123"));
 
                 SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
             }
         }
 
-        Some(Box::new(Temp {
-            creator: creator.to_string(),
-        }))
+        Some(Box::new(Temp { creator }))
     }
 }
