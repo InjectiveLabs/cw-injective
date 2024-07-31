@@ -5,7 +5,7 @@ edition     = "2021"
 license     = "Apache-2.0"
 name        = "injective-testing"
 repository  = "https://github.com/InjectiveLabs/cw-injective/tree/dev/packages/injective-testing"
-version     = "0.1.6"
+version     = "0.1.7"
 
 [dependencies]
 anyhow             = { version = "1.0.66" }

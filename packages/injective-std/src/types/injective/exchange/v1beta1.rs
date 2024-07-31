@@ -1,4 +1,4 @@
-use osmosis_std_derive::CosmwasmExt;
+use injective_std_derive::CosmwasmExt;
 /// spot authz messages
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -329,7 +329,7 @@ pub struct DerivativeMarket {
     /// true if the market is a perpetual market. false if the market is an expiry
     /// futures market
     #[prost(bool, tag = "13")]
-    pub is_perpetual: bool,
+    pub isPerpetual: bool,
     /// Status of the market
     #[prost(enumeration = "MarketStatus", tag = "14")]
     #[serde(
@@ -813,7 +813,7 @@ pub struct SubaccountOrder {
     #[prost(string, tag = "2")]
     pub quantity: ::prost::alloc::string::String,
     #[prost(bool, tag = "3")]
-    pub is_reduce_only: bool,
+    pub isReduceOnly: bool,
     #[prost(string, tag = "4")]
     pub cid: ::prost::alloc::string::String,
 }
@@ -883,7 +883,7 @@ pub struct DerivativeMarketOrder {
 #[proto_message(type_url = "/injective.exchange.v1beta1.Position")]
 pub struct Position {
     #[prost(bool, tag = "1")]
-    pub is_long: bool,
+    pub isLong: bool,
     #[prost(string, tag = "2")]
     pub quantity: ::prost::alloc::string::String,
     #[prost(string, tag = "3")]
@@ -902,7 +902,7 @@ pub struct MarketOrderIndicator {
     #[serde(alias = "marketID")]
     pub market_id: ::prost::alloc::string::String,
     #[prost(bool, tag = "2")]
-    pub is_buy: bool,
+    pub isBuy: bool,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -1469,7 +1469,7 @@ pub struct EventBatchSpotExecution {
         serialize_with = "crate::serde::as_str::serialize",
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
-    pub execution_type: i32,
+    pub executionType: i32,
     #[prost(message, repeated, tag = "4")]
     pub trades: ::prost::alloc::vec::Vec<TradeLog>,
 }
@@ -1492,7 +1492,7 @@ pub struct EventBatchDerivativeExecution {
         serialize_with = "crate::serde::as_str::serialize",
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
-    pub execution_type: i32,
+    pub executionType: i32,
     #[prost(message, repeated, tag = "6")]
     pub trades: ::prost::alloc::vec::Vec<DerivativeTradeLog>,
 }
@@ -1704,7 +1704,7 @@ pub struct EventCancelDerivativeOrder {
     #[serde(alias = "marketID")]
     pub market_id: ::prost::alloc::string::String,
     #[prost(bool, tag = "2")]
-    pub is_limit_cancel: bool,
+    pub isLimitCancel: bool,
     #[prost(message, optional, tag = "3")]
     pub limit_order: ::core::option::Option<DerivativeLimitOrder>,
     #[prost(message, optional, tag = "4")]
@@ -1755,7 +1755,7 @@ pub struct EventCancelConditionalDerivativeOrder {
     #[serde(alias = "marketID")]
     pub market_id: ::prost::alloc::string::String,
     #[prost(bool, tag = "2")]
-    pub is_limit_cancel: bool,
+    pub isLimitCancel: bool,
     #[prost(message, optional, tag = "3")]
     pub limit_order: ::core::option::Option<DerivativeLimitOrder>,
     #[prost(message, optional, tag = "4")]
@@ -1769,7 +1769,7 @@ pub struct EventConditionalDerivativeOrderTrigger {
     #[serde(alias = "marketID")]
     pub market_id: ::prost::alloc::vec::Vec<u8>,
     #[prost(bool, tag = "2")]
-    pub is_limit_trigger: bool,
+    pub isLimitTrigger: bool,
     #[prost(bytes = "vec", tag = "3")]
     pub triggered_order_hash: ::prost::alloc::vec::Vec<u8>,
     #[prost(bytes = "vec", tag = "4")]
@@ -3177,7 +3177,7 @@ pub struct SpotOrderBook {
     #[serde(alias = "marketID")]
     pub market_id: ::prost::alloc::string::String,
     #[prost(bool, tag = "2")]
-    pub is_buy_side: bool,
+    pub isBuySide: bool,
     #[prost(message, repeated, tag = "3")]
     pub orders: ::prost::alloc::vec::Vec<SpotLimitOrder>,
 }
@@ -3190,7 +3190,7 @@ pub struct DerivativeOrderBook {
     #[serde(alias = "marketID")]
     pub market_id: ::prost::alloc::string::String,
     #[prost(bool, tag = "2")]
-    pub is_buy_side: bool,
+    pub isBuySide: bool,
     #[prost(message, repeated, tag = "3")]
     pub orders: ::prost::alloc::vec::Vec<DerivativeLimitOrder>,
 }
@@ -3349,7 +3349,7 @@ pub struct ExchangeEnableProposal {
         serialize_with = "crate::serde::as_str::serialize",
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
-    pub exchange_type: i32,
+    pub exchangeType: i32,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -4858,7 +4858,7 @@ pub struct FullDerivativeMarket {
 }
 /// Nested message and enum types in `FullDerivativeMarket`.
 pub mod full_derivative_market {
-    use osmosis_std_derive::CosmwasmExt;
+    use injective_std_derive::CosmwasmExt;
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, Eq, ::prost::Oneof, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema)]
     pub enum Info {
@@ -5618,14 +5618,14 @@ pub struct TrimmedDerivativeConditionalOrder {
     pub margin: ::prost::alloc::string::String,
     /// price to trigger the order
     #[prost(string, tag = "4")]
-    pub trigger_price: ::prost::alloc::string::String,
+    pub triggerPrice: ::prost::alloc::string::String,
     /// true if the order is a buy
     ///
     /// ensure omitempty is not in jsontag
     #[prost(bool, tag = "5")]
-    pub is_buy: bool,
+    pub isBuy: bool,
     #[prost(bool, tag = "6")]
-    pub is_limit: bool,
+    pub isLimit: bool,
     #[prost(string, tag = "7")]
     pub order_hash: ::prost::alloc::string::String,
     #[prost(string, tag = "8")]
