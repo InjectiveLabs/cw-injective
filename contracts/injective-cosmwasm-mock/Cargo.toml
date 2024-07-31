@@ -44,4 +44,4 @@ thiserror          = { version = "1.0.56" }
 
 [dev-dependencies]
 injective-test-tube = { version = "1.13.0-a90d21322682bbfdfc72445dc0a9b45ee49f1084", path = "../../../test-tube/packages/injective-test-tube" }
-injective-testing   = { version = "0.1.7", path = "../../packages/injective-testing" }
+injective-testing   = { version = "0.1.6", path = "../../packages/injective-testing" }
