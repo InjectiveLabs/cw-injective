@@ -1807,7 +1807,7 @@ dependencies = [
  "cw-storage-plus 2.0.0",
  "ethereum-types",
  "hex",
- "injective-math 0.2.4",
+ "injective-math 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "schemars",
  "serde 1.0.202",
  "serde-json-wasm 1.0.1",

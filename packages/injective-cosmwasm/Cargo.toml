@@ -14,7 +14,7 @@ cosmwasm-std    = { version = "2.1.0", features = [ "abort", "cosmwasm_1_2", "co
 cw-storage-plus = { version = "2.0.0" }
 ethereum-types  = { version = "0.5.2" }
 hex             = { version = "0.4.3", features = [ "serde" ] }
-injective-math  = { version = "0.2.4", path = "../injective-math" }
+injective-math  = { version = "0.2.4" }
 schemars        = "0.8.16"
 serde           = { version = "1.0.193", default-features = false, features = [ "derive" ] }
 serde_repr      = "0.1.17"
