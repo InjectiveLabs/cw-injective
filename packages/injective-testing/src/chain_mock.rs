@@ -1,10 +1,12 @@
+use crate::InjectiveAddressGenerator;
+
 use anyhow::{bail, Result as AnyResult};
 use cosmwasm_std::{testing::MockApi, Addr, Api, Binary, BlockInfo, Coin, CustomQuery, Empty, MemoryStorage, Querier, Storage};
 use cosmwasm_std::{to_json_binary, StdError};
-use cw_multi_test::{AddressGenerator, App};
-use cw_multi_test::{AppResponse, BankKeeper, BasicAppBuilder, CosmosRouter, DistributionKeeper, Module, Router, StakeKeeper, WasmKeeper};
+use cw_multi_test::{
+    no_init, AddressGenerator, App, AppResponse, BankKeeper, BasicAppBuilder, CosmosRouter, Module, StargateAccepting, StargateFailing, WasmKeeper,
+};
 use injective_cosmwasm::{InjectiveMsgWrapper, InjectiveQueryWrapper};
-
 use std::{
     cell::{Ref, RefCell},
     marker::PhantomData,
@@ -13,24 +15,12 @@ use std::{
     u8,
 };
 
-use crate::InjectiveAddressGenerator;
-
-fn no_init<BankT, CustomT, WasmT, StakingT, DistrT, IbcT, GovT>(
-    _: &mut Router<BankT, CustomT, WasmT, StakingT, DistrT, IbcT, GovT>,
-    _: &dyn Api,
-    _: &mut dyn Storage,
-) {
+pub enum StargateT {
+    Accepting(StargateAccepting),
+    Failing(StargateFailing),
 }
 
-pub type MockedInjectiveApp = App<
-    BankKeeper,
-    MockApi,
-    MemoryStorage,
-    CustomInjectiveHandler,
-    WasmKeeper<InjectiveMsgWrapper, InjectiveQueryWrapper>,
-    StakeKeeper,
-    DistributionKeeper,
->;
+pub type MockedInjectiveApp = App<BankKeeper, MockApi, MemoryStorage, CustomInjectiveHandler, WasmKeeper<InjectiveMsgWrapper, InjectiveQueryWrapper>>;
 
 #[derive(Clone)]
 pub struct InitialBalance {
@@ -314,13 +304,13 @@ pub fn mock_custom_injective_chain_app(
     };
 
     let inj_wasm_keeper = match address_generator {
-        Some(generator) => WasmKeeper::<InjectiveMsgWrapper, InjectiveQueryWrapper>::new_with_custom_address_generator(generator),
-        None => WasmKeeper::<InjectiveMsgWrapper, InjectiveQueryWrapper>::new_with_custom_address_generator(InjectiveAddressGenerator()),
+        Some(generator) => WasmKeeper::<InjectiveMsgWrapper, InjectiveQueryWrapper>::new().with_address_generator(generator),
+        None => WasmKeeper::<InjectiveMsgWrapper, InjectiveQueryWrapper>::new().with_address_generator(InjectiveAddressGenerator()),
     };
 
-    BasicAppBuilder::new()
+    BasicAppBuilder::new_custom()
         .with_custom(inj_handler)
-        .with_wasm::<CustomInjectiveHandler, WasmKeeper<InjectiveMsgWrapper, InjectiveQueryWrapper>>(inj_wasm_keeper)
+        .with_wasm::<WasmKeeper<InjectiveMsgWrapper, InjectiveQueryWrapper>>(inj_wasm_keeper)
         .build(|router, _, storage| {
             initial_balances.into_iter().for_each(|balance| {
                 router
@@ -332,18 +322,18 @@ pub fn mock_custom_injective_chain_app(
 }
 
 pub fn mock_default_injective_chain_app() -> MockedInjectiveApp {
-    let inj_wasm_keeper = WasmKeeper::<InjectiveMsgWrapper, InjectiveQueryWrapper>::new_with_custom_address_generator(InjectiveAddressGenerator());
+    let inj_wasm_keeper = WasmKeeper::<InjectiveMsgWrapper, InjectiveQueryWrapper>::new().with_address_generator(InjectiveAddressGenerator());
 
     let inj_handler = CustomInjectiveHandler::default();
 
-    BasicAppBuilder::new()
+    BasicAppBuilder::new_custom()
         .with_custom(inj_handler)
-        .with_wasm::<CustomInjectiveHandler, WasmKeeper<InjectiveMsgWrapper, InjectiveQueryWrapper>>(inj_wasm_keeper)
+        .with_wasm::<WasmKeeper<InjectiveMsgWrapper, InjectiveQueryWrapper>>(inj_wasm_keeper)
         .build(no_init)
 }
 
 fn copy_binary(binary: &Binary) -> Binary {
-    let mut c: Vec<u8> = vec![0; binary.0.len()];
-    c.clone_from_slice(&binary.0);
-    Binary(c)
+    let mut c: Vec<u8> = vec![0; binary.to_vec().len()];
+    c.clone_from_slice(binary);
+    Binary::new(c)
 }
