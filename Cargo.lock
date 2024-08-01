@@ -208,10 +208,10 @@ name = "atomic-order-example"
 version = "0.2.0"
 dependencies = [
  "cosmwasm-schema 1.5.5",
- "cosmwasm-std 1.5.2",
+ "cosmwasm-std 2.1.1",
  "cosmwasm-storage",
  "cw-multi-test 0.16.5",
- "cw-storage-plus 1.2.0",
+ "cw-storage-plus 2.0.0",
  "cw-utils 0.16.0",
  "cw2 0.16.0",
  "injective-cosmwasm 0.2.24",
@@ -1104,8 +1104,8 @@ checksum = "59f8e79d1fbf76bdfbde321e902714bf6c49df88a7dda6fc682fc2979226962d"
 name = "dummy"
 version = "1.1.0"
 dependencies = [
- "cosmwasm-std 1.5.2",
- "cw-storage-plus 1.2.0",
+ "cosmwasm-std 2.1.1",
+ "cw-storage-plus 2.0.0",
  "cw2 0.16.0",
  "injective-cosmwasm 0.2.24",
  "schemars",
@@ -1837,8 +1837,8 @@ version = "1.0.0"
 dependencies = [
  "cosmos-sdk-proto",
  "cosmwasm-schema 1.5.5",
- "cosmwasm-std 1.5.2",
- "cw-storage-plus 1.2.0",
+ "cosmwasm-std 2.1.1",
+ "cw-storage-plus 2.0.0",
  "cw2 0.16.0",
  "injective-cosmwasm 0.2.24",
  "injective-math 0.2.4",
@@ -1858,7 +1858,7 @@ name = "injective-math"
 version = "0.2.4"
 dependencies = [
  "cosmwasm-schema 1.5.5",
- "cosmwasm-std 1.5.2",
+ "cosmwasm-std 2.1.1",
  "ethereum-types",
  "primitive-types",
  "schemars",
@@ -1882,10 +1882,10 @@ dependencies = [
 
 [[package]]
 name = "injective-protobuf"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "cosmwasm-schema 1.5.5",
- "cosmwasm-std 1.5.2",
+ "cosmwasm-std 2.1.1",
  "ethereum-types",
  "num 0.4.3",
  "protobuf 2.28.0",

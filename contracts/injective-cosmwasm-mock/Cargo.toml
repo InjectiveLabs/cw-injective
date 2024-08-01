@@ -16,24 +16,15 @@ exclude = [
 crate-type = [ "cdylib", "rlib" ]
 
 [features]
-# for more explicit tests, cargo test --features=backtraces
-backtraces = [ "cosmwasm-std/backtraces" ]
 # use library feature to disable all instantiate/execute/query exports
 integration = [  ]
 library     = [  ]
 
-[package.metadata.scripts]
-optimize = """docker run --rm -v "$(pwd)":/code \
-  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
-  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/workspace-optimizer-arm64:0.12.11
-"""
-
 [dependencies]
 cosmos-sdk-proto   = { version = "0.20.0", default-features = false }
 cosmwasm-schema    = { version = "1.5.0" }
-cosmwasm-std       = { version = "1.5.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "iterator", "stargate" ] }
-cw-storage-plus    = { version = "1.2.0" }
+cosmwasm-std       = { version = "2.1.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
+cw-storage-plus    = { version = "2.0.0" }
 cw2                = { version = "0.16.0" }
 injective-cosmwasm = { path = "../../packages/injective-cosmwasm" }
 injective-math     = { path = "../../packages/injective-math" }
@@ -47,5 +38,5 @@ thiserror          = { version = "1.0.56" }
 
 [dev-dependencies]
 injective-std       = { version = "0.1.5" }
-injective-test-tube = { version = "1.1.7" }
+injective-test-tube = { git = "https://github.com/InjectiveLabs/test-tube.git", branch = "latest" }
 injective-testing   = { version = "0.1.6" }
