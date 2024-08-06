@@ -38,5 +38,5 @@ thiserror          = { version = "1.0.56" }
 
 [dev-dependencies]
 injective-std       = { version = "0.1.5" }
-injective-test-tube = { git = "https://github.com/InjectiveLabs/test-tube.git", branch = "latest" }
+injective-test-tube = { version = "1.13.0" }
 injective-testing   = { version = "0.1.6" }
