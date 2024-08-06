@@ -25,9 +25,9 @@ cosmos-sdk-proto   = { version = "0.20.0", default-features = false }
 cosmwasm-schema    = { version = "1.5.0" }
 cosmwasm-std       = { version = "2.1.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
 cw-storage-plus    = { version = "2.0.0" }
-cw2                = { version = "0.16.0" }
-injective-cosmwasm = { path = "../../packages/injective-cosmwasm" }
-injective-math     = { path = "../../packages/injective-math" }
+cw2                = { version = "2.0.0" }
+injective-cosmwasm = { version = "0.2.24" }
+injective-math     = { version = "0.3.0" }
 injective-protobuf = { path = "../../packages/injective-protobuf" }
 injective-std      = { version = "0.1.5" }
 prost              = { version = "0.12.4" }
@@ -39,4 +39,4 @@ thiserror          = { version = "1.0.56" }
 [dev-dependencies]
 injective-std       = { version = "0.1.5" }
 injective-test-tube = { version = "1.13.0" }
-injective-testing   = { version = "0.1.6" }
+injective-testing   = { version = "0.2.0" }

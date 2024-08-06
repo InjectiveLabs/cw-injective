@@ -30,11 +30,11 @@ optimize = """docker run --rm -v "$(pwd)":/code \
 cosmwasm-std       = { version = "2.1.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
 cosmwasm-storage   = { version = "1.5.2", features = [ "iterator" ] }
 cw-storage-plus    = { version = "2.0.0" }
-cw-utils           = { version = "0.16.0" }
-cw2                = { version = "0.16.0" }
-injective-cosmwasm = { version = "0.2.24", path = "../../packages/injective-cosmwasm" }
-injective-math     = { version = "0.3.0", path = "../../packages/injective-math" }
-injective-protobuf = { version = "0.2.3", path = "../../packages/injective-protobuf" }
+cw-utils           = { version = "2.0.0" }
+cw2                = { version = "2.0.0" }
+injective-cosmwasm = { version = "0.2.24" }
+injective-math     = { version = "0.3.0" }
+injective-protobuf = { version = "0.3.0", path = "../../packages/injective-protobuf" }
 protobuf           = { version = "2.28.0", features = [ "with-bytes" ] }
 schemars           = { version = "0.8.8", features = [ "enumset" ] }
 serde              = { version = "1.0.137", default-features = false, features = [ "derive" ] }

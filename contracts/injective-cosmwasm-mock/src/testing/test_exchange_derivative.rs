@@ -14,8 +14,11 @@ use injective_cosmwasm::{
     TrimmedDerivativeLimitOrder,
 };
 use injective_math::FPDecimal;
-use injective_std::types::injective::exchange::v1beta1::{MsgInstantPerpetualMarketLaunch, OrderType};
-use injective_test_tube::{injective_cosmwasm::get_default_subaccount_id_for_checked_address, Account, Exchange, Module, Wasm};
+use injective_test_tube::{
+    injective_cosmwasm::get_default_subaccount_id_for_checked_address,
+    injective_std::types::injective::exchange::v1beta1::{MsgInstantPerpetualMarketLaunch, OrderType},
+    Account, Exchange, Module, Wasm,
+};
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
@@ -69,6 +72,7 @@ fn test_query_derivative_market() {
                 maintenance_margin_ratio: dec_to_proto(maintenance_margin_ratio),
                 min_price_tick_size: dec_to_proto(min_price_tick_size),
                 min_quantity_tick_size: dec_to_proto(min_quantity_tick_size),
+                min_notional: "1".to_string(),
             },
             &env.signer,
         )

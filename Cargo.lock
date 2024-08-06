@@ -212,10 +212,10 @@ dependencies = [
  "cosmwasm-storage",
  "cw-multi-test 0.16.5",
  "cw-storage-plus 2.0.0",
- "cw-utils 0.16.0",
- "cw2 0.16.0",
- "injective-cosmwasm 0.2.24",
- "injective-math 0.3.0",
+ "cw-utils 2.0.0",
+ "cw2 2.0.0",
+ "injective-cosmwasm 0.2.24 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-math 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "injective-protobuf",
  "protobuf 2.28.0",
  "schemars",
@@ -876,17 +876,6 @@ dependencies = [
 
 [[package]]
 name = "cw-storage-plus"
-version = "0.16.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9b6f91c0b94481a3e9ef1ceb183c37d00764f8751e39b45fc09f4d9b970d469"
-dependencies = [
- "cosmwasm-std 1.5.2",
- "schemars",
- "serde 1.0.204",
-]
-
-[[package]]
-name = "cw-storage-plus"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d5ff29294ee99373e2cd5fd21786a3c0ced99a52fec2ca347d565489c61b723c"
@@ -905,21 +894,6 @@ dependencies = [
  "cosmwasm-std 2.1.1",
  "schemars",
  "serde 1.0.204",
-]
-
-[[package]]
-name = "cw-utils"
-version = "0.16.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6a84c6c1c0acc3616398eba50783934bd6c964bad6974241eaee3460c8f5b26"
-dependencies = [
- "cosmwasm-schema 1.5.5",
- "cosmwasm-std 1.5.2",
- "cw2 0.16.0",
- "schemars",
- "semver",
- "serde 1.0.204",
- "thiserror",
 ]
 
 [[package]]
@@ -952,19 +926,6 @@ dependencies = [
 
 [[package]]
 name = "cw2"
-version = "0.16.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "91398113b806f4d2a8d5f8d05684704a20ffd5968bf87e3473e1973710b884ad"
-dependencies = [
- "cosmwasm-schema 1.5.5",
- "cosmwasm-std 1.5.2",
- "cw-storage-plus 0.16.0",
- "schemars",
- "serde 1.0.204",
-]
-
-[[package]]
-name = "cw2"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c6c120b24fbbf5c3bedebb97f2cc85fbfa1c3287e09223428e7e597b5293c1fa"
@@ -972,6 +933,21 @@ dependencies = [
  "cosmwasm-schema 1.5.5",
  "cosmwasm-std 1.5.2",
  "cw-storage-plus 1.2.0",
+ "schemars",
+ "semver",
+ "serde 1.0.204",
+ "thiserror",
+]
+
+[[package]]
+name = "cw2"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b04852cd38f044c0751259d5f78255d07590d136b8a86d4e09efdd7666bd6d27"
+dependencies = [
+ "cosmwasm-schema 2.1.1",
+ "cosmwasm-std 2.1.1",
+ "cw-storage-plus 2.0.0",
  "schemars",
  "semver",
  "serde 1.0.204",
@@ -1106,8 +1082,8 @@ version = "1.1.0"
 dependencies = [
  "cosmwasm-std 2.1.1",
  "cw-storage-plus 2.0.0",
- "cw2 0.16.0",
- "injective-cosmwasm 0.2.24",
+ "cw2 2.0.0",
+ "injective-cosmwasm 0.2.24 (registry+https://github.com/rust-lang/crates.io-index)",
  "schemars",
  "serde 1.0.204",
  "thiserror",
@@ -1803,7 +1779,7 @@ dependencies = [
  "cw-storage-plus 2.0.0",
  "ethereum-types",
  "hex",
- "injective-math 0.2.4",
+ "injective-math 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "schemars",
  "serde 1.0.204",
  "serde-json-wasm 1.0.1",
@@ -1839,13 +1815,13 @@ dependencies = [
  "cosmwasm-schema 1.5.5",
  "cosmwasm-std 2.1.1",
  "cw-storage-plus 2.0.0",
- "cw2 0.16.0",
- "injective-cosmwasm 0.2.24",
- "injective-math 0.3.0",
+ "cw2 2.0.0",
+ "injective-cosmwasm 0.2.24 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-math 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "injective-protobuf",
  "injective-std 0.1.8",
  "injective-test-tube",
- "injective-testing 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-testing 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "prost 0.12.6",
  "protobuf 3.5.0",
  "schemars",
@@ -1881,8 +1857,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "injective-math"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "194fb5cb49537b0b9137d02a563b7019003220fb4affff05ad6cdc6fee3509c9"
+dependencies = [
+ "cosmwasm-std 2.1.1",
+ "ethereum-types",
+ "primitive-types",
+ "schemars",
+ "serde 1.0.204",
+ "subtle-encoding",
+]
+
+[[package]]
 name = "injective-protobuf"
-version = "0.2.3"
+version = "0.3.0"
 dependencies = [
  "cosmwasm-schema 1.5.5",
  "cosmwasm-std 2.1.1",
@@ -1990,7 +1980,7 @@ dependencies = [
 
 [[package]]
 name = "injective-testing"
-version = "0.1.6"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "base64 0.13.1",
@@ -2006,16 +1996,16 @@ dependencies = [
 
 [[package]]
 name = "injective-testing"
-version = "0.1.6"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49dc1d881d0b7726745ed776a87d1e6f93e877d2d5ebd0fe8be759f5424a091a"
+checksum = "88cbbc0e2aa54bc5752007a8712e7b42d2cfc589a81dc665cea484aef0a6d02b"
 dependencies = [
  "anyhow",
  "base64 0.13.1",
- "cosmwasm-std 1.5.2",
- "cw-multi-test 0.16.5",
+ "cosmwasm-std 2.1.1",
+ "cw-multi-test 2.1.0",
  "injective-cosmwasm 0.2.24 (registry+https://github.com/rust-lang/crates.io-index)",
- "injective-math 0.2.4",
+ "injective-math 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.4.6",
  "secp256k1",
  "serde 1.0.204",
