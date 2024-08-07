@@ -2,9 +2,10 @@ use crate::msg::QueryMsg;
 use crate::utils::{ExchangeType, Setup, BASE_DENOM};
 use cosmwasm_std::Uint128;
 use injective_cosmwasm::exchange::response::StakedAmountResponse;
-use injective_std::types::cosmos::base::v1beta1::Coin;
-use injective_std::types::cosmos::staking::v1beta1::MsgDelegate;
-use injective_test_tube::{Account, Module, Staking, Wasm};
+use injective_test_tube::{
+    injective_std::types::cosmos::{base::v1beta1::Coin, staking::v1beta1::MsgDelegate},
+    Account, Module, Staking, Wasm,
+};
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]

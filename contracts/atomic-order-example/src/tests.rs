@@ -101,7 +101,10 @@ fn test_swap() {
         result: SubMsgResult::Ok(SubMsgResponse {
             events: vec![],
             data: Some(binary_response),
+            msg_responses: vec![],
         }),
+        payload: Binary::default(),
+        gas_used: 0,
     };
 
     let transfers_response = reply(deps.as_mut_deps(), inj_mock_env(), reply_msg);

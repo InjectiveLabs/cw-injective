@@ -26,12 +26,10 @@ cosmwasm-schema    = { version = "1.5.0" }
 cosmwasm-std       = { version = "2.1.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
 cw-storage-plus    = { version = "2.0.0" }
 cw2                = { version = "2.0.0" }
-injective-cosmwasm = { version = "0.2.24" }
+injective-cosmwasm = { version = "0.3.0" }
 injective-math     = { version = "0.3.0" }
-injective-protobuf = { path = "../../packages/injective-protobuf" }
-injective-std      = { version = "0.1.5" }
-prost              = { version = "0.12.4" }
-protobuf           = { version = "3.3.0" }
+injective-std      = { version = "1.13.0" }
+prost              = { version = "0.12.6" }
 schemars           = { version = "0.8.16" }
 serde              = { version = "1.0.196", default-features = false, features = [ "derive" ] }
 thiserror          = { version = "1.0.56" }

@@ -32,10 +32,10 @@ cosmwasm-storage   = { version = "1.5.2", features = [ "iterator" ] }
 cw-storage-plus    = { version = "2.0.0" }
 cw-utils           = { version = "2.0.0" }
 cw2                = { version = "2.0.0" }
-injective-cosmwasm = { version = "0.2.24" }
+injective-cosmwasm = { version = "0.3.0" }
 injective-math     = { version = "0.3.0" }
-injective-protobuf = { version = "0.3.0", path = "../../packages/injective-protobuf" }
-protobuf           = { version = "2.28.0", features = [ "with-bytes" ] }
+injective-std      = { version = "1.13.0" }
+prost              = { version = "0.12.6" }
 schemars           = { version = "0.8.8", features = [ "enumset" ] }
 serde              = { version = "1.0.137", default-features = false, features = [ "derive" ] }
 thiserror          = { version = "1.0.31" }

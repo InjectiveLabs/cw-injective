@@ -2,17 +2,15 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{BankMsg, Coin, DepsMut, Env, MessageInfo, Reply, Response, SubMsg, Uint128};
 use cw2::set_contract_version;
-use protobuf::Message;
-use std::str::FromStr;
-
-use serde::{Deserialize, Serialize};
-
 use injective_cosmwasm::{
     create_spot_market_order_msg, get_default_subaccount_id_for_checked_address,
     InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, OrderType, SpotOrder,
 };
 use injective_math::FPDecimal;
-use injective_protobuf::proto::tx;
+use injective_std::types::injective::exchange::v1beta1 as Exchange;
+use prost::Message;
+use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
@@ -149,29 +147,51 @@ fn handle_atomic_order_reply(
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     let dec_scale_factor: FPDecimal = FPDecimal::from(1000000000000000000_i128);
     let id = msg.id;
-    let order_response: tx::MsgCreateSpotMarketOrderResponse = Message::parse_from_bytes(
-        msg.result
-            .into_result()
-            .map_err(ContractError::SubMsgFailure)?
-            .data
-            .ok_or_else(|| ContractError::ReplyParseFailure {
-                id,
-                err: "Missing reply data".to_owned(),
-            })?
-            .as_slice(),
+
+    let binding = msg
+        .result
+        .into_result()
+        .map_err(ContractError::SubMsgFailure)
+        .unwrap();
+
+    let first_messsage = binding.msg_responses.first();
+
+    let order_response = Exchange::MsgCreateSpotMarketOrderResponse::decode(
+        first_messsage.unwrap().value.as_slice(),
     )
     .map_err(|err| ContractError::ReplyParseFailure {
         id,
         err: err.to_string(),
-    })?;
+    })
+    .unwrap();
 
-    // unwrap results into trade_data
-    let trade_data = match order_response.results.into_option() {
-        Some(trade_data) => Ok(trade_data),
-        None => Err(ContractError::CustomError {
-            val: "No trade data in order response".to_string(),
-        }),
-    }?;
+    let trade_data = order_response
+        .results
+        .ok_or_else(|| ContractError::SubMsgFailure("No trade data".to_owned()))
+        .unwrap();
+    // let order_response: tx::MsgCreateSpotMarketOrderResponse = Message::parse_from_bytes(
+    //     msg.result
+    //         .into_result()
+    //         .map_err(ContractError::SubMsgFailure)?
+    //         .data
+    //         .ok_or_else(|| ContractError::ReplyParseFailure {
+    //             id,
+    //             err: "Missing reply data".to_owned(),
+    //         })?
+    //         .as_slice(),
+    // )
+    // .map_err(|err| ContractError::ReplyParseFailure {
+    //     id,
+    //     err: err.to_string(),
+    // })?;
+
+    // // unwrap results into trade_data
+    // let trade_data = match order_response.results.into_option() {
+    //     Some(trade_data) => Ok(trade_data),
+    //     None => Err(ContractError::CustomError {
+    //         val: "No trade data in order response".to_string(),
+    //     }),
+    // }?;
     let quantity = FPDecimal::from_str(&trade_data.quantity)? / dec_scale_factor;
     let price = FPDecimal::from_str(&trade_data.price)? / dec_scale_factor;
     let fee = FPDecimal::from_str(&trade_data.fee)? / dec_scale_factor;

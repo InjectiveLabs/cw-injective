@@ -17,8 +17,11 @@ use injective_cosmwasm::{
 use injective_math::FPDecimal;
 use injective_test_tube::{
     injective_cosmwasm::get_default_subaccount_id_for_checked_address,
-    injective_std::types::injective::exchange::v1beta1::{
-        Deposit, MsgDeposit, MsgInstantSpotMarketLaunch, OrderType, QueryAggregateMarketVolumeResponse, QuerySubaccountDepositsRequest,
+    injective_std::types::{
+        cosmos::base::v1beta1::Coin as BaseCoin,
+        injective::exchange::v1beta1::{
+            Deposit, MsgDeposit, MsgInstantSpotMarketLaunch, OrderType, QueryAggregateMarketVolumeResponse, QuerySubaccountDepositsRequest,
+        },
     },
     Account, Exchange, Module, RunnerResult, Wasm,
 };
@@ -77,7 +80,7 @@ fn test_query_subaccount_deposit() {
                 MsgDeposit {
                     sender: env.users[0].account.address(),
                     subaccount_id: subaccount_id.to_string(),
-                    amount: Some(injective_std::types::cosmos::base::v1beta1::Coin {
+                    amount: Some(BaseCoin {
                         amount: amount.to_string(),
                         denom: env.denoms[denom_key].clone(),
                     }),

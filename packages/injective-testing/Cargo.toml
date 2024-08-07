@@ -5,15 +5,15 @@ edition     = "2021"
 license     = "Apache-2.0"
 name        = "injective-testing"
 repository  = "https://github.com/InjectiveLabs/cw-injective/tree/dev/packages/injective-testing"
-version     = "0.2.0"
+version     = "0.2.1"
 
 [dependencies]
 anyhow             = { version = "1.0.66" }
 base64             = { version = "0.13.1" }
-cosmwasm-std       = { version = "2.1.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
+cosmwasm-std       = { version = "2.1.0", features = [ "abort", "cosmwasm_1_1", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
 cw-multi-test      = { version = "2.1.0" }
-injective-cosmwasm = { version = "0.2.24", path = "../injective-cosmwasm" }
-injective-math     = { version = "0.3.0", path = "../injective-math" }
+injective-cosmwasm = { version = "0.3.0" }
+injective-math     = { version = "0.3.0" }
 rand               = { version = "0.4.6" }
 secp256k1          = { version = "0.6.2" }
 serde              = { version = "1.0.137", default-features = false, features = [ "derive" ] }
