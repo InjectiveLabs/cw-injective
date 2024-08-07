@@ -35,6 +35,5 @@ serde              = { version = "1.0.196", default-features = false, features =
 thiserror          = { version = "1.0.56" }
 
 [dev-dependencies]
-injective-std       = { version = "0.1.5" }
-injective-test-tube = { version = "1.13.0" }
-injective-testing   = { version = "0.2.0" }
+injective-test-tube = { version = "=1.13.0-1" }
+injective-testing   = { version = "0.2.1" }

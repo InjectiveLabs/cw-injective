@@ -1030,18 +1030,18 @@ dependencies = [
 
 [[package]]
 name = "derive_more"
-version = "1.0.0-beta.7"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3249c0372e72f5f93b5c0ca54c0ab76bbf6216b6f718925476fd9bc4ffabb4fe"
+checksum = "4a9b99b9cbbe49445b21764dc0625032a89b145a2642e67603e1c936f5458d05"
 dependencies = [
  "derive_more-impl",
 ]
 
 [[package]]
 name = "derive_more-impl"
-version = "1.0.0-beta.7"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27d919ced7590fc17b5d5a3c63b662e8a7d2324212c4e4dbbed975cafd22d16d"
+checksum = "cb7330aeadfbe296029522e6c40f315320aba36fc43a5b3632f3795348f3bd22"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1772,24 +1772,6 @@ dependencies = [
 
 [[package]]
 name = "injective-cosmwasm"
-version = "0.2.24"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f04d173eced96ba05f33a0af9d2fce14d119335b4ae4c91d504018177b6fbfe"
-dependencies = [
- "cosmwasm-std 2.1.1",
- "cw-storage-plus 2.0.0",
- "ethereum-types",
- "hex",
- "injective-math 0.2.4",
- "schemars",
- "serde 1.0.204",
- "serde_repr",
- "subtle-encoding",
- "tiny-keccak",
-]
-
-[[package]]
-name = "injective-cosmwasm"
 version = "0.3.0"
 dependencies = [
  "cosmwasm-schema 1.5.5",
@@ -1836,28 +1818,13 @@ dependencies = [
  "cw2 2.0.0",
  "injective-cosmwasm 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "injective-math 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "injective-std 0.1.8",
  "injective-std 1.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "injective-test-tube",
- "injective-testing 0.2.0",
+ "injective-testing 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "prost 0.12.6",
  "schemars",
  "serde 1.0.204",
  "thiserror",
-]
-
-[[package]]
-name = "injective-math"
-version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db4e31ffb7dff274e0be1117bc8f1240f6572d6157be2c4daf13ff82eaaddd85"
-dependencies = [
- "cosmwasm-std 1.5.2",
- "ethereum-types",
- "primitive-types",
- "schemars",
- "serde 1.0.204",
- "subtle-encoding",
 ]
 
 [[package]]
@@ -1900,22 +1867,6 @@ dependencies = [
  "schemars",
  "serde 1.0.204",
  "subtle-encoding",
-]
-
-[[package]]
-name = "injective-std"
-version = "0.1.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c480fc32c2a6b745f3e96bcdaf551265b2a5e0b650cbe9804f8149a1b000b62a"
-dependencies = [
- "chrono",
- "cosmwasm-std 1.5.2",
- "osmosis-std-derive",
- "prost 0.12.6",
- "prost-types 0.12.6",
- "schemars",
- "serde 1.0.204",
- "serde-cw-value",
 ]
 
 [[package]]
@@ -1977,16 +1928,16 @@ dependencies = [
 
 [[package]]
 name = "injective-test-tube"
-version = "1.13.0"
+version = "1.13.0-1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "822774f5eb5a1f592d0eea771c2c496ff3781a22f599845adf22de55bfae52d3"
+checksum = "c4c7836812f2797d1ddba6c83d56a9c1b7c2eeef9b1771767556941af9959f34"
 dependencies = [
  "base64 0.21.7",
  "bindgen",
  "cosmrs",
  "cosmwasm-std 2.1.1",
  "hex",
- "injective-cosmwasm 0.2.24",
+ "injective-cosmwasm 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "injective-std 1.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "prost 0.12.6",
  "serde 1.0.204",
@@ -1997,15 +1948,13 @@ dependencies = [
 
 [[package]]
 name = "injective-testing"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88cbbc0e2aa54bc5752007a8712e7b42d2cfc589a81dc665cea484aef0a6d02b"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "base64 0.13.1",
  "cosmwasm-std 2.1.1",
  "cw-multi-test 2.1.0",
- "injective-cosmwasm 0.2.24",
+ "injective-cosmwasm 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "injective-math 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.4.6",
  "secp256k1",
@@ -2016,6 +1965,8 @@ dependencies = [
 [[package]]
 name = "injective-testing"
 version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc7fac0e025e0755fad2a3e9f6fbbb052fc0cbff9517b74c7d9cd2076d0aee2e"
 dependencies = [
  "anyhow",
  "base64 0.13.1",
@@ -2374,19 +2325,6 @@ name = "os_str_bytes"
 version = "6.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2355d85b9a3786f481747ced0e0ff2ba35213a1f9bd406ed906554d7af805a1"
-
-[[package]]
-name = "osmosis-std-derive"
-version = "0.20.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5ebdfd1bc8ed04db596e110c6baa9b174b04f6ed1ec22c666ddc5cb3fa91bd7"
-dependencies = [
- "itertools 0.10.5",
- "proc-macro2",
- "prost-types 0.11.9",
- "quote",
- "syn 1.0.109",
-]
 
 [[package]]
 name = "p256"
