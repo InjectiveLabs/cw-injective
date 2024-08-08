@@ -154,6 +154,7 @@ fn handle_atomic_order_reply(
         .map_err(ContractError::SubMsgFailure)
         .unwrap();
 
+    deps.api.debug(">>>>>>>>>>");
     let first_messsage = binding.msg_responses.first();
 
     let order_response = Exchange::MsgCreateSpotMarketOrderResponse::decode(
@@ -169,29 +170,7 @@ fn handle_atomic_order_reply(
         .results
         .ok_or_else(|| ContractError::SubMsgFailure("No trade data".to_owned()))
         .unwrap();
-    // let order_response: tx::MsgCreateSpotMarketOrderResponse = Message::parse_from_bytes(
-    //     msg.result
-    //         .into_result()
-    //         .map_err(ContractError::SubMsgFailure)?
-    //         .data
-    //         .ok_or_else(|| ContractError::ReplyParseFailure {
-    //             id,
-    //             err: "Missing reply data".to_owned(),
-    //         })?
-    //         .as_slice(),
-    // )
-    // .map_err(|err| ContractError::ReplyParseFailure {
-    //     id,
-    //     err: err.to_string(),
-    // })?;
 
-    // // unwrap results into trade_data
-    // let trade_data = match order_response.results.into_option() {
-    //     Some(trade_data) => Ok(trade_data),
-    //     None => Err(ContractError::CustomError {
-    //         val: "No trade data in order response".to_string(),
-    //     }),
-    // }?;
     let quantity = FPDecimal::from_str(&trade_data.quantity)? / dec_scale_factor;
     let price = FPDecimal::from_str(&trade_data.price)? / dec_scale_factor;
     let fee = FPDecimal::from_str(&trade_data.fee)? / dec_scale_factor;

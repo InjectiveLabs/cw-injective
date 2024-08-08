@@ -45,8 +45,10 @@ pub fn execute_trigger_pyth_update(
 mod tests {
     use std::marker::PhantomData;
 
-    use cosmwasm_std::testing::{mock_env, mock_info, MockApi, MockStorage};
-    use cosmwasm_std::{Api, CustomQuery, DepsMut, OwnedDeps, Querier, QuerierWrapper, Storage};
+    use cosmwasm_std::testing::{message_info, mock_env, MockApi, MockStorage};
+    use cosmwasm_std::{
+        Addr, Api, CustomQuery, DepsMut, OwnedDeps, Querier, QuerierWrapper, Storage,
+    };
 
     use injective_cosmwasm::{InjectiveQueryWrapper, WasmMockQuerier};
 
@@ -58,7 +60,7 @@ mod tests {
         let sender_addr = "inj1x2ck0ql2ngyxqtw8jteyc0tchwnwxv7npaungt";
 
         let msg = ExecuteMsg::TriggerPythUpdate { price: 10000 };
-        let info = mock_info(sender_addr, &[]);
+        let info = message_info(&Addr::unchecked(sender_addr), &[]);
         let env = mock_env();
         let res = execute(inj_mock_deps().as_mut_deps(), env, info, msg);
         assert!(res.is_ok())
