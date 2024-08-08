@@ -8,13 +8,13 @@ repository  = "https://github.com/InjectiveLabs/cw-injective/tree/dev/packages/i
 version     = "0.2.1"
 
 [dependencies]
-anyhow             = { version = "1.0.66" }
-base64             = { version = "0.13.1" }
-cosmwasm-std       = { version = "2.1.0", features = [ "abort", "cosmwasm_1_1", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
-cw-multi-test      = { version = "2.1.0" }
-injective-cosmwasm = { version = "0.3.0" }
-injective-math     = { version = "0.3.0" }
-rand               = { version = "0.4.6" }
-secp256k1          = { version = "0.6.2" }
-serde              = { version = "1.0.137", default-features = false, features = [ "derive" ] }
-tiny-keccak        = { version = "1.2.1" }
+anyhow             = { workspace = true }
+base64             = { workspace = true }
+cosmwasm-std       = { workspace = true }
+cw-multi-test      = { workspace = true }
+injective-cosmwasm = { workspace = true }
+injective-math     = { workspace = true }
+rand               = { workspace = true }
+secp256k1          = { workspace = true }
+serde              = { workspace = true }
+tiny-keccak        = { workspace = true }

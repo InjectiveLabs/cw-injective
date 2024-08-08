@@ -11,14 +11,14 @@ version     = "1.13.0"
 proc-macro = true
 
 [dependencies]
-cosmwasm-std = { version = "2.1.0", features = [ "stargate" ] }
-itertools    = "0.10.3"
-proc-macro2  = "1.0.40"
-quote        = "1.0.20"
-syn          = "1.0.98"
+cosmwasm-std = { workspace = true }
+itertools    = { workspace = true }
+proc-macro2  = { workspace = true }
+quote        = { workspace = true }
+syn          = { workspace = true }
 
 [dev-dependencies]
-cosmwasm-std = { version = "2.1.0", features = [ "stargate" ] }
-prost        = "0.12.4"
-serde        = "1.0.142"
-trybuild     = { version = "1.0.63", features = [ "diff" ] }
+cosmwasm-std = { workspace = true }
+prost        = { workspace = true }
+serde        = { workspace = true }
+trybuild     = { workspace = true }
