@@ -6,8 +6,10 @@ use crate::utils::{
 use injective_cosmwasm::{OracleInfo, OraclePriceResponse, OracleType, OracleVolatilityResponse, PythPriceResponse};
 use injective_math::scale::Scaled;
 use injective_math::FPDecimal;
-use injective_std::types::injective::oracle::v1beta1::{QueryOraclePriceRequest, QueryPythPriceRequest};
-use injective_test_tube::{Module, Oracle, RunnerResult, Wasm};
+use injective_test_tube::{
+    injective_std::types::injective::oracle::v1beta1::{QueryOraclePriceRequest, QueryPythPriceRequest},
+    Module, Oracle, RunnerResult, Wasm,
+};
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
@@ -26,6 +28,7 @@ fn test_query_oracle_price() {
         oracle_type: 2i32,
         base: env.denoms["base"].to_owned(),
         quote: env.denoms["quote"].to_owned(),
+        scaling_options: None,
     };
 
     let oracle_response = oracle.query_oracle_price(&query_oracle_price_request);
