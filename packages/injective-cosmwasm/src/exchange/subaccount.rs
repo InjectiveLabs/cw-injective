@@ -53,14 +53,6 @@ pub fn subaccount_id_to_ethereum_address(subaccount_id: &SubaccountId) -> String
 pub fn subaccount_id_to_injective_address(subaccount_id: &SubaccountId, deps: &Deps<InjectiveQueryWrapper>) -> StdResult<Addr> {
     let ethereum_address = subaccount_id_to_ethereum_address(subaccount_id);
 
-    println!("ethereum_address: {:?}", ethereum_address);
-    println!("ethereum_address: {:?}", addr_to_bech32(ethereum_address.clone()).as_str());
-
-    println!("ethereum_address: {:?}", deps.api.addr_validate(""));
-    println!(
-        "ethereum_address: {:?}",
-        deps.api.addr_validate("inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv")
-    );
     deps.api.addr_validate(addr_to_bech32(ethereum_address).as_str())
 }
 
