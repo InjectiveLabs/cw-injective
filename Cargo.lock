@@ -1711,9 +1711,9 @@ dependencies = [
 
 [[package]]
 name = "injective-test-tube"
-version = "1.13.0-1"
+version = "1.13.0-2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4c7836812f2797d1ddba6c83d56a9c1b7c2eeef9b1771767556941af9959f34"
+checksum = "14100ae915701e78f31faf33e06e53cc0eeae27f693003d9fbad426234e1acd5"
 dependencies = [
  "base64 0.21.7",
  "bindgen",

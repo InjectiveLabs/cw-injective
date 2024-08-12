@@ -32,8 +32,8 @@ cosmwasm-storage   = { workspace = true }
 cw-storage-plus    = { workspace = true }
 cw-utils           = { workspace = true }
 cw2                = { workspace = true }
-injective-cosmwasm = { workspace = true }
-injective-math     = { workspace = true }
+injective-cosmwasm = { workspace = true, path = "../../packages/injective-cosmwasm" }
+injective-math     = { workspace = true, path = "../../packages/injective-math" }
 injective-std      = { workspace = true }
 prost              = { workspace = true }
 schemars           = { workspace = true }
