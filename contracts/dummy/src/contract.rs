@@ -26,8 +26,6 @@ pub fn instantiate(
     info: MessageInfo,
     _msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
-    deps.api.debug("Instantiate contract");
-    deps.api.debug(">>>>>>>>>>>>>>>>>>>>");
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     COUNTER.save(deps.storage, &0u32)?;
     ACTIVE.save(deps.storage, &false)?;
