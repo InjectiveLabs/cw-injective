@@ -154,7 +154,6 @@ fn handle_atomic_order_reply(
         .map_err(ContractError::SubMsgFailure)
         .unwrap();
 
-    deps.api.debug(">>>>>>>>>>");
     let first_messsage = binding.msg_responses.first();
 
     let order_response = Exchange::MsgCreateSpotMarketOrderResponse::decode(
