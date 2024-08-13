@@ -1,6 +1,7 @@
 use cosmwasm_std::{Addr, Storage};
 use cw_multi_test::AddressGenerator;
 use injective_cosmwasm::addr_to_bech32;
+use injective_cosmwasm::utils::instantiate2_address_inj;
 use rand::OsRng;
 use secp256k1::Secp256k1;
 use std::fmt::Write;
@@ -29,7 +30,7 @@ impl AddressGenerator for InjectiveAddressGenerator {
         creator: &cosmwasm_std::CanonicalAddr,
         salt: &[u8],
     ) -> anyhow::Result<Addr> {
-        let canonical_addr = cosmwasm_std::instantiate2_address(checksum, creator, salt)?;
+        let canonical_addr = instantiate2_address_inj(checksum, creator, salt)?;
         Ok(api.addr_humanize(&canonical_addr)?)
     }
 }
