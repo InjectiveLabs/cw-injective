@@ -20,7 +20,7 @@ cw-utils             = { version = "2.0.0" }
 cw2                  = { version = "2.0.0" }
 ethereum-types       = { version = "0.5.2" }
 hex                  = { version = "0.4.3", features = [ "serde" ] }
-injective-cosmwasm   = { version = "0.3.0" }
+injective-cosmwasm   = { version = "0.3.1" }
 injective-math       = { version = "0.3.0" }
 injective-std        = { version = "1.13.0" }
 injective-std-derive = { version = "1.13.0" }

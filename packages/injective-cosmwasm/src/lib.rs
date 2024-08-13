@@ -61,6 +61,7 @@ pub mod querier;
 pub mod query;
 pub mod route;
 pub mod tokenfactory;
+pub mod utils;
 pub mod wasmx;
 
 #[cfg(not(target_arch = "wasm32"))]
