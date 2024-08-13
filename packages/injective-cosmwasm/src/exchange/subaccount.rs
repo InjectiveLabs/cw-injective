@@ -52,6 +52,7 @@ pub fn subaccount_id_to_ethereum_address(subaccount_id: &SubaccountId) -> String
 
 pub fn subaccount_id_to_injective_address(subaccount_id: &SubaccountId, deps: &Deps<InjectiveQueryWrapper>) -> StdResult<Addr> {
     let ethereum_address = subaccount_id_to_ethereum_address(subaccount_id);
+
     deps.api.addr_validate(addr_to_bech32(ethereum_address).as_str())
 }
 
@@ -95,10 +96,11 @@ mod tests {
     fn subaccount_id_to_address_test() {
         let subaccount_id = "0xb5e09b93aceb70c1711af078922fa256011d7e56000000000000000000000000";
         let address = subaccount_id_to_injective_address(
-            &SubaccountId::new(subaccount_id.to_string()).expect("failed to create subaccount_id"),
+            &SubaccountId::new(subaccount_id.to_string()).expect("Wong bech32 prefix"),
             &mock_dependencies().as_ref(),
-        );
+        )
+        .unwrap();
 
-        assert_eq!(address.unwrap(), "inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv");
+        assert_eq!(address.to_string(), "inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv".to_string());
     }
 }

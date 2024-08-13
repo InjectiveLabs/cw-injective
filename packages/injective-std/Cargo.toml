@@ -10,11 +10,11 @@ version     = "1.13.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-chrono               = { version = "0.4.27", default-features = false }
-cosmwasm-std         = { version = "2.1.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
-injective-std-derive = { version = "1.13.0" }
-prost                = { version = "0.12.4", features = [ "prost-derive" ] }
-prost-types          = { version = "0.12.4", default-features = false }
-schemars             = "0.8.8"
-serde                = { version = "1.0", default-features = false, features = [ "derive" ] }
-serde-cw-value       = { version = "0.7.0" }
+chrono               = { workspace = true }
+cosmwasm-std         = { workspace = true }
+injective-std-derive = { workspace = true, path = "../injective-std-derive" }
+prost                = { workspace = true }
+prost-types          = { workspace = true }
+schemars             = { workspace = true }
+serde                = { workspace = true }
+serde-cw-value       = { workspace = true }

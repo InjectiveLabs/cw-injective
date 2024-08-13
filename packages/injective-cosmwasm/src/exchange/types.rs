@@ -364,9 +364,15 @@ impl Into<String> for SubaccountId {
 impl KeyDeserialize for SubaccountId {
     type Output = SubaccountId;
 
+    const KEY_ELEMS: u16 = 42;
+
     #[inline(always)]
-    fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
+    fn from_vec(value: Vec<u8>) -> std::result::Result<SubaccountId, StdError> {
         Ok(SubaccountId::unchecked(String::from_vec(value)?))
+    }
+
+    fn from_slice(value: &[u8]) -> StdResult<Self::Output> {
+        Self::from_vec(value.to_vec())
     }
 }
 
@@ -390,6 +396,8 @@ impl<'a> Prefixer<'a> for SubaccountId {
 
 impl KeyDeserialize for &SubaccountId {
     type Output = SubaccountId;
+
+    const KEY_ELEMS: u16 = 42;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
