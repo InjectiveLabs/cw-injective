@@ -1,9 +1,11 @@
 use cosmwasm_std::Uint128;
-use injective_std::types::cosmos::{
-    bank::v1beta1::{MsgSend, QueryBalanceRequest},
-    base::v1beta1::Coin,
+use injective_test_tube::{
+    injective_std::types::cosmos::{
+        bank::v1beta1::{MsgSend, QueryBalanceRequest},
+        base::v1beta1::Coin,
+    },
+    Account, Bank, InjectiveTestApp, SigningAccount,
 };
-use injective_test_tube::{Account, Bank, InjectiveTestApp, SigningAccount};
 use std::str::FromStr;
 
 pub fn send(bank: &Bank<InjectiveTestApp>, amount: &str, denom: &str, from: &SigningAccount, to: &SigningAccount) {

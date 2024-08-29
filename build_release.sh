@@ -8,4 +8,4 @@ fi
 docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/workspace-optimizer${ARCH}:0.12.11
+  cosmwasm/optimizer${ARCH}:0.16.0

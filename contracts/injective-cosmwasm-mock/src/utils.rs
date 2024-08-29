@@ -31,7 +31,7 @@ use injective_test_tube::{
     },
     Account, Authz, Bank, Exchange, ExecuteResponse, Gov, InjectiveTestApp, Insurance, Module, Oracle, Runner, SigningAccount, Wasm,
 };
-use injective_testing::human_to_i64;
+use injective_testing::utils::human_to_i64;
 use prost::Message;
 use std::{collections::HashMap, ops::Neg, str::FromStr};
 

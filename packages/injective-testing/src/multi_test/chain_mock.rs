@@ -1,4 +1,4 @@
-use crate::InjectiveAddressGenerator;
+use crate::multi_test::address_generator::InjectiveAddressGenerator;
 
 use anyhow::{bail, Result as AnyResult};
 use cosmwasm_std::{testing::MockApi, Addr, Api, Binary, BlockInfo, Coin, CustomQuery, Empty, MemoryStorage, Querier, Storage};

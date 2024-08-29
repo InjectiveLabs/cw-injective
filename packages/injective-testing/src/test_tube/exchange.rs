@@ -6,25 +6,28 @@ use crate::{
     utils::{dec_to_proto, scale_price_quantity_perp_market, scale_price_quantity_spot_market, str_coin},
 };
 
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Uint128};
 use injective_cosmwasm::{get_default_subaccount_id_for_checked_address, SubaccountId};
 use injective_math::FPDecimal;
-use injective_std::{
-    shim::Any,
-    types::{
-        cosmos::{
-            base::v1beta1::Coin as BaseCoin,
-            gov::v1::{MsgSubmitProposal, MsgVote},
-        },
-        injective::exchange::v1beta1::{
-            DerivativeOrder, MsgBatchUpdateOrders, MsgBatchUpdateOrdersResponse, MsgCancelDerivativeOrder, MsgCreateDerivativeLimitOrder,
-            MsgCreateDerivativeLimitOrderResponse, MsgCreateSpotLimitOrder, MsgInstantPerpetualMarketLaunch, MsgInstantSpotMarketLaunch,
-            MsgUpdateParams, OrderInfo, OrderType, PerpetualMarketFunding, Position, QueryDerivativeMarketsRequest, QueryExchangeParamsRequest,
-            QueryExchangeParamsResponse, QuerySpotMarketsRequest, SpotOrder,
+use injective_test_tube::{
+    injective_std::{
+        shim::Any,
+        types::{
+            cosmos::{
+                base::v1beta1::Coin as BaseCoin,
+                gov::v1::{MsgSubmitProposal, MsgVote},
+            },
+            injective::exchange::v1beta1::{
+                DerivativeOrder, MsgBatchUpdateOrders, MsgBatchUpdateOrdersResponse, MsgCancelDerivativeOrder, MsgCreateDerivativeLimitOrder,
+                MsgCreateDerivativeLimitOrderResponse, MsgCreateSpotLimitOrder, MsgInstantPerpetualMarketLaunch, MsgInstantSpotMarketLaunch,
+                MsgUpdateParams, OrderInfo, OrderType, PerpetualMarketFunding, Position, QueryDerivativeMarketsRequest, QueryExchangeParamsRequest,
+                QueryExchangeParamsResponse, QuerySpotMarketsRequest, QuerySubaccountDepositsRequest,
+                QuerySubaccountEffectivePositionInMarketRequest, SpotOrder,
+            },
         },
     },
+    Account, Exchange, Gov, InjectiveTestApp, Module, Runner, SigningAccount,
 };
-use injective_test_tube::{Account, Exchange, Gov, InjectiveTestApp, Module, Runner, SigningAccount};
 use prost::Message;
 use std::str::FromStr;
 
@@ -727,20 +730,6 @@ pub fn remove_orders(
         .data
 }
 
-pub fn get_spot_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: String) -> String {
-    let spot_markets = exchange
-        .query_spot_markets(&QuerySpotMarketsRequest {
-            status: "Active".to_string(),
-            market_ids: vec![],
-        })
-        .unwrap()
-        .markets;
-
-    let market = spot_markets.iter().find(|m| m.ticker == ticker).unwrap();
-
-    market.market_id.to_string()
-}
-
 pub fn get_perpetual_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: String) -> String {
     let perpetual_markets = exchange
         .query_derivative_markets(&QueryDerivativeMarketsRequest {
@@ -759,6 +748,43 @@ pub fn get_perpetual_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: St
         .market
         .as_ref()
         .unwrap();
+
+    market.market_id.to_string()
+}
+
+pub fn get_subaccount_total_value(exchange: &Exchange<InjectiveTestApp>, market_id: String, subaccount_id: String, denom: String) -> Uint128 {
+    let trade_deposits_during = exchange
+        .query_subaccount_deposits(&QuerySubaccountDepositsRequest {
+            subaccount_id: subaccount_id.clone(),
+            subaccount: None,
+        })
+        .unwrap();
+
+    let total_balance = Uint128::from_str(&trade_deposits_during.deposits[&denom].total_balance)
+    .unwrap_or(Uint128::zero()) // Use zero if the result is an Err
+    / Uint128::one();
+
+    let effective_position = exchange
+        .query_subaccount_effective_position_in_market(&QuerySubaccountEffectivePositionInMarketRequest { market_id, subaccount_id })
+        .unwrap();
+
+    let effective_margin = effective_position.state.as_ref().map_or(Uint128::zero(), |state| {
+        Uint128::from_str(&state.effective_margin).unwrap_or(Uint128::zero())
+    }) / Uint128::one();
+
+    total_balance + effective_margin
+}
+
+pub fn get_spot_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: String) -> String {
+    let spot_markets = exchange
+        .query_spot_markets(&QuerySpotMarketsRequest {
+            status: "Active".to_string(),
+            market_ids: vec![],
+        })
+        .unwrap()
+        .markets;
+
+    let market = spot_markets.iter().find(|m| m.ticker == ticker).unwrap();
 
     market.market_id.to_string()
 }
