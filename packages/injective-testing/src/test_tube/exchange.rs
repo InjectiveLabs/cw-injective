@@ -39,6 +39,7 @@ pub fn add_exchange_admin(app: &InjectiveTestApp, validator: &SigningAccount, ad
     exchange_params.exchange_admins.push(admin_address);
     exchange_params.max_derivative_order_side_count = 300u32;
 
+    // NOTE: this could change int he future
     let governance_module_address = "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt";
 
     let mut buf = vec![];

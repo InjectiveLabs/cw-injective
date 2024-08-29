@@ -80,7 +80,7 @@ pub fn create_send_authorization(app: &InjectiveTestApp, granter: &SigningAccoun
         .unwrap();
 }
 
-pub fn execute_grid_authorizations(app: &InjectiveTestApp, granter: &SigningAccount, grantee: String, msgs: Vec<String>) {
+pub fn execute_generic_authorizations(app: &InjectiveTestApp, granter: &SigningAccount, grantee: String, msgs: Vec<String>) {
     for msg in msgs {
         create_generic_authorization(app, granter, grantee.clone(), msg, None);
     }
