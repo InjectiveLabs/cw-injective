@@ -20,12 +20,12 @@ cw-utils             = { version = "2.0.0" }
 cw2                  = { version = "2.0.0" }
 ethereum-types       = { version = "0.5.2" }
 hex                  = { version = "0.4.3", features = [ "serde" ] }
-injective-cosmwasm   = { version = "0.3.0" }
-injective-math       = { version = "0.3.0" }
-injective-std        = { version = "1.13.0" }
-injective-std-derive = { version = "1.13.0" }
-injective-test-tube  = { version = "=1.13.0-2" }
-injective-testing    = { version = "0.2.1" }
+injective-cosmwasm   = { version = "0.3.0", path = "./packages/injective-cosmwasm" }
+injective-math       = { version = "0.3.0", path = "./packages/injective-math" }
+injective-std        = { version = "1.13.0", path = "./packages/injective-std" }
+injective-std-derive = { version = "1.13.0", path = "./packages/injective-std-derive" }
+injective-test-tube  = { version = "1.13.2" }
+injective-testing    = { version = "1.1.0", path = "./packages/injective-testing" }
 itertools            = { version = "0.10.3" }
 primitive-types      = { version = "0.12.2", default-features = false }
 proc-macro2          = { version = "1.0.40" }

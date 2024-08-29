@@ -1,10 +1,12 @@
 use crate::{mocks::MOCK_QUOTE_DECIMALS, utils::human_to_dec};
 
-use injective_std::types::{
-    cosmos::base::v1beta1::Coin as BaseCoin,
-    injective::{insurance::v1beta1::MsgCreateInsuranceFund, oracle::v1beta1::OracleType},
+use injective_test_tube::{
+    injective_std::types::{
+        cosmos::base::v1beta1::Coin as BaseCoin,
+        injective::{insurance::v1beta1::MsgCreateInsuranceFund, oracle::v1beta1::OracleType},
+    },
+    Account, InjectiveTestApp, Insurance, Module, SigningAccount,
 };
-use injective_test_tube::{Account, InjectiveTestApp, Insurance, Module, SigningAccount};
 
 pub fn launch_insurance_fund(
     app: &InjectiveTestApp,
