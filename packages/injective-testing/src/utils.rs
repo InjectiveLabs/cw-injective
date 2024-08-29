@@ -31,6 +31,10 @@ pub fn human_to_dec(raw_number: &str, decimals: i32) -> FPDecimal {
     FPDecimal::must_from_str(&raw_number.replace('_', "")).scaled(decimals)
 }
 
+pub fn human_to_dec_vector(values: Vec<&str>, decimals: i32) -> Vec<FPDecimal> {
+    values.iter().map(|v| human_to_dec(v, decimals)).collect::<Vec<FPDecimal>>()
+}
+
 pub fn human_to_i64(raw_number: &str, exponent: i32) -> i64 {
     let scaled_amount = FPDecimal::must_from_str(&raw_number.replace('_', "")).scaled(exponent);
     let as_int: i64 = scaled_amount.to_string().parse().unwrap();
