@@ -1,8 +1,5 @@
 use crate::{
-    mocks::{
-        MOCK_ATOM_DECIMALS, MOCK_ATOM_DENOM, MOCK_BASE_DECIMALS, MOCK_BASE_DENOM, MOCK_GAS_DENOM, MOCK_QUOTE_DECIMALS, MOCK_QUOTE_DENOM,
-        MOCK_USDC_DENOM,
-    },
+    mocks::{MOCK_ATOM_DECIMALS, MOCK_ATOM_DENOM, MOCK_BASE_DECIMALS, MOCK_BASE_DENOM, MOCK_QUOTE_DECIMALS, MOCK_QUOTE_DENOM, MOCK_USDC_DENOM},
     utils::{dec_to_proto, scale_price_quantity_perp_market, scale_price_quantity_spot_market, str_coin},
 };
 
@@ -553,7 +550,6 @@ pub fn execute_spot_limit_order(app: &InjectiveTestApp, market_id: String, price
     let trader = app
         .init_account(&[
             str_coin("1000000", MOCK_ATOM_DENOM, MOCK_ATOM_DECIMALS),
-            str_coin("1000000", MOCK_GAS_DENOM, MOCK_BASE_DECIMALS),
             str_coin("1000000", MOCK_BASE_DENOM, MOCK_BASE_DECIMALS),
             str_coin("1000000", MOCK_QUOTE_DENOM, MOCK_QUOTE_DECIMALS),
             str_coin("1000000", MOCK_USDC_DENOM, MOCK_QUOTE_DECIMALS),
@@ -638,7 +634,6 @@ pub fn execute_derivative_limit_order(
         .init_account(&[
             str_coin("1000000", MOCK_ATOM_DENOM, MOCK_ATOM_DECIMALS),
             str_coin("1000000", MOCK_BASE_DENOM, MOCK_BASE_DECIMALS),
-            str_coin("1000000", MOCK_GAS_DENOM, MOCK_BASE_DECIMALS),
             str_coin("1000000", MOCK_QUOTE_DENOM, MOCK_QUOTE_DECIMALS),
         ])
         .unwrap();

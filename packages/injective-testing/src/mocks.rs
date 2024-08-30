@@ -13,8 +13,7 @@ pub const MOCK_ATOM_DECIMALS: i32 = 8i32;
 pub const MOCK_QUOTE_DECIMALS: i32 = 6i32;
 
 pub const MOCK_ATOM_DENOM: &str = "atom";
-pub const MOCK_GAS_DENOM: &str = "inj";
-pub const MOCK_BASE_DENOM: &str = "ubase";
+pub const MOCK_BASE_DENOM: &str = "inj";
 pub const MOCK_QUOTE_DENOM: &str = "usdt";
 pub const MOCK_USDC_DENOM: &str = "usdc";
 
