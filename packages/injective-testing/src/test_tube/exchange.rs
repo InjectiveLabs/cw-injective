@@ -1,30 +1,30 @@
 use crate::{
-    mocks::{
-        MOCK_ATOM_DECIMALS, MOCK_ATOM_DENOM, MOCK_BASE_DECIMALS, MOCK_BASE_DENOM, MOCK_GAS_DENOM, MOCK_QUOTE_DECIMALS, MOCK_QUOTE_DENOM,
-        MOCK_USDC_DENOM,
-    },
+    mocks::{MOCK_ATOM_DECIMALS, MOCK_ATOM_DENOM, MOCK_BASE_DECIMALS, MOCK_BASE_DENOM, MOCK_QUOTE_DECIMALS, MOCK_QUOTE_DENOM, MOCK_USDC_DENOM},
     utils::{dec_to_proto, scale_price_quantity_perp_market, scale_price_quantity_spot_market, str_coin},
 };
 
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Uint128};
 use injective_cosmwasm::{get_default_subaccount_id_for_checked_address, SubaccountId};
 use injective_math::FPDecimal;
-use injective_std::{
-    shim::Any,
-    types::{
-        cosmos::{
-            base::v1beta1::Coin as BaseCoin,
-            gov::v1::{MsgSubmitProposal, MsgVote},
-        },
-        injective::exchange::v1beta1::{
-            DerivativeOrder, MsgBatchUpdateOrders, MsgBatchUpdateOrdersResponse, MsgCancelDerivativeOrder, MsgCreateDerivativeLimitOrder,
-            MsgCreateDerivativeLimitOrderResponse, MsgCreateSpotLimitOrder, MsgInstantPerpetualMarketLaunch, MsgInstantSpotMarketLaunch,
-            MsgUpdateParams, OrderInfo, OrderType, PerpetualMarketFunding, Position, QueryDerivativeMarketsRequest, QueryExchangeParamsRequest,
-            QueryExchangeParamsResponse, QuerySpotMarketsRequest, SpotOrder,
+use injective_test_tube::{
+    injective_std::{
+        shim::Any,
+        types::{
+            cosmos::{
+                base::v1beta1::Coin as BaseCoin,
+                gov::v1::{MsgSubmitProposal, MsgVote},
+            },
+            injective::exchange::v1beta1::{
+                DerivativeOrder, MsgBatchUpdateOrders, MsgBatchUpdateOrdersResponse, MsgCancelDerivativeOrder, MsgCreateDerivativeLimitOrder,
+                MsgCreateDerivativeLimitOrderResponse, MsgCreateSpotLimitOrder, MsgInstantPerpetualMarketLaunch, MsgInstantSpotMarketLaunch,
+                MsgUpdateParams, OrderInfo, OrderType, PerpetualMarketFunding, Position, QueryDerivativeMarketsRequest, QueryExchangeParamsRequest,
+                QueryExchangeParamsResponse, QuerySpotMarketsRequest, QuerySubaccountDepositsRequest,
+                QuerySubaccountEffectivePositionInMarketRequest, SpotOrder,
+            },
         },
     },
+    Account, Exchange, Gov, InjectiveTestApp, Module, Runner, SigningAccount,
 };
-use injective_test_tube::{Account, Exchange, Gov, InjectiveTestApp, Module, Runner, SigningAccount};
 use prost::Message;
 use std::str::FromStr;
 
@@ -39,6 +39,7 @@ pub fn add_exchange_admin(app: &InjectiveTestApp, validator: &SigningAccount, ad
     exchange_params.exchange_admins.push(admin_address);
     exchange_params.max_derivative_order_side_count = 300u32;
 
+    // NOTE: this could change int he future
     let governance_module_address = "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt";
 
     let mut buf = vec![];
@@ -60,7 +61,7 @@ pub fn add_exchange_admin(app: &InjectiveTestApp, validator: &SigningAccount, ad
                 }],
                 initial_deposit: vec![BaseCoin {
                     amount: "100000000000000000000".to_string(),
-                    denom: "inj".to_string(),
+                    denom: MOCK_BASE_DENOM.to_string(),
                 }],
                 proposer: validator.address(),
                 metadata: "".to_string(),
@@ -434,8 +435,8 @@ pub fn launch_spot_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
             MsgInstantSpotMarketLaunch {
                 sender: signer.address(),
                 ticker: ticker.clone(),
-                base_denom: MOCK_BASE_DECIMALS.to_string(),
-                quote_denom: MOCK_QUOTE_DECIMALS.to_string(),
+                base_denom: MOCK_BASE_DENOM.to_string(),
+                quote_denom: MOCK_QUOTE_DENOM.to_string(),
                 min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.000000000000001")),
                 min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("1000000000000000")),
                 min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
@@ -453,8 +454,8 @@ pub fn launch_spot_market_atom(exchange: &Exchange<InjectiveTestApp>, signer: &S
             MsgInstantSpotMarketLaunch {
                 sender: signer.address(),
                 ticker: ticker.clone(),
-                base_denom: MOCK_ATOM_DECIMALS.to_string(),
-                quote_denom: MOCK_QUOTE_DECIMALS.to_string(),
+                base_denom: MOCK_ATOM_DENOM.to_string(),
+                quote_denom: MOCK_QUOTE_DENOM.to_string(),
                 min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.000010000000000000")),
                 min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("100000")),
                 min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
@@ -499,9 +500,9 @@ pub fn launch_perp_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
             MsgInstantPerpetualMarketLaunch {
                 sender: signer.address(),
                 ticker: ticker.to_owned(),
-                quote_denom: "usdt".to_string(),
-                oracle_base: "inj".to_string(),
-                oracle_quote: "usdt".to_string(),
+                quote_denom: MOCK_QUOTE_DENOM.to_string(),
+                oracle_base: MOCK_BASE_DENOM.to_string(),
+                oracle_quote: MOCK_QUOTE_DENOM.to_string(),
                 oracle_scale_factor: 6u32,
                 oracle_type: 2i32,
                 maker_fee_rate: "-000100000000000000".to_owned(),
@@ -525,9 +526,9 @@ pub fn launch_perp_market_atom(exchange: &Exchange<InjectiveTestApp>, signer: &S
             MsgInstantPerpetualMarketLaunch {
                 sender: signer.address(),
                 ticker: ticker.to_owned(),
-                quote_denom: "usdt".to_string(),
-                oracle_base: "atom".to_string(),
-                oracle_quote: "usdt".to_string(),
+                quote_denom: MOCK_QUOTE_DENOM.to_string(),
+                oracle_base: MOCK_ATOM_DENOM.to_string(),
+                oracle_quote: MOCK_QUOTE_DENOM.to_string(),
                 oracle_scale_factor: 6u32,
                 oracle_type: 2i32,
                 maker_fee_rate: "-000100000000000000".to_owned(),
@@ -549,7 +550,6 @@ pub fn execute_spot_limit_order(app: &InjectiveTestApp, market_id: String, price
     let trader = app
         .init_account(&[
             str_coin("1000000", MOCK_ATOM_DENOM, MOCK_ATOM_DECIMALS),
-            str_coin("1000000", MOCK_GAS_DENOM, MOCK_BASE_DECIMALS),
             str_coin("1000000", MOCK_BASE_DENOM, MOCK_BASE_DECIMALS),
             str_coin("1000000", MOCK_QUOTE_DENOM, MOCK_QUOTE_DECIMALS),
             str_coin("1000000", MOCK_USDC_DENOM, MOCK_QUOTE_DECIMALS),
@@ -634,7 +634,6 @@ pub fn execute_derivative_limit_order(
         .init_account(&[
             str_coin("1000000", MOCK_ATOM_DENOM, MOCK_ATOM_DECIMALS),
             str_coin("1000000", MOCK_BASE_DENOM, MOCK_BASE_DECIMALS),
-            str_coin("1000000", MOCK_GAS_DENOM, MOCK_BASE_DECIMALS),
             str_coin("1000000", MOCK_QUOTE_DENOM, MOCK_QUOTE_DECIMALS),
         ])
         .unwrap();
@@ -726,20 +725,6 @@ pub fn remove_orders(
         .data
 }
 
-pub fn get_spot_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: String) -> String {
-    let spot_markets = exchange
-        .query_spot_markets(&QuerySpotMarketsRequest {
-            status: "Active".to_string(),
-            market_ids: vec![],
-        })
-        .unwrap()
-        .markets;
-
-    let market = spot_markets.iter().find(|m| m.ticker == ticker).unwrap();
-
-    market.market_id.to_string()
-}
-
 pub fn get_perpetual_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: String) -> String {
     let perpetual_markets = exchange
         .query_derivative_markets(&QueryDerivativeMarketsRequest {
@@ -758,6 +743,43 @@ pub fn get_perpetual_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: St
         .market
         .as_ref()
         .unwrap();
+
+    market.market_id.to_string()
+}
+
+pub fn get_subaccount_total_value(exchange: &Exchange<InjectiveTestApp>, market_id: String, subaccount_id: String, denom: String) -> Uint128 {
+    let trade_deposits_during = exchange
+        .query_subaccount_deposits(&QuerySubaccountDepositsRequest {
+            subaccount_id: subaccount_id.clone(),
+            subaccount: None,
+        })
+        .unwrap();
+
+    let total_balance = Uint128::from_str(&trade_deposits_during.deposits[&denom].total_balance)
+    .unwrap_or(Uint128::zero()) // Use zero if the result is an Err
+    / Uint128::one();
+
+    let effective_position = exchange
+        .query_subaccount_effective_position_in_market(&QuerySubaccountEffectivePositionInMarketRequest { market_id, subaccount_id })
+        .unwrap();
+
+    let effective_margin = effective_position.state.as_ref().map_or(Uint128::zero(), |state| {
+        Uint128::from_str(&state.effective_margin).unwrap_or(Uint128::zero())
+    }) / Uint128::one();
+
+    total_balance + effective_margin
+}
+
+pub fn get_spot_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: String) -> String {
+    let spot_markets = exchange
+        .query_spot_markets(&QuerySpotMarketsRequest {
+            status: "Active".to_string(),
+            market_ids: vec![],
+        })
+        .unwrap()
+        .markets;
+
+    let market = spot_markets.iter().find(|m| m.ticker == ticker).unwrap();
 
     market.market_id.to_string()
 }

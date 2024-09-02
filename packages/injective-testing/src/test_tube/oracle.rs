@@ -1,14 +1,18 @@
-use injective_std::{
-    shim::Any,
-    types::{
-        cosmos::{
-            base::v1beta1::Coin as BaseCoin,
-            gov::{v1::MsgVote, v1beta1::MsgSubmitProposal as MsgSubmitProposalV1Beta1},
+use injective_test_tube::{
+    injective_std::{
+        shim::Any,
+        types::{
+            cosmos::{
+                base::v1beta1::Coin as BaseCoin,
+                gov::{v1::MsgVote, v1beta1::MsgSubmitProposal as MsgSubmitProposalV1Beta1},
+            },
+            injective::oracle::v1beta1::{
+                GrantPriceFeederPrivilegeProposal, MsgRelayPriceFeedPrice, QueryOraclePriceRequest, QueryOraclePriceResponse,
+            },
         },
-        injective::oracle::v1beta1::{GrantPriceFeederPrivilegeProposal, MsgRelayPriceFeedPrice, QueryOraclePriceRequest, QueryOraclePriceResponse},
     },
+    Account, Gov, InjectiveTestApp, Module, Oracle, SigningAccount,
 };
-use injective_test_tube::{Account, Gov, InjectiveTestApp, Module, Oracle, SigningAccount};
 use prost::Message;
 use std::str::FromStr;
 
