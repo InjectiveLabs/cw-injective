@@ -10,7 +10,6 @@ mod spot_market_order_msg;
 mod state;
 #[cfg(test)]
 mod testing;
-mod types;
 #[cfg(test)]
 pub mod utils;
 

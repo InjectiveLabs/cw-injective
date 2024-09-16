@@ -1,6 +1,6 @@
-use cosmwasm_std::{CosmosMsg, StdResult};
+use cosmwasm_std::{AnyMsg, CosmosMsg, StdResult};
 use injective_cosmwasm::{InjectiveMsgWrapper, OrderType, SpotMarket};
-use injective_math::{display::ToProto, round_to_min_tick, round_to_nearest_tick, FPDecimal};
+use injective_math::{round_to_min_tick, round_to_nearest_tick, FPDecimal};
 use injective_std::types::injective::exchange::v1beta1 as Exchange;
 use prost::Message;
 
@@ -18,10 +18,10 @@ pub fn create_spot_market_order_message(
     let mut order_bytes = vec![];
     Exchange::MsgCreateSpotMarketOrder::encode(&msg, &mut order_bytes).unwrap();
 
-    Ok(CosmosMsg::Stargate {
+    Ok(CosmosMsg::Any(AnyMsg {
         type_url: Exchange::MsgCreateSpotMarketOrder::TYPE_URL.to_string(),
         value: order_bytes.into(),
-    })
+    }))
 }
 
 fn create_spot_market_order(
@@ -43,8 +43,8 @@ fn create_spot_market_order(
             order_info: Some(Exchange::OrderInfo {
                 subaccount_id: subaccount_id.to_string(),
                 fee_recipient: fee_recipient.to_string(),
-                price: rounded_price.to_proto_string(),
-                quantity: rounded_quantity.to_proto_string(),
+                price: rounded_price.to_string(),
+                quantity: rounded_quantity.to_string(),
                 cid: "".to_string(),
             }),
             order_type: order_type as i32,

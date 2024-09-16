@@ -1,4 +1,5 @@
 use crate::msg::QueryStargateResponse;
+
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
 use base64::Engine as _;
 use cosmwasm_std::{to_json_binary, to_json_vec, Binary, ContractResult, Deps, QuerierWrapper, QueryRequest, StdError, StdResult, SystemResult};

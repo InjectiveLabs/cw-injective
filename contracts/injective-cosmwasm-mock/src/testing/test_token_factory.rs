@@ -1,9 +1,11 @@
 use crate::msg::QueryMsg;
 use crate::utils::{str_coin, ExchangeType, Setup, BASE_DECIMALS, BASE_DENOM};
 use cosmwasm_std::Uint128;
-use injective_cosmwasm::tokenfactory::response::{TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse};
-use injective_std::types::injective::tokenfactory::v1beta1::MsgCreateDenom;
-use injective_test_tube::{Account, Module, TokenFactory, Wasm};
+use injective_test_tube::{
+    injective_cosmwasm::tokenfactory::response::{TokenFactoryCreateDenomFeeResponse, TokenFactoryDenomSupplyResponse},
+    injective_std::types::injective::tokenfactory::v1beta1::MsgCreateDenom,
+    Account, Module, TokenFactory, Wasm,
+};
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
@@ -18,6 +20,7 @@ fn test_query_token_factory_denom_total_supply() {
         subdenom: "test".to_string(),
         name: "Test".to_string(),
         symbol: "TST".to_string(),
+        decimals: 6,
     };
 
     factory.create_denom(msg_create_denom, &env.owner).unwrap();

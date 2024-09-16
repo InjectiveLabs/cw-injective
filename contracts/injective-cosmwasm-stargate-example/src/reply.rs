@@ -43,7 +43,7 @@ pub fn handle_create_order_reply_stargate(deps: DepsMut<InjectiveQueryWrapper>, 
                 encode_query_message,
             );
             response_str = match stargate_response {
-                Ok(binary) => String::from_utf8(binary.0).unwrap_or_else(|e| format!("Failed to decode binary to string: {:?}", e)),
+                Ok(binary) => String::from_utf8(binary.to_vec()).unwrap_or_else(|e| format!("Failed to decode binary to string: {:?}", e)),
                 Err(e) => format!("Error: {:?}", e),
             };
             cache.clear();
@@ -70,7 +70,7 @@ pub fn handle_create_derivative_order_reply_stargate(deps: DepsMut<InjectiveQuer
                 encode_query_message,
             );
             response_str = match stargate_response {
-                Ok(binary) => String::from_utf8(binary.0).unwrap_or_else(|e| format!("Failed to decode binary to string: {:?}", e)),
+                Ok(binary) => String::from_utf8(binary.to_vec()).unwrap_or_else(|e| format!("Failed to decode binary to string: {:?}", e)),
                 Err(e) => format!("Error: {:?}", e),
             };
             cache.clear();

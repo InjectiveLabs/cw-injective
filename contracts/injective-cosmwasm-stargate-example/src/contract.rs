@@ -5,6 +5,7 @@ use crate::{
     query::{handle_query_bank_params, handle_query_spot_market, handle_query_stargate_raw},
     reply::{handle_create_derivative_order_reply_stargate, handle_create_order_reply_stargate},
 };
+
 use cosmwasm_std::{entry_point, Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult};
 use cw2::set_contract_version;
 use injective_cosmwasm::{InjectiveMsgWrapper, InjectiveQueryWrapper};
@@ -39,7 +40,7 @@ pub fn execute(
             subaccount_id,
             price,
             quantity,
-        } => handle_test_market_spot_order(deps, env.contract.address.as_str(), market_id, subaccount_id, price, quantity),
+        } => handle_test_market_spot_order(deps, env.contract.address.as_ref(), market_id, subaccount_id, price, quantity),
         ExecuteMsg::TestTraderTransientDerivativeOrders {
             market_id,
             subaccount_id,

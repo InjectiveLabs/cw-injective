@@ -1,14 +1,16 @@
-use crate::types;
-use cosmwasm_std::{CosmosMsg, StdResult};
+use cosmwasm_std::{AnyMsg, CosmosMsg, StdResult};
 use injective_cosmwasm::{FullDerivativeMarket, InjectiveMsgWrapper, OrderType, SpotMarket};
 use injective_math::FPDecimal;
+use injective_std::types::injective::exchange::v1beta1::{
+    DerivativeOrder, MsgCreateDerivativeLimitOrder, MsgCreateSpotLimitOrder, OrderInfo, SpotOrder,
+};
 use prost::Message;
 
 pub fn create_stargate_msg(type_url: &str, value: Vec<u8>) -> StdResult<CosmosMsg<InjectiveMsgWrapper>> {
-    Ok(CosmosMsg::Stargate {
+    Ok(CosmosMsg::Any(AnyMsg {
         type_url: type_url.to_string(),
         value: value.into(),
-    })
+    }))
 }
 
 pub fn create_spot_limit_order(
@@ -18,16 +20,17 @@ pub fn create_spot_limit_order(
     sender: &str,
     subaccount_id: &str,
     market: &SpotMarket,
-) -> types::MsgCreateSpotLimitOrder {
-    types::MsgCreateSpotLimitOrder {
+) -> MsgCreateSpotLimitOrder {
+    MsgCreateSpotLimitOrder {
         sender: sender.to_string(),
-        order: Some(types::SpotOrder {
+        order: Some(SpotOrder {
             market_id: market.market_id.as_str().into(),
-            order_info: Some(types::OrderInfo {
+            order_info: Some(OrderInfo {
                 subaccount_id: subaccount_id.to_string(),
                 fee_recipient: sender.to_string(),
                 price: price.to_string(),
                 quantity: quantity.to_string(),
+                cid: "".to_string(),
             }),
             order_type: order_type as i32,
             trigger_price: "".to_string(),
@@ -43,18 +46,19 @@ pub fn create_derivative_limit_order(
     sender: &str,
     subaccount_id: &str,
     market: &FullDerivativeMarket,
-) -> types::MsgCreateDerivativeLimitOrder {
+) -> MsgCreateDerivativeLimitOrder {
     let market_id = market.market.as_ref().unwrap().market_id.as_str().to_string();
 
-    types::MsgCreateDerivativeLimitOrder {
+    MsgCreateDerivativeLimitOrder {
         sender: sender.to_string(),
-        order: Some(types::DerivativeOrder {
+        order: Some(DerivativeOrder {
             market_id,
-            order_info: Some(types::OrderInfo {
+            order_info: Some(OrderInfo {
                 subaccount_id: subaccount_id.to_string(),
                 fee_recipient: sender.to_string(),
                 price: price.to_string(),
                 quantity: quantity.to_string(),
+                cid: "".to_string(),
             }),
             order_type: order_type as i32,
             margin: margin.to_string(),

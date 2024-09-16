@@ -6,6 +6,47 @@ resolver = "2"
 codegen-units = 1
 incremental   = false
 
+[workspace.dependencies]
+anyhow               = { version = "1.0.66" }
+base64               = { version = "0.21.5" }
+chrono               = { version = "0.4.27", default-features = false }
+cosmos-sdk-proto     = { version = "0.20.0", default-features = false }
+cosmwasm-schema      = { version = "1.5.0" }
+cosmwasm-std         = { version = "2.1.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
+cosmwasm-storage     = { version = "1.5.2", features = [ "iterator" ] }
+cw-multi-test        = { version = "2.1.0" }
+cw-storage-plus      = { version = "2.0.0" }
+cw-utils             = { version = "2.0.0" }
+cw2                  = { version = "2.0.0" }
+ethereum-types       = { version = "0.5.2" }
+hex                  = { version = "0.4.3", features = [ "serde" ] }
+injective-cosmwasm   = { version = "0.3.0", path = "./packages/injective-cosmwasm" }
+injective-math       = { version = "0.3.0", path = "./packages/injective-math" }
+injective-std        = { version = "1.13.0", path = "./packages/injective-std" }
+injective-std-derive = { version = "1.13.0", path = "./packages/injective-std-derive" }
+injective-test-tube  = { version = "1.13.2" }
+injective-testing    = { version = "1.1.0", path = "./packages/injective-testing" }
+itertools            = { version = "0.10.3" }
+primitive-types      = { version = "0.12.2", default-features = false }
+proc-macro2          = { version = "1.0.40" }
+prost                = { version = "0.12.6" }
+prost-types          = { version = "0.12.6", default-features = false }
+quote                = { version = "1.0.20" }
+rand                 = { version = "0.4.6" }
+schemars             = { version = "0.8.16" }
+secp256k1            = { version = "0.6.2" }
+serde                = { version = "1.0.196", default-features = false, features = [ "derive" ] }
+serde-cw-value       = { version = "0.7.0" }
+serde-json-wasm      = { version = "1.0.0" }
+serde_json           = { version = "1.0.111" }
+serde_repr           = { version = "0.1.17" }
+serde_test           = { version = "1.0.176" }
+subtle-encoding      = { version = "0.5.1", features = [ "bech32-preview" ] }
+syn                  = { version = "1.0.98" }
+thiserror            = { version = "1.0.56" }
+tiny-keccak          = { version = "1.2.1" }
+trybuild             = { version = "1.0.63", features = [ "diff" ] }
+
 [profile.release]
 codegen-units    = 1
 debug            = false

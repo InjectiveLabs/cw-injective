@@ -6,21 +6,19 @@ license     = "Apache-2.0"
 name        = "injective-math"
 readme      = "README.md"
 repository  = "https://github.com/InjectiveLabs/cw-injective/tree/dev/packages/injective-math"
-version     = "0.2.5"
+version     = "0.3.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-# for more explicit tests, cargo test --features=backtraces
-backtraces = [ "cosmwasm-std/backtraces" ]
 
 [dependencies]
-cosmwasm-std    = { version = "1.5.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "iterator", "stargate" ] }
-ethereum-types  = { version = "0.5.2" }
-primitive-types = { version = "0.12.2", default-features = false }
-schemars        = "0.8.8"
-serde           = { version = "1.0.193", default-features = false, features = [ "derive" ] }
-subtle-encoding = { version = "0.5.1", features = [ "bech32-preview" ] }
+cosmwasm-std    = { workspace = true }
+ethereum-types  = { workspace = true }
+primitive-types = { workspace = true }
+schemars        = { workspace = true }
+serde           = { workspace = true }
+subtle-encoding = { workspace = true }
 
 [dev-dependencies]
-cosmwasm-schema = { version = "1.5.0" }
+cosmwasm-schema = { workspace = true }

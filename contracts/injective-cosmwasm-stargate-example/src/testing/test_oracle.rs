@@ -3,16 +3,19 @@ use crate::{
     msg::QueryMsg,
     testing::type_helpers::{MyOraclePriceResponse, MyPythPriceResponse, MyVolatilityResponse},
     utils::{
-        create_some_inj_price_attestation, get_stargate_query_result, relay_pyth_price, set_address_of_pyth_contract, str_coin, ExchangeType, Setup,
+        create_some_inj_price_attestation, get_stargate_query_result, relay_pyth_price, set_address_of_pyth_contract, ExchangeType, Setup,
         BASE_DECIMALS, BASE_DENOM, INJ_PYTH_PRICE_ID,
     },
 };
 use injective_cosmwasm::OracleType;
 use injective_math::{scale::Scaled, FPDecimal};
-use injective_std::types::injective::oracle::v1beta1::{
-    OracleHistoryOptions, OracleInfo, QueryOraclePriceRequest, QueryOracleVolatilityRequest, QueryPythPriceRequest,
+use injective_test_tube::{
+    injective_std::types::injective::oracle::v1beta1::{
+        OracleHistoryOptions, OracleInfo, QueryOraclePriceRequest, QueryOracleVolatilityRequest, QueryPythPriceRequest,
+    },
+    Module, Oracle, Wasm,
 };
-use injective_test_tube::{Module, Oracle, Wasm};
+use injective_testing::utils::str_coin;
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
@@ -27,6 +30,7 @@ fn test_query_oracle_price() {
             oracle_type: OracleType::PriceFeed as i32,
             base: env.denoms["base"].to_owned(),
             quote: env.denoms["quote"].to_owned(),
+            scaling_options: None,
         }),
     };
 
@@ -34,6 +38,7 @@ fn test_query_oracle_price() {
         oracle_type: 2i32,
         base: env.denoms["base"].to_owned(),
         quote: env.denoms["quote"].to_owned(),
+        scaling_options: None,
     };
 
     let oracle_response = oracle.query_oracle_price(&query_oracle_price_request);

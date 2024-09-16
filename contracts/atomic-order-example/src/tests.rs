@@ -1,9 +1,9 @@
 use std::str::FromStr;
 
-use cosmwasm_std::testing::{mock_info, MockApi, MockStorage};
+use cosmwasm_std::testing::{message_info, MockApi, MockStorage};
 use cosmwasm_std::{
-    coins, to_json_binary, BankMsg, Binary, ContractResult, CosmosMsg, OwnedDeps, QuerierResult,
-    Reply, SubMsgResponse, SubMsgResult, SystemResult, Uint128,
+    coins, to_json_binary, Addr, BankMsg, Binary, ContractResult, CosmosMsg, MsgResponse,
+    OwnedDeps, QuerierResult, Reply, SubMsgResponse, SubMsgResult, SystemResult, Uint128,
 };
 
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
@@ -33,7 +33,7 @@ fn proper_initialization() {
         )
         .expect("failed to create market_id"),
     };
-    let info = mock_info(sender_addr, &coins(1000, "earth"));
+    let info = message_info(&Addr::unchecked(sender_addr), &coins(1000, "earth"));
 
     // we can just call .unwrap() to assert this was a success
     let res = instantiate(test_deps().as_mut_deps(), inj_mock_env(), info, msg).unwrap();
@@ -52,12 +52,12 @@ fn test_swap() {
     let msg = InstantiateMsg {
         market_id: market_id.clone(),
     };
-    let info = mock_info(contract_addr, &coins(1000, "earth"));
+    let info = message_info(&Addr::unchecked(contract_addr), &coins(1000, "earth"));
     let mut deps = test_deps();
     let env = inj_mock_env();
     let _ = instantiate(deps.as_mut_deps(), env.clone(), info, msg);
 
-    let info = mock_info(sender_addr, &coins(9000, "usdt"));
+    let info = message_info(&Addr::unchecked(sender_addr), &coins(9000, "usdt"));
     let msg = ExecuteMsg::SwapSpot {
         quantity: i32_to_dec(8),
         price: i32_to_dec(1000),
@@ -96,12 +96,20 @@ fn test_swap() {
     );
 
     let binary_response = Binary::from_base64("CkIweGRkNzI5MmY2ODcwMzIwOTc2YTUxYTUwODBiMGQ2NDU5M2NhZjE3OWViM2YxOTNjZWVlZGFiNGVhNWUxNDljZWISQwoTODAwMDAwMDAwMDAwMDAwMDAwMBIWMTAwMDAwMDAwMDAwMDAwMDAwMDAwMBoUMzYwMDAwMDAwMDAwMDAwMDAwMDA=").unwrap();
+    #[allow(deprecated)]
     let reply_msg = Reply {
         id: ATOMIC_ORDER_REPLY_ID,
         result: SubMsgResult::Ok(SubMsgResponse {
             events: vec![],
-            data: Some(binary_response),
+            data: None,
+            msg_responses: vec![MsgResponse {
+                type_url: "/injective.exchange.v1beta1.MsgCreateSpotMarketOrderResponse"
+                    .to_string(),
+                value: binary_response,
+            }],
         }),
+        payload: Binary::default(),
+        gas_used: 0,
     };
 
     let transfers_response = reply(deps.as_mut_deps(), inj_mock_env(), reply_msg);

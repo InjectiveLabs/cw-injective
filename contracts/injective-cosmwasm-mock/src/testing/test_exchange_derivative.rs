@@ -14,8 +14,11 @@ use injective_cosmwasm::{
     TrimmedDerivativeLimitOrder,
 };
 use injective_math::FPDecimal;
-use injective_std::types::injective::exchange::v1beta1::{MsgInstantPerpetualMarketLaunch, OrderType};
-use injective_test_tube::{injective_cosmwasm::get_default_subaccount_id_for_checked_address, Account, Exchange, Module, Wasm};
+use injective_test_tube::{
+    injective_cosmwasm::get_default_subaccount_id_for_checked_address,
+    injective_std::types::injective::exchange::v1beta1::{MsgInstantPerpetualMarketLaunch, OrderType},
+    Account, Exchange, Module, Wasm,
+};
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]

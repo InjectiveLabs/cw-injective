@@ -1,20 +1,18 @@
 use cosmwasm_std::{coin, Coin};
 use injective_math::{scale::Scaled, FPDecimal};
 
-#[derive(PartialEq, Eq, Debug, Copy, Clone)]
-#[repr(i32)]
-pub enum Decimals {
-    Eighteen = 18,
-    Six = 6,
+pub fn assert_execute_error(message: &str) -> String {
+    format!(
+        "execute error: failed to execute message; message index: 0: {}: execute wasm contract failed",
+        message
+    )
 }
 
-impl Decimals {
-    pub fn get_decimals(&self) -> i32 {
-        match self {
-            Decimals::Eighteen => 18,
-            Decimals::Six => 6,
-        }
-    }
+pub fn assert_instantiate_error(message: &str) -> String {
+    format!(
+        "execute error: failed to execute message; message index: 0: {}: instantiate wasm contract failed",
+        message
+    )
 }
 
 pub fn proto_to_dec(val: &str) -> FPDecimal {
@@ -29,8 +27,12 @@ pub fn dec_to_proto(val: FPDecimal) -> String {
     val.scaled(18).to_string()
 }
 
-pub fn human_to_dec(raw_number: &str, decimals: Decimals) -> FPDecimal {
-    FPDecimal::must_from_str(&raw_number.replace('_', "")).scaled(decimals.get_decimals())
+pub fn human_to_dec(raw_number: &str, decimals: i32) -> FPDecimal {
+    FPDecimal::must_from_str(&raw_number.replace('_', "")).scaled(decimals)
+}
+
+pub fn human_to_dec_vector(values: Vec<&str>, decimals: i32) -> Vec<FPDecimal> {
+    values.iter().map(|v| human_to_dec(v, decimals)).collect::<Vec<FPDecimal>>()
 }
 
 pub fn human_to_i64(raw_number: &str, exponent: i32) -> i64 {
@@ -43,8 +45,31 @@ pub fn human_to_proto(raw_number: &str, decimals: i32) -> String {
     FPDecimal::must_from_str(&raw_number.replace('_', "")).scaled(18 + decimals).to_string()
 }
 
-pub fn str_coin(human_amount: &str, denom: &str, decimals: Decimals) -> Coin {
+pub fn str_coin(human_amount: &str, denom: &str, decimals: i32) -> Coin {
     let scaled_amount = human_to_dec(human_amount, decimals);
     let as_int: u128 = scaled_amount.into();
     coin(as_int, denom)
+}
+
+pub fn scale_price_quantity_spot_market(price: &str, quantity: &str, base_decimals: &i32, quote_decimals: &i32) -> (String, String) {
+    let price_dec = FPDecimal::must_from_str(price.replace('_', "").as_str());
+    let quantity_dec = FPDecimal::must_from_str(quantity.replace('_', "").as_str());
+
+    let scaled_price = price_dec.scaled(quote_decimals - base_decimals);
+    let scaled_quantity = quantity_dec.scaled(*base_decimals);
+
+    (dec_to_proto(scaled_price), dec_to_proto(scaled_quantity))
+}
+
+pub fn scale_price_quantity_perp_market(price: &str, quantity: &str, margin_ratio: &str, quote_decimals: &i32) -> (String, String, String) {
+    let price_dec = FPDecimal::must_from_str(price.replace('_', "").as_str());
+    let quantity_dec = FPDecimal::must_from_str(quantity.replace('_', "").as_str());
+    let margin_ratio_dec = FPDecimal::must_from_str(margin_ratio.replace('_', "").as_str());
+
+    let scaled_price = price_dec.scaled(*quote_decimals);
+    let scaled_quantity = quantity_dec;
+
+    let scaled_margin = (price_dec * quantity_dec * margin_ratio_dec).scaled(*quote_decimals);
+
+    (dec_to_proto(scaled_price), dec_to_proto(scaled_quantity), dec_to_proto(scaled_margin))
 }

@@ -15,10 +15,16 @@ use injective_cosmwasm::{
     TraderSpotOrdersResponse, TrimmedSpotLimitOrder,
 };
 use injective_math::FPDecimal;
-use injective_std::types::injective::exchange::v1beta1::{
-    Deposit, MsgDeposit, MsgInstantSpotMarketLaunch, OrderType, QueryAggregateMarketVolumeResponse, QuerySubaccountDepositsRequest,
+use injective_test_tube::{
+    injective_cosmwasm::get_default_subaccount_id_for_checked_address,
+    injective_std::types::{
+        cosmos::base::v1beta1::Coin as BaseCoin,
+        injective::exchange::v1beta1::{
+            Deposit, MsgDeposit, MsgInstantSpotMarketLaunch, OrderType, QueryAggregateMarketVolumeResponse, QuerySubaccountDepositsRequest,
+        },
+    },
+    Account, Exchange, Module, RunnerResult, Wasm,
 };
-use injective_test_tube::{injective_cosmwasm::get_default_subaccount_id_for_checked_address, Account, Exchange, Module, RunnerResult, Wasm};
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
@@ -34,9 +40,9 @@ fn test_msg_deposit() {
         &env.contract_address,
         &ExecuteMsg::TestDepositMsg {
             subaccount_id: subaccount_id.clone(),
-            amount: Coin::new(100, "usdt"),
+            amount: Coin::new(100u128, "usdt"),
         },
-        &[Coin::new(100, "usdt")],
+        &[Coin::new(100u128, "usdt")],
         &user.account,
     );
     assert!(res.is_ok(), "Execution failed with error: {:?}", res.unwrap_err());
@@ -74,7 +80,7 @@ fn test_query_subaccount_deposit() {
                 MsgDeposit {
                     sender: env.users[0].account.address(),
                     subaccount_id: subaccount_id.to_string(),
-                    amount: Some(injective_std::types::cosmos::base::v1beta1::Coin {
+                    amount: Some(BaseCoin {
                         amount: amount.to_string(),
                         denom: env.denoms[denom_key].clone(),
                     }),

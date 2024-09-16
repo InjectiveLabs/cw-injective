@@ -6,8 +6,7 @@ use crate::{
 };
 use cosmos_sdk_proto::cosmos::bank::v1beta1::{QueryBalanceRequest, QueryDenomMetadataRequest, QuerySupplyOfRequest};
 use cosmwasm_std::{Coin, Uint128};
-use injective_std::types::injective::tokenfactory::v1beta1::MsgCreateDenom;
-use injective_test_tube::{Account, Module, TokenFactory, Wasm};
+use injective_test_tube::{injective_std::types::injective::tokenfactory::v1beta1::MsgCreateDenom, Account, Module, TokenFactory, Wasm};
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
@@ -48,6 +47,7 @@ fn test_query_denom_metadata() {
         subdenom: "cw".to_string(),
         name: "CosmWasm".to_string(),
         symbol: "CW".to_string(),
+        decimals: 6u32,
     };
 
     let denom = token_factory.create_denom(create_denom_msg, &env.users[0].account).unwrap();
@@ -108,7 +108,7 @@ fn test_query_supply_of() {
         response.amount,
         Coin {
             denom: "inj".to_string(),
-            amount: Uint128::new(12000003336863671397639633),
+            amount: Uint128::new(12000004078367203674350010),
         }
     );
 }

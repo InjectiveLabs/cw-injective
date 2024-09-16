@@ -2,15 +2,18 @@ use crate::{
     encode_helper::encode_proto_message,
     msg::{ExecuteMsg, QueryMsg, QueryStargateResponse},
     testing::type_helpers::{ExchangeParams, ParamResponse},
-    utils::{
-        add_spot_initial_liquidity, execute_all_authorizations, human_to_dec, human_to_proto, scale_price_quantity_for_spot_market_dec, str_coin,
-        ExchangeType, Setup, BASE_DECIMALS, BASE_DENOM, QUOTE_DECIMALS,
-    },
+    utils::{add_spot_initial_liquidity, execute_all_authorizations, ExchangeType, Setup, BASE_DECIMALS, BASE_DENOM, QUOTE_DECIMALS},
 };
-use cosmwasm_std::{from_json, Addr, Coin};
+use cosmwasm_std::{coin, from_json, Addr};
 use injective_cosmwasm::{checked_address_to_subaccount_id, MarketId, SubaccountDepositResponse};
-use injective_std::types::injective::exchange::v1beta1::{Deposit, MsgDeposit, QuerySubaccountDepositRequest, QuerySubaccountDepositsRequest};
-use injective_test_tube::{Account, Exchange, Module, Wasm};
+use injective_test_tube::{
+    injective_std::types::{
+        cosmos::base::v1beta1::Coin as BaseCoin,
+        injective::exchange::v1beta1::{Deposit, MsgDeposit, QuerySubaccountDepositRequest, QuerySubaccountDepositsRequest},
+    },
+    Account, Exchange, Module, Wasm,
+};
+use injective_testing::utils::{human_to_dec, human_to_proto, scale_price_quantity_spot_market, str_coin};
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
@@ -25,10 +28,11 @@ fn test_exchange_param() {
 
     let contract_response: QueryStargateResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
     let contract_response = contract_response.value;
-    println!("{:?}", contract_response);
-    let response: ParamResponse<ExchangeParams> = from_json(&contract_response).unwrap();
-    println!("{:?}", response);
-    let listing_fee_coin = str_coin("1000", BASE_DENOM, BASE_DECIMALS);
+
+    let response: ParamResponse<ExchangeParams> = from_json(contract_response).unwrap();
+
+    let listing_fee_coin = str_coin("20", BASE_DENOM, BASE_DECIMALS);
+
     assert_eq!(response.params.spot_market_instant_listing_fee, listing_fee_coin);
 }
 
@@ -47,7 +51,7 @@ fn test_query_subaccount_deposit() {
                 MsgDeposit {
                     sender: env.users[0].account.address(),
                     subaccount_id: subaccount_id.to_string(),
-                    amount: Some(injective_std::types::cosmos::base::v1beta1::Coin {
+                    amount: Some(BaseCoin {
                         amount: amount.to_string(),
                         denom: env.denoms[denom_key].clone(),
                     }),
@@ -106,9 +110,10 @@ fn test_query_trader_transient_spot_orders() {
     let subaccount_id = checked_address_to_subaccount_id(&Addr::unchecked(env.users[0].account.address()), 0u32);
 
     execute_all_authorizations(&env.app, &env.users[0].account, env.contract_address.clone());
+
     add_spot_initial_liquidity(&env.app, market_id.clone());
 
-    let (scale_price, scale_quantity) = scale_price_quantity_for_spot_market_dec("9.8", "1", &BASE_DECIMALS, &QUOTE_DECIMALS);
+    let (scale_price, scale_quantity) = scale_price_quantity_spot_market("9.8", "1", &BASE_DECIMALS, &QUOTE_DECIMALS);
 
     let res = wasm
         .execute(
@@ -147,7 +152,7 @@ fn test_query_trader_spot_market_order() {
     execute_all_authorizations(&env.app, &env.users[0].account, env.contract_address.clone());
     add_spot_initial_liquidity(&env.app, market_id.clone());
 
-    let (scale_price, scale_quantity) = scale_price_quantity_for_spot_market_dec("9.8", "1", &BASE_DECIMALS, &QUOTE_DECIMALS);
+    let (scale_price, scale_quantity) = scale_price_quantity_spot_market("9.8", "1", &BASE_DECIMALS, &QUOTE_DECIMALS);
 
     wasm.execute(
         &env.contract_address,
@@ -157,7 +162,7 @@ fn test_query_trader_spot_market_order() {
             price: scale_price.to_string(),
             quantity: scale_quantity.to_string(),
         },
-        &[Coin::new(1000000000000000000000, "inj")],
+        &[coin(1000000000000000000000u128, BASE_DENOM)],
         &env.users[0].account,
     )
     .unwrap();
