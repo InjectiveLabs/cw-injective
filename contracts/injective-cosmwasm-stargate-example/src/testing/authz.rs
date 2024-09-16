@@ -19,7 +19,7 @@ fn test_query_grantee_grants() {
     execute_all_authorizations(&env.app, &env.users[0].account, env.users[1].account.address().to_string());
     execute_all_authorizations(&env.app, &env.users[2].account, env.users[1].account.address().to_string());
 
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRawRaw {
         path: "/cosmos.authz.v1beta1.Query/GranteeGrants".to_string(),
         query_request: encode_proto_message(QueryGranteeGrantsRequest {
             grantee: env.users[1].account.address().to_string(),
@@ -68,7 +68,7 @@ fn test_query_granter_grants() {
 
     execute_all_authorizations(&env.app, &env.users[0].account, env.users[1].account.address().to_string());
 
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/cosmos.authz.v1beta1.Query/GranterGrants".to_string(),
         query_request: encode_proto_message(QueryGranterGrantsRequest {
             granter: env.users[0].account.address().to_string(),
@@ -79,7 +79,7 @@ fn test_query_granter_grants() {
     let query_result = get_stargate_query_result::<StargateQueryGranterGrantsResponse>(wasm.query(&env.contract_address, &query_msg)).unwrap();
     assert_eq!(query_result.grants.len(), 5);
 
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/cosmos.authz.v1beta1.Query/GranterGrants".to_string(),
         query_request: encode_proto_message(QueryGranterGrantsRequest {
             granter: env.users[2].account.address().to_string(),
@@ -99,7 +99,7 @@ fn test_query_grants() {
 
     execute_all_authorizations(&env.app, &env.users[0].account, env.users[1].account.address().to_string());
 
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/cosmos.authz.v1beta1.Query/Grants".to_string(),
         query_request: encode_proto_message(QueryGrantsRequest {
             granter: env.users[0].account.address().to_string(),
@@ -114,7 +114,7 @@ fn test_query_grants() {
     // let query_result = get_stargate_query_result::<GranteeGrantsResponse>(wasm.query(&env.contract_address, &query_msg)).unwrap();
     // println!("{:?}", query_result);
 
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/cosmos.authz.v1beta1.Query/Grants".to_string(),
         query_request: encode_proto_message(QueryGrantsRequest {
             granter: env.users[2].account.address().to_string(),
