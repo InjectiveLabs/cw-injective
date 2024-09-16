@@ -6,6 +6,7 @@
 
 mod serde;
 pub mod shim;
+pub mod traits;
 pub mod types;
 
 // pub use shim::{cosmwasm_to_proto_coins, try_proto_to_cosmwasm_coins};

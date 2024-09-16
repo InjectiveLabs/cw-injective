@@ -5,17 +5,17 @@ edition     = "2021"
 license     = "Apache-2.0"
 name        = "injective-testing"
 repository  = "https://github.com/InjectiveLabs/cw-injective/tree/dev/packages/injective-testing"
-version     = "1.1.0"
+version     = "1.1.2"
 
 [dependencies]
-anyhow              = { workspace = true }
-base64              = { workspace = true }
-cosmwasm-std        = { workspace = true }
-cw-multi-test       = { workspace = true }
-injective-cosmwasm  = { workspace = true, path = "../injective-cosmwasm" }
+anyhow        = { workspace = true }
+base64        = { workspace = true }
+cosmwasm-std  = { workspace = true }
+cw-multi-test = { workspace = true }
+# injective-cosmwasm  = { workspace = true, path = "../injective-cosmwasm" }
 injective-math      = { workspace = true, path = "../injective-math" }
 injective-std       = { workspace = true, path = "../injective-std" }
-injective-test-tube = { workspace = true }
+injective-test-tube = { version = "=1.13.2-1", path = "../../../test-tube/packages/injective-test-tube" }
 prost               = { workspace = true }
 rand                = { workspace = true }
 secp256k1           = { workspace = true }
