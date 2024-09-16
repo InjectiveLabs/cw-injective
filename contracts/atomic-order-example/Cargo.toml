@@ -28,7 +28,9 @@ optimize = """docker run --rm -v "$(pwd)":/code \
 
 [dependencies]
 cosmwasm-std       = { workspace = true }
+cosmwasm-storage   = { workspace = true }
 cw-storage-plus    = { workspace = true }
+cw-utils           = { workspace = true }
 cw2                = { workspace = true }
 injective-cosmwasm = { path = "../../packages/injective-cosmwasm" }
 injective-math     = { path = "../../packages/injective-math" }
