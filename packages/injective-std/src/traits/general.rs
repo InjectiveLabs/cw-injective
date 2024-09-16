@@ -1,12 +1,14 @@
 use crate::types::injective::exchange::v1beta1::ExchangeQuerier;
 
-use cosmwasm_std::{Coin, Deps, Empty, StdError, StdResult};
+use cosmwasm_std::{Addr, Coin, CustomQuery, Deps, Empty, StdError, StdResult};
 use cw_storage_plus::{Key, KeyDeserialize, Prefixer, PrimaryKey};
+use ethereum_types::H160;
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{de::Error, ser::Error as SerError, Deserialize, Deserializer, Serialize, Serializer};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use std::fmt;
+use std::{fmt, str::FromStr};
+use subtle_encoding::bech32;
 
 pub enum MarketType {
     Spot,
@@ -54,9 +56,7 @@ impl MarketId {
         self.0.as_str()
     }
 
-    pub fn validate(self, deps: &Deps, market_type: MarketType) -> StdResult<Self> {
-        let querier = ExchangeQuerier::new(&deps.querier);
-
+    pub fn validate<Q: CustomQuery>(self, querier: &ExchangeQuerier<Q>, market_type: MarketType) -> StdResult<Self> {
         match market_type {
             MarketType::Spot => {
                 let res = querier.spot_market(self.to_string())?;
@@ -383,13 +383,102 @@ impl fmt::Display for Hash {
     }
 }
 
+pub fn get_default_subaccount_id_for_checked_address(addr: &Addr) -> SubaccountId {
+    checked_address_to_subaccount_id(addr, 0)
+}
+
+pub fn checked_address_to_subaccount_id(addr: &Addr, nonce: u32) -> SubaccountId {
+    let address_str = bech32_to_hex(addr);
+    let hex_nonce = format!("{nonce:08x}");
+    let nonce_str = left_pad_with_zeroes(hex_nonce, 24);
+
+    SubaccountId::new(format!("{address_str}{nonce_str}")).expect("failed to create subaccount_id")
+}
+
+pub fn is_default_subaccount(subaccount_id: &SubaccountId) -> bool {
+    let subaccount_id_str = subaccount_id.as_str();
+    let hex_nonce = &subaccount_id_str[subaccount_id_str.len() - 24..subaccount_id_str.len()];
+
+    hex_nonce == "000000000000000000000000"
+}
+
+fn left_pad_with_zeroes(mut input: String, length: usize) -> String {
+    while input.len() < length {
+        input = "0".to_string() + &input;
+    }
+    input
+}
+
+pub fn bech32_to_hex(addr: &Addr) -> String {
+    let decoded_bytes = bech32::decode(addr.as_str()).unwrap().1;
+    let decoded_h160 = H160::from_slice(&decoded_bytes);
+    let decoded_string = format!("{decoded_h160:?}");
+    decoded_string
+}
+
+pub fn addr_to_bech32(addr: String) -> String {
+    let encoded_bytes = H160::from_str(&addr[2..addr.len()]).unwrap();
+    bech32::encode("inj", encoded_bytes)
+}
+
+pub fn subaccount_id_to_ethereum_address(subaccount_id: &SubaccountId) -> String {
+    let subaccount_id_str = subaccount_id.as_str();
+    subaccount_id_str[0..subaccount_id_str.len() - 24].to_string()
+}
+
+pub fn subaccount_id_to_injective_address(subaccount_id: &SubaccountId, deps: &Deps) -> StdResult<Addr> {
+    let ethereum_address = subaccount_id_to_ethereum_address(subaccount_id);
+
+    deps.api.addr_validate(addr_to_bech32(ethereum_address).as_str())
+}
+
+pub fn subaccount_id_to_unchecked_injective_address(subaccount_id: &SubaccountId) -> String {
+    let ethereum_address = subaccount_id_to_ethereum_address(subaccount_id);
+    addr_to_bech32(ethereum_address)
+}
+
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::StdError;
+    use cosmwasm_std::{testing::mock_dependencies, Addr, StdError};
     use serde_test::{assert_de_tokens, assert_ser_tokens, Token};
     use std::panic::catch_unwind;
 
-    use crate::traits::general::{MarketId, ShortSubaccountId, SubaccountId};
+    use crate::traits::general::{
+        bech32_to_hex, checked_address_to_subaccount_id, get_default_subaccount_id_for_checked_address, subaccount_id_to_injective_address, MarketId,
+        ShortSubaccountId, SubaccountId,
+    };
+
+    #[test]
+    fn bech32_to_hex_test() {
+        let decoded_string = bech32_to_hex(&Addr::unchecked("inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv"));
+        assert_eq!(decoded_string, "0xB5e09b93aCEb70C1711aF078922fA256011D7e56".to_lowercase());
+    }
+
+    #[test]
+    fn checked_address_to_subaccount_id_test() {
+        let subaccount_id = checked_address_to_subaccount_id(&Addr::unchecked("inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv"), 69);
+        assert_eq!(
+            subaccount_id.as_str(),
+            "0xb5e09b93aceb70c1711af078922fa256011d7e56000000000000000000000045"
+        );
+
+        assert_eq!(
+            get_default_subaccount_id_for_checked_address(&Addr::unchecked("inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv")).as_str(),
+            "0xb5e09b93aceb70c1711af078922fa256011d7e56000000000000000000000000"
+        );
+    }
+
+    #[test]
+    fn subaccount_id_to_address_test() {
+        let subaccount_id = "0xb5e09b93aceb70c1711af078922fa256011d7e56000000000000000000000000";
+        let address = subaccount_id_to_injective_address(
+            &SubaccountId::new(subaccount_id.to_string()).expect("Wong bech32 prefix"),
+            &mock_dependencies().as_ref(),
+        )
+        .unwrap();
+
+        assert_eq!(address.to_string(), "inj1khsfhyavadcvzug67pufytaz2cq36ljkrsr0nv".to_string());
+    }
 
     #[test]
     fn unchecked_subaccount_id_to_lowercase() {

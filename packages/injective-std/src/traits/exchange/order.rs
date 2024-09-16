@@ -1,6 +1,8 @@
 use crate::{
     traits::general::{MarketId, SubaccountId},
-    types::injective::exchange::v1beta1::{DerivativeLimitOrder, DerivativeOrder, OrderData, OrderInfo, SpotLimitOrder, SpotOrder},
+    types::injective::exchange::v1beta1::{
+        DerivativeLimitOrder, DerivativeOrder, OrderData, OrderInfo, SpotLimitOrder, SpotOrder, TrimmedDerivativeLimitOrder, TrimmedSpotLimitOrder,
+    },
 };
 
 use cosmwasm_std::Addr;
@@ -52,12 +54,24 @@ impl OrderType {
     }
 }
 
-pub trait GenericOrder {
+pub trait OrderExtension {
     fn get_order_type(&self) -> OrderType;
     fn get_order_info(&self) -> &Option<OrderInfo>;
     fn get_trigger_price(&self) -> Option<FPDecimal>;
     fn is_buy(&self) -> bool;
     fn is_sell(&self) -> bool;
+}
+
+pub trait TrimmedOrderExtension {
+    fn get_price(&self) -> FPDecimal;
+    fn get_fillable_quantity(&self) -> FPDecimal;
+    fn is_buy(&self) -> bool;
+    fn is_sell(&self) -> bool;
+    fn get_order_hash(&self) -> String;
+}
+
+pub trait TrimmedDerivativeOrderExtension {
+    fn get_margin(&self) -> FPDecimal;
 }
 
 impl SpotLimitOrder {
@@ -72,7 +86,7 @@ impl SpotLimitOrder {
     }
 }
 
-impl GenericOrder for SpotLimitOrder {
+impl OrderExtension for SpotLimitOrder {
     fn is_buy(&self) -> bool {
         self.order_type == OrderType::Buy as i32 || self.order_type == OrderType::BuyPo as i32 || self.order_type == OrderType::BuyAtomic as i32
     }
@@ -119,7 +133,7 @@ impl SpotOrder {
     }
 }
 
-impl GenericOrder for SpotOrder {
+impl OrderExtension for SpotOrder {
     fn is_buy(&self) -> bool {
         self.order_type == OrderType::Buy as i32 || self.order_type == OrderType::BuyPo as i32 || self.order_type == OrderType::BuyAtomic as i32
     }
@@ -138,5 +152,55 @@ impl GenericOrder for SpotOrder {
 
     fn get_trigger_price(&self) -> Option<FPDecimal> {
         Some(FPDecimal::must_from_str(&self.trigger_price))
+    }
+}
+
+impl TrimmedOrderExtension for TrimmedSpotLimitOrder {
+    fn is_buy(&self) -> bool {
+        self.is_buy
+    }
+
+    fn is_sell(&self) -> bool {
+        !self.is_buy
+    }
+
+    fn get_price(&self) -> FPDecimal {
+        FPDecimal::must_from_str(&self.price)
+    }
+
+    fn get_fillable_quantity(&self) -> FPDecimal {
+        FPDecimal::must_from_str(&self.fillable)
+    }
+
+    fn get_order_hash(&self) -> String {
+        self.order_hash.to_owned()
+    }
+}
+
+impl TrimmedOrderExtension for TrimmedDerivativeLimitOrder {
+    fn is_buy(&self) -> bool {
+        self.is_buy
+    }
+
+    fn is_sell(&self) -> bool {
+        !self.is_buy
+    }
+
+    fn get_price(&self) -> FPDecimal {
+        FPDecimal::must_from_str(&self.price)
+    }
+
+    fn get_fillable_quantity(&self) -> FPDecimal {
+        FPDecimal::must_from_str(&self.fillable)
+    }
+
+    fn get_order_hash(&self) -> String {
+        self.order_hash.to_owned()
+    }
+}
+
+impl TrimmedDerivativeOrderExtension for TrimmedDerivativeLimitOrder {
+    fn get_margin(&self) -> FPDecimal {
+        FPDecimal::must_from_str(&self.margin)
     }
 }

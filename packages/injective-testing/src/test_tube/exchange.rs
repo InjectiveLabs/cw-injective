@@ -4,11 +4,11 @@ use crate::{
 };
 
 use cosmwasm_std::{Addr, Uint128};
-use injective_cosmwasm::{get_default_subaccount_id_for_checked_address, SubaccountId};
 use injective_math::FPDecimal;
 use injective_test_tube::{
     injective_std::{
         shim::Any,
+        traits::general::{get_default_subaccount_id_for_checked_address, SubaccountId},
         types::{
             cosmos::{
                 base::v1beta1::Coin as BaseCoin,

@@ -1,6 +1,6 @@
 use cosmwasm_std::{Addr, Storage};
 use cw_multi_test::AddressGenerator;
-use injective_cosmwasm::addr_to_bech32;
+use injective_std::traits::general::addr_to_bech32;
 use rand::OsRng;
 use secp256k1::Secp256k1;
 use std::fmt::Write;
