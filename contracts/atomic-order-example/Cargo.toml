@@ -32,9 +32,9 @@ cosmwasm-storage   = { workspace = true }
 cw-storage-plus    = { workspace = true }
 cw-utils           = { workspace = true }
 cw2                = { workspace = true }
-injective-cosmwasm = { workspace = true, path = "../../packages/injective-cosmwasm" }
-injective-math     = { workspace = true, path = "../../packages/injective-math" }
-injective-std      = { workspace = true, path = "../../packages/injective-std" }
+injective-cosmwasm = { path = "../../packages/injective-cosmwasm" }
+injective-math     = { path = "../../packages/injective-math" }
+injective-std      = { path = "../../packages/injective-std" }
 prost              = { workspace = true }
 schemars           = { workspace = true }
 serde              = { workspace = true }

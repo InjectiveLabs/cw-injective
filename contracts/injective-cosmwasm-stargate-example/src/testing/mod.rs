@@ -1,3 +1,4 @@
+mod authz;
 mod test_auction;
 mod test_auth;
 mod test_bank;
