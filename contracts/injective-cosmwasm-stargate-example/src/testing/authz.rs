@@ -19,7 +19,7 @@ fn test_query_grantee_grants() {
     execute_all_authorizations(&env.app, &env.users[0].account, env.users[1].account.address().to_string());
     execute_all_authorizations(&env.app, &env.users[2].account, env.users[1].account.address().to_string());
 
-    let query_msg = QueryMsg::QueryStargateRawRaw {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/cosmos.authz.v1beta1.Query/GranteeGrants".to_string(),
         query_request: encode_proto_message(QueryGranteeGrantsRequest {
             grantee: env.users[1].account.address().to_string(),
