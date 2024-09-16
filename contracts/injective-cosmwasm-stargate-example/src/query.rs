@@ -8,6 +8,8 @@ use injective_std::types::{cosmos::bank::v1beta1::BankQuerier, injective::exchan
 
 pub fn handle_query_stargate_raw(querier: &QuerierWrapper<InjectiveQueryWrapper>, path: String, query_request: String) -> StdResult<Binary> {
     let data = Binary::from_base64(&query_request)?;
+
+    #[allow(deprecated)]
     let request = &QueryRequest::<InjectiveQueryWrapper>::Stargate { path, data };
     let raw = to_json_vec(request).map_err(|serialize_err| StdError::generic_err(format!("Serializing QueryRequest: {}", serialize_err)))?;
 

@@ -205,7 +205,6 @@ pub struct QuerySupplyOffResponse {
     pub amount: Coin,
 }
 
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct QueryDenomMetadataResponse {
     pub metadatas: Vec<Metadata>,
