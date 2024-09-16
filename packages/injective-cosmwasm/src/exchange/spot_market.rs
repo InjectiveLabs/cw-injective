@@ -21,6 +21,7 @@ pub struct SpotMarket {
     pub status: MarketStatus,
     pub min_price_tick_size: FPDecimal,
     pub min_quantity_tick_size: FPDecimal,
+    pub min_notional: FPDecimal,
 }
 
 impl GenericMarket for SpotMarket {

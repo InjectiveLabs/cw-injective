@@ -1,8 +1,5 @@
 use crate::{
-    mocks::{
-        MOCK_ATOM_DECIMALS, MOCK_ATOM_DENOM, MOCK_BASE_DECIMALS, MOCK_BASE_DENOM, MOCK_GAS_DENOM, MOCK_QUOTE_DECIMALS, MOCK_QUOTE_DENOM,
-        MOCK_USDC_DENOM,
-    },
+    mocks::{MOCK_ATOM_DECIMALS, MOCK_ATOM_DENOM, MOCK_BASE_DECIMALS, MOCK_BASE_DENOM, MOCK_QUOTE_DECIMALS, MOCK_QUOTE_DENOM, MOCK_USDC_DENOM},
     utils::{dec_to_proto, scale_price_quantity_perp_market, scale_price_quantity_spot_market, str_coin},
 };
 
@@ -438,8 +435,8 @@ pub fn launch_spot_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
             MsgInstantSpotMarketLaunch {
                 sender: signer.address(),
                 ticker: ticker.clone(),
-                base_denom: MOCK_BASE_DECIMALS.to_string(),
-                quote_denom: MOCK_QUOTE_DECIMALS.to_string(),
+                base_denom: MOCK_BASE_DENOM.to_string(),
+                quote_denom: MOCK_QUOTE_DENOM.to_string(),
                 min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.000000000000001")),
                 min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("1000000000000000")),
                 min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
@@ -457,8 +454,8 @@ pub fn launch_spot_market_atom(exchange: &Exchange<InjectiveTestApp>, signer: &S
             MsgInstantSpotMarketLaunch {
                 sender: signer.address(),
                 ticker: ticker.clone(),
-                base_denom: MOCK_ATOM_DECIMALS.to_string(),
-                quote_denom: MOCK_QUOTE_DECIMALS.to_string(),
+                base_denom: MOCK_ATOM_DENOM.to_string(),
+                quote_denom: MOCK_QUOTE_DENOM.to_string(),
                 min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.000010000000000000")),
                 min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("100000")),
                 min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
@@ -553,7 +550,6 @@ pub fn execute_spot_limit_order(app: &InjectiveTestApp, market_id: String, price
     let trader = app
         .init_account(&[
             str_coin("1000000", MOCK_ATOM_DENOM, MOCK_ATOM_DECIMALS),
-            str_coin("1000000", MOCK_GAS_DENOM, MOCK_BASE_DECIMALS),
             str_coin("1000000", MOCK_BASE_DENOM, MOCK_BASE_DECIMALS),
             str_coin("1000000", MOCK_QUOTE_DENOM, MOCK_QUOTE_DECIMALS),
             str_coin("1000000", MOCK_USDC_DENOM, MOCK_QUOTE_DECIMALS),
@@ -638,7 +634,6 @@ pub fn execute_derivative_limit_order(
         .init_account(&[
             str_coin("1000000", MOCK_ATOM_DENOM, MOCK_ATOM_DECIMALS),
             str_coin("1000000", MOCK_BASE_DENOM, MOCK_BASE_DECIMALS),
-            str_coin("1000000", MOCK_GAS_DENOM, MOCK_BASE_DECIMALS),
             str_coin("1000000", MOCK_QUOTE_DENOM, MOCK_QUOTE_DECIMALS),
         ])
         .unwrap();

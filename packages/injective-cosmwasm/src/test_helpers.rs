@@ -109,6 +109,7 @@ pub(crate) mod testing_helpers {
             status: MarketStatus::Active,
             min_price_tick_size: FPDecimal::from_str("0.01").unwrap(),
             min_quantity_tick_size: FPDecimal::from_str("0.01").unwrap(),
+            min_notional: FPDecimal::from_str("0.01").unwrap(),
         }
     }
 }

@@ -1,8 +1,8 @@
 [package]
-authors = [ "Markus Waas <markus@injectivelabs.org>" ]
-edition = "2021"
-name    = "atomic-order-example"
-version = "0.2.0"
+authors = [ "Jose Luis Bernal Castillo <joseluis@injectivelabs.org>" ]
+edition = "2018"
+name    = "injective-cosmwasm-stargate-example"
+version = "0.0.1"
 
 exclude = [
  # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
@@ -17,20 +17,15 @@ crate-type = [ "cdylib", "rlib" ]
 
 [features]
 # use library feature to disable all instantiate/execute/query exports
-library = [  ]
-
-[package.metadata.scripts]
-optimize = """docker run --rm -v "$(pwd)":/code \
-  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
-  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/workspace-optimizer-arm64:0.12.11
-"""
+integration = [  ]
+library     = [  ]
 
 [dependencies]
+base64             = { workspace = true }
+cosmos-sdk-proto   = { workspace = true }
+cosmwasm-schema    = { workspace = true }
 cosmwasm-std       = { workspace = true }
-cosmwasm-storage   = { workspace = true }
 cw-storage-plus    = { workspace = true }
-cw-utils           = { workspace = true }
 cw2                = { workspace = true }
 injective-cosmwasm = { path = "../../packages/injective-cosmwasm" }
 injective-math     = { path = "../../packages/injective-math" }
@@ -38,8 +33,10 @@ injective-std      = { path = "../../packages/injective-std" }
 prost              = { workspace = true }
 schemars           = { workspace = true }
 serde              = { workspace = true }
+serde_json         = { workspace = true }
 thiserror          = { workspace = true }
 
 [dev-dependencies]
-cosmwasm-schema = { workspace = true }
-cw-multi-test   = { workspace = true }
+injective-std       = { workspace = true }
+injective-test-tube = { workspace = true }
+injective-testing   = { workspace = true }

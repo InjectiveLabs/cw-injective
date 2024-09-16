@@ -1,4 +1,7 @@
-use crate::fp_decimal::FPDecimal;
+use crate::{
+    fp_decimal::FPDecimal,
+    scale::{Scaled, DEC_SCALE_FACTOR},
+};
 use std::fmt;
 
 impl fmt::Display for FPDecimal {
@@ -20,6 +23,16 @@ impl fmt::Display for FPDecimal {
 
             Ok(())
         }
+    }
+}
+
+pub trait ToProto {
+    fn to_proto_string(self) -> String;
+}
+
+impl ToProto for FPDecimal {
+    fn to_proto_string(self) -> String {
+        self.scaled(DEC_SCALE_FACTOR).to_string()
     }
 }
 

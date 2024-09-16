@@ -14,9 +14,11 @@ version     = "0.3.0"
 
 [dependencies]
 cosmwasm-std    = { workspace = true }
+ethereum-types  = { workspace = true }
 primitive-types = { workspace = true }
 schemars        = { workspace = true }
 serde           = { workspace = true }
+subtle-encoding = { workspace = true }
 
 [dev-dependencies]
 cosmwasm-schema = { workspace = true }

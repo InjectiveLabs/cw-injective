@@ -13,8 +13,7 @@ pub const MOCK_ATOM_DECIMALS: i32 = 8i32;
 pub const MOCK_QUOTE_DECIMALS: i32 = 6i32;
 
 pub const MOCK_ATOM_DENOM: &str = "atom";
-pub const MOCK_GAS_DENOM: &str = "inj";
-pub const MOCK_BASE_DENOM: &str = "ubase";
+pub const MOCK_BASE_DENOM: &str = "inj";
 pub const MOCK_QUOTE_DENOM: &str = "usdt";
 pub const MOCK_USDC_DENOM: &str = "usdc";
 
@@ -31,6 +30,7 @@ pub fn mock_spot_market(market_id: &str) -> SpotMarket {
         min_price_tick_size: FPDecimal::must_from_str("0.000000000000001000"),
         min_quantity_tick_size: FPDecimal::must_from_str("10000000000000.0"), // 0.00001 @ 18dp
         relayer_fee_share_rate: FPDecimal::must_from_str("0.4"),
+        min_notional: FPDecimal::ZERO,
     }
 }
 
