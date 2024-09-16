@@ -1,14 +1,14 @@
 use crate::types;
-use cosmwasm_std::{CosmosMsg, StdResult};
+use cosmwasm_std::{AnyMsg, CosmosMsg, StdResult};
 use injective_cosmwasm::{FullDerivativeMarket, InjectiveMsgWrapper, OrderType, SpotMarket};
 use injective_math::FPDecimal;
 use prost::Message;
 
 pub fn create_stargate_msg(type_url: &str, value: Vec<u8>) -> StdResult<CosmosMsg<InjectiveMsgWrapper>> {
-    Ok(CosmosMsg::Stargate {
+    Ok(CosmosMsg::Any(AnyMsg {
         type_url: type_url.to_string(),
         value: value.into(),
-    })
+    }))
 }
 
 pub fn create_spot_limit_order(

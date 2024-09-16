@@ -2,35 +2,36 @@ use crate::msg::{InstantiateMsg, MSG_CREATE_DERIVATIVE_LIMIT_ORDER_ENDPOINT, MSG
 use cosmwasm_std::{coin, Addr, Coin};
 use injective_cosmwasm::{checked_address_to_subaccount_id, SubaccountId};
 use injective_math::{scale::Scaled, FPDecimal};
-use injective_std::{
-    shim::{Any, Timestamp},
-    types::{
-        cosmos::{
-            authz::v1beta1::{GenericAuthorization, Grant, MsgGrant, MsgRevoke, MsgRevokeResponse},
-            bank::v1beta1::{MsgSend, SendAuthorization},
-            base::v1beta1::Coin as BaseCoin,
-            gov::{
-                v1::{MsgSubmitProposal, MsgVote},
-                v1beta1::MsgSubmitProposal as MsgSubmitProposalV1Beta1,
+use injective_test_tube::{
+    injective_cosmwasm::get_default_subaccount_id_for_checked_address,
+    injective_std::{
+        shim::{Any, Timestamp},
+        types::{
+            cosmos::{
+                authz::v1beta1::{GenericAuthorization, Grant, MsgGrant, MsgRevoke, MsgRevokeResponse},
+                bank::v1beta1::{MsgSend, SendAuthorization},
+                base::v1beta1::Coin as BaseCoin,
+                gov::{
+                    v1::{MsgSubmitProposal, MsgVote},
+                    v1beta1::MsgSubmitProposal as MsgSubmitProposalV1Beta1,
+                },
             },
-        },
-        injective::{
-            exchange::v1beta1::{
-                DerivativeOrder, MsgCreateDerivativeLimitOrder, MsgCreateSpotLimitOrder, MsgInstantPerpetualMarketLaunch, MsgInstantSpotMarketLaunch,
-                OrderInfo, OrderType, QueryDerivativeMarketsRequest, QuerySpotMarketsRequest, SpotOrder,
-            },
-            insurance::v1beta1::MsgCreateInsuranceFund,
-            oracle::v1beta1::{
-                GrantPriceFeederPrivilegeProposal, MsgRelayPriceFeedPrice, MsgRelayPythPrices, MsgUpdateParams, OracleType, Params, PriceAttestation,
+            injective::{
+                exchange::v1beta1::{
+                    DerivativeOrder, MsgCreateDerivativeLimitOrder, MsgCreateSpotLimitOrder, MsgInstantPerpetualMarketLaunch,
+                    MsgInstantSpotMarketLaunch, OrderInfo, OrderType, QueryDerivativeMarketsRequest, QuerySpotMarketsRequest, SpotOrder,
+                },
+                insurance::v1beta1::MsgCreateInsuranceFund,
+                oracle::v1beta1::{
+                    GrantPriceFeederPrivilegeProposal, MsgRelayPriceFeedPrice, MsgRelayPythPrices, MsgUpdateParams, OracleType, Params,
+                    PriceAttestation,
+                },
             },
         },
     },
+    Account, Authz, Bank, Exchange, ExecuteResponse, Gov, InjectiveTestApp, Insurance, Module, Oracle, Runner, SigningAccount, Wasm,
 };
-use injective_test_tube::{
-    injective_cosmwasm::get_default_subaccount_id_for_checked_address, Account, Authz, Bank, Exchange, ExecuteResponse, Gov, InjectiveTestApp,
-    Insurance, Module, Oracle, Runner, SigningAccount, Wasm,
-};
-use injective_testing::human_to_i64;
+use injective_testing::utils::human_to_i64;
 use prost::Message;
 use std::{collections::HashMap, ops::Neg, str::FromStr};
 
@@ -326,6 +327,7 @@ pub fn launch_spot_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
                 quote_denom: QUOTE_DENOM.to_string(),
                 min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.000000000000001")),
                 min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("1")),
+                min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
             },
             signer,
         )
@@ -364,6 +366,7 @@ pub fn launch_perp_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
                 maintenance_margin_ratio: "50000000000000000".to_owned(),
                 min_price_tick_size: "1000000000000000000000".to_owned(),
                 min_quantity_tick_size: "1000000000000000".to_owned(),
+                min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
             },
             signer,
         )
@@ -755,6 +758,7 @@ pub fn set_address_of_pyth_contract(app: &InjectiveTestApp, validator: &SigningA
                 metadata: "".to_string(),
                 title: "Set Pyth contract address".to_string(),
                 summary: "Set Pyth contract address".to_string(),
+                expedited: false,
             },
             validator,
         )

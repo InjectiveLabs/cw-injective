@@ -1,4 +1,4 @@
-use osmosis_std_derive::CosmwasmExt;
+use injective_std_derive::CosmwasmExt;
 /// AccessTypeParam
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -1161,6 +1161,40 @@ pub struct QueryContractsByCreatorResponse {
     #[prost(message, optional, tag = "2")]
     pub pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageResponse>,
 }
+/// QueryBuildAddressRequest is the request type for the Query/BuildAddress RPC
+/// method.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/cosmwasm.wasm.v1.QueryBuildAddressRequest")]
+#[proto_query(
+    path = "/cosmwasm.wasm.v1.Query/BuildAddress",
+    response_type = QueryBuildAddressResponse
+)]
+pub struct QueryBuildAddressRequest {
+    /// CodeHash is the hash of the code
+    #[prost(string, tag = "1")]
+    pub code_hash: ::prost::alloc::string::String,
+    /// CreatorAddress is the address of the contract instantiator
+    #[prost(string, tag = "2")]
+    pub creator_address: ::prost::alloc::string::String,
+    /// Salt is a hex encoded salt
+    #[prost(string, tag = "3")]
+    pub salt: ::prost::alloc::string::String,
+    /// InitArgs are optional json encoded init args to be used in contract address
+    /// building if provided
+    #[prost(bytes = "vec", tag = "4")]
+    pub init_args: ::prost::alloc::vec::Vec<u8>,
+}
+/// QueryBuildAddressResponse is the response type for the Query/BuildAddress RPC
+/// method.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/cosmwasm.wasm.v1.QueryBuildAddressResponse")]
+pub struct QueryBuildAddressResponse {
+    /// Address is the contract address
+    #[prost(string, tag = "1")]
+    pub address: ::prost::alloc::string::String,
+}
 /// MsgStoreCode submit Wasm code to the system
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -1739,5 +1773,20 @@ impl<'a, Q: cosmwasm_std::CustomQuery> WasmQuerier<'a, Q> {
         pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageRequest>,
     ) -> Result<QueryContractsByCreatorResponse, cosmwasm_std::StdError> {
         QueryContractsByCreatorRequest { creator_address, pagination }.query(self.querier)
+    }
+    pub fn build_address(
+        &self,
+        code_hash: ::prost::alloc::string::String,
+        creator_address: ::prost::alloc::string::String,
+        salt: ::prost::alloc::string::String,
+        init_args: ::prost::alloc::vec::Vec<u8>,
+    ) -> Result<QueryBuildAddressResponse, cosmwasm_std::StdError> {
+        QueryBuildAddressRequest {
+            code_hash,
+            creator_address,
+            salt,
+            init_args,
+        }
+        .query(self.querier)
     }
 }

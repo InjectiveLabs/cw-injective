@@ -81,7 +81,7 @@ impl FPDecimal {
 
         assert_ne!(y.num, U256::zero());
 
-        let num = FPDecimal::ONE.num.full_mul(x.num) / U512::try_from(y.num).unwrap();
+        let num = FPDecimal::ONE.num.full_mul(x.num) / U512::from(y.num);
         if num.is_zero() {
             return FPDecimal::ZERO;
         }

@@ -48,7 +48,7 @@ pub struct LastAuctionResult {
 fn test_current_auction_basket() {
     let env = Setup::new(ExchangeType::None);
     let wasm = Wasm::new(&env.app);
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/injective.auction.v1beta1.Query/CurrentAuctionBasket".to_string(),
         query_request: "".to_string(),
     };
@@ -58,9 +58,9 @@ fn test_current_auction_basket() {
     let response: QueryCurrentAuctionBasketResponse = from_json(contract_response).unwrap();
 
     assert_eq!(response.amount, vec![]);
-    assert_eq!(response.auction_closing_time, Int64::from(-62122291200i64));
+    assert_eq!(response.auction_closing_time, Int64::from(-62121081600i64));
     assert_eq!(response.highest_bid_amount, Uint128::zero());
-    assert_eq!(response.auction_round, Uint64::from(21u64));
+    assert_eq!(response.auction_round, Uint64::from(23u64));
     assert_eq!(response.highest_bidder, "".to_string());
 }
 
@@ -69,7 +69,7 @@ fn test_current_auction_basket() {
 fn test_auction_params() {
     let env = Setup::new(ExchangeType::None);
     let wasm = Wasm::new(&env.app);
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/injective.auction.v1beta1.Query/AuctionParams".to_string(),
         query_request: "".to_string(),
     };
@@ -87,7 +87,7 @@ fn test_auction_params() {
 fn test_last_auction_result() {
     let env = Setup::new(ExchangeType::None);
     let wasm = Wasm::new(&env.app);
-    let query_msg = QueryMsg::QueryStargate {
+    let query_msg = QueryMsg::QueryStargateRaw {
         path: "/injective.auction.v1beta1.Query/LastAuctionResult".to_string(),
         query_request: "".to_string(),
     };
@@ -98,5 +98,5 @@ fn test_last_auction_result() {
 
     assert_eq!(response.last_auction_result.winner, "".to_string());
     assert_eq!(response.last_auction_result.round, Uint64::zero());
-    assert_eq!(response.last_auction_result.amount, Coin::new(0, "inj"));
+    assert_eq!(response.last_auction_result.amount, Coin::new(0u128, "inj"));
 }

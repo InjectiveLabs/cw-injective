@@ -1,36 +1,37 @@
 use crate::msg::{InstantiateMsg, QueryStargateResponse, MSG_CREATE_DERIVATIVE_LIMIT_ORDER_ENDPOINT, MSG_CREATE_SPOT_LIMIT_ORDER_ENDPOINT};
-use cosmwasm_std::{coin, Addr, Coin};
-use injective_cosmwasm::{checked_address_to_subaccount_id, SubaccountId};
-use injective_math::{scale::Scaled, FPDecimal};
-use injective_std::{
-    shim::{Any, Timestamp},
-    types::{
-        cosmos::{
-            authz::v1beta1::{GenericAuthorization, Grant, MsgGrant, MsgRevoke, MsgRevokeResponse},
-            bank::v1beta1::{MsgSend, SendAuthorization},
-            base::v1beta1::Coin as BaseCoin,
-            gov::{
-                v1::{MsgSubmitProposal, MsgVote},
-                v1beta1::MsgSubmitProposal as MsgSubmitProposalV1Beta1,
+use cosmwasm_std::Addr;
+use injective_cosmwasm::{checked_address_to_subaccount_id, get_default_subaccount_id_for_checked_address, SubaccountId};
+use injective_test_tube::{
+    injective_std::{
+        shim::{Any, Timestamp},
+        types::{
+            cosmos::{
+                authz::v1beta1::{GenericAuthorization, Grant, MsgGrant, MsgRevoke, MsgRevokeResponse},
+                bank::v1beta1::SendAuthorization,
+                base::v1beta1::Coin as BaseCoin,
+                gov::v1::{MsgSubmitProposal, MsgVote},
             },
-        },
-        injective::{
-            exchange::v1beta1::{
-                DerivativeOrder, MsgCreateDerivativeLimitOrder, MsgCreateSpotLimitOrder, MsgInstantPerpetualMarketLaunch, MsgInstantSpotMarketLaunch,
-                OrderInfo, OrderType, QueryDerivativeMarketsRequest, QuerySpotMarketsRequest, SpotOrder,
-            },
-            insurance::v1beta1::MsgCreateInsuranceFund,
-            oracle::v1beta1::{
-                GrantPriceFeederPrivilegeProposal, MsgRelayPriceFeedPrice, MsgRelayPythPrices, MsgUpdateParams, OracleType, Params, PriceAttestation,
+            injective::{
+                exchange::v1beta1::{
+                    DerivativeOrder, MsgCreateDerivativeLimitOrder, MsgCreateSpotLimitOrder, OrderInfo, OrderType, QueryDerivativeMarketsRequest,
+                    SpotOrder,
+                },
+                oracle::v1beta1::{MsgRelayPythPrices, MsgUpdateParams, OracleType, Params, PriceAttestation},
             },
         },
     },
+    Account, Authz, Bank, Exchange, ExecuteResponse, Gov, InjectiveTestApp, Module, Oracle, Runner, RunnerResult, SigningAccount, Wasm,
 };
-use injective_test_tube::{
-    injective_cosmwasm::get_default_subaccount_id_for_checked_address, Account, Authz, Bank, Exchange, ExecuteResponse, Gov, InjectiveTestApp,
-    Insurance, Module, Oracle, Runner, RunnerResult, SigningAccount, Wasm,
+use injective_testing::{
+    test_tube::{
+        bank::send,
+        exchange::{add_exchange_admin, launch_perp_market, launch_spot_market},
+        insurance::launch_insurance_fund,
+        oracle::launch_price_feed_oracle,
+        utils::wasm_file,
+    },
+    utils::{human_to_dec, human_to_i64, scale_price_quantity_perp_market, scale_price_quantity_spot_market, str_coin},
 };
-use injective_testing::human_to_i64;
 use prost::Message;
 use serde::de::DeserializeOwned;
 use std::{collections::HashMap, ops::Neg, str::FromStr};
@@ -72,7 +73,10 @@ pub enum ExchangeType {
 impl Setup {
     pub fn new(exchange_type: ExchangeType) -> Self {
         let app = InjectiveTestApp::new();
+
         let wasm = Wasm::new(&app);
+        let exchange = Exchange::new(&app);
+
         let mut market_id = None;
 
         let mut denoms = HashMap::new();
@@ -124,6 +128,8 @@ impl Setup {
 
         send(&Bank::new(&app), "1000000000000000000000", BASE_DENOM, &owner, &validator);
 
+        add_exchange_admin(&app, &validator, owner.address().to_string());
+
         launch_insurance_fund(
             &app,
             &owner,
@@ -145,11 +151,9 @@ impl Setup {
 
         match exchange_type {
             ExchangeType::Spot => {
-                let exchange = Exchange::new(&app);
                 market_id = Some(launch_spot_market(&exchange, &owner, "INJ/USDT".to_string()));
             }
             ExchangeType::Derivative => {
-                let exchange = Exchange::new(&app);
                 market_id = Some(launch_perp_market(&exchange, &owner, "INJ/USDT".to_string()));
             }
             ExchangeType::None => {}
@@ -173,206 +177,6 @@ impl Default for Setup {
     fn default() -> Self {
         Self::new(ExchangeType::None)
     }
-}
-
-pub fn wasm_file(contract_name: String) -> String {
-    let snaked_name = contract_name.replace('-', "_");
-    let arch = std::env::consts::ARCH;
-
-    let target = format!("../../target/wasm32-unknown-unknown/release/{snaked_name}.wasm");
-
-    let artifacts_dir = std::env::var("ARTIFACTS_DIR_PATH").unwrap_or_else(|_| "artifacts".to_string());
-    let arch_target = format!("../../{artifacts_dir}/{snaked_name}-{arch}.wasm");
-
-    if std::path::Path::new(&target).exists() {
-        target
-    } else if std::path::Path::new(&arch_target).exists() {
-        arch_target
-    } else {
-        format!("../../{artifacts_dir}/{snaked_name}.wasm")
-    }
-}
-
-pub fn str_coin(human_amount: &str, denom: &str, decimals: i32) -> Coin {
-    let scaled_amount = human_to_dec(human_amount, decimals);
-    let as_int: u128 = scaled_amount.into();
-    coin(as_int, denom)
-}
-
-pub fn send(bank: &Bank<InjectiveTestApp>, amount: &str, denom: &str, from: &SigningAccount, to: &SigningAccount) {
-    bank.send(
-        MsgSend {
-            from_address: from.address(),
-            to_address: to.address(),
-            amount: vec![BaseCoin {
-                amount: amount.to_string(),
-                denom: denom.to_string(),
-            }],
-        },
-        from,
-    )
-    .unwrap();
-}
-
-pub fn launch_price_feed_oracle(
-    app: &InjectiveTestApp,
-    signer: &SigningAccount,
-    validator: &SigningAccount,
-    base: &str,
-    quote: &str,
-    dec_price: String,
-) {
-    let gov = Gov::new(app);
-    let oracle = Oracle::new(app);
-
-    let mut buf = vec![];
-    GrantPriceFeederPrivilegeProposal::encode(
-        &GrantPriceFeederPrivilegeProposal {
-            title: "test-proposal".to_string(),
-            description: "test-proposal".to_string(),
-            base: base.to_string(),
-            quote: quote.to_string(),
-            relayers: vec![signer.address()],
-        },
-        &mut buf,
-    )
-    .unwrap();
-
-    let res = gov
-        .submit_proposal_v1beta1(
-            MsgSubmitProposalV1Beta1 {
-                content: Some(Any {
-                    type_url: "/injective.oracle.v1beta1.GrantPriceFeederPrivilegeProposal".to_string(),
-                    value: buf,
-                }),
-                initial_deposit: vec![BaseCoin {
-                    amount: "100000000000000000000".to_string(),
-                    denom: "inj".to_string(),
-                }],
-                proposer: validator.address(),
-            },
-            validator,
-        )
-        .unwrap();
-
-    let proposal_id = res.events.iter().find(|e| e.ty == "submit_proposal").unwrap().attributes[0]
-        .value
-        .to_owned();
-
-    gov.vote(
-        MsgVote {
-            proposal_id: u64::from_str(&proposal_id).unwrap(),
-            voter: validator.address(),
-            option: 1i32,
-            metadata: "".to_string(),
-        },
-        validator,
-    )
-    .unwrap();
-
-    // NOTE: increase the block time in order to move past the voting period
-    app.increase_time(10u64);
-
-    oracle
-        .relay_price_feed(
-            MsgRelayPriceFeedPrice {
-                sender: signer.address(),
-                base: vec![base.to_string()],
-                quote: vec![quote.to_string()],
-                price: vec![dec_price], // 1.2@18dp
-            },
-            signer,
-        )
-        .unwrap();
-}
-
-pub fn launch_insurance_fund(
-    app: &InjectiveTestApp,
-    signer: &SigningAccount,
-    ticker: &str,
-    quote: &str,
-    oracle_base: &str,
-    oracle_quote: &str,
-    oracle_type: OracleType,
-) {
-    let insurance = Insurance::new(app);
-
-    insurance
-        .create_insurance_fund(
-            MsgCreateInsuranceFund {
-                sender: signer.address(),
-                ticker: ticker.to_string(),
-                quote_denom: quote.to_string(),
-                oracle_base: oracle_base.to_string(),
-                oracle_quote: oracle_quote.to_string(),
-                oracle_type: oracle_type as i32,
-                expiry: -1i64,
-                initial_deposit: Some(BaseCoin {
-                    amount: human_to_dec("1_000", QUOTE_DECIMALS).to_string(),
-                    denom: quote.to_string(),
-                }),
-            },
-            signer,
-        )
-        .unwrap();
-}
-
-pub fn launch_spot_market(exchange: &Exchange<InjectiveTestApp>, signer: &SigningAccount, ticker: String) -> String {
-    exchange
-        .instant_spot_market_launch(
-            MsgInstantSpotMarketLaunch {
-                sender: signer.address(),
-                ticker: ticker.clone(),
-                base_denom: BASE_DENOM.to_string(),
-                quote_denom: QUOTE_DENOM.to_string(),
-                min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.000000000000001")),
-                min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("1")),
-                min_notional: dec_to_proto(FPDecimal::must_from_str("0.000000000000002")),
-            },
-            signer,
-        )
-        .unwrap();
-
-    get_spot_market_id(exchange, ticker)
-}
-
-pub fn get_spot_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: String) -> String {
-    let spot_markets = exchange
-        .query_spot_markets(&QuerySpotMarketsRequest {
-            status: "Active".to_string(),
-            market_ids: vec![],
-        })
-        .unwrap()
-        .markets;
-
-    let market = spot_markets.iter().find(|m| m.ticker == ticker).unwrap();
-    market.market_id.to_string()
-}
-
-pub fn launch_perp_market(exchange: &Exchange<InjectiveTestApp>, signer: &SigningAccount, ticker: String) -> String {
-    exchange
-        .instant_perpetual_market_launch(
-            MsgInstantPerpetualMarketLaunch {
-                sender: signer.address(),
-                ticker: ticker.to_owned(),
-                quote_denom: "usdt".to_string(),
-                oracle_base: "inj".to_string(),
-                oracle_quote: "usdt".to_string(),
-                oracle_scale_factor: 6u32,
-                oracle_type: 2i32,
-                maker_fee_rate: "0".to_owned(),
-                taker_fee_rate: "0".to_owned(),
-                initial_margin_ratio: "195000000000000000".to_owned(),
-                maintenance_margin_ratio: "50000000000000000".to_owned(),
-                min_price_tick_size: "1000000000000000000000".to_owned(),
-                min_quantity_tick_size: "1000000000000000".to_owned(),
-                min_notional: "1000000000000000".to_string(),
-            },
-            signer,
-        )
-        .unwrap();
-
-    get_perpetual_market_id(exchange, ticker)
 }
 
 pub fn get_perpetual_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: String) -> String {
@@ -440,7 +244,7 @@ pub fn add_spot_orders(app: &InjectiveTestApp, market_id: String, orders: Vec<Hu
     let trader = UserInfo { account, subaccount_id };
 
     for order in orders {
-        let (price, quantity) = scale_price_quantity_for_spot_market(order.price.as_str(), order.quantity.as_str(), &BASE_DECIMALS, &QUOTE_DECIMALS);
+        let (price, quantity) = scale_price_quantity_spot_market(order.price.as_str(), order.quantity.as_str(), &BASE_DECIMALS, &QUOTE_DECIMALS);
         add_spot_order_as(app, market_id.to_owned(), &trader, price, quantity, order.order_type);
     }
 }
@@ -676,58 +480,6 @@ pub fn execute_all_authorizations(app: &InjectiveTestApp, granter: &SigningAccou
     create_generic_authorization(app, granter, grantee, "/injective.exchange.v1beta1.MsgWithdraw".to_string(), None);
 }
 
-// Human Utils
-pub fn human_to_proto(raw_number: &str, decimals: i32) -> String {
-    FPDecimal::must_from_str(&raw_number.replace('_', "")).scaled(18 + decimals).to_string()
-}
-
-pub fn human_to_dec(raw_number: &str, decimals: i32) -> FPDecimal {
-    FPDecimal::must_from_str(&raw_number.replace('_', "")).scaled(decimals)
-}
-
-pub fn dec_to_proto(val: FPDecimal) -> String {
-    val.scaled(18).to_string()
-}
-
-pub fn scale_price_quantity_for_spot_market(price: &str, quantity: &str, base_decimals: &i32, quote_decimals: &i32) -> (String, String) {
-    let (scaled_price, scaled_quantity) = scale_price_quantity_for_spot_market_dec(price, quantity, base_decimals, quote_decimals);
-    (dec_to_proto(scaled_price), dec_to_proto(scaled_quantity))
-}
-
-pub fn scale_price_quantity_for_spot_market_dec(price: &str, quantity: &str, base_decimals: &i32, quote_decimals: &i32) -> (FPDecimal, FPDecimal) {
-    let price_dec = FPDecimal::must_from_str(price.replace('_', "").as_str());
-    let quantity_dec = FPDecimal::must_from_str(quantity.replace('_', "").as_str());
-
-    let scaled_price = price_dec.scaled(quote_decimals - base_decimals);
-    let scaled_quantity = quantity_dec.scaled(*base_decimals);
-
-    (scaled_price, scaled_quantity)
-}
-
-pub fn scale_price_quantity_perp_market(price: &str, quantity: &str, margin_ratio: &str, quote_decimals: &i32) -> (String, String, String) {
-    let (scaled_price, scaled_quantity, scaled_margin) = scale_price_quantity_perp_market_dec(price, quantity, margin_ratio, quote_decimals);
-
-    (dec_to_proto(scaled_price), dec_to_proto(scaled_quantity), dec_to_proto(scaled_margin))
-}
-
-pub fn scale_price_quantity_perp_market_dec(
-    price: &str,
-    quantity: &str,
-    margin_ratio: &str,
-    quote_decimals: &i32,
-) -> (FPDecimal, FPDecimal, FPDecimal) {
-    let price_dec = FPDecimal::must_from_str(price.replace('_', "").as_str());
-    let quantity_dec = FPDecimal::must_from_str(quantity.replace('_', "").as_str());
-    let margin_ratio_dec = FPDecimal::must_from_str(margin_ratio.replace('_', "").as_str());
-
-    let scaled_price = price_dec.scaled(*quote_decimals);
-    let scaled_quantity = quantity_dec;
-
-    let scaled_margin = (price_dec * quantity_dec * margin_ratio_dec).scaled(*quote_decimals);
-
-    (scaled_price, scaled_quantity, scaled_margin)
-}
-
 pub fn set_address_of_pyth_contract(app: &InjectiveTestApp, validator: &SigningAccount, pyth_address: &SigningAccount) {
     let gov = Gov::new(app);
 
@@ -758,6 +510,7 @@ pub fn set_address_of_pyth_contract(app: &InjectiveTestApp, validator: &SigningA
                 metadata: "".to_string(),
                 title: "Set Pyth contract address".to_string(),
                 summary: "Set Pyth contract address".to_string(),
+                expedited: false,
             },
             validator,
         )
@@ -840,7 +593,7 @@ pub fn create_some_usdt_price_attestation(human_price: &str, decimal_precision: 
 pub fn get_stargate_query_result<T: DeserializeOwned>(contract_response: RunnerResult<QueryStargateResponse>) -> serde_json::Result<T> {
     let contract_response = contract_response.unwrap().value;
     serde_json::from_str::<T>(&contract_response).map_err(|error| {
-        println!("{} \n {}", error.to_string(), contract_response);
+        println!("{} \n {}", error, contract_response);
         error
     })
 }
