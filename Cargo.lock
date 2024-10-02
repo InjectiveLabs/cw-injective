@@ -958,6 +958,7 @@ dependencies = [
  "cw-storage-plus",
  "cw2",
  "injective-cosmwasm 0.3.0",
+ "injective-std 1.13.0",
  "schemars",
  "serde 1.0.210",
  "thiserror",

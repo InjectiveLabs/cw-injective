@@ -12,6 +12,10 @@ use crate::error::ContractError;
 use crate::mock_pyth_attestation::execute_trigger_pyth_update;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, SudoMsg};
 
+use injective_std::types::injective::auction::v1beta1::{
+    AuctionQuerier, QueryLastAuctionResultRequest, QueryLastAuctionResultResponse,
+};
+
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:injective:dummy";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -27,6 +31,14 @@ pub fn instantiate(
     _msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    let auction_querier = AuctionQuerier::new(&deps.querier);
+
+    // let res = auction_querier.current_auction_basket().unwrap();
+    // let res = auction_querier.auction_params().unwrap();
+    let res = auction_querier.last_auction_result().unwrap();
+
+    deps.api.debug(&format!("res: {:?}", res));
     COUNTER.save(deps.storage, &0u32)?;
     ACTIVE.save(deps.storage, &false)?;
     Ok(Response::new()

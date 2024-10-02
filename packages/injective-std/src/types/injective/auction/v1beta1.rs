@@ -31,8 +31,9 @@ pub struct LastAuctionResult {
     #[prost(string, tag = "1")]
     pub winner: ::prost::alloc::string::String,
     /// amount describes the amount the winner get from the auction
-    #[prost(string, tag = "2")]
-    pub amount: ::prost::alloc::string::String,
+    // #[prost(string, tag = "2")]
+    #[prost(message, optional, tag = "2")]
+    pub amount: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
     /// round defines the round number of auction
     #[prost(uint64, tag = "3")]
     #[serde(
