@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.3.1] - 2024-10-02
+
+### Fixed
+
+- Add min notional to markets
+
 ## [0.2.24] - 2024-08-01
 
 ### Changed
