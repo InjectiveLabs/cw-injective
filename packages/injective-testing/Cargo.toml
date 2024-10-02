@@ -12,7 +12,7 @@ anyhow              = { workspace = true }
 base64              = { workspace = true }
 cosmwasm-std        = { workspace = true }
 cw-multi-test       = { workspace = true }
-injective-cosmwasm  = { version = "0.3.0", path = "../injective-cosmwasm" }
+injective-cosmwasm  = { version = "0.3.1", path = "../injective-cosmwasm" }
 injective-math      = { version = "0.3.0", path = "../injective-math" }
 injective-std       = { version = "1.13.0", path = "../injective-std" }
 injective-test-tube = { workspace = true }
