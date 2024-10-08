@@ -9,11 +9,13 @@ pub const MOCKED_FEE_RECIPIENT: &str = "0x01edfab47f124748dc89998eb33144af734484
 
 pub const MOCK_EXCHANGE_DECIMALS: i32 = 18i32;
 pub const MOCK_BASE_DECIMALS: i32 = 18i32;
+pub const MOCK_STAKE_DECIMALS: i32 = 18i32;
 pub const MOCK_ATOM_DECIMALS: i32 = 8i32;
 pub const MOCK_QUOTE_DECIMALS: i32 = 6i32;
 
 pub const MOCK_ATOM_DENOM: &str = "atom";
 pub const MOCK_BASE_DENOM: &str = "inj";
+pub const MOCK_STAKE_DENOM: &str = "hinj";
 pub const MOCK_QUOTE_DENOM: &str = "usdt";
 pub const MOCK_USDC_DENOM: &str = "usdc";
 

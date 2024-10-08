@@ -22,7 +22,7 @@ ethereum-types       = { version = "0.5.2" }
 hex                  = { version = "0.4.3", features = [ "serde" ] }
 injective-cosmwasm   = { version = "0.3.0", path = "./packages/injective-cosmwasm" }
 injective-math       = { version = "0.3.0", path = "./packages/injective-math" }
-injective-std        = { version = "1.13.0", path = "./packages/injective-std" }
+injective-std        = { version = "1.13.2-auction", path = "./packages/injective-std" }
 injective-std-derive = { version = "1.13.0", path = "./packages/injective-std-derive" }
 injective-test-tube  = { version = "1.13.2" }
 injective-testing    = { version = "1.1.0", path = "./packages/injective-testing" }
