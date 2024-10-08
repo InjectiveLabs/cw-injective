@@ -46,11 +46,7 @@ fn test_query_grantee_grants() {
         env.users[1].account.address().to_string(),
     );
 
-    let combined_grants = response_user0
-        .grants
-        .into_iter()
-        .chain(response_user2.grants.into_iter())
-        .collect::<Vec<_>>();
+    let combined_grants = response_user0.grants.into_iter().chain(response_user2.grants).collect::<Vec<_>>();
     let query_result = get_stargate_query_result::<StargateQueryGranteeGrantsResponse>(wasm.query(&env.contract_address, &query_msg)).unwrap();
 
     let all_grants_present = combined_grants.iter().all(|grant| query_result.grants.contains(grant));
@@ -125,7 +121,6 @@ fn test_query_grants() {
     };
 
     let contract_response: RunnerResult<QueryStargateResponse> = wasm.query(&env.contract_address, &query_msg);
-    println!("{:?}", contract_response);
 
     if let Err(QueryError { msg }) = contract_response {
         assert_eq!(
@@ -133,7 +128,7 @@ fn test_query_grants() {
             "The error message does not match the expected value"
         );
     } else {
-        assert!(false, "Expected an error, but got a success: {:?}", contract_response);
+        panic!("Expected an error, but got a success: {:?}", contract_response);
     }
 }
 

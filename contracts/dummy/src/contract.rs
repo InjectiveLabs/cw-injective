@@ -27,6 +27,7 @@ pub fn instantiate(
     _msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
     COUNTER.save(deps.storage, &0u32)?;
     ACTIVE.save(deps.storage, &false)?;
     Ok(Response::new()
