@@ -20,8 +20,11 @@ pub struct Params {
 pub struct Bid {
     #[prost(string, tag = "1")]
     pub bidder: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub amount: ::prost::alloc::string::String,
+    // #[prost(string, tag = "2")]
+    // pub amount: ::prost::alloc::string::String,
+    // NOTE: THIS IS A FIX FOR RUST BINDINGS, PLEASE COPY IN FUTURE RELEASES
+    #[prost(message, optional, tag = "2")]
+    pub amount: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -32,6 +35,8 @@ pub struct LastAuctionResult {
     pub winner: ::prost::alloc::string::String,
     /// amount describes the amount the winner get from the auction
     // #[prost(string, tag = "2")]
+    // pub amount: ::prost::alloc::string::String,
+    // NOTE: THIS IS A FIX FOR RUST BINDINGS, PLEASE COPY IN FUTURE RELEASES
     #[prost(message, optional, tag = "2")]
     pub amount: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
     /// round defines the round number of auction
@@ -50,8 +55,11 @@ pub struct EventBid {
     #[prost(string, tag = "1")]
     pub bidder: ::prost::alloc::string::String,
     /// amount describes the amount the bidder put on the auction
-    #[prost(string, tag = "2")]
-    pub amount: ::prost::alloc::string::String,
+    // #[prost(string, tag = "2")]
+    // pub amount: ::prost::alloc::string::String,
+    // NOTE: THIS IS A FIX FOR RUST BINDINGS, PLEASE COPY IN FUTURE RELEASES
+    #[prost(message, optional, tag = "2")]
+    pub amount: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
     /// round defines the round number of auction
     #[prost(uint64, tag = "3")]
     #[serde(
@@ -68,8 +76,11 @@ pub struct EventAuctionResult {
     #[prost(string, tag = "1")]
     pub winner: ::prost::alloc::string::String,
     /// amount describes the amount the winner get from the auction
-    #[prost(string, tag = "2")]
-    pub amount: ::prost::alloc::string::String,
+    // #[prost(string, tag = "2")]
+    // pub amount: ::prost::alloc::string::String,
+    // NOTE: THIS IS A FIX FOR RUST BINDINGS, PLEASE COPY IN FUTURE RELEASES
+    #[prost(message, optional, tag = "2")]
+    pub amount: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
     /// round defines the round number of auction
     #[prost(uint64, tag = "3")]
     #[serde(
