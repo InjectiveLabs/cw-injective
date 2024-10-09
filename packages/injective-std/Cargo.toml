@@ -12,7 +12,7 @@ version     = "1.13.2-auction"
 [dependencies]
 chrono               = { workspace = true }
 cosmwasm-std         = { workspace = true }
-injective-std-derive = { path = "../injective-std-derive" }
+injective-std-derive = { workspace = true, path = "../injective-std-derive" }
 prost                = { workspace = true }
 prost-types          = { workspace = true }
 schemars             = { workspace = true }
