@@ -1,6 +1,6 @@
-use injective_std_derive::CosmwasmExt;
+use osmosis_std_derive::CosmwasmExt;
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.Params")]
 pub struct Params {
     /// default_redemption_notice_period_duration defines the default minimum
@@ -179,7 +179,7 @@ pub struct GenesisState {
 /// QueryInsuranceParamsRequest is the request type for the Query/InsuranceParams
 /// RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.QueryInsuranceParamsRequest")]
 #[proto_query(
     path = "/injective.insurance.v1beta1.Query/InsuranceParams",
@@ -189,7 +189,7 @@ pub struct QueryInsuranceParamsRequest {}
 /// QueryInsuranceParamsRequest is the response type for the
 /// Query/InsuranceParams RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.QueryInsuranceParamsResponse")]
 pub struct QueryInsuranceParamsResponse {
     #[prost(message, optional, tag = "1")]
@@ -222,7 +222,7 @@ pub struct QueryInsuranceFundResponse {
 /// QueryInsuranceFundsRequest is the request type for the Query/InsuranceFunds
 /// RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.QueryInsuranceFundsRequest")]
 #[proto_query(
     path = "/injective.insurance.v1beta1.Query/InsuranceFunds",
@@ -291,7 +291,7 @@ pub struct QueryPendingRedemptionsResponse {
 /// QueryModuleStateRequest is the request type for the
 /// Query/InsuranceModuleState RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.QueryModuleStateRequest")]
 #[proto_query(
     path = "/injective.insurance.v1beta1.Query/InsuranceModuleState",
@@ -350,7 +350,7 @@ pub struct MsgCreateInsuranceFund {
     pub initial_deposit: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.MsgCreateInsuranceFundResponse")]
 pub struct MsgCreateInsuranceFundResponse {}
 /// MsgUnderwrite defines a message for depositing coins to underwrite an
@@ -371,7 +371,7 @@ pub struct MsgUnderwrite {
     pub deposit: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.MsgUnderwriteResponse")]
 pub struct MsgUnderwriteResponse {}
 /// MsgRequestRedemption defines a message for requesting a redemption of the
@@ -392,7 +392,7 @@ pub struct MsgRequestRedemption {
     pub amount: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.MsgRequestRedemptionResponse")]
 pub struct MsgRequestRedemptionResponse {}
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -409,7 +409,7 @@ pub struct MsgUpdateParams {
     pub params: ::core::option::Option<Params>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.insurance.v1beta1.MsgUpdateParamsResponse")]
 pub struct MsgUpdateParamsResponse {}
 pub struct InsuranceQuerier<'a, Q: cosmwasm_std::CustomQuery> {

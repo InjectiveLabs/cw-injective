@@ -1,4 +1,4 @@
-use injective_std_derive::CosmwasmExt;
+use osmosis_std_derive::CosmwasmExt;
 /// ParameterChangeProposal defines a proposal to change one or more parameters.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -54,7 +54,7 @@ pub struct QueryParamsResponse {
 ///
 /// Since: cosmos-sdk 0.46
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.params.v1beta1.QuerySubspacesRequest")]
 #[proto_query(
     path = "/cosmos.params.v1beta1.Query/Subspaces",

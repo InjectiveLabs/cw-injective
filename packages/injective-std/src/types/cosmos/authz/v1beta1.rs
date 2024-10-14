@@ -1,4 +1,4 @@
-use injective_std_derive::CosmwasmExt;
+use osmosis_std_derive::CosmwasmExt;
 /// GenericAuthorization gives the grantee unrestricted permissions to execute
 /// the provided method on behalf of the granter's account.
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -186,7 +186,7 @@ pub struct MsgGrant {
 }
 /// MsgGrantResponse defines the Msg/MsgGrant response type.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.authz.v1beta1.MsgGrantResponse")]
 pub struct MsgGrantResponse {}
 /// MsgExec attempts to execute the provided messages using
@@ -227,7 +227,7 @@ pub struct MsgRevoke {
 }
 /// MsgRevokeResponse defines the Msg/MsgRevokeResponse response type.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.authz.v1beta1.MsgRevokeResponse")]
 pub struct MsgRevokeResponse {}
 /// MsgExecCompatResponse defines the Msg/MsgExecCompatResponse response type.

@@ -1,4 +1,4 @@
-use injective_std_derive::CosmwasmExt;
+use osmosis_std_derive::CosmwasmExt;
 /// NOTE: The following type is not implemented due to current limitations of code generator
 /// which currently has issue with tendermint_proto.
 /// This will be fixed in the upcoming release.
@@ -534,7 +534,7 @@ pub struct MsgCreateValidator {
 }
 /// MsgCreateValidatorResponse defines the Msg/CreateValidator response type.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.staking.v1beta1.MsgCreateValidatorResponse")]
 pub struct MsgCreateValidatorResponse {}
 /// MsgEditValidator defines a SDK message for editing an existing validator.
@@ -557,7 +557,7 @@ pub struct MsgEditValidator {
 }
 /// MsgEditValidatorResponse defines the Msg/EditValidator response type.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.staking.v1beta1.MsgEditValidatorResponse")]
 pub struct MsgEditValidatorResponse {}
 /// MsgDelegate defines a SDK message for performing a delegation of coins
@@ -575,7 +575,7 @@ pub struct MsgDelegate {
 }
 /// MsgDelegateResponse defines the Msg/Delegate response type.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.staking.v1beta1.MsgDelegateResponse")]
 pub struct MsgDelegateResponse {}
 /// MsgBeginRedelegate defines a SDK message for performing a redelegation
@@ -595,7 +595,7 @@ pub struct MsgBeginRedelegate {
 }
 /// MsgBeginRedelegateResponse defines the Msg/BeginRedelegate response type.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.staking.v1beta1.MsgBeginRedelegateResponse")]
 pub struct MsgBeginRedelegateResponse {
     #[prost(message, optional, tag = "1")]
@@ -653,7 +653,7 @@ pub struct MsgCancelUnbondingDelegation {
 ///
 /// Since: cosmos-sdk 0.46
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegationResponse")]
 pub struct MsgCancelUnbondingDelegationResponse {}
 /// MsgUpdateParams is the Msg/UpdateParams request type.
@@ -677,6 +677,6 @@ pub struct MsgUpdateParams {
 ///
 /// Since: cosmos-sdk 0.47
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.staking.v1beta1.MsgUpdateParamsResponse")]
 pub struct MsgUpdateParamsResponse {}

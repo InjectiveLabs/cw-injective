@@ -1,4 +1,4 @@
-use injective_std_derive::CosmwasmExt;
+use osmosis_std_derive::CosmwasmExt;
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.auction.v1beta1.Params")]
@@ -13,6 +13,10 @@ pub struct Params {
     /// min_next_bid_increment_rate defines the minimum increment rate for new bids
     #[prost(string, tag = "2")]
     pub min_next_bid_increment_rate: ::prost::alloc::string::String,
+    /// inj_basket_max_cap defines the maximum cap for INJ contained in an auction
+    /// basket
+    #[prost(string, tag = "3")]
+    pub inj_basket_max_cap: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -20,9 +24,6 @@ pub struct Params {
 pub struct Bid {
     #[prost(string, tag = "1")]
     pub bidder: ::prost::alloc::string::String,
-    // #[prost(string, tag = "2")]
-    // pub amount: ::prost::alloc::string::String,
-    // NOTE: THIS IS A FIX FOR RUST BINDINGS, PLEASE COPY IN FUTURE RELEASES
     #[prost(message, optional, tag = "2")]
     pub amount: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
 }
@@ -34,9 +35,6 @@ pub struct LastAuctionResult {
     #[prost(string, tag = "1")]
     pub winner: ::prost::alloc::string::String,
     /// amount describes the amount the winner get from the auction
-    // #[prost(string, tag = "2")]
-    // pub amount: ::prost::alloc::string::String,
-    // NOTE: THIS IS A FIX FOR RUST BINDINGS, PLEASE COPY IN FUTURE RELEASES
     #[prost(message, optional, tag = "2")]
     pub amount: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
     /// round defines the round number of auction
@@ -55,9 +53,6 @@ pub struct EventBid {
     #[prost(string, tag = "1")]
     pub bidder: ::prost::alloc::string::String,
     /// amount describes the amount the bidder put on the auction
-    // #[prost(string, tag = "2")]
-    // pub amount: ::prost::alloc::string::String,
-    // NOTE: THIS IS A FIX FOR RUST BINDINGS, PLEASE COPY IN FUTURE RELEASES
     #[prost(message, optional, tag = "2")]
     pub amount: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
     /// round defines the round number of auction
@@ -76,9 +71,6 @@ pub struct EventAuctionResult {
     #[prost(string, tag = "1")]
     pub winner: ::prost::alloc::string::String,
     /// amount describes the amount the winner get from the auction
-    // #[prost(string, tag = "2")]
-    // pub amount: ::prost::alloc::string::String,
-    // NOTE: THIS IS A FIX FOR RUST BINDINGS, PLEASE COPY IN FUTURE RELEASES
     #[prost(message, optional, tag = "2")]
     pub amount: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
     /// round defines the round number of auction
@@ -144,7 +136,7 @@ pub struct GenesisState {
 /// QueryAuctionParamsRequest is the request type for the Query/AuctionParams RPC
 /// method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.auction.v1beta1.QueryAuctionParamsRequest")]
 #[proto_query(
     path = "/injective.auction.v1beta1.Query/AuctionParams",
@@ -163,7 +155,7 @@ pub struct QueryAuctionParamsResponse {
 /// QueryCurrentAuctionBasketRequest is the request type for the
 /// Query/CurrentAuctionBasket RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.auction.v1beta1.QueryCurrentAuctionBasketRequest")]
 #[proto_query(
     path = "/injective.auction.v1beta1.Query/CurrentAuctionBasket",
@@ -185,25 +177,25 @@ pub struct QueryCurrentAuctionBasketResponse {
         serialize_with = "crate::serde::as_str::serialize",
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
-    pub auctionRound: u64,
+    pub auction_round: u64,
     /// auctionClosingTime describes auction close time for the round
     #[prost(int64, tag = "3")]
     #[serde(
         serialize_with = "crate::serde::as_str::serialize",
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
-    pub auctionClosingTime: i64,
+    pub auction_closing_time: i64,
     /// highestBidder describes highest bidder on current round
     #[prost(string, tag = "4")]
-    pub highestBidder: ::prost::alloc::string::String,
+    pub highest_bidder: ::prost::alloc::string::String,
     /// highestBidAmount describes highest bid amount on current round
     #[prost(string, tag = "5")]
-    pub highestBidAmount: ::prost::alloc::string::String,
+    pub highest_bid_amount: ::prost::alloc::string::String,
 }
 /// QueryModuleStateRequest is the request type for the Query/AuctionModuleState
 /// RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.auction.v1beta1.QueryModuleStateRequest")]
 #[proto_query(
     path = "/injective.auction.v1beta1.Query/AuctionModuleState",
@@ -220,7 +212,7 @@ pub struct QueryModuleStateResponse {
     pub state: ::core::option::Option<GenesisState>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.auction.v1beta1.QueryLastAuctionResultRequest")]
 #[proto_query(
     path = "/injective.auction.v1beta1.Query/LastAuctionResult",
@@ -253,7 +245,7 @@ pub struct MsgBid {
     pub round: u64,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.auction.v1beta1.MsgBidResponse")]
 pub struct MsgBidResponse {}
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -270,7 +262,7 @@ pub struct MsgUpdateParams {
     pub params: ::core::option::Option<Params>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.auction.v1beta1.MsgUpdateParamsResponse")]
 pub struct MsgUpdateParamsResponse {}
 pub struct AuctionQuerier<'a, Q: cosmwasm_std::CustomQuery> {
