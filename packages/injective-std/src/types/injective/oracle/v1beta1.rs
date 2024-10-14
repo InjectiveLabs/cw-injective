@@ -650,7 +650,7 @@ pub struct EventBandIbcAckError {
     pub client_id: i64,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.EventBandIBCResponseTimeout")]
 pub struct EventBandIbcResponseTimeout {
     #[prost(int64, tag = "1")]
@@ -940,7 +940,7 @@ pub struct QueryPythPriceResponse {
 /// QueryOracleParamsRequest is the request type for the Query/OracleParams RPC
 /// method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.QueryParamsRequest")]
 #[proto_query(
     path = "/injective.oracle.v1beta1.Query/Params",
@@ -959,7 +959,7 @@ pub struct QueryParamsResponse {
 /// QueryBandRelayersRequest is the request type for the Query/BandRelayers RPC
 /// method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.QueryBandRelayersRequest")]
 #[proto_query(
     path = "/injective.oracle.v1beta1.Query/BandRelayers",
@@ -978,7 +978,7 @@ pub struct QueryBandRelayersResponse {
 /// QueryBandPriceStatesRequest is the request type for the Query/BandPriceStates
 /// RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.QueryBandPriceStatesRequest")]
 #[proto_query(
     path = "/injective.oracle.v1beta1.Query/BandPriceStates",
@@ -997,7 +997,7 @@ pub struct QueryBandPriceStatesResponse {
 /// QueryBandIBCPriceStatesRequest is the request type for the
 /// Query/BandIBCPriceStates RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.QueryBandIBCPriceStatesRequest")]
 #[proto_query(
     path = "/injective.oracle.v1beta1.Query/BandIBCPriceStates",
@@ -1016,7 +1016,7 @@ pub struct QueryBandIbcPriceStatesResponse {
 /// QueryPriceFeedPriceStatesRequest is the request type for the
 /// Query/PriceFeedPriceStates RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.QueryPriceFeedPriceStatesRequest")]
 #[proto_query(
     path = "/injective.oracle.v1beta1.Query/PriceFeedPriceStates",
@@ -1035,7 +1035,7 @@ pub struct QueryPriceFeedPriceStatesResponse {
 /// QueryCoinbasePriceStatesRequest is the request type for the
 /// Query/CoinbasePriceStates RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.QueryCoinbasePriceStatesRequest")]
 #[proto_query(
     path = "/injective.oracle.v1beta1.Query/CoinbasePriceStates",
@@ -1054,7 +1054,7 @@ pub struct QueryCoinbasePriceStatesResponse {
 /// QueryPythPriceStatesRequest is the request type for the
 /// Query/CoinbasePriceStates RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.QueryPythPriceStatesRequest")]
 #[proto_query(
     path = "/injective.oracle.v1beta1.Query/PythPriceStates",
@@ -1073,7 +1073,7 @@ pub struct QueryPythPriceStatesResponse {
 /// QueryStorkPriceStatesRequest is the request type for the
 /// Query/StorkPriceStates RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.QueryStorkPriceStatesRequest")]
 #[proto_query(
     path = "/injective.oracle.v1beta1.Query/StorkPriceStates",
@@ -1092,7 +1092,7 @@ pub struct QueryStorkPriceStatesResponse {
 /// QueryStorkPublishersRequest is the request type for the
 /// Query/StorkPublishers RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.QueryStorkPublishersRequest")]
 #[proto_query(
     path = "/injective.oracle.v1beta1.Query/StorkPublishers",
@@ -1135,7 +1135,7 @@ pub struct QueryProviderPriceStateResponse {
 /// QueryModuleStateRequest is the request type for the Query/OracleModuleState
 /// RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.QueryModuleStateRequest")]
 #[proto_query(
     path = "/injective.oracle.v1beta1.Query/OracleModuleState",
@@ -1177,7 +1177,7 @@ pub struct QueryHistoricalPriceRecordsResponse {
     pub price_records: ::prost::alloc::vec::Vec<PriceRecords>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.OracleHistoryOptions")]
 pub struct OracleHistoryOptions {
     /// MaxAge restricts the oracle price records oldest age in seconds from the
@@ -1229,7 +1229,7 @@ pub struct QueryOracleVolatilityResponse {
     pub raw_history: ::prost::alloc::vec::Vec<PriceRecord>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.QueryOracleProvidersInfoRequest")]
 #[proto_query(
     path = "/injective.oracle.v1beta1.Query/OracleProvidersInfo",
@@ -1265,7 +1265,7 @@ pub struct QueryOracleProviderPricesResponse {
 /// oracle result will be returned as base_price * 10^base_decimals / quote_price
 /// * 10^quote_decimals
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.ScalingOptions")]
 pub struct ScalingOptions {
     #[prost(uint32, tag = "1")]
@@ -1356,7 +1356,7 @@ pub struct MsgRelayProviderPrices {
     pub prices: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.MsgRelayProviderPricesResponse")]
 pub struct MsgRelayProviderPricesResponse {}
 /// MsgRelayPriceFeedPrice defines a SDK message for setting a price through the
@@ -1376,7 +1376,7 @@ pub struct MsgRelayPriceFeedPrice {
     pub price: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.MsgRelayPriceFeedPriceResponse")]
 pub struct MsgRelayPriceFeedPriceResponse {}
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -1395,7 +1395,7 @@ pub struct MsgRelayBandRates {
     pub request_i_ds: ::prost::alloc::vec::Vec<u64>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.MsgRelayBandRatesResponse")]
 pub struct MsgRelayBandRatesResponse {}
 /// MsgRelayCoinbaseMessages defines a SDK message for relaying price messages
@@ -1412,7 +1412,7 @@ pub struct MsgRelayCoinbaseMessages {
     pub signatures: ::prost::alloc::vec::Vec<::prost::alloc::vec::Vec<u8>>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.MsgRelayCoinbaseMessagesResponse")]
 pub struct MsgRelayCoinbaseMessagesResponse {}
 /// MsgRelayStorkPrices defines a SDK message for relaying price message
@@ -1427,7 +1427,7 @@ pub struct MsgRelayStorkPrices {
     pub asset_pairs: ::prost::alloc::vec::Vec<AssetPair>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.MsgRelayStorkPricesResponse")]
 pub struct MsgRelayStorkPricesResponse {}
 /// MsgRequestBandIBCRates defines a SDK message for requesting data from
@@ -1448,7 +1448,7 @@ pub struct MsgRequestBandIbcRates {
 }
 /// MsgRequestDataResponse defines the Msg/RequestBandIBCRates response type.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.MsgRequestBandIBCRatesResponse")]
 pub struct MsgRequestBandIbcRatesResponse {}
 /// MsgRelayPythPrices defines a SDK message for updating Pyth prices
@@ -1463,7 +1463,7 @@ pub struct MsgRelayPythPrices {
 }
 /// MsgRelayPythPricesResponse defines the Msg/RelayPythPrices response type.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.MsgRelayPythPricesResponse")]
 pub struct MsgRelayPythPricesResponse {}
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -1480,7 +1480,7 @@ pub struct MsgUpdateParams {
     pub params: ::core::option::Option<Params>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.oracle.v1beta1.MsgUpdateParamsResponse")]
 pub struct MsgUpdateParamsResponse {}
 pub struct OracleQuerier<'a, Q: cosmwasm_std::CustomQuery> {

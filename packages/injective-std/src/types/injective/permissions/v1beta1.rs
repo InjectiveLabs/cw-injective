@@ -10,7 +10,7 @@ pub struct EventSetVoucher {
 }
 /// Params defines the parameters for the permissions module.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.permissions.v1beta1.Params")]
 pub struct Params {
     #[prost(uint64, tag = "1")]
@@ -138,7 +138,7 @@ pub struct GenesisState {
 }
 /// QueryParamsRequest is the request type for the Query/Params RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.permissions.v1beta1.QueryParamsRequest")]
 #[proto_query(
     path = "/injective.permissions.v1beta1.Query/Params",
@@ -147,7 +147,7 @@ pub struct GenesisState {
 pub struct QueryParamsRequest {}
 /// QueryParamsResponse is the response type for the Query/Params RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.permissions.v1beta1.QueryParamsResponse")]
 pub struct QueryParamsResponse {
     /// params defines the parameters of the module.
@@ -157,7 +157,7 @@ pub struct QueryParamsResponse {
 /// QueryAllNamespacesRequest is the request type for the Query/AllNamespaces RPC
 /// method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.permissions.v1beta1.QueryAllNamespacesRequest")]
 #[proto_query(
     path = "/injective.permissions.v1beta1.Query/AllNamespaces",
@@ -273,7 +273,7 @@ pub struct MsgUpdateParams {
     pub params: ::core::option::Option<Params>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.permissions.v1beta1.MsgUpdateParamsResponse")]
 pub struct MsgUpdateParamsResponse {}
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -286,7 +286,7 @@ pub struct MsgCreateNamespace {
     pub namespace: ::core::option::Option<Namespace>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.permissions.v1beta1.MsgCreateNamespaceResponse")]
 pub struct MsgCreateNamespaceResponse {}
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -299,7 +299,7 @@ pub struct MsgDeleteNamespace {
     pub namespace_denom: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.permissions.v1beta1.MsgDeleteNamespaceResponse")]
 pub struct MsgDeleteNamespaceResponse {}
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -332,21 +332,21 @@ pub mod msg_update_namespace {
         pub new_value: ::prost::alloc::string::String,
     }
     #[allow(clippy::derive_partial_eq_without_eq)]
-    #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+    #[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
     #[proto_message(type_url = "/injective.permissions.v1beta1.MsgUpdateNamespace.MsgSetMintsPaused")]
     pub struct MsgSetMintsPaused {
         #[prost(bool, tag = "1")]
         pub new_value: bool,
     }
     #[allow(clippy::derive_partial_eq_without_eq)]
-    #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+    #[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
     #[proto_message(type_url = "/injective.permissions.v1beta1.MsgUpdateNamespace.MsgSetSendsPaused")]
     pub struct MsgSetSendsPaused {
         #[prost(bool, tag = "1")]
         pub new_value: bool,
     }
     #[allow(clippy::derive_partial_eq_without_eq)]
-    #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+    #[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
     #[proto_message(type_url = "/injective.permissions.v1beta1.MsgUpdateNamespace.MsgSetBurnsPaused")]
     pub struct MsgSetBurnsPaused {
         #[prost(bool, tag = "1")]
@@ -354,7 +354,7 @@ pub mod msg_update_namespace {
     }
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.permissions.v1beta1.MsgUpdateNamespaceResponse")]
 pub struct MsgUpdateNamespaceResponse {}
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -374,7 +374,7 @@ pub struct MsgUpdateNamespaceRoles {
     pub address_roles: ::prost::alloc::vec::Vec<AddressRoles>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.permissions.v1beta1.MsgUpdateNamespaceRolesResponse")]
 pub struct MsgUpdateNamespaceRolesResponse {}
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -391,7 +391,7 @@ pub struct MsgRevokeNamespaceRoles {
     pub address_roles_to_revoke: ::prost::alloc::vec::Vec<AddressRoles>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.permissions.v1beta1.MsgRevokeNamespaceRolesResponse")]
 pub struct MsgRevokeNamespaceRolesResponse {}
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -404,7 +404,7 @@ pub struct MsgClaimVoucher {
     pub denom: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.permissions.v1beta1.MsgClaimVoucherResponse")]
 pub struct MsgClaimVoucherResponse {}
 pub struct PermissionsQuerier<'a, Q: cosmwasm_std::CustomQuery> {

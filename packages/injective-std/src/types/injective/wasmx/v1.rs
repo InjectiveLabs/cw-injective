@@ -287,7 +287,7 @@ pub struct GenesisState {
 /// QueryWasmxParamsRequest is the request type for the Query/WasmxParams RPC
 /// method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.wasmx.v1.QueryWasmxParamsRequest")]
 #[proto_query(
     path = "/injective.wasmx.v1.Query/WasmxParams",
@@ -306,7 +306,7 @@ pub struct QueryWasmxParamsResponse {
 /// QueryModuleStateRequest is the request type for the Query/WasmxModuleState
 /// RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.wasmx.v1.QueryModuleStateRequest")]
 #[proto_query(
     path = "/injective.wasmx.v1.Query/WasmxModuleState",
@@ -397,7 +397,7 @@ pub struct MsgUpdateContract {
     pub admin_address: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.wasmx.v1.MsgUpdateContractResponse")]
 pub struct MsgUpdateContractResponse {}
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -411,7 +411,7 @@ pub struct MsgActivateContract {
     pub contract_address: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.wasmx.v1.MsgActivateContractResponse")]
 pub struct MsgActivateContractResponse {}
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -425,7 +425,7 @@ pub struct MsgDeactivateContract {
     pub contract_address: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.wasmx.v1.MsgDeactivateContractResponse")]
 pub struct MsgDeactivateContractResponse {}
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -442,7 +442,7 @@ pub struct MsgUpdateParams {
     pub params: ::core::option::Option<Params>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.wasmx.v1.MsgUpdateParamsResponse")]
 pub struct MsgUpdateParamsResponse {}
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -455,7 +455,7 @@ pub struct MsgRegisterContract {
     pub contract_registration_request: ::core::option::Option<ContractRegistrationRequest>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.wasmx.v1.MsgRegisterContractResponse")]
 pub struct MsgRegisterContractResponse {}
 pub struct WasmxQuerier<'a, Q: cosmwasm_std::CustomQuery> {
