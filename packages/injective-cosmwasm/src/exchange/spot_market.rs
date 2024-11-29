@@ -3,6 +3,7 @@ use cosmwasm_std::StdResult;
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+// use tiny_keccak::{Hasher, Keccak};
 use tiny_keccak::Keccak;
 
 use super::market::{GenericMarket, MarketStatus};
@@ -60,6 +61,7 @@ impl GenericMarket for SpotMarket {
 
 pub fn calculate_spot_market_id(base_denom: String, quote_denom: String) -> StdResult<MarketId> {
     let mut hasher = Keccak::new_keccak256();
+    // let mut hasher = Keccak::v256();
     hasher.update((base_denom + &quote_denom).as_bytes());
     let mut res = [0u8; 32];
     hasher.finalize(&mut res);

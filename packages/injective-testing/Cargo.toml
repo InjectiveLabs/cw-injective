@@ -18,6 +18,7 @@ injective-std       = { path = "../injective-std" }
 injective-test-tube = { workspace = true }
 prost               = { workspace = true }
 rand                = { workspace = true }
+regex               = { workspace = true }
 secp256k1           = { workspace = true }
 serde               = { workspace = true }
 tiny-keccak         = { workspace = true }

@@ -32,20 +32,24 @@ proc-macro2          = { version = "1.0.40" }
 prost                = { version = "0.12.6" }
 prost-types          = { version = "0.12.6", default-features = false }
 quote                = { version = "1.0.20" }
-rand                 = { version = "0.4.6" }
-schemars             = { version = "0.8.16" }
-secp256k1            = { version = "0.6.2" }
-serde                = { version = "1.0.196", default-features = false, features = [ "derive" ] }
-serde-cw-value       = { version = "0.7.0" }
-serde-json-wasm      = { version = "1.0.0" }
-serde_json           = { version = "1.0.111" }
-serde_repr           = { version = "0.1.17" }
-serde_test           = { version = "1.0.176" }
-subtle-encoding      = { version = "0.5.1", features = [ "bech32-preview" ] }
-syn                  = { version = "1.0.98" }
-thiserror            = { version = "1.0.56" }
-tiny-keccak          = { version = "1.2.1" }
-trybuild             = { version = "1.0.63", features = [ "diff" ] }
+# rand                 = { version = "0.8.5" }
+rand     = { version = "0.4.6" }
+regex    = { version = "1.11.1" }
+schemars = { version = "0.8.16" }
+# secp256k1       = { version = "0.29.0", default-features = false, features = [ "alloc", "hashes" ] }
+secp256k1       = { version = "0.7.1" }
+serde           = { version = "1.0.196", default-features = false, features = [ "derive" ] }
+serde-cw-value  = { version = "0.7.0" }
+serde-json-wasm = { version = "1.0.0" }
+serde_json      = { version = "1.0.111" }
+serde_repr      = { version = "0.1.17" }
+serde_test      = { version = "1.0.176" }
+subtle-encoding = { version = "0.5.1", features = [ "bech32-preview" ] }
+syn             = { version = "1.0.98" }
+thiserror       = { version = "1.0.56" }
+tiny-keccak     = { version = "1.2.1" }
+# tiny-keccak     = { version = "2.0.2", features = [ "keccak" ] }
+trybuild = { version = "1.0.63", features = [ "diff" ] }
 
 [profile.release]
 codegen-units    = 1

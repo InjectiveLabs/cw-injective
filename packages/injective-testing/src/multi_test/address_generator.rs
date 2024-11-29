@@ -2,7 +2,9 @@ use cosmwasm_std::{Addr, Storage};
 use cw_multi_test::AddressGenerator;
 use injective_cosmwasm::addr_to_bech32;
 use rand::OsRng;
+// use rand::rngs::OsRng;
 use secp256k1::Secp256k1;
+// use secp256k1::{rand, Secp256k1, SecretKey};
 use std::fmt::Write;
 use std::u8;
 
@@ -71,12 +73,15 @@ impl AddressGenerator for StorageAwareInjectiveAddressGenerator {
 }
 
 pub fn generate_inj_address() -> Addr {
-    let secp256k1 = Secp256k1::new();
+    let secp = Secp256k1::new();
+    // let mut rng = rand::thread_rng();
     let mut rng = OsRng::new().expect("failed to create new random number generator");
-    let (_, public_key) = secp256k1.generate_keypair(&mut rng).expect("failed to generate key pair");
+    let (_, pubkey) = secp.generate_keypair(&mut rng).unwrap();
+    // let (_, public_key) = secp256k1.generate_keypair(&mut rng).expect("failed to generate key pair");
 
-    let public_key_array = &public_key.serialize_vec(&secp256k1, false)[1..];
+    let public_key_array = &pubkey.serialize_vec(&secp, false)[1..];
     let keccak = tiny_keccak::keccak256(public_key_array);
+    // let keccak = tiny_keccak::keccakf(public_key_array);
     let address_short = to_hex_string(&keccak[ADDRESS_BYTE_INDEX..], 40); // get rid of the constant 0x04 byte
     let full_address = format!("0x{address_short}");
     let inj_address = addr_to_bech32(full_address);
@@ -92,4 +97,33 @@ fn to_hex_string(slice: &[u8], expected_string_size: usize) -> String {
     }
 
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use regex::Regex;
+
+    #[test]
+    fn test_generate_inj_address() {
+        // Generate an Injective address
+        let generated_address = generate_inj_address();
+
+        // Ensure the generated address is not empty
+        assert!(!generated_address.to_string().is_empty(), "Generated address should not be empty");
+
+        // Ensure the generated address starts with the Injective prefix (e.g., "inj")
+        assert!(generated_address.as_str().starts_with("inj"), "Generated address should start with 'inj'");
+
+        // Ensure the address matches a valid bech32 format
+        let bech32_regex = Regex::new(r"^inj[1-9a-z]{38}$").unwrap();
+        assert!(
+            bech32_regex.is_match(generated_address.as_str()),
+            "Generated address does not match valid bech32 format"
+        );
+
+        // Ensure each generated address is unique (you can extend this for more iterations)
+        let another_generated_address = generate_inj_address();
+        assert_ne!(generated_address, another_generated_address, "Generated addresses should be unique");
+    }
 }
