@@ -76,34 +76,16 @@ pub fn generate_inj_address() -> Addr {
 
     let public_key = PublicKey::from_secret_key(&secp256k1, &secret_key);
 
-    // let mut rng = OsRng::new().expect("failed to create new random number generator");
-    // let (_, public_key) = secp256k1.generate_keypair(&mut rng).expect("failed to generate key pair");
-
-    // println!("public key: {:?}", public_key);
-
     let public_key_array = &public_key.serialize()[1..];
-    // let public_key_array = &public_key.serialize_vec(&secp256k1, true)[1..];
-
-    // let public_key_array = &public_key_array[1..];
-
-    println!("public key array: {:?}", public_key_array);
 
     let keccak = tiny_keccak::keccak256(public_key_array);
 
-    println!("keccak: {:?}", keccak);
-
     let address_short = to_hex_string(&keccak[ADDRESS_BYTE_INDEX..], 40); // get rid of the constant 0x04 byte
-    println!("address_short: {:?}", address_short);
     let full_address = format!("0x{address_short}");
-
-    println!("full_address: {:?}", full_address);
 
     let inj_address = addr_to_bech32(full_address);
 
-    println!("inj_address: {:?}", inj_address);
-
     Addr::unchecked(inj_address)
-    // Addr::unchecked("inj123")
 }
 
 fn to_hex_string(slice: &[u8], expected_string_size: usize) -> String {
