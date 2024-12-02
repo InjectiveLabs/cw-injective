@@ -212,7 +212,7 @@ dependencies = [
  "cw2",
  "injective-cosmwasm 0.3.1",
  "injective-math 0.3.0",
- "injective-std 1.13.2-auction",
+ "injective-std 1.13.2",
  "prost 0.12.6",
  "schemars",
  "serde",
@@ -970,7 +970,7 @@ dependencies = [
  "cw-storage-plus",
  "cw2",
  "injective-cosmwasm 0.3.1",
- "injective-std 1.13.2-auction",
+ "injective-std 1.13.2",
  "schemars",
  "serde",
  "thiserror",
@@ -1634,7 +1634,7 @@ dependencies = [
  "cw2",
  "injective-cosmwasm 0.3.1",
  "injective-math 0.3.0",
- "injective-std 1.13.2-auction",
+ "injective-std 1.13.2",
  "injective-test-tube",
  "injective-testing",
  "prost 0.12.6",
@@ -1655,7 +1655,7 @@ dependencies = [
  "cw2",
  "injective-cosmwasm 0.3.1",
  "injective-math 0.3.0",
- "injective-std 1.13.2-auction",
+ "injective-std 1.13.2",
  "injective-test-tube",
  "injective-testing",
  "prost 0.12.6",
@@ -1710,7 +1710,7 @@ dependencies = [
 
 [[package]]
 name = "injective-std"
-version = "1.13.2-auction"
+version = "1.13.2"
 dependencies = [
  "chrono",
  "cosmwasm-std 2.1.4",
@@ -1779,7 +1779,7 @@ dependencies = [
  "cw-multi-test",
  "injective-cosmwasm 0.3.1",
  "injective-math 0.3.0",
- "injective-std 1.13.2-auction",
+ "injective-std 1.13.2",
  "injective-test-tube",
  "prost 0.12.6",
  "rand 0.4.6",
