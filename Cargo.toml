@@ -22,7 +22,7 @@ ethereum-types       = { version = "0.5.2" }
 hex                  = { version = "0.4.3", features = [ "serde" ] }
 injective-cosmwasm   = { version = "0.3.0", path = "./packages/injective-cosmwasm" }
 injective-math       = { version = "0.3.0", path = "./packages/injective-math" }
-injective-std        = { version = "1.13.2-auction", path = "./packages/injective-std" }
+injective-std        = { version = "=1.13.2-auction", path = "./packages/injective-std" }
 injective-std-derive = { version = "1.13.0", path = "./packages/injective-std-derive" }
 injective-test-tube  = { version = "1.13.2" }
 injective-testing    = { version = "1.1.0", path = "./packages/injective-testing" }
@@ -35,7 +35,7 @@ quote                = { version = "1.0.20" }
 rand                 = { version = "0.4.6" }
 regex                = { version = "1.11.1" }
 schemars             = { version = "0.8.16" }
-secp256k1            = { version = "0.30.0" }
+secp256k1            = { version = "0.30.0", features = [ "rand" ] }
 serde                = { version = "1.0.196", default-features = false, features = [ "derive" ] }
 serde-cw-value       = { version = "0.7.0" }
 serde-json-wasm      = { version = "1.0.0" }
