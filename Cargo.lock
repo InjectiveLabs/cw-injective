@@ -1786,6 +1786,7 @@ dependencies = [
  "regex",
  "secp256k1",
  "serde",
+ "test-tube-inj",
  "tiny-keccak",
 ]
 

@@ -21,4 +21,5 @@ rand                = { workspace = true }
 regex               = { workspace = true }
 secp256k1           = { workspace = true }
 serde               = { workspace = true }
+test-tube-inj       = { workspace = true }
 tiny-keccak         = { workspace = true }
