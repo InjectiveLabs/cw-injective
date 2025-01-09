@@ -29,8 +29,8 @@ injective-testing    = { version = "1.1.0", path = "./packages/injective-testing
 itertools            = { version = "0.10.3" }
 primitive-types      = { version = "0.12.2", default-features = false }
 proc-macro2          = { version = "1.0.40" }
-prost                = { version = "0.12.6" }
-prost-types          = { version = "0.12.6", default-features = false }
+prost                = { version = "0.13.4" }
+prost-types          = { version = "0.13.4", default-features = false }
 quote                = { version = "1.0.20" }
 rand                 = { version = "0.4.6" }
 schemars             = { version = "0.8.16" }
