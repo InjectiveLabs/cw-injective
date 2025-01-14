@@ -3,7 +3,7 @@ description = "Procedural macro for injective-std"
 edition     = "2021"
 license     = "MIT OR Apache-2.0"
 name        = "injective-std-derive"
-version     = "1.13.0"
+version     = "1.13.3"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

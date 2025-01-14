@@ -16,7 +16,7 @@ injective-cosmwasm  = { workspace = true, path = "../injective-cosmwasm" }
 injective-math      = { workspace = true, path = "../injective-math" }
 injective-std       = { workspace = true, path = "../injective-std" }
 injective-test-tube = { workspace = true }
-prost               = { workspace = true }
+prost               = { workspace = true, features = [ "prost-derive" ] }
 rand                = { workspace = true }
 regex               = { workspace = true }
 secp256k1           = { workspace = true }
