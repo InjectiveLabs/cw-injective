@@ -216,7 +216,7 @@ dependencies = [
  "cw2",
  "injective-cosmwasm 0.3.1",
  "injective-math 0.3.0",
- "injective-std 1.13.2-auction",
+ "injective-std 1.13.4",
  "prost 0.12.6",
  "schemars",
  "serde 1.0.210",
@@ -958,7 +958,7 @@ dependencies = [
  "cw-storage-plus",
  "cw2",
  "injective-cosmwasm 0.3.1",
- "injective-std 1.13.2-auction",
+ "injective-std 1.13.4",
  "schemars",
  "serde 1.0.210",
  "thiserror",
@@ -1619,7 +1619,7 @@ dependencies = [
  "cw2",
  "injective-cosmwasm 0.3.1",
  "injective-math 0.3.0",
- "injective-std 1.13.2-auction",
+ "injective-std 1.13.4",
  "injective-test-tube",
  "injective-testing",
  "prost 0.12.6",
@@ -1640,7 +1640,7 @@ dependencies = [
  "cw2",
  "injective-cosmwasm 0.3.1",
  "injective-math 0.3.0",
- "injective-std 1.13.2-auction",
+ "injective-std 1.13.4",
  "injective-test-tube",
  "injective-testing",
  "prost 0.12.6",
@@ -1685,20 +1685,6 @@ checksum = "c0e5193cb9520754f60b9e9af08a662ddf298d2e1a579200b9a447064b64db8b"
 dependencies = [
  "chrono",
  "cosmwasm-std 2.1.4",
- "injective-std-derive 1.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "prost 0.12.6",
- "prost-types 0.12.6",
- "schemars",
- "serde 1.0.210",
- "serde-cw-value",
-]
-
-[[package]]
-name = "injective-std"
-version = "1.13.2-auction"
-dependencies = [
- "chrono",
- "cosmwasm-std 2.1.4",
  "injective-std-derive 1.13.0",
  "prost 0.12.6",
  "prost-types 0.12.6",
@@ -1708,17 +1694,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "injective-std-derive"
-version = "1.13.0"
+name = "injective-std"
+version = "1.13.4"
 dependencies = [
+ "chrono",
  "cosmwasm-std 2.1.4",
- "itertools 0.10.5",
- "proc-macro2",
+ "injective-std-derive 1.13.4",
  "prost 0.12.6",
- "quote",
+ "prost-types 0.12.6",
+ "schemars",
  "serde 1.0.210",
- "syn 1.0.109",
- "trybuild",
+ "serde-cw-value",
 ]
 
 [[package]]
@@ -1732,6 +1718,20 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "injective-std-derive"
+version = "1.13.4"
+dependencies = [
+ "cosmwasm-std 2.1.4",
+ "itertools 0.10.5",
+ "proc-macro2",
+ "prost 0.12.6",
+ "quote",
+ "serde 1.0.210",
+ "syn 1.0.109",
+ "trybuild",
 ]
 
 [[package]]
@@ -1764,7 +1764,7 @@ dependencies = [
  "cw-multi-test",
  "injective-cosmwasm 0.3.1",
  "injective-math 0.3.0",
- "injective-std 1.13.2-auction",
+ "injective-std 1.13.4",
  "injective-test-tube",
  "prost 0.12.6",
  "rand 0.4.6",
