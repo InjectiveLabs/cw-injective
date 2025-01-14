@@ -12,7 +12,7 @@ base64               = { version = "0.21.5" }
 chrono               = { version = "0.4.27", default-features = false }
 cosmos-sdk-proto     = { version = "0.20.0", default-features = false }
 cosmwasm-schema      = { version = "1.5.0" }
-cosmwasm-std         = { version = "2.1.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
+cosmwasm-std         = { version = "2.2.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
 cosmwasm-storage     = { version = "1.5.2", features = [ "iterator" ] }
 cw-multi-test        = { version = "2.1.0" }
 cw-storage-plus      = { version = "2.0.0" }
@@ -22,15 +22,15 @@ ethereum-types       = { version = "0.5.2" }
 hex                  = { version = "0.4.3", features = [ "serde" ] }
 injective-cosmwasm   = { version = "0.3.0", path = "./packages/injective-cosmwasm" }
 injective-math       = { version = "0.3.0", path = "./packages/injective-math" }
-injective-std        = { version = "1.13.2", path = "./packages/injective-std" }
+injective-std        = { version = "1.13.3", path = "./packages/injective-std" }
 injective-std-derive = { version = "1.13.0", path = "./packages/injective-std-derive" }
 injective-test-tube  = { version = "1.13.2" }
 injective-testing    = { version = "1.1.0", path = "./packages/injective-testing" }
 itertools            = { version = "0.10.3" }
 primitive-types      = { version = "0.12.2", default-features = false }
 proc-macro2          = { version = "1.0.40" }
-prost                = { version = "0.12.6" }
-prost-types          = { version = "0.12.6", default-features = false }
+prost                = { version = "0.13.4", features = [ "prost-derive" ] }
+prost-types          = { version = "0.13.4", default-features = false }
 quote                = { version = "1.0.20" }
 rand                 = { version = "0.4.6" }
 regex                = { version = "1.11.1" }

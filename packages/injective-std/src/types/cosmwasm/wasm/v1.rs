@@ -1,7 +1,8 @@
-use injective_std_derive::CosmwasmExt;
+use osmosis_std_derive::CosmwasmExt;
 /// AccessTypeParam
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.AccessTypeParamAccessTypeParam")]
 pub struct AccessTypeParam {
     #[prost(enumeration = "AccessType", tag = "1")]
@@ -13,7 +14,8 @@ pub struct AccessTypeParam {
 }
 /// AccessConfig access control type.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.AccessConfigAccessConfig")]
 pub struct AccessConfig {
     #[prost(enumeration = "AccessType", tag = "1")]
@@ -27,7 +29,8 @@ pub struct AccessConfig {
 }
 /// Params defines the set of wasm parameters.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.ParamsParams")]
 pub struct Params {
     #[prost(message, optional, tag = "1")]
@@ -41,7 +44,8 @@ pub struct Params {
 }
 /// CodeInfo is data for the uploaded contract WASM code
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.CodeInfoCodeInfo")]
 pub struct CodeInfo {
     /// CodeHash is the unique identifier created by wasmvm
@@ -56,7 +60,8 @@ pub struct CodeInfo {
 }
 /// ContractInfo stores a WASM contract instance
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.ContractInfoContractInfo")]
 pub struct ContractInfo {
     /// CodeID is the reference to the stored Wasm code
@@ -89,8 +94,11 @@ pub struct ContractInfo {
 }
 /// ContractCodeHistoryEntry metadata to a contract.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.ContractCodeHistoryEntryContractCodeHistoryEntry")]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(
+    type_url = "/cosmwasm.wasm.v1.ContractCodeHistoryEntryContractCodeHistoryEntry"
+)]
 pub struct ContractCodeHistoryEntry {
     #[prost(enumeration = "ContractCodeHistoryOperationType", tag = "1")]
     #[serde(
@@ -115,7 +123,8 @@ pub struct ContractCodeHistoryEntry {
 /// AbsoluteTxPosition is a unique transaction position that allows for global
 /// ordering of transactions.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.AbsoluteTxPositionAbsoluteTxPosition")]
 pub struct AbsoluteTxPosition {
     /// BlockHeight is the block the contract was created at
@@ -136,7 +145,8 @@ pub struct AbsoluteTxPosition {
 }
 /// Model is a struct that holds a KV pair
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.ModelModel")]
 pub struct Model {
     /// hex-encode key to read it better (this is often ascii)
@@ -145,6 +155,86 @@ pub struct Model {
     /// base64-encode raw value
     #[prost(bytes = "vec", tag = "2")]
     pub value: ::prost::alloc::vec::Vec<u8>,
+}
+/// EventCodeStored is emitted when contract code is checked and stored
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/cosmwasm.wasm.v1.EventCodeStored")]
+pub struct EventCodeStored {
+    /// CodeID is the reference to the stored Wasm code
+    #[prost(uint64, tag = "1")]
+    #[serde(alias = "codeID")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub code_id: u64,
+    /// Creator address who initially stored the code
+    #[prost(string, tag = "2")]
+    pub creator: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "3")]
+    pub access_config: ::core::option::Option<AccessConfig>,
+    #[prost(bytes = "vec", tag = "4")]
+    pub checksum: ::prost::alloc::vec::Vec<u8>,
+}
+/// EventContractInstantiated is emitted when contract is instantiated
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/cosmwasm.wasm.v1.EventContractInstantiated")]
+pub struct EventContractInstantiated {
+    #[prost(string, tag = "1")]
+    pub contract_address: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub admin: ::prost::alloc::string::String,
+    #[prost(uint64, tag = "3")]
+    #[serde(alias = "codeID")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub code_id: u64,
+    /// Funds coins that are transferred to the contract on instantiation
+    #[prost(message, repeated, tag = "4")]
+    pub funds: ::prost::alloc::vec::Vec<
+        super::super::super::cosmos::base::v1beta1::Coin,
+    >,
+    #[prost(bytes = "vec", tag = "5")]
+    pub msg: ::prost::alloc::vec::Vec<u8>,
+    #[prost(string, tag = "6")]
+    pub label: ::prost::alloc::string::String,
+    #[prost(string, tag = "7")]
+    pub creator: ::prost::alloc::string::String,
+}
+/// EventContractMigrated is emitted when a contract get migrated to another code
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/cosmwasm.wasm.v1.EventContractMigrated")]
+pub struct EventContractMigrated {
+    #[prost(uint64, tag = "1")]
+    #[serde(alias = "codeID")]
+    #[serde(
+        serialize_with = "crate::serde::as_str::serialize",
+        deserialize_with = "crate::serde::as_str::deserialize"
+    )]
+    pub code_id: u64,
+    #[prost(string, tag = "2")]
+    pub contract_address: ::prost::alloc::string::String,
+    #[prost(bytes = "vec", tag = "3")]
+    pub msg: ::prost::alloc::vec::Vec<u8>,
+}
+/// EventContractAdminSet is emitted when new admin is set
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/cosmwasm.wasm.v1.EventContractAdminSet")]
+pub struct EventContractAdminSet {
+    #[prost(string, tag = "1")]
+    pub contract_address: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub new_admin: ::prost::alloc::string::String,
 }
 /// AccessType permission types
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
@@ -205,10 +295,18 @@ impl ContractCodeHistoryOperationType {
     /// (if the ProtoBuf definition does not change) and safe for programmatic use.
     pub fn as_str_name(&self) -> &'static str {
         match self {
-            ContractCodeHistoryOperationType::Unspecified => "CONTRACT_CODE_HISTORY_OPERATION_TYPE_UNSPECIFIED",
-            ContractCodeHistoryOperationType::Init => "CONTRACT_CODE_HISTORY_OPERATION_TYPE_INIT",
-            ContractCodeHistoryOperationType::Migrate => "CONTRACT_CODE_HISTORY_OPERATION_TYPE_MIGRATE",
-            ContractCodeHistoryOperationType::Genesis => "CONTRACT_CODE_HISTORY_OPERATION_TYPE_GENESIS",
+            ContractCodeHistoryOperationType::Unspecified => {
+                "CONTRACT_CODE_HISTORY_OPERATION_TYPE_UNSPECIFIED"
+            }
+            ContractCodeHistoryOperationType::Init => {
+                "CONTRACT_CODE_HISTORY_OPERATION_TYPE_INIT"
+            }
+            ContractCodeHistoryOperationType::Migrate => {
+                "CONTRACT_CODE_HISTORY_OPERATION_TYPE_MIGRATE"
+            }
+            ContractCodeHistoryOperationType::Genesis => {
+                "CONTRACT_CODE_HISTORY_OPERATION_TYPE_GENESIS"
+            }
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
@@ -225,7 +323,8 @@ impl ContractCodeHistoryOperationType {
 /// StoreCodeAuthorization defines authorization for wasm code upload.
 /// Since: wasmd 0.42
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.StoreCodeAuthorization")]
 pub struct StoreCodeAuthorization {
     /// Grants for code upload
@@ -235,7 +334,8 @@ pub struct StoreCodeAuthorization {
 /// ContractExecutionAuthorization defines authorization for wasm execute.
 /// Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.ContractExecutionAuthorization")]
 pub struct ContractExecutionAuthorization {
     /// Grants for contract executions
@@ -245,7 +345,8 @@ pub struct ContractExecutionAuthorization {
 /// ContractMigrationAuthorization defines authorization for wasm contract
 /// migration. Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.ContractMigrationAuthorization")]
 pub struct ContractMigrationAuthorization {
     /// Grants for contract migrations
@@ -254,7 +355,8 @@ pub struct ContractMigrationAuthorization {
 }
 /// CodeGrant a granted permission for a single code
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.CodeGrant")]
 pub struct CodeGrant {
     /// CodeHash is the unique identifier created by wasmvm
@@ -270,7 +372,8 @@ pub struct CodeGrant {
 /// ContractGrant a granted permission for a single contract
 /// Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.ContractGrant")]
 pub struct ContractGrant {
     /// Contract is the bech32 address of the smart contract
@@ -289,7 +392,8 @@ pub struct ContractGrant {
 /// MaxCallsLimit limited number of calls to the contract. No funds transferable.
 /// Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MaxCallsLimit")]
 pub struct MaxCallsLimit {
     /// Remaining number that is decremented on each execution
@@ -303,18 +407,22 @@ pub struct MaxCallsLimit {
 /// MaxFundsLimit defines the maximal amounts that can be sent to the contract.
 /// Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MaxFundsLimit")]
 pub struct MaxFundsLimit {
     /// Amounts is the maximal amount of tokens transferable to the contract.
     #[prost(message, repeated, tag = "1")]
-    pub amounts: ::prost::alloc::vec::Vec<super::super::super::cosmos::base::v1beta1::Coin>,
+    pub amounts: ::prost::alloc::vec::Vec<
+        super::super::super::cosmos::base::v1beta1::Coin,
+    >,
 }
 /// CombinedLimit defines the maximal amounts that can be sent to a contract and
 /// the maximal number of calls executable. Both need to remain >0 to be valid.
 /// Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.CombinedLimit")]
 pub struct CombinedLimit {
     /// Remaining number that is decremented on each execution
@@ -326,20 +434,24 @@ pub struct CombinedLimit {
     pub calls_remaining: u64,
     /// Amounts is the maximal amount of tokens transferable to the contract.
     #[prost(message, repeated, tag = "2")]
-    pub amounts: ::prost::alloc::vec::Vec<super::super::super::cosmos::base::v1beta1::Coin>,
+    pub amounts: ::prost::alloc::vec::Vec<
+        super::super::super::cosmos::base::v1beta1::Coin,
+    >,
 }
 /// AllowAllMessagesFilter is a wildcard to allow any type of contract payload
 /// message.
 /// Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.AllowAllMessagesFilter")]
 pub struct AllowAllMessagesFilter {}
 /// AcceptedMessageKeysFilter accept only the specific contract message keys in
 /// the json object to be executed.
 /// Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.AcceptedMessageKeysFilter")]
 pub struct AcceptedMessageKeysFilter {
     /// Messages is the list of unique keys
@@ -350,7 +462,8 @@ pub struct AcceptedMessageKeysFilter {
 /// executed.
 /// Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.AcceptedMessagesFilter")]
 pub struct AcceptedMessagesFilter {
     /// Messages is the list of raw contract messages
@@ -359,7 +472,8 @@ pub struct AcceptedMessagesFilter {
 }
 /// GenesisState - genesis state of x/wasm
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.GenesisState")]
 pub struct GenesisState {
     #[prost(message, optional, tag = "1")]
@@ -373,7 +487,8 @@ pub struct GenesisState {
 }
 /// Code struct encompasses CodeInfo and CodeBytes
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.Code")]
 pub struct Code {
     #[prost(uint64, tag = "1")]
@@ -393,7 +508,8 @@ pub struct Code {
 }
 /// Contract struct encompasses ContractAddress, ContractInfo, and ContractState
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.Contract")]
 pub struct Contract {
     #[prost(string, tag = "1")]
@@ -407,7 +523,8 @@ pub struct Contract {
 }
 /// Sequence key and value of an id generation counter
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.Sequence")]
 pub struct Sequence {
     #[prost(bytes = "vec", tag = "1")]
@@ -421,7 +538,8 @@ pub struct Sequence {
 }
 /// MsgIBCSend
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgIBCSend")]
 pub struct MsgIbcSend {
     /// the channel by which the packet will be sent
@@ -450,7 +568,8 @@ pub struct MsgIbcSend {
 }
 /// MsgIBCSendResponse
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgIBCSendResponse")]
 pub struct MsgIbcSendResponse {
     /// Sequence number of the IBC packet sent
@@ -461,9 +580,16 @@ pub struct MsgIbcSendResponse {
     )]
     pub sequence: u64,
 }
+/// MsgIBCWriteAcknowledgementResponse
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/cosmwasm.wasm.v1.MsgIBCWriteAcknowledgementResponse")]
+pub struct MsgIbcWriteAcknowledgementResponse {}
 /// MsgIBCCloseChannel port and channel need to be owned by the contract
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgIBCCloseChannel")]
 pub struct MsgIbcCloseChannel {
     #[prost(string, tag = "2")]
@@ -474,7 +600,8 @@ pub struct MsgIbcCloseChannel {
 /// a simple MsgStoreCode can be invoked from the x/gov module via
 /// a v1 governance proposal.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.StoreCodeProposalStoreCodeProposal")]
 #[deprecated]
 pub struct StoreCodeProposal {
@@ -513,8 +640,11 @@ pub struct StoreCodeProposal {
 /// a simple MsgInstantiateContract can be invoked from the x/gov module via
 /// a v1 governance proposal.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.InstantiateContractProposalInstantiateContractProposal")]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(
+    type_url = "/cosmwasm.wasm.v1.InstantiateContractProposalInstantiateContractProposal"
+)]
 #[deprecated]
 pub struct InstantiateContractProposal {
     /// Title is a short summary
@@ -545,15 +675,20 @@ pub struct InstantiateContractProposal {
     pub msg: ::prost::alloc::vec::Vec<u8>,
     /// Funds coins that are transferred to the contract on instantiation
     #[prost(message, repeated, tag = "8")]
-    pub funds: ::prost::alloc::vec::Vec<super::super::super::cosmos::base::v1beta1::Coin>,
+    pub funds: ::prost::alloc::vec::Vec<
+        super::super::super::cosmos::base::v1beta1::Coin,
+    >,
 }
 /// Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
 /// an explicit InstantiateContract2Proposal. To instantiate contract 2,
 /// a simple MsgInstantiateContract2 can be invoked from the x/gov module via
 /// a v1 governance proposal.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.InstantiateContract2ProposalInstantiateContract2Proposal")]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(
+    type_url = "/cosmwasm.wasm.v1.InstantiateContract2ProposalInstantiateContract2Proposal"
+)]
 #[deprecated]
 pub struct InstantiateContract2Proposal {
     /// Title is a short summary
@@ -584,7 +719,9 @@ pub struct InstantiateContract2Proposal {
     pub msg: ::prost::alloc::vec::Vec<u8>,
     /// Funds coins that are transferred to the contract on instantiation
     #[prost(message, repeated, tag = "8")]
-    pub funds: ::prost::alloc::vec::Vec<super::super::super::cosmos::base::v1beta1::Coin>,
+    pub funds: ::prost::alloc::vec::Vec<
+        super::super::super::cosmos::base::v1beta1::Coin,
+    >,
     /// Salt is an arbitrary value provided by the sender. Size can be 1 to 64.
     #[prost(bytes = "vec", tag = "9")]
     pub salt: ::prost::alloc::vec::Vec<u8>,
@@ -598,8 +735,11 @@ pub struct InstantiateContract2Proposal {
 /// a simple MsgMigrateContract can be invoked from the x/gov module via
 /// a v1 governance proposal.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.MigrateContractProposalMigrateContractProposal")]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(
+    type_url = "/cosmwasm.wasm.v1.MigrateContractProposalMigrateContractProposal"
+)]
 #[deprecated]
 pub struct MigrateContractProposal {
     /// Title is a short summary
@@ -630,7 +770,8 @@ pub struct MigrateContractProposal {
 /// a simple MsgSudoContract can be invoked from the x/gov module via
 /// a v1 governance proposal.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.SudoContractProposalSudoContractProposal")]
 #[deprecated]
 pub struct SudoContractProposal {
@@ -652,8 +793,11 @@ pub struct SudoContractProposal {
 /// a simple MsgExecuteContract can be invoked from the x/gov module via
 /// a v1 governance proposal.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.ExecuteContractProposalExecuteContractProposal")]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(
+    type_url = "/cosmwasm.wasm.v1.ExecuteContractProposalExecuteContractProposal"
+)]
 #[deprecated]
 pub struct ExecuteContractProposal {
     /// Title is a short summary
@@ -673,14 +817,17 @@ pub struct ExecuteContractProposal {
     pub msg: ::prost::alloc::vec::Vec<u8>,
     /// Funds coins that are transferred to the contract on instantiation
     #[prost(message, repeated, tag = "6")]
-    pub funds: ::prost::alloc::vec::Vec<super::super::super::cosmos::base::v1beta1::Coin>,
+    pub funds: ::prost::alloc::vec::Vec<
+        super::super::super::cosmos::base::v1beta1::Coin,
+    >,
 }
 /// Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
 /// an explicit UpdateAdminProposal. To set an admin for a contract,
 /// a simple MsgUpdateAdmin can be invoked from the x/gov module via
 /// a v1 governance proposal.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.UpdateAdminProposalUpdateAdminProposal")]
 #[deprecated]
 pub struct UpdateAdminProposal {
@@ -702,7 +849,8 @@ pub struct UpdateAdminProposal {
 /// a simple MsgClearAdmin can be invoked from the x/gov module via
 /// a v1 governance proposal.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.ClearAdminProposalClearAdminProposal")]
 #[deprecated]
 pub struct ClearAdminProposal {
@@ -721,7 +869,8 @@ pub struct ClearAdminProposal {
 /// cache, a simple MsgPinCodes can be invoked from the x/gov module via
 /// a v1 governance proposal.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.PinCodesProposalPinCodesProposal")]
 #[deprecated]
 pub struct PinCodesProposal {
@@ -741,7 +890,8 @@ pub struct PinCodesProposal {
 /// cache, a simple MsgUnpinCodes can be invoked from the x/gov module via
 /// a v1 governance proposal.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.UnpinCodesProposalUnpinCodesProposal")]
 #[deprecated]
 pub struct UnpinCodesProposal {
@@ -759,7 +909,8 @@ pub struct UnpinCodesProposal {
 /// AccessConfigUpdate contains the code id and the access config to be
 /// applied.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.AccessConfigUpdateAccessConfigUpdate")]
 pub struct AccessConfigUpdate {
     /// CodeID is the reference to the stored WASM code to be updated
@@ -779,8 +930,11 @@ pub struct AccessConfigUpdate {
 /// to a set of code ids, a simple MsgUpdateInstantiateConfig can be invoked from
 /// the x/gov module via a v1 governance proposal.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.UpdateInstantiateConfigProposalUpdateInstantiateConfigProposal")]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(
+    type_url = "/cosmwasm.wasm.v1.UpdateInstantiateConfigProposalUpdateInstantiateConfigProposal"
+)]
 #[deprecated]
 pub struct UpdateInstantiateConfigProposal {
     /// Title is a short summary
@@ -799,8 +953,11 @@ pub struct UpdateInstantiateConfigProposal {
 /// the contract, a simple MsgStoreAndInstantiateContract can be invoked from
 /// the x/gov module via a v1 governance proposal.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.StoreAndInstantiateContractProposalStoreAndInstantiateContractProposal")]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(
+    type_url = "/cosmwasm.wasm.v1.StoreAndInstantiateContractProposalStoreAndInstantiateContractProposal"
+)]
 #[deprecated]
 pub struct StoreAndInstantiateContractProposal {
     /// Title is a short summary
@@ -832,7 +989,9 @@ pub struct StoreAndInstantiateContractProposal {
     pub msg: ::prost::alloc::vec::Vec<u8>,
     /// Funds coins that are transferred to the contract on instantiation
     #[prost(message, repeated, tag = "10")]
-    pub funds: ::prost::alloc::vec::Vec<super::super::super::cosmos::base::v1beta1::Coin>,
+    pub funds: ::prost::alloc::vec::Vec<
+        super::super::super::cosmos::base::v1beta1::Coin,
+    >,
     /// Source is the URL where the code is hosted
     #[prost(string, tag = "11")]
     pub source: ::prost::alloc::string::String,
@@ -848,7 +1007,8 @@ pub struct StoreAndInstantiateContractProposal {
 /// QueryContractInfoRequest is the request type for the Query/ContractInfo RPC
 /// method
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryContractInfoRequest")]
 #[proto_query(
     path = "/cosmwasm.wasm.v1.Query/ContractInfo",
@@ -862,7 +1022,8 @@ pub struct QueryContractInfoRequest {
 /// QueryContractInfoResponse is the response type for the Query/ContractInfo RPC
 /// method
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryContractInfoResponse")]
 pub struct QueryContractInfoResponse {
     /// address is the address of the contract
@@ -874,7 +1035,8 @@ pub struct QueryContractInfoResponse {
 /// QueryContractHistoryRequest is the request type for the Query/ContractHistory
 /// RPC method
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryContractHistoryRequest")]
 #[proto_query(
     path = "/cosmwasm.wasm.v1.Query/ContractHistory",
@@ -886,24 +1048,30 @@ pub struct QueryContractHistoryRequest {
     pub address: ::prost::alloc::string::String,
     /// pagination defines an optional pagination for the request.
     #[prost(message, optional, tag = "2")]
-    pub pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageRequest>,
+    pub pagination: ::core::option::Option<
+        super::super::super::cosmos::base::query::v1beta1::PageRequest,
+    >,
 }
 /// QueryContractHistoryResponse is the response type for the
 /// Query/ContractHistory RPC method
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryContractHistoryResponse")]
 pub struct QueryContractHistoryResponse {
     #[prost(message, repeated, tag = "1")]
     pub entries: ::prost::alloc::vec::Vec<ContractCodeHistoryEntry>,
     /// pagination defines the pagination in the response.
     #[prost(message, optional, tag = "2")]
-    pub pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageResponse>,
+    pub pagination: ::core::option::Option<
+        super::super::super::cosmos::base::query::v1beta1::PageResponse,
+    >,
 }
 /// QueryContractsByCodeRequest is the request type for the Query/ContractsByCode
 /// RPC method
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryContractsByCodeRequest")]
 #[proto_query(
     path = "/cosmwasm.wasm.v1.Query/ContractsByCode",
@@ -920,12 +1088,15 @@ pub struct QueryContractsByCodeRequest {
     pub code_id: u64,
     /// pagination defines an optional pagination for the request.
     #[prost(message, optional, tag = "2")]
-    pub pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageRequest>,
+    pub pagination: ::core::option::Option<
+        super::super::super::cosmos::base::query::v1beta1::PageRequest,
+    >,
 }
 /// QueryContractsByCodeResponse is the response type for the
 /// Query/ContractsByCode RPC method
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryContractsByCodeResponse")]
 pub struct QueryContractsByCodeResponse {
     /// contracts are a set of contract addresses
@@ -933,12 +1104,15 @@ pub struct QueryContractsByCodeResponse {
     pub contracts: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
     /// pagination defines the pagination in the response.
     #[prost(message, optional, tag = "2")]
-    pub pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageResponse>,
+    pub pagination: ::core::option::Option<
+        super::super::super::cosmos::base::query::v1beta1::PageResponse,
+    >,
 }
 /// QueryAllContractStateRequest is the request type for the
 /// Query/AllContractState RPC method
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryAllContractStateRequest")]
 #[proto_query(
     path = "/cosmwasm.wasm.v1.Query/AllContractState",
@@ -950,24 +1124,30 @@ pub struct QueryAllContractStateRequest {
     pub address: ::prost::alloc::string::String,
     /// pagination defines an optional pagination for the request.
     #[prost(message, optional, tag = "2")]
-    pub pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageRequest>,
+    pub pagination: ::core::option::Option<
+        super::super::super::cosmos::base::query::v1beta1::PageRequest,
+    >,
 }
 /// QueryAllContractStateResponse is the response type for the
 /// Query/AllContractState RPC method
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryAllContractStateResponse")]
 pub struct QueryAllContractStateResponse {
     #[prost(message, repeated, tag = "1")]
     pub models: ::prost::alloc::vec::Vec<Model>,
     /// pagination defines the pagination in the response.
     #[prost(message, optional, tag = "2")]
-    pub pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageResponse>,
+    pub pagination: ::core::option::Option<
+        super::super::super::cosmos::base::query::v1beta1::PageResponse,
+    >,
 }
 /// QueryRawContractStateRequest is the request type for the
 /// Query/RawContractState RPC method
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryRawContractStateRequest")]
 #[proto_query(
     path = "/cosmwasm.wasm.v1.Query/RawContractState",
@@ -983,7 +1163,8 @@ pub struct QueryRawContractStateRequest {
 /// QueryRawContractStateResponse is the response type for the
 /// Query/RawContractState RPC method
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryRawContractStateResponse")]
 pub struct QueryRawContractStateResponse {
     /// Data contains the raw store data
@@ -993,7 +1174,8 @@ pub struct QueryRawContractStateResponse {
 /// QuerySmartContractStateRequest is the request type for the
 /// Query/SmartContractState RPC method
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QuerySmartContractStateRequest")]
 #[proto_query(
     path = "/cosmwasm.wasm.v1.Query/SmartContractState",
@@ -1010,7 +1192,8 @@ pub struct QuerySmartContractStateRequest {
 /// QuerySmartContractStateResponse is the response type for the
 /// Query/SmartContractState RPC method
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QuerySmartContractStateResponse")]
 pub struct QuerySmartContractStateResponse {
     /// Data contains the json data returned from the smart contract
@@ -1019,7 +1202,8 @@ pub struct QuerySmartContractStateResponse {
 }
 /// QueryCodeRequest is the request type for the Query/Code RPC method
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryCodeRequest")]
 #[proto_query(path = "/cosmwasm.wasm.v1.Query/Code", response_type = QueryCodeResponse)]
 pub struct QueryCodeRequest {
@@ -1034,7 +1218,8 @@ pub struct QueryCodeRequest {
 }
 /// CodeInfoResponse contains code meta data from CodeInfo
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.CodeInfoResponse")]
 pub struct CodeInfoResponse {
     /// id for legacy support
@@ -1054,7 +1239,8 @@ pub struct CodeInfoResponse {
 }
 /// QueryCodeResponse is the response type for the Query/Code RPC method
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryCodeResponse")]
 pub struct QueryCodeResponse {
     #[prost(message, optional, tag = "1")]
@@ -1064,7 +1250,8 @@ pub struct QueryCodeResponse {
 }
 /// QueryCodesRequest is the request type for the Query/Codes RPC method
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryCodesRequest")]
 #[proto_query(
     path = "/cosmwasm.wasm.v1.Query/Codes",
@@ -1073,23 +1260,29 @@ pub struct QueryCodeResponse {
 pub struct QueryCodesRequest {
     /// pagination defines an optional pagination for the request.
     #[prost(message, optional, tag = "1")]
-    pub pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageRequest>,
+    pub pagination: ::core::option::Option<
+        super::super::super::cosmos::base::query::v1beta1::PageRequest,
+    >,
 }
 /// QueryCodesResponse is the response type for the Query/Codes RPC method
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryCodesResponse")]
 pub struct QueryCodesResponse {
     #[prost(message, repeated, tag = "1")]
     pub code_infos: ::prost::alloc::vec::Vec<CodeInfoResponse>,
     /// pagination defines the pagination in the response.
     #[prost(message, optional, tag = "2")]
-    pub pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageResponse>,
+    pub pagination: ::core::option::Option<
+        super::super::super::cosmos::base::query::v1beta1::PageResponse,
+    >,
 }
 /// QueryPinnedCodesRequest is the request type for the Query/PinnedCodes
 /// RPC method
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryPinnedCodesRequest")]
 #[proto_query(
     path = "/cosmwasm.wasm.v1.Query/PinnedCodes",
@@ -1098,12 +1291,15 @@ pub struct QueryCodesResponse {
 pub struct QueryPinnedCodesRequest {
     /// pagination defines an optional pagination for the request.
     #[prost(message, optional, tag = "2")]
-    pub pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageRequest>,
+    pub pagination: ::core::option::Option<
+        super::super::super::cosmos::base::query::v1beta1::PageRequest,
+    >,
 }
 /// QueryPinnedCodesResponse is the response type for the
 /// Query/PinnedCodes RPC method
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryPinnedCodesResponse")]
 pub struct QueryPinnedCodesResponse {
     #[prost(uint64, repeated, packed = "false", tag = "1")]
@@ -1111,11 +1307,14 @@ pub struct QueryPinnedCodesResponse {
     pub code_ids: ::prost::alloc::vec::Vec<u64>,
     /// pagination defines the pagination in the response.
     #[prost(message, optional, tag = "2")]
-    pub pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageResponse>,
+    pub pagination: ::core::option::Option<
+        super::super::super::cosmos::base::query::v1beta1::PageResponse,
+    >,
 }
 /// QueryParamsRequest is the request type for the Query/Params RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryParamsRequest")]
 #[proto_query(
     path = "/cosmwasm.wasm.v1.Query/Params",
@@ -1124,7 +1323,8 @@ pub struct QueryPinnedCodesResponse {
 pub struct QueryParamsRequest {}
 /// QueryParamsResponse is the response type for the Query/Params RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryParamsResponse")]
 pub struct QueryParamsResponse {
     /// params defines the parameters of the module.
@@ -1134,7 +1334,8 @@ pub struct QueryParamsResponse {
 /// QueryContractsByCreatorRequest is the request type for the
 /// Query/ContractsByCreator RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryContractsByCreatorRequest")]
 #[proto_query(
     path = "/cosmwasm.wasm.v1.Query/ContractsByCreator",
@@ -1146,12 +1347,15 @@ pub struct QueryContractsByCreatorRequest {
     pub creator_address: ::prost::alloc::string::String,
     /// Pagination defines an optional pagination for the request.
     #[prost(message, optional, tag = "2")]
-    pub pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageRequest>,
+    pub pagination: ::core::option::Option<
+        super::super::super::cosmos::base::query::v1beta1::PageRequest,
+    >,
 }
 /// QueryContractsByCreatorResponse is the response type for the
 /// Query/ContractsByCreator RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryContractsByCreatorResponse")]
 pub struct QueryContractsByCreatorResponse {
     /// ContractAddresses result set
@@ -1159,12 +1363,15 @@ pub struct QueryContractsByCreatorResponse {
     pub contract_addresses: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
     /// Pagination defines the pagination in the response.
     #[prost(message, optional, tag = "2")]
-    pub pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageResponse>,
+    pub pagination: ::core::option::Option<
+        super::super::super::cosmos::base::query::v1beta1::PageResponse,
+    >,
 }
 /// QueryBuildAddressRequest is the request type for the Query/BuildAddress RPC
 /// method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryBuildAddressRequest")]
 #[proto_query(
     path = "/cosmwasm.wasm.v1.Query/BuildAddress",
@@ -1188,7 +1395,8 @@ pub struct QueryBuildAddressRequest {
 /// QueryBuildAddressResponse is the response type for the Query/BuildAddress RPC
 /// method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.QueryBuildAddressResponse")]
 pub struct QueryBuildAddressResponse {
     /// Address is the contract address
@@ -1197,7 +1405,8 @@ pub struct QueryBuildAddressResponse {
 }
 /// MsgStoreCode submit Wasm code to the system
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgStoreCode")]
 pub struct MsgStoreCode {
     /// Sender is the actor that signed the messages
@@ -1213,7 +1422,8 @@ pub struct MsgStoreCode {
 }
 /// MsgStoreCodeResponse returns store result data.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgStoreCodeResponse")]
 pub struct MsgStoreCodeResponse {
     /// CodeID is the reference to the stored WASM code
@@ -1231,7 +1441,8 @@ pub struct MsgStoreCodeResponse {
 /// MsgInstantiateContract create a new smart contract instance for the given
 /// code id.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgInstantiateContract")]
 pub struct MsgInstantiateContract {
     /// Sender is the that actor that signed the messages
@@ -1256,11 +1467,14 @@ pub struct MsgInstantiateContract {
     pub msg: ::prost::alloc::vec::Vec<u8>,
     /// Funds coins that are transferred to the contract on instantiation
     #[prost(message, repeated, tag = "6")]
-    pub funds: ::prost::alloc::vec::Vec<super::super::super::cosmos::base::v1beta1::Coin>,
+    pub funds: ::prost::alloc::vec::Vec<
+        super::super::super::cosmos::base::v1beta1::Coin,
+    >,
 }
 /// MsgInstantiateContractResponse return instantiation result data
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgInstantiateContractResponse")]
 pub struct MsgInstantiateContractResponse {
     /// Address is the bech32 address of the new contract instance.
@@ -1273,7 +1487,8 @@ pub struct MsgInstantiateContractResponse {
 /// MsgInstantiateContract2 create a new smart contract instance for the given
 /// code id with a predicable address.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgInstantiateContract2")]
 pub struct MsgInstantiateContract2 {
     /// Sender is the that actor that signed the messages
@@ -1298,7 +1513,9 @@ pub struct MsgInstantiateContract2 {
     pub msg: ::prost::alloc::vec::Vec<u8>,
     /// Funds coins that are transferred to the contract on instantiation
     #[prost(message, repeated, tag = "6")]
-    pub funds: ::prost::alloc::vec::Vec<super::super::super::cosmos::base::v1beta1::Coin>,
+    pub funds: ::prost::alloc::vec::Vec<
+        super::super::super::cosmos::base::v1beta1::Coin,
+    >,
     /// Salt is an arbitrary value provided by the sender. Size can be 1 to 64.
     #[prost(bytes = "vec", tag = "7")]
     pub salt: ::prost::alloc::vec::Vec<u8>,
@@ -1309,7 +1526,8 @@ pub struct MsgInstantiateContract2 {
 }
 /// MsgInstantiateContract2Response return instantiation result data
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgInstantiateContract2Response")]
 pub struct MsgInstantiateContract2Response {
     /// Address is the bech32 address of the new contract instance.
@@ -1321,7 +1539,8 @@ pub struct MsgInstantiateContract2Response {
 }
 /// MsgExecuteContract submits the given message data to a smart contract
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgExecuteContract")]
 pub struct MsgExecuteContract {
     /// Sender is the that actor that signed the messages
@@ -1335,11 +1554,14 @@ pub struct MsgExecuteContract {
     pub msg: ::prost::alloc::vec::Vec<u8>,
     /// Funds coins that are transferred to the contract on execution
     #[prost(message, repeated, tag = "5")]
-    pub funds: ::prost::alloc::vec::Vec<super::super::super::cosmos::base::v1beta1::Coin>,
+    pub funds: ::prost::alloc::vec::Vec<
+        super::super::super::cosmos::base::v1beta1::Coin,
+    >,
 }
 /// MsgExecuteContractResponse returns execution result data.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgExecuteContractResponse")]
 pub struct MsgExecuteContractResponse {
     /// Data contains bytes to returned from the contract
@@ -1348,7 +1570,8 @@ pub struct MsgExecuteContractResponse {
 }
 /// MsgMigrateContract runs a code upgrade/ downgrade for a smart contract
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgMigrateContract")]
 pub struct MsgMigrateContract {
     /// Sender is the that actor that signed the messages
@@ -1371,7 +1594,8 @@ pub struct MsgMigrateContract {
 }
 /// MsgMigrateContractResponse returns contract migration result data.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgMigrateContractResponse")]
 pub struct MsgMigrateContractResponse {
     /// Data contains same raw bytes returned as data from the wasm contract.
@@ -1381,7 +1605,8 @@ pub struct MsgMigrateContractResponse {
 }
 /// MsgUpdateAdmin sets a new admin for a smart contract
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgUpdateAdmin")]
 pub struct MsgUpdateAdmin {
     /// Sender is the that actor that signed the messages
@@ -1396,12 +1621,14 @@ pub struct MsgUpdateAdmin {
 }
 /// MsgUpdateAdminResponse returns empty data
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgUpdateAdminResponse")]
 pub struct MsgUpdateAdminResponse {}
 /// MsgClearAdmin removes any admin stored for a smart contract
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgClearAdmin")]
 pub struct MsgClearAdmin {
     /// Sender is the actor that signed the messages
@@ -1413,12 +1640,14 @@ pub struct MsgClearAdmin {
 }
 /// MsgClearAdminResponse returns empty data
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgClearAdminResponse")]
 pub struct MsgClearAdminResponse {}
 /// MsgUpdateInstantiateConfig updates instantiate config for a smart contract
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgUpdateInstantiateConfig")]
 pub struct MsgUpdateInstantiateConfig {
     /// Sender is the that actor that signed the messages
@@ -1438,14 +1667,16 @@ pub struct MsgUpdateInstantiateConfig {
 }
 /// MsgUpdateInstantiateConfigResponse returns empty data
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgUpdateInstantiateConfigResponse")]
 pub struct MsgUpdateInstantiateConfigResponse {}
 /// MsgUpdateParams is the MsgUpdateParams request type.
 ///
 /// Since: 0.40
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgUpdateParams")]
 pub struct MsgUpdateParams {
     /// Authority is the address of the governance account.
@@ -1462,14 +1693,16 @@ pub struct MsgUpdateParams {
 ///
 /// Since: 0.40
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgUpdateParamsResponse")]
 pub struct MsgUpdateParamsResponse {}
 /// MsgSudoContract is the MsgSudoContract request type.
 ///
 /// Since: 0.40
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgSudoContract")]
 pub struct MsgSudoContract {
     /// Authority is the address of the governance account.
@@ -1487,7 +1720,8 @@ pub struct MsgSudoContract {
 ///
 /// Since: 0.40
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgSudoContractResponse")]
 pub struct MsgSudoContractResponse {
     /// Data contains bytes to returned from the contract
@@ -1498,7 +1732,8 @@ pub struct MsgSudoContractResponse {
 ///
 /// Since: 0.40
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgPinCodes")]
 pub struct MsgPinCodes {
     /// Authority is the address of the governance account.
@@ -1514,14 +1749,16 @@ pub struct MsgPinCodes {
 ///
 /// Since: 0.40
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgPinCodesResponse")]
 pub struct MsgPinCodesResponse {}
 /// MsgUnpinCodes is the MsgUnpinCodes request type.
 ///
 /// Since: 0.40
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgUnpinCodes")]
 pub struct MsgUnpinCodes {
     /// Authority is the address of the governance account.
@@ -1537,7 +1774,8 @@ pub struct MsgUnpinCodes {
 ///
 /// Since: 0.40
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgUnpinCodesResponse")]
 pub struct MsgUnpinCodesResponse {}
 /// MsgStoreAndInstantiateContract is the MsgStoreAndInstantiateContract
@@ -1545,7 +1783,8 @@ pub struct MsgUnpinCodesResponse {}
 ///
 /// Since: 0.40
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgStoreAndInstantiateContract")]
 pub struct MsgStoreAndInstantiateContract {
     /// Authority is the address of the governance account.
@@ -1573,7 +1812,9 @@ pub struct MsgStoreAndInstantiateContract {
     /// Funds coins that are transferred from the authority account to the contract
     /// on instantiation
     #[prost(message, repeated, tag = "9")]
-    pub funds: ::prost::alloc::vec::Vec<super::super::super::cosmos::base::v1beta1::Coin>,
+    pub funds: ::prost::alloc::vec::Vec<
+        super::super::super::cosmos::base::v1beta1::Coin,
+    >,
     /// Source is the URL where the code is hosted
     #[prost(string, tag = "10")]
     pub source: ::prost::alloc::string::String,
@@ -1591,7 +1832,8 @@ pub struct MsgStoreAndInstantiateContract {
 ///
 /// Since: 0.40
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgStoreAndInstantiateContractResponse")]
 pub struct MsgStoreAndInstantiateContractResponse {
     /// Address is the bech32 address of the new contract instance.
@@ -1604,7 +1846,8 @@ pub struct MsgStoreAndInstantiateContractResponse {
 /// MsgAddCodeUploadParamsAddresses is the
 /// MsgAddCodeUploadParamsAddresses request type.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgAddCodeUploadParamsAddresses")]
 pub struct MsgAddCodeUploadParamsAddresses {
     /// Authority is the address of the governance account.
@@ -1616,13 +1859,15 @@ pub struct MsgAddCodeUploadParamsAddresses {
 /// MsgAddCodeUploadParamsAddressesResponse defines the response
 /// structure for executing a MsgAddCodeUploadParamsAddresses message.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgAddCodeUploadParamsAddressesResponse")]
 pub struct MsgAddCodeUploadParamsAddressesResponse {}
 /// MsgRemoveCodeUploadParamsAddresses is the
 /// MsgRemoveCodeUploadParamsAddresses request type.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgRemoveCodeUploadParamsAddresses")]
 pub struct MsgRemoveCodeUploadParamsAddresses {
     /// Authority is the address of the governance account.
@@ -1634,15 +1879,19 @@ pub struct MsgRemoveCodeUploadParamsAddresses {
 /// MsgRemoveCodeUploadParamsAddressesResponse defines the response
 /// structure for executing a MsgRemoveCodeUploadParamsAddresses message.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.MsgRemoveCodeUploadParamsAddressesResponse")]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(
+    type_url = "/cosmwasm.wasm.v1.MsgRemoveCodeUploadParamsAddressesResponse"
+)]
 pub struct MsgRemoveCodeUploadParamsAddressesResponse {}
 /// MsgStoreAndMigrateContract is the MsgStoreAndMigrateContract
 /// request type.
 ///
 /// Since: 0.42
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgStoreAndMigrateContract")]
 pub struct MsgStoreAndMigrateContract {
     /// Authority is the address of the governance account.
@@ -1666,7 +1915,8 @@ pub struct MsgStoreAndMigrateContract {
 ///
 /// Since: 0.42
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgStoreAndMigrateContractResponse")]
 pub struct MsgStoreAndMigrateContractResponse {
     /// CodeID is the reference to the stored WASM code
@@ -1686,7 +1936,8 @@ pub struct MsgStoreAndMigrateContractResponse {
 }
 /// MsgUpdateContractLabel sets a new label for a smart contract
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgUpdateContractLabel")]
 pub struct MsgUpdateContractLabel {
     /// Sender is the that actor that signed the messages
@@ -1701,7 +1952,8 @@ pub struct MsgUpdateContractLabel {
 }
 /// MsgUpdateContractLabelResponse returns empty data
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgUpdateContractLabelResponse")]
 pub struct MsgUpdateContractLabelResponse {}
 pub struct WasmQuerier<'a, Q: cosmwasm_std::CustomQuery> {
@@ -1711,58 +1963,100 @@ impl<'a, Q: cosmwasm_std::CustomQuery> WasmQuerier<'a, Q> {
     pub fn new(querier: &'a cosmwasm_std::QuerierWrapper<'a, Q>) -> Self {
         Self { querier }
     }
-    pub fn contract_info(&self, address: ::prost::alloc::string::String) -> Result<QueryContractInfoResponse, cosmwasm_std::StdError> {
-        QueryContractInfoRequest { address }.query(self.querier)
+    pub fn contract_info(
+        &self,
+        address: ::prost::alloc::string::String,
+    ) -> Result<QueryContractInfoResponse, cosmwasm_std::StdError> {
+        QueryContractInfoRequest {
+            address,
+        }
+            .query(self.querier)
     }
     pub fn contract_history(
         &self,
         address: ::prost::alloc::string::String,
-        pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageRequest>,
+        pagination: ::core::option::Option<
+            super::super::super::cosmos::base::query::v1beta1::PageRequest,
+        >,
     ) -> Result<QueryContractHistoryResponse, cosmwasm_std::StdError> {
-        QueryContractHistoryRequest { address, pagination }.query(self.querier)
+        QueryContractHistoryRequest {
+            address,
+            pagination,
+        }
+            .query(self.querier)
     }
     pub fn contracts_by_code(
         &self,
         code_id: u64,
-        pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageRequest>,
+        pagination: ::core::option::Option<
+            super::super::super::cosmos::base::query::v1beta1::PageRequest,
+        >,
     ) -> Result<QueryContractsByCodeResponse, cosmwasm_std::StdError> {
-        QueryContractsByCodeRequest { code_id, pagination }.query(self.querier)
+        QueryContractsByCodeRequest {
+            code_id,
+            pagination,
+        }
+            .query(self.querier)
     }
     pub fn all_contract_state(
         &self,
         address: ::prost::alloc::string::String,
-        pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageRequest>,
+        pagination: ::core::option::Option<
+            super::super::super::cosmos::base::query::v1beta1::PageRequest,
+        >,
     ) -> Result<QueryAllContractStateResponse, cosmwasm_std::StdError> {
-        QueryAllContractStateRequest { address, pagination }.query(self.querier)
+        QueryAllContractStateRequest {
+            address,
+            pagination,
+        }
+            .query(self.querier)
     }
     pub fn raw_contract_state(
         &self,
         address: ::prost::alloc::string::String,
         query_data: ::prost::alloc::vec::Vec<u8>,
     ) -> Result<QueryRawContractStateResponse, cosmwasm_std::StdError> {
-        QueryRawContractStateRequest { address, query_data }.query(self.querier)
+        QueryRawContractStateRequest {
+            address,
+            query_data,
+        }
+            .query(self.querier)
     }
     pub fn smart_contract_state(
         &self,
         address: ::prost::alloc::string::String,
         query_data: ::prost::alloc::vec::Vec<u8>,
     ) -> Result<QuerySmartContractStateResponse, cosmwasm_std::StdError> {
-        QuerySmartContractStateRequest { address, query_data }.query(self.querier)
+        QuerySmartContractStateRequest {
+            address,
+            query_data,
+        }
+            .query(self.querier)
     }
-    pub fn code(&self, code_id: u64) -> Result<QueryCodeResponse, cosmwasm_std::StdError> {
+    pub fn code(
+        &self,
+        code_id: u64,
+    ) -> Result<QueryCodeResponse, cosmwasm_std::StdError> {
         QueryCodeRequest { code_id }.query(self.querier)
     }
     pub fn codes(
         &self,
-        pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageRequest>,
+        pagination: ::core::option::Option<
+            super::super::super::cosmos::base::query::v1beta1::PageRequest,
+        >,
     ) -> Result<QueryCodesResponse, cosmwasm_std::StdError> {
         QueryCodesRequest { pagination }.query(self.querier)
     }
     pub fn pinned_codes(
         &self,
-        pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageRequest>,
+        pagination: ::core::option::Option<
+            super::super::super::cosmos::base::query::v1beta1::PageRequest,
+        >,
     ) -> Result<QueryPinnedCodesResponse, cosmwasm_std::StdError> {
-        QueryPinnedCodesRequest { pagination }.query(self.querier)
+        QueryPinnedCodesRequest {
+            pagination,
+        }
+            .query(self.querier)
     }
     pub fn params(&self) -> Result<QueryParamsResponse, cosmwasm_std::StdError> {
         QueryParamsRequest {}.query(self.querier)
@@ -1770,9 +2064,15 @@ impl<'a, Q: cosmwasm_std::CustomQuery> WasmQuerier<'a, Q> {
     pub fn contracts_by_creator(
         &self,
         creator_address: ::prost::alloc::string::String,
-        pagination: ::core::option::Option<super::super::super::cosmos::base::query::v1beta1::PageRequest>,
+        pagination: ::core::option::Option<
+            super::super::super::cosmos::base::query::v1beta1::PageRequest,
+        >,
     ) -> Result<QueryContractsByCreatorResponse, cosmwasm_std::StdError> {
-        QueryContractsByCreatorRequest { creator_address, pagination }.query(self.querier)
+        QueryContractsByCreatorRequest {
+            creator_address,
+            pagination,
+        }
+            .query(self.querier)
     }
     pub fn build_address(
         &self,
@@ -1787,6 +2087,6 @@ impl<'a, Q: cosmwasm_std::CustomQuery> WasmQuerier<'a, Q> {
             salt,
             init_args,
         }
-        .query(self.querier)
+            .query(self.querier)
     }
 }
