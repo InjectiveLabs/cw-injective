@@ -10,11 +10,11 @@ version     = "1.13.3"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-chrono             = { workspace = true }
-cosmwasm-std       = { workspace = true }
-osmosis-std-derive = { package = "injective-std-derive", path = "../injective-std-derive" }
-prost              = { workspace = true }
-prost-types        = { workspace = true }
-schemars           = { workspace = true }
-serde              = { workspace = true }
-serde-cw-value     = { workspace = true }
+chrono               = { workspace = true }
+cosmwasm-std         = { workspace = true }
+injective-std-derive = { path = "../injective-std-derive" }
+prost                = { workspace = true }
+prost-types          = { workspace = true }
+schemars             = { workspace = true }
+serde                = { workspace = true }
+serde-cw-value       = { workspace = true }

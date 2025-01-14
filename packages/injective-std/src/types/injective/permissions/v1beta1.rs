@@ -1,4 +1,4 @@
-use osmosis_std_derive::CosmwasmExt;
+use injective_std_derive::CosmwasmExt;
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message)]
 #[derive(::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -367,7 +367,7 @@ pub struct MsgUpdateNamespace {
 }
 /// Nested message and enum types in `MsgUpdateNamespace`.
 pub mod msg_update_namespace {
-    use osmosis_std_derive::CosmwasmExt;
+    use injective_std_derive::CosmwasmExt;
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, Eq, ::prost::Message)]
     #[derive(

@@ -1,4 +1,4 @@
-use osmosis_std_derive::CosmwasmExt;
+use injective_std_derive::CosmwasmExt;
 /// Attestation is an aggregate of `claims` that eventually becomes `observed` by
 /// all orchestrators
 /// EVENT_NONCE:
