@@ -4,8 +4,7 @@ use crate::{
     testing::type_helpers::{AuthParams, CosmosAuthQueryAccountsResponse, ParamResponse},
     utils::{ExchangeType, Setup},
 };
-use cosmos_sdk_proto::cosmos::auth::v1beta1::QueryAccountRequest;
-use injective_test_tube::{Account, Module, Wasm};
+use injective_test_tube::{injective_std::types::cosmos::auth::v1beta1::QueryAccountRequest, Account, Module, Wasm};
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
