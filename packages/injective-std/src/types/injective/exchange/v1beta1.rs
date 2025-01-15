@@ -1,4 +1,4 @@
-use injective_std_derive::CosmwasmExt;
+use osmosis_std_derive::CosmwasmExt;
 /// spot authz messages
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -359,13 +359,6 @@ pub struct DerivativeMarket {
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
     pub admin_permissions: u32,
-    /// quote token decimals
-    #[prost(uint32, tag = "20")]
-    #[serde(
-        serialize_with = "crate::serde::as_str::serialize",
-        deserialize_with = "crate::serde::as_str::deserialize"
-    )]
-    pub quote_decimals: u32,
 }
 /// An object describing a binary options market in Injective Protocol.
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -457,13 +450,6 @@ pub struct BinaryOptionsMarket {
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
     pub admin_permissions: u32,
-    /// quote token decimals
-    #[prost(uint32, tag = "20")]
-    #[serde(
-        serialize_with = "crate::serde::as_str::serialize",
-        deserialize_with = "crate::serde::as_str::deserialize"
-    )]
-    pub quote_decimals: u32,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -643,20 +629,6 @@ pub struct SpotMarket {
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
     pub admin_permissions: u32,
-    /// base token decimals
-    #[prost(uint32, tag = "14")]
-    #[serde(
-        serialize_with = "crate::serde::as_str::serialize",
-        deserialize_with = "crate::serde::as_str::deserialize"
-    )]
-    pub base_decimals: u32,
-    /// quote token decimals
-    #[prost(uint32, tag = "15")]
-    #[serde(
-        serialize_with = "crate::serde::as_str::serialize",
-        deserialize_with = "crate::serde::as_str::deserialize"
-    )]
-    pub quote_decimals: u32,
 }
 /// A subaccount's deposit for a given base currency
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -2099,20 +2071,6 @@ pub struct MsgInstantSpotMarketLaunch {
     /// orders in the market
     #[prost(string, tag = "7")]
     pub min_notional: ::prost::alloc::string::String,
-    /// base token decimals
-    #[prost(uint32, tag = "8")]
-    #[serde(
-        serialize_with = "crate::serde::as_str::serialize",
-        deserialize_with = "crate::serde::as_str::deserialize"
-    )]
-    pub base_decimals: u32,
-    /// quote token decimals
-    #[prost(uint32, tag = "9")]
-    #[serde(
-        serialize_with = "crate::serde::as_str::serialize",
-        deserialize_with = "crate::serde::as_str::deserialize"
-    )]
-    pub quote_decimals: u32,
 }
 /// MsgInstantSpotMarketLaunchResponse defines the Msg/InstantSpotMarketLaunch
 /// response type.
@@ -3377,20 +3335,6 @@ pub struct SpotMarketParamUpdateProposal {
     pub min_notional: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "12")]
     pub admin_info: ::core::option::Option<AdminInfo>,
-    /// base token decimals
-    #[prost(uint32, tag = "13")]
-    #[serde(
-        serialize_with = "crate::serde::as_str::serialize",
-        deserialize_with = "crate::serde::as_str::deserialize"
-    )]
-    pub base_decimals: u32,
-    /// quote token decimals
-    #[prost(uint32, tag = "14")]
-    #[serde(
-        serialize_with = "crate::serde::as_str::serialize",
-        deserialize_with = "crate::serde::as_str::deserialize"
-    )]
-    pub quote_decimals: u32,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -3475,20 +3419,6 @@ pub struct SpotMarketLaunchProposal {
     pub min_notional: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "11")]
     pub admin_info: ::core::option::Option<AdminInfo>,
-    /// base token decimals
-    #[prost(uint32, tag = "14")]
-    #[serde(
-        serialize_with = "crate::serde::as_str::serialize",
-        deserialize_with = "crate::serde::as_str::deserialize"
-    )]
-    pub base_decimals: u32,
-    /// quote token decimals
-    #[prost(uint32, tag = "15")]
-    #[serde(
-        serialize_with = "crate::serde::as_str::serialize",
-        deserialize_with = "crate::serde::as_str::deserialize"
-    )]
-    pub quote_decimals: u32,
 }
 /// PerpetualMarketLaunchProposal defines a SDK message for proposing a new
 /// perpetual futures market through governance
@@ -4928,7 +4858,7 @@ pub struct FullDerivativeMarket {
 }
 /// Nested message and enum types in `FullDerivativeMarket`.
 pub mod full_derivative_market {
-    use injective_std_derive::CosmwasmExt;
+    use osmosis_std_derive::CosmwasmExt;
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, Eq, ::prost::Oneof, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema)]
     pub enum Info {
@@ -5712,65 +5642,6 @@ pub struct QueryTraderDerivativeConditionalOrdersResponse {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.QueryFullSpotOrderbookRequest")]
-#[proto_query(
-    path = "/injective.exchange.v1beta1.Query/L3SpotOrderBook",
-    response_type = QueryFullSpotOrderbookResponse
-)]
-pub struct QueryFullSpotOrderbookRequest {
-    /// market id
-    #[prost(string, tag = "1")]
-    #[serde(alias = "marketID")]
-    pub market_id: ::prost::alloc::string::String,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.QueryFullSpotOrderbookResponse")]
-pub struct QueryFullSpotOrderbookResponse {
-    #[prost(message, repeated, tag = "1")]
-    pub bids: ::prost::alloc::vec::Vec<TrimmedLimitOrder>,
-    #[prost(message, repeated, tag = "2")]
-    pub asks: ::prost::alloc::vec::Vec<TrimmedLimitOrder>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.QueryFullDerivativeOrderbookRequest")]
-#[proto_query(
-    path = "/injective.exchange.v1beta1.Query/L3DerivativeOrderBook",
-    response_type = QueryFullDerivativeOrderbookResponse
-)]
-pub struct QueryFullDerivativeOrderbookRequest {
-    /// market id
-    #[prost(string, tag = "1")]
-    #[serde(alias = "marketID")]
-    pub market_id: ::prost::alloc::string::String,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.QueryFullDerivativeOrderbookResponse")]
-pub struct QueryFullDerivativeOrderbookResponse {
-    #[prost(message, repeated, tag = "1")]
-    pub bids: ::prost::alloc::vec::Vec<TrimmedLimitOrder>,
-    #[prost(message, repeated, tag = "2")]
-    pub asks: ::prost::alloc::vec::Vec<TrimmedLimitOrder>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.exchange.v1beta1.TrimmedLimitOrder")]
-pub struct TrimmedLimitOrder {
-    #[prost(string, tag = "1")]
-    pub price: ::prost::alloc::string::String,
-    /// quantity of the order
-    #[prost(string, tag = "2")]
-    pub quantity: ::prost::alloc::string::String,
-    #[prost(string, tag = "3")]
-    pub order_hash: ::prost::alloc::string::String,
-    #[prost(string, tag = "4")]
-    #[serde(alias = "subaccountID")]
-    pub subaccount_id: ::prost::alloc::string::String,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.exchange.v1beta1.QueryMarketAtomicExecutionFeeMultiplierRequest")]
 #[proto_query(
     path = "/injective.exchange.v1beta1.Query/MarketAtomicExecutionFeeMultiplier",
@@ -5919,15 +5790,6 @@ pub struct ExchangeQuerier<'a, Q: cosmwasm_std::CustomQuery> {
 impl<'a, Q: cosmwasm_std::CustomQuery> ExchangeQuerier<'a, Q> {
     pub fn new(querier: &'a cosmwasm_std::QuerierWrapper<'a, Q>) -> Self {
         Self { querier }
-    }
-    pub fn l3_derivative_order_book(
-        &self,
-        market_id: ::prost::alloc::string::String,
-    ) -> Result<QueryFullDerivativeOrderbookResponse, cosmwasm_std::StdError> {
-        QueryFullDerivativeOrderbookRequest { market_id }.query(self.querier)
-    }
-    pub fn l3_spot_order_book(&self, market_id: ::prost::alloc::string::String) -> Result<QueryFullSpotOrderbookResponse, cosmwasm_std::StdError> {
-        QueryFullSpotOrderbookRequest { market_id }.query(self.querier)
     }
     pub fn query_exchange_params(&self) -> Result<QueryExchangeParamsResponse, cosmwasm_std::StdError> {
         QueryExchangeParamsRequest {}.query(self.querier)
