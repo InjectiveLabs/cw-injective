@@ -127,10 +127,7 @@ fn save_cache_info(deps: DepsMut<InjectiveQueryWrapper>, market_id: MarketId, su
         market_id,
     };
 
-    let mut order_cache = match ORDER_CALL_CACHE.may_load(deps.storage)? {
-        Some(order_cache) => order_cache,
-        None => vec![],
-    };
+    let mut order_cache = (ORDER_CALL_CACHE.may_load(deps.storage)?).unwrap_or_default();
 
     order_cache.push(cache_order_info);
 
