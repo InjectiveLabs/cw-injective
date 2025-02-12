@@ -4,9 +4,14 @@ use crate::{
     testing::type_helpers::{BankParams, ParamResponse, QueryBalanceResponse, QueryDenomMetadataResponse, QuerySupplyOffResponse},
     utils::{ExchangeType, Setup},
 };
-use cosmos_sdk_proto::cosmos::bank::v1beta1::{QueryBalanceRequest, QueryDenomMetadataRequest, QuerySupplyOfRequest};
 use cosmwasm_std::{Coin, Uint128};
-use injective_test_tube::{injective_std::types::injective::tokenfactory::v1beta1::MsgCreateDenom, Account, Module, TokenFactory, Wasm};
+use injective_test_tube::{
+    injective_std::types::{
+        cosmos::bank::v1beta1::{QueryBalanceRequest, QueryDenomMetadataRequest, QuerySupplyOfRequest},
+        injective::tokenfactory::v1beta1::MsgCreateDenom,
+    },
+    Account, Module, TokenFactory, Wasm,
+};
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]

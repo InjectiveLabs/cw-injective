@@ -3,9 +3,11 @@ use crate::{
     msg::{QueryMsg, QueryStargateResponse},
     utils::{execute_all_authorizations, ExchangeType, Setup},
 };
-use cosmos_sdk_proto::cosmos::authz::v1beta1::{QueryGranteeGrantsRequest, QueryGranterGrantsRequest, QueryGrantsRequest};
 use injective_test_tube::RunnerError::QueryError;
-use injective_test_tube::{Account, Module, RunnerResult, Wasm};
+use injective_test_tube::{
+    injective_std::types::cosmos::authz::v1beta1::{QueryGranteeGrantsRequest, QueryGranterGrantsRequest, QueryGrantsRequest},
+    Account, Module, RunnerResult, Wasm,
+};
 
 use crate::testing::type_helpers::{Authorization, Grants, StargateQueryGranteeGrantsResponse, StargateQueryGranterGrantsResponse};
 use crate::utils::get_stargate_query_result;

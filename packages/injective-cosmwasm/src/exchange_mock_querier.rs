@@ -555,6 +555,7 @@ impl WasmMockQuerier {
                     Some(handler) => handler.handle(address.to_string(), denom.to_string()),
                     None => default_balance_bank_query_handler(denom),
                 },
+                #[allow(deprecated)]
                 BankQuery::AllBalances { address } => match &self.all_balances_query_handler {
                     Some(handler) => handler.handle(address.to_string()),
                     None => default_all_balances_bank_query_handler(),

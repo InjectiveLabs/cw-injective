@@ -385,7 +385,7 @@ pub struct QuerySupplyOfResponse {
 }
 /// QueryParamsRequest defines the request type for querying x/bank parameters.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.bank.v1beta1.QueryParamsRequest")]
 #[proto_query(
     path = "/cosmos.bank.v1beta1.Query/Params",
@@ -601,7 +601,7 @@ pub struct MsgSend {
 }
 /// MsgSendResponse defines the Msg/Send response type.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.bank.v1beta1.MsgSendResponse")]
 pub struct MsgSendResponse {}
 /// MsgMultiSend represents an arbitrary multi-in, multi-out send message.
@@ -618,7 +618,7 @@ pub struct MsgMultiSend {
 }
 /// MsgMultiSendResponse defines the Msg/MultiSend response type.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.bank.v1beta1.MsgMultiSendResponse")]
 pub struct MsgMultiSendResponse {}
 /// MsgUpdateParams is the Msg/UpdateParams request type.
@@ -642,7 +642,7 @@ pub struct MsgUpdateParams {
 ///
 /// Since: cosmos-sdk 0.47
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.bank.v1beta1.MsgUpdateParamsResponse")]
 pub struct MsgUpdateParamsResponse {}
 /// MsgSetSendEnabled is the Msg/SetSendEnabled request type.
@@ -673,7 +673,7 @@ pub struct MsgSetSendEnabled {
 ///
 /// Since: cosmos-sdk 0.47
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmos.bank.v1beta1.MsgSetSendEnabledResponse")]
 pub struct MsgSetSendEnabledResponse {}
 pub struct BankQuerier<'a, Q: cosmwasm_std::CustomQuery> {

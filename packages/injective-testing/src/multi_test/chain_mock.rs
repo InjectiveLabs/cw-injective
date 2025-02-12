@@ -12,7 +12,6 @@ use std::{
     marker::PhantomData,
     ops::Deref,
     rc::Rc,
-    u8,
 };
 
 pub enum StargateT {

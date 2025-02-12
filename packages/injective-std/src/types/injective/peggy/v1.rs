@@ -211,7 +211,7 @@ pub struct Valset {
 /// outward and always produce batches with timeouts in the future
 /// even if no Ethereum block height has been relayed for a long time
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.LastObservedEthereumBlockHeight")]
 pub struct LastObservedEthereumBlockHeight {
     #[prost(uint64, tag = "1")]
@@ -229,7 +229,7 @@ pub struct LastObservedEthereumBlockHeight {
 }
 /// LastClaimEvent stores last claim event details of validator.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.LastClaimEvent")]
 pub struct LastClaimEvent {
     #[prost(uint64, tag = "1")]
@@ -579,7 +579,7 @@ pub struct EventValsetUpdateClaim {
     pub orchestrator_address: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.EventCancelSendToEth")]
 pub struct EventCancelSendToEth {
     #[prost(uint64, tag = "1")]
@@ -730,7 +730,7 @@ pub struct MsgSetOrchestratorAddresses {
     pub eth_address: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.MsgSetOrchestratorAddressesResponse")]
 pub struct MsgSetOrchestratorAddressesResponse {}
 /// MsgValsetConfirm
@@ -766,7 +766,7 @@ pub struct MsgValsetConfirm {
     pub signature: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.MsgValsetConfirmResponse")]
 pub struct MsgValsetConfirmResponse {}
 /// MsgSendToEth
@@ -795,7 +795,7 @@ pub struct MsgSendToEth {
     pub bridge_fee: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.MsgSendToEthResponse")]
 pub struct MsgSendToEthResponse {}
 /// MsgRequestBatch
@@ -817,7 +817,7 @@ pub struct MsgRequestBatch {
     pub denom: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.MsgRequestBatchResponse")]
 pub struct MsgRequestBatchResponse {}
 /// MsgConfirmBatch
@@ -848,7 +848,7 @@ pub struct MsgConfirmBatch {
     pub signature: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.MsgConfirmBatchResponse")]
 pub struct MsgConfirmBatchResponse {}
 /// EthereumBridgeDepositClaim
@@ -886,7 +886,7 @@ pub struct MsgDepositClaim {
     pub data: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.MsgDepositClaimResponse")]
 pub struct MsgDepositClaimResponse {}
 /// WithdrawClaim claims that a batch of withdrawal
@@ -919,7 +919,7 @@ pub struct MsgWithdrawClaim {
     pub orchestrator: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.MsgWithdrawClaimResponse")]
 pub struct MsgWithdrawClaimResponse {}
 /// ERC20DeployedClaim allows the Cosmos module
@@ -959,7 +959,7 @@ pub struct MsgErc20DeployedClaim {
     pub orchestrator: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.MsgERC20DeployedClaimResponse")]
 pub struct MsgErc20DeployedClaimResponse {}
 /// This call allows the sender (and only the sender)
@@ -980,7 +980,7 @@ pub struct MsgCancelSendToEth {
     pub sender: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.MsgCancelSendToEthResponse")]
 pub struct MsgCancelSendToEthResponse {}
 /// This call allows anyone to submit evidence that a
@@ -998,7 +998,7 @@ pub struct MsgSubmitBadSignatureEvidence {
     pub sender: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.MsgSubmitBadSignatureEvidenceResponse")]
 pub struct MsgSubmitBadSignatureEvidenceResponse {}
 /// This informs the Cosmos module that a validator
@@ -1035,7 +1035,7 @@ pub struct MsgValsetUpdatedClaim {
     pub orchestrator: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.MsgValsetUpdatedClaimResponse")]
 pub struct MsgValsetUpdatedClaimResponse {}
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -1052,7 +1052,7 @@ pub struct MsgUpdateParams {
     pub params: ::core::option::Option<Params>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.MsgUpdateParamsResponse")]
 pub struct MsgUpdateParamsResponse {}
 /// MsgBlacklistEthereumAddresses defines the message used to add Ethereum
@@ -1071,7 +1071,7 @@ pub struct MsgBlacklistEthereumAddresses {
 /// MsgBlacklistEthereumAddressesResponse defines the
 /// MsgBlacklistEthereumAddresses response type.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.MsgBlacklistEthereumAddressesResponse")]
 pub struct MsgBlacklistEthereumAddressesResponse {}
 /// MsgRevokeEthereumBlacklist defines the message used to remove Ethereum
@@ -1090,7 +1090,7 @@ pub struct MsgRevokeEthereumBlacklist {
 /// MsgRevokeEthereumBlacklistResponse defines the MsgRevokeEthereumBlacklist
 /// response type.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.MsgRevokeEthereumBlacklistResponse")]
 pub struct MsgRevokeEthereumBlacklistResponse {}
 /// GenesisState struct
@@ -1165,7 +1165,7 @@ pub struct BatchFees {
     pub total_fees: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.QueryParamsRequest")]
 #[proto_query(
     path = "/injective.peggy.v1.Query/Params",
@@ -1180,7 +1180,7 @@ pub struct QueryParamsResponse {
     pub params: ::core::option::Option<Params>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.QueryCurrentValsetRequest")]
 #[proto_query(
     path = "/injective.peggy.v1.Query/CurrentValset",
@@ -1195,7 +1195,7 @@ pub struct QueryCurrentValsetResponse {
     pub valset: ::core::option::Option<Valset>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.QueryValsetRequestRequest")]
 #[proto_query(
     path = "/injective.peggy.v1.Query/ValsetRequest",
@@ -1241,7 +1241,7 @@ pub struct QueryValsetConfirmResponse {
     pub confirm: ::core::option::Option<MsgValsetConfirm>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.QueryValsetConfirmsByNonceRequest")]
 #[proto_query(
     path = "/injective.peggy.v1.Query/ValsetConfirmsByNonce",
@@ -1263,7 +1263,7 @@ pub struct QueryValsetConfirmsByNonceResponse {
     pub confirms: ::prost::alloc::vec::Vec<MsgValsetConfirm>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.QueryLastValsetRequestsRequest")]
 #[proto_query(
     path = "/injective.peggy.v1.Query/LastValsetRequests",
@@ -1296,7 +1296,7 @@ pub struct QueryLastPendingValsetRequestByAddrResponse {
     pub valsets: ::prost::alloc::vec::Vec<Valset>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.QueryBatchFeeRequest")]
 #[proto_query(
     path = "/injective.peggy.v1.Query/BatchFees",
@@ -1304,13 +1304,11 @@ pub struct QueryLastPendingValsetRequestByAddrResponse {
 )]
 pub struct QueryBatchFeeRequest {}
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[allow(non_snake_case)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.QueryBatchFeeResponse")]
 pub struct QueryBatchFeeResponse {
-    #[allow(non_snake_case)]
     #[prost(message, repeated, tag = "1")]
-    pub batchFees: ::prost::alloc::vec::Vec<BatchFees>,
+    pub batch_fees: ::prost::alloc::vec::Vec<BatchFees>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -1331,7 +1329,7 @@ pub struct QueryLastPendingBatchRequestByAddrResponse {
     pub batch: ::core::option::Option<OutgoingTxBatch>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.QueryOutgoingTxBatchesRequest")]
 #[proto_query(
     path = "/injective.peggy.v1.Query/OutgoingTxBatches",
@@ -1405,7 +1403,7 @@ pub struct QueryLastEventByAddrRequest {
     pub address: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.QueryLastEventByAddrResponse")]
 pub struct QueryLastEventByAddrResponse {
     #[prost(message, optional, tag = "1")]
@@ -1534,7 +1532,7 @@ pub struct QueryPendingSendToEthResponse {
 /// QueryModuleStateRequest is the request type for the Query/PeggyModuleState
 /// RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.QueryModuleStateRequest")]
 #[proto_query(
     path = "/injective.peggy.v1.Query/PeggyModuleState",
@@ -1551,7 +1549,7 @@ pub struct QueryModuleStateResponse {
     pub state: ::core::option::Option<GenesisState>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.MissingNoncesRequest")]
 #[proto_query(
     path = "/injective.peggy.v1.Query/MissingPeggoNonces",

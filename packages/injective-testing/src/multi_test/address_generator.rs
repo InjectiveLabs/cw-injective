@@ -3,7 +3,6 @@ use cw_multi_test::AddressGenerator;
 use injective_cosmwasm::addr_to_bech32;
 use secp256k1::{rand, PublicKey, Secp256k1, SecretKey};
 use std::fmt::Write;
-use std::u8;
 
 const ADDRESS_LENGTH: usize = 40;
 const ADDRESS_BYTES: usize = ADDRESS_LENGTH / 2;
