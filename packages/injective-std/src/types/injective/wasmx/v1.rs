@@ -1,4 +1,4 @@
-use osmosis_std_derive::CosmwasmExt;
+use injective_std_derive::CosmwasmExt;
 /// ContractExecutionAuthorization defines authorization for wasm execute.
 /// Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]

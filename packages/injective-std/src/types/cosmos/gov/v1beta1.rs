@@ -1,4 +1,4 @@
-use osmosis_std_derive::CosmwasmExt;
+use injective_std_derive::CosmwasmExt;
 /// WeightedVoteOption defines a unit of vote for vote split.
 ///
 /// Since: cosmos-sdk 0.43

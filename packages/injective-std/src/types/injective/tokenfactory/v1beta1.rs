@@ -1,4 +1,4 @@
-use osmosis_std_derive::CosmwasmExt;
+use injective_std_derive::CosmwasmExt;
 /// DenomAuthorityMetadata specifies metadata for addresses that have specific
 /// capabilities over a token factory denom. Right now there is only one Admin
 /// permission, but is planned to be extended to the future.
@@ -295,7 +295,7 @@ pub struct MsgSetDenomMetadata {
 }
 /// Nested message and enum types in `MsgSetDenomMetadata`.
 pub mod msg_set_denom_metadata {
-    use osmosis_std_derive::CosmwasmExt;
+    use injective_std_derive::CosmwasmExt;
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
     #[proto_message(type_url = "/injective.tokenfactory.v1beta1.MsgSetDenomMetadata.AdminBurnDisabled")]
