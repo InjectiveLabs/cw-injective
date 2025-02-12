@@ -1,4 +1,4 @@
-use injective_std_derive::CosmwasmExt;
+use osmosis_std_derive::CosmwasmExt;
 /// AccessTypeParam
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -300,7 +300,7 @@ impl ContractCodeHistoryOperationType {
 /// Since: wasmd 0.42
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.StoreCodeAuthorization")]
+#[proto_message(type_url = "/cosmwasm.wasm.v1.StoreCodeAuthorizationStoreCodeAuthorization")]
 pub struct StoreCodeAuthorization {
     /// Grants for code upload
     #[prost(message, repeated, tag = "1")]
@@ -310,7 +310,7 @@ pub struct StoreCodeAuthorization {
 /// Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.ContractExecutionAuthorization")]
+#[proto_message(type_url = "/cosmwasm.wasm.v1.ContractExecutionAuthorizationContractExecutionAuthorization")]
 pub struct ContractExecutionAuthorization {
     /// Grants for contract executions
     #[prost(message, repeated, tag = "1")]
@@ -320,7 +320,7 @@ pub struct ContractExecutionAuthorization {
 /// migration. Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.ContractMigrationAuthorization")]
+#[proto_message(type_url = "/cosmwasm.wasm.v1.ContractMigrationAuthorizationContractMigrationAuthorization")]
 pub struct ContractMigrationAuthorization {
     /// Grants for contract migrations
     #[prost(message, repeated, tag = "1")]
@@ -329,7 +329,7 @@ pub struct ContractMigrationAuthorization {
 /// CodeGrant a granted permission for a single code
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.CodeGrant")]
+#[proto_message(type_url = "/cosmwasm.wasm.v1.CodeGrantCodeGrant")]
 pub struct CodeGrant {
     /// CodeHash is the unique identifier created by wasmvm
     /// Wildcard "*" is used to specify any kind of grant.
@@ -345,7 +345,7 @@ pub struct CodeGrant {
 /// Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.ContractGrant")]
+#[proto_message(type_url = "/cosmwasm.wasm.v1.ContractGrantContractGrant")]
 pub struct ContractGrant {
     /// Contract is the bech32 address of the smart contract
     #[prost(string, tag = "1")]
@@ -364,7 +364,7 @@ pub struct ContractGrant {
 /// Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.MaxCallsLimit")]
+#[proto_message(type_url = "/cosmwasm.wasm.v1.MaxCallsLimitMaxCallsLimit")]
 pub struct MaxCallsLimit {
     /// Remaining number that is decremented on each execution
     #[prost(uint64, tag = "1")]
@@ -378,7 +378,7 @@ pub struct MaxCallsLimit {
 /// Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.MaxFundsLimit")]
+#[proto_message(type_url = "/cosmwasm.wasm.v1.MaxFundsLimitMaxFundsLimit")]
 pub struct MaxFundsLimit {
     /// Amounts is the maximal amount of tokens transferable to the contract.
     #[prost(message, repeated, tag = "1")]
@@ -389,7 +389,7 @@ pub struct MaxFundsLimit {
 /// Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.CombinedLimit")]
+#[proto_message(type_url = "/cosmwasm.wasm.v1.CombinedLimitCombinedLimit")]
 pub struct CombinedLimit {
     /// Remaining number that is decremented on each execution
     #[prost(uint64, tag = "1")]
@@ -407,14 +407,14 @@ pub struct CombinedLimit {
 /// Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.AllowAllMessagesFilter")]
+#[proto_message(type_url = "/cosmwasm.wasm.v1.AllowAllMessagesFilterAllowAllMessagesFilter")]
 pub struct AllowAllMessagesFilter {}
 /// AcceptedMessageKeysFilter accept only the specific contract message keys in
 /// the json object to be executed.
 /// Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.AcceptedMessageKeysFilter")]
+#[proto_message(type_url = "/cosmwasm.wasm.v1.AcceptedMessageKeysFilterAcceptedMessageKeysFilter")]
 pub struct AcceptedMessageKeysFilter {
     /// Messages is the list of unique keys
     #[prost(string, repeated, tag = "1")]
@@ -425,7 +425,7 @@ pub struct AcceptedMessageKeysFilter {
 /// Since: wasmd 0.30
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/cosmwasm.wasm.v1.AcceptedMessagesFilter")]
+#[proto_message(type_url = "/cosmwasm.wasm.v1.AcceptedMessagesFilterAcceptedMessagesFilter")]
 pub struct AcceptedMessagesFilter {
     /// Messages is the list of raw contract messages
     #[prost(bytes = "vec", repeated, tag = "1")]
@@ -1350,7 +1350,7 @@ pub struct MsgInstantiateContractResponse {
     pub data: ::prost::alloc::vec::Vec<u8>,
 }
 /// MsgInstantiateContract2 create a new smart contract instance for the given
-/// code id with a predicable address.
+/// code id with a predictable address.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/cosmwasm.wasm.v1.MsgInstantiateContract2")]

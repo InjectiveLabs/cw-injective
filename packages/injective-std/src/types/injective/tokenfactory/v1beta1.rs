@@ -1,4 +1,4 @@
-use injective_std_derive::CosmwasmExt;
+use osmosis_std_derive::CosmwasmExt;
 /// DenomAuthorityMetadata specifies metadata for addresses that have specific
 /// capabilities over a token factory denom. Right now there is only one Admin
 /// permission, but is planned to be extended to the future.
@@ -9,11 +9,14 @@ pub struct DenomAuthorityMetadata {
     /// Can be empty for no admin, or a valid injective address
     #[prost(string, tag = "1")]
     pub admin: ::prost::alloc::string::String,
+    /// true if the admin can burn tokens from other addresses
+    #[prost(bool, tag = "2")]
+    pub admin_burn_allowed: bool,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.tokenfactory.v1beta1.EventCreateTFDenom")]
-pub struct EventCreateTfDenom {
+#[proto_message(type_url = "/injective.tokenfactory.v1beta1.EventCreateDenom")]
+pub struct EventCreateDenom {
     #[prost(string, tag = "1")]
     pub account: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
@@ -21,26 +24,30 @@ pub struct EventCreateTfDenom {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.tokenfactory.v1beta1.EventMintTFDenom")]
-pub struct EventMintTfDenom {
+#[proto_message(type_url = "/injective.tokenfactory.v1beta1.EventMint")]
+pub struct EventMint {
     #[prost(string, tag = "1")]
-    pub recipient_address: ::prost::alloc::string::String,
+    pub minter: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "2")]
     pub amount: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
+    #[prost(string, tag = "3")]
+    pub receiver: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.tokenfactory.v1beta1.EventBurnDenom")]
-pub struct EventBurnDenom {
+#[proto_message(type_url = "/injective.tokenfactory.v1beta1.EventBurn")]
+pub struct EventBurn {
     #[prost(string, tag = "1")]
-    pub burner_address: ::prost::alloc::string::String,
+    pub burner: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "2")]
     pub amount: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
+    #[prost(string, tag = "3")]
+    pub burn_from: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.tokenfactory.v1beta1.EventChangeTFAdmin")]
-pub struct EventChangeTfAdmin {
+#[proto_message(type_url = "/injective.tokenfactory.v1beta1.EventChangeAdmin")]
+pub struct EventChangeAdmin {
     #[prost(string, tag = "1")]
     pub denom: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
@@ -48,8 +55,8 @@ pub struct EventChangeTfAdmin {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
-#[proto_message(type_url = "/injective.tokenfactory.v1beta1.EventSetTFDenomMetadata")]
-pub struct EventSetTfDenomMetadata {
+#[proto_message(type_url = "/injective.tokenfactory.v1beta1.EventSetDenomMetadata")]
+pub struct EventSetDenomMetadata {
     #[prost(string, tag = "1")]
     pub denom: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "2")]
@@ -207,6 +214,9 @@ pub struct MsgCreateDenom {
         deserialize_with = "crate::serde::as_str::deserialize"
     )]
     pub decimals: u32,
+    /// true if admins are allowed to burn tokens from other addresses
+    #[prost(bool, tag = "6")]
+    pub allow_admin_burn: bool,
 }
 /// MsgCreateDenomResponse is the return value of MsgCreateDenom
 /// It returns the full string of the newly created denom
@@ -217,8 +227,8 @@ pub struct MsgCreateDenomResponse {
     #[prost(string, tag = "1")]
     pub new_token_denom: ::prost::alloc::string::String,
 }
-/// MsgMint is the sdk.Msg type for allowing an admin account to mint
-/// more of a token.  For now, we only support minting to the sender account
+/// MsgMint is the sdk.Msg type for allowing an admin account or other permitted accounts to mint
+/// more of a token.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.tokenfactory.v1beta1.MsgMint")]
@@ -227,13 +237,15 @@ pub struct MsgMint {
     pub sender: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "2")]
     pub amount: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
+    #[prost(string, tag = "3")]
+    pub receiver: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.tokenfactory.v1beta1.MsgMintResponse")]
 pub struct MsgMintResponse {}
 /// MsgBurn is the sdk.Msg type for allowing an admin account to burn
-/// a token.  For now, we only support burning from the sender account.
+/// a token.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.tokenfactory.v1beta1.MsgBurn")]
@@ -242,6 +254,8 @@ pub struct MsgBurn {
     pub sender: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "2")]
     pub amount: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
+    #[prost(string, tag = "3")]
+    pub burn_from_address: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
@@ -276,6 +290,20 @@ pub struct MsgSetDenomMetadata {
     pub sender: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "2")]
     pub metadata: ::core::option::Option<super::super::super::cosmos::bank::v1beta1::Metadata>,
+    #[prost(message, optional, tag = "3")]
+    pub admin_burn_disabled: ::core::option::Option<msg_set_denom_metadata::AdminBurnDisabled>,
+}
+/// Nested message and enum types in `MsgSetDenomMetadata`.
+pub mod msg_set_denom_metadata {
+    use osmosis_std_derive::CosmwasmExt;
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, Copy, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+    #[proto_message(type_url = "/injective.tokenfactory.v1beta1.MsgSetDenomMetadata.AdminBurnDisabled")]
+    pub struct AdminBurnDisabled {
+        /// true if the admin burn capability should be disabled
+        #[prost(bool, tag = "1")]
+        pub should_disable: bool,
+    }
 }
 /// MsgSetDenomMetadataResponse defines the response structure for an executed
 /// MsgSetDenomMetadata message.
