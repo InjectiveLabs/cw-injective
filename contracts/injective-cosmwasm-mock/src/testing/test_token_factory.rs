@@ -21,6 +21,7 @@ fn test_query_token_factory_denom_total_supply() {
         name: "Test".to_string(),
         symbol: "TST".to_string(),
         decimals: 6,
+        allow_admin_burn: true,
     };
 
     factory.create_denom(msg_create_denom, &env.owner).unwrap();

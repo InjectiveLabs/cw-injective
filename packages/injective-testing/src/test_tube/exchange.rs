@@ -443,6 +443,8 @@ pub fn launch_spot_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
                 min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.000000000000001")),
                 min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("1000000000000000")),
                 min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
+                base_decimals: MOCK_BASE_DECIMALS as u32,
+                quote_decimals: MOCK_QUOTE_DECIMALS as u32,
             },
             signer,
         )
@@ -462,6 +464,8 @@ pub fn launch_spot_market_atom(exchange: &Exchange<InjectiveTestApp>, signer: &S
                 min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.000010000000000000")),
                 min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("100000")),
                 min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
+                base_decimals: MOCK_BASE_DECIMALS as u32,
+                quote_decimals: MOCK_QUOTE_DECIMALS as u32,
             },
             signer,
         )
@@ -489,6 +493,8 @@ pub fn launch_spot_market_custom(
                 min_price_tick_size: dec_to_proto(FPDecimal::must_from_str(&min_price_tick_size)),
                 min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str(&min_quantity_tick_size)),
                 min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
+                base_decimals: MOCK_BASE_DECIMALS as u32,
+                quote_decimals: MOCK_QUOTE_DECIMALS as u32,
             },
             signer,
         )

@@ -328,6 +328,8 @@ pub fn launch_spot_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
                 min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.000000000000001")),
                 min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("1")),
                 min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
+                base_decimals: BASE_DECIMALS as u32,
+                quote_decimals: QUOTE_DECIMALS as u32,
             },
             signer,
         )

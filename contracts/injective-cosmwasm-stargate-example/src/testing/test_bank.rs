@@ -53,6 +53,7 @@ fn test_query_denom_metadata() {
         name: "CosmWasm".to_string(),
         symbol: "CW".to_string(),
         decimals: 6u32,
+        allow_admin_burn: true,
     };
 
     let denom = token_factory.create_denom(create_denom_msg, &env.users[0].account).unwrap();

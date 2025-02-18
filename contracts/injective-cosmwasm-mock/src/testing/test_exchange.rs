@@ -166,6 +166,8 @@ fn test_query_spot_market() {
                 min_price_tick_size: dec_to_proto(min_price_tick_size),
                 min_quantity_tick_size: dec_to_proto(min_quantity_tick_size),
                 min_notional: dec_to_proto(min_notional),
+                base_decimals: BASE_DECIMALS as u32,
+                quote_decimals: QUOTE_DECIMALS as u32,
             },
             &env.signer,
         )
