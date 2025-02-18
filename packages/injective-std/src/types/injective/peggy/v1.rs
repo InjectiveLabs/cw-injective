@@ -620,6 +620,45 @@ pub struct EventValidatorSlash {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.peggy.v1.EventDepositReceived")]
+pub struct EventDepositReceived {
+    /// Ethereum sender address
+    #[prost(string, tag = "1")]
+    pub sender: ::prost::alloc::string::String,
+    /// Injective receiver address
+    #[prost(string, tag = "2")]
+    pub receiver: ::prost::alloc::string::String,
+    /// Coin deposited to Injective
+    #[prost(string, tag = "3")]
+    pub amount: ::prost::alloc::string::String,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.peggy.v1.EventWithdrawalsCompleted")]
+pub struct EventWithdrawalsCompleted {
+    /// token denom of each withdrawal
+    #[prost(string, tag = "1")]
+    pub denom: ::prost::alloc::string::String,
+    /// individual withdrawals
+    #[prost(message, repeated, tag = "2")]
+    pub withdrawals: ::prost::alloc::vec::Vec<Withdrawal>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.peggy.v1.Withdrawal")]
+pub struct Withdrawal {
+    /// Injective sender address
+    #[prost(string, tag = "1")]
+    pub sender: ::prost::alloc::string::String,
+    /// Ethereum receiver address
+    #[prost(string, tag = "2")]
+    pub receiver: ::prost::alloc::string::String,
+    /// Amount of tokens withdrawn to Ethereum
+    #[prost(string, tag = "3")]
+    pub amount: ::prost::alloc::string::String,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.peggy.v1.Params")]
 pub struct Params {
     #[prost(string, tag = "1")]
@@ -704,6 +743,9 @@ pub struct Params {
     pub valset_reward: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
     #[prost(string, repeated, tag = "22")]
     pub admins: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// address for receiving Peggy Deposits from sanctioned Ethereum addresses
+    #[prost(string, tag = "23")]
+    pub segregated_wallet_address: ::prost::alloc::string::String,
 }
 /// MsgSetOrchestratorAddresses
 /// this message allows validators to delegate their voting responsibilities

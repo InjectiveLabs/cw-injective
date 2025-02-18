@@ -1,4 +1,14 @@
 use injective_std_derive::CosmwasmExt;
+/// ContractExecutionAuthorization defines authorization for wasm execute.
+/// Since: wasmd 0.30
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
+#[proto_message(type_url = "/injective.wasmx.v1.ContractExecutionCompatAuthorization")]
+pub struct ContractExecutionCompatAuthorization {
+    /// Grants for contract executions
+    #[prost(message, repeated, tag = "1")]
+    pub grants: ::prost::alloc::vec::Vec<super::super::super::cosmwasm::wasm::v1::ContractGrant>,
+}
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, Eq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize, ::schemars::JsonSchema, CosmwasmExt)]
 #[proto_message(type_url = "/injective.wasmx.v1.ContractRegistrationRequestProposal")]

@@ -13,7 +13,8 @@ pub struct Params {
     /// min_next_bid_increment_rate defines the minimum increment rate for new bids
     #[prost(string, tag = "2")]
     pub min_next_bid_increment_rate: ::prost::alloc::string::String,
-    /// inj_basket_max_cap defines the maximum cap for INJ contained in an auction basket
+    /// inj_basket_max_cap defines the maximum cap for INJ contained in an auction
+    /// basket
     #[prost(string, tag = "3")]
     pub inj_basket_max_cap: ::prost::alloc::string::String,
 }
@@ -23,9 +24,6 @@ pub struct Params {
 pub struct Bid {
     #[prost(string, tag = "1")]
     pub bidder: ::prost::alloc::string::String,
-    // #[prost(string, tag = "2")]
-    // pub amount: ::prost::alloc::string::String,
-    // NOTE: THIS IS A FIX FOR RUST BINDINGS, PLEASE COPY IN FUTURE RELEASES
     #[prost(message, optional, tag = "2")]
     pub amount: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
 }
@@ -37,9 +35,6 @@ pub struct LastAuctionResult {
     #[prost(string, tag = "1")]
     pub winner: ::prost::alloc::string::String,
     /// amount describes the amount the winner get from the auction
-    // #[prost(string, tag = "2")]
-    // pub amount: ::prost::alloc::string::String,
-    // NOTE: THIS IS A FIX FOR RUST BINDINGS, PLEASE COPY IN FUTURE RELEASES
     #[prost(message, optional, tag = "2")]
     pub amount: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
     /// round defines the round number of auction
@@ -58,9 +53,6 @@ pub struct EventBid {
     #[prost(string, tag = "1")]
     pub bidder: ::prost::alloc::string::String,
     /// amount describes the amount the bidder put on the auction
-    // #[prost(string, tag = "2")]
-    // pub amount: ::prost::alloc::string::String,
-    // NOTE: THIS IS A FIX FOR RUST BINDINGS, PLEASE COPY IN FUTURE RELEASES
     #[prost(message, optional, tag = "2")]
     pub amount: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
     /// round defines the round number of auction
@@ -79,9 +71,6 @@ pub struct EventAuctionResult {
     #[prost(string, tag = "1")]
     pub winner: ::prost::alloc::string::String,
     /// amount describes the amount the winner get from the auction
-    // #[prost(string, tag = "2")]
-    // pub amount: ::prost::alloc::string::String,
-    // NOTE: THIS IS A FIX FOR RUST BINDINGS, PLEASE COPY IN FUTURE RELEASES
     #[prost(message, optional, tag = "2")]
     pub amount: ::core::option::Option<super::super::super::cosmos::base::v1beta1::Coin>,
     /// round defines the round number of auction
