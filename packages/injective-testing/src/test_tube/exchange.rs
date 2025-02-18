@@ -18,7 +18,8 @@ use injective_test_tube::{
                 gov::v1::{MsgSubmitProposal, MsgVote},
             },
             injective::exchange::v1beta1::{
-                DerivativeOrder, MsgBatchUpdateOrders, MsgBatchUpdateOrdersResponse, MsgCancelDerivativeOrder, MsgCreateDerivativeLimitOrder,
+                BatchExchangeModificationProposal, DenomMinNotional, DenomMinNotionalProposal, DerivativeOrder, MsgBatchExchangeModification,
+                MsgBatchUpdateOrders, MsgBatchUpdateOrdersResponse, MsgCancelDerivativeOrder, MsgCreateDerivativeLimitOrder,
                 MsgCreateDerivativeLimitOrderResponse, MsgCreateSpotLimitOrder, MsgInstantPerpetualMarketLaunch, MsgInstantSpotMarketLaunch,
                 MsgUpdateParams, OrderInfo, OrderType, PerpetualMarketFunding, Position, QueryDerivativeMarketsRequest, QueryExchangeParamsRequest,
                 QueryExchangeParamsResponse, QuerySpotMarketsRequest, QuerySubaccountDepositsRequest,
@@ -60,6 +61,78 @@ pub fn add_exchange_admin(app: &InjectiveTestApp, validator: &SigningAccount, ad
             MsgSubmitProposal {
                 messages: vec![Any {
                     type_url: MsgUpdateParams::TYPE_URL.to_string(),
+                    value: buf,
+                }],
+                initial_deposit: vec![BaseCoin {
+                    amount: "100000000000000000000".to_string(),
+                    denom: "inj".to_string(),
+                }],
+                proposer: validator.address(),
+                metadata: "".to_string(),
+                title: "Update params".to_string(),
+                summary: "Basically updating the params".to_string(),
+                expedited: false,
+            },
+            validator,
+        )
+        .unwrap();
+
+    let proposal_id = res.events.iter().find(|e| e.ty == "submit_proposal").unwrap().attributes[0].value.clone();
+
+    gov.vote(
+        MsgVote {
+            proposal_id: u64::from_str(&proposal_id).unwrap(),
+            voter: validator.address(),
+            option: 1i32,
+            metadata: "".to_string(),
+        },
+        validator,
+    )
+    .unwrap();
+}
+
+pub fn add_min_notional(app: &InjectiveTestApp, validator: &SigningAccount, denom: String, min_notional: String) {
+    let gov = Gov::new(app);
+
+    // NOTE: this could change int he future
+    let governance_module_address = "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt";
+
+    let proposal = BatchExchangeModificationProposal {
+        title: "Update params".to_string(),
+        description: "Basically updating the params".to_string(),
+        spot_market_param_update_proposals: vec![],
+        derivative_market_param_update_proposals: vec![],
+        spot_market_launch_proposals: vec![],
+        perpetual_market_launch_proposals: vec![],
+        expiry_futures_market_launch_proposals: vec![],
+        trading_reward_campaign_update_proposal: None,
+        binary_options_market_launch_proposals: vec![],
+        binary_options_param_update_proposals: vec![],
+        denom_decimals_update_proposal: None,
+        fee_discount_proposal: None,
+        market_forced_settlement_proposals: vec![],
+        denom_min_notional_proposal: Some(DenomMinNotionalProposal {
+            title: "Update min notional".to_string(),
+            description: "Love it!".to_string(),
+            denom_min_notionals: vec![DenomMinNotional { denom, min_notional }],
+        }),
+    };
+
+    let mut buf = vec![];
+    MsgBatchExchangeModification::encode(
+        &MsgBatchExchangeModification {
+            sender: governance_module_address.to_string(),
+            proposal: Some(proposal),
+        },
+        &mut buf,
+    )
+    .unwrap();
+
+    let res = gov
+        .submit_proposal(
+            MsgSubmitProposal {
+                messages: vec![Any {
+                    type_url: MsgBatchExchangeModification::TYPE_URL.to_string(),
                     value: buf,
                 }],
                 initial_deposit: vec![BaseCoin {
