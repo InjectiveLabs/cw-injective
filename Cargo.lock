@@ -1918,7 +1918,7 @@ dependencies = [
 
 [[package]]
 name = "injective-testing"
-version = "1.1.5"
+version = "1.1.6"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
