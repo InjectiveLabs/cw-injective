@@ -18,12 +18,12 @@ use injective_test_tube::{
                 gov::v1::{MsgSubmitProposal, MsgVote},
             },
             injective::exchange::v1beta1::{
-                BatchExchangeModificationProposal, DenomMinNotional, DenomMinNotionalProposal, DerivativeOrder, MsgBatchExchangeModification,
-                MsgBatchUpdateOrders, MsgBatchUpdateOrdersResponse, MsgCancelDerivativeOrder, MsgCreateDerivativeLimitOrder,
-                MsgCreateDerivativeLimitOrderResponse, MsgCreateSpotLimitOrder, MsgInstantPerpetualMarketLaunch, MsgInstantSpotMarketLaunch,
-                MsgUpdateParams, OrderInfo, OrderType, PerpetualMarketFunding, Position, QueryDerivativeMarketsRequest, QueryExchangeParamsRequest,
-                QueryExchangeParamsResponse, QuerySpotMarketsRequest, QuerySubaccountDepositsRequest,
-                QuerySubaccountEffectivePositionInMarketRequest, SpotOrder,
+                BatchExchangeModificationProposal, DenomDecimals, DenomMinNotional, DenomMinNotionalProposal, DerivativeOrder,
+                MsgBatchExchangeModification, MsgBatchUpdateOrders, MsgBatchUpdateOrdersResponse, MsgCancelDerivativeOrder,
+                MsgCreateDerivativeLimitOrder, MsgCreateDerivativeLimitOrderResponse, MsgCreateSpotLimitOrder, MsgInstantPerpetualMarketLaunch,
+                MsgInstantSpotMarketLaunch, MsgUpdateParams, OrderInfo, OrderType, PerpetualMarketFunding, Position, QueryDerivativeMarketsRequest,
+                QueryExchangeParamsRequest, QueryExchangeParamsResponse, QuerySpotMarketsRequest, QuerySubaccountDepositsRequest,
+                QuerySubaccountEffectivePositionInMarketRequest, SpotOrder, UpdateDenomDecimalsProposal,
             },
         },
     },
@@ -91,7 +91,7 @@ pub fn add_exchange_admin(app: &InjectiveTestApp, validator: &SigningAccount, ad
     .unwrap();
 }
 
-pub fn add_min_notional(app: &InjectiveTestApp, validator: &SigningAccount, denom: String, min_notional: String) {
+pub fn add_denom(app: &InjectiveTestApp, validator: &SigningAccount, denom: String, min_notional: String, decimals: u64) {
     let gov = Gov::new(app);
 
     // NOTE: this could change int he future
@@ -108,7 +108,14 @@ pub fn add_min_notional(app: &InjectiveTestApp, validator: &SigningAccount, deno
         trading_reward_campaign_update_proposal: None,
         binary_options_market_launch_proposals: vec![],
         binary_options_param_update_proposals: vec![],
-        denom_decimals_update_proposal: None,
+        denom_decimals_update_proposal: Some(UpdateDenomDecimalsProposal {
+            title: "Update denom decimals".to_string(),
+            description: "Love it!".to_string(),
+            denom_decimals: vec![DenomDecimals {
+                denom: denom.clone(),
+                decimals,
+            }],
+        }),
         fee_discount_proposal: None,
         market_forced_settlement_proposals: vec![],
         denom_min_notional_proposal: Some(DenomMinNotionalProposal {
