@@ -14,7 +14,7 @@ cosmwasm-std    = { workspace = true }
 cw-storage-plus = { workspace = true }
 ethereum-types  = { workspace = true }
 hex             = { workspace = true }
-injective-math  = { path = "../../packages/injective-math" }
+injective-math  = { version = "0.3.1", path = "../../packages/injective-math" }
 schemars        = { workspace = true }
 serde           = { workspace = true }
 serde_repr      = { workspace = true }

@@ -21,7 +21,7 @@ cw2                  = { version = "2.0.0" }
 ethereum-types       = { version = "0.5.2" }
 hex                  = { version = "0.4.3", features = [ "serde" ] }
 injective-cosmwasm   = { version = "0.3.0", path = "./packages/injective-cosmwasm" }
-injective-math       = { version = "0.3.0", path = "./packages/injective-math" }
+injective-math       = { version = "0.3.1", path = "./packages/injective-math" }
 injective-std        = { version = "1.15.0-beta"}
 injective-std-derive = { version = "1.13.4"}
 injective-test-tube  = { version = "1.15.0-beta" }
