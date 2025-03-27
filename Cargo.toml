@@ -21,10 +21,10 @@ cw2                  = { version = "2.0.0" }
 ethereum-types       = { version = "0.5.2" }
 hex                  = { version = "0.4.3", features = [ "serde" ] }
 injective-cosmwasm   = { version = "0.3.0", path = "./packages/injective-cosmwasm" }
-injective-math       = { version = "0.3.0", path = "./packages/injective-math" }
-injective-std        = { version = "1.14.0-rc1", path = "./packages/injective-std" }
-injective-std-derive = { version = "1.13.4", path = "./packages/injective-std-derive" }
-injective-test-tube  = { version = "1.14.0-rc1" }
+injective-math       = { version = "0.3.1", path = "./packages/injective-math" }
+injective-std        = { version = "1.15.0-beta"}
+injective-std-derive = { version = "1.13.4"}
+injective-test-tube  = { version = "1.15.0-beta" }
 injective-testing    = { version = "1.1.4", path = "./packages/injective-testing" }
 itertools            = { version = "0.10.3" }
 primitive-types      = { version = "0.12.2", default-features = false }
@@ -47,7 +47,7 @@ syn                  = { version = "1.0.98" }
 test-tube-inj        = { version = "2.0.4" }
 thiserror            = { version = "1.0.56" }
 tiny-keccak          = { version = "1.2.1" }
-trybuild             = { version = "1.0.63", features = [ "diff" ] }
+
 
 [profile.release]
 codegen-units    = 1
@@ -64,5 +64,4 @@ rpath            = false
 # injective-cosmwasm = { path = "./packages/injective-cosmwasm" }
 # injective-math     = { path = "./packages/injective-math" }
 # injective-protobuf = { path = "./packages/injective-protobuf" }
-# injective-std      = { path = "./packages/injective-std" }
 # injective-testing  = { path = "./packages/injective-testing" }
