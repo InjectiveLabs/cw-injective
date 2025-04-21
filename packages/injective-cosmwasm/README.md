@@ -1,3 +1,7 @@
+> ⚠️ **This package is no longer maintained.**  
+> Please use [`injective-std`](https://github.com/InjectiveLabs/injective-rust/tree/dev/packages/injective-std) if you want new chain features. For existing functionality, continued usage of `injective-cosmwasm` is possible.  
+> Detailed guidance can be found in the [Injective CosmWasm developer docs](https://docs.injective.network/developers/cosmwasm-developers/cosmwasm-any).
+
 # injective-cosmwasm
 
 <div align="center">
