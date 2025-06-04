@@ -20,7 +20,7 @@ hex                 = { version = "0.4.3", features = [ "serde" ] }
 injective-cosmwasm  = { version = "0.3.3", path = "./packages/injective-cosmwasm" }
 injective-math      = { version = "0.3.3", path = "./packages/injective-math" }
 injective-std       = { version = "1.16.0-beta.2" }
-injective-test-tube = { version = "1.16.0-beta.2" }
+injective-test-tube = { version = "1.16.0-beta.2.1" }
 injective-testing   = { version = "1.1.7", path = "./packages/injective-testing" }
 primitive-types     = { version = "0.12.2", default-features = false }
 prost               = { version = "0.13.4", features = [ "prost-derive" ] }
