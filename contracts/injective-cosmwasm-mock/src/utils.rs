@@ -88,7 +88,7 @@ impl Setup {
                     Coin::new(10_000_000_000_000_000_000_000u128, "inj"),
                     Coin::new(100_000_000_000_000_000_000u128, "usdt"),
                 ],
-                &[10u32, 6u32],
+                &[18u32, 6u32],
             )
             .unwrap();
         let validator = app.get_first_validator_signing_account(BASE_DENOM.to_string(), 1.2f64).unwrap();
