@@ -151,7 +151,7 @@ impl Setup {
             &validator,
             denoms["base"].as_str(),
             denoms["quote"].as_str(),
-            human_to_dec("10.01", BASE_DECIMALS).to_string(),
+            human_to_dec("10.01", QUOTE_DECIMALS).to_string(),
         );
 
         match exchange_type {
