@@ -72,6 +72,12 @@ impl From<Uint128> for FPDecimal {
     }
 }
 
+impl From<FPDecimal> for Uint256 {
+    fn from(value: FPDecimal) -> Self {
+        value.to_u256()
+    }
+}
+
 impl From<Uint256> for FPDecimal {
     fn from(x: Uint256) -> FPDecimal {
         FPDecimal::from_str(&x.to_string()).unwrap()
@@ -454,6 +460,18 @@ mod tests {
 
         let uint256 = fp_decimal.to_u256();
         assert_eq!(uint256, Uint256::from(12345u64));
+    }
+
+    #[test]
+    fn test_into_u256() {
+        let fp_decimal: Uint256 = FPDecimal {
+            num: U256::from(12345u64),
+            sign: 1, // Assuming it's always positive
+        }
+        .into();
+        let u256 = Uint256::from(12345u64);
+
+        assert_eq!(u256, fp_decimal)
     }
 
     #[test]
