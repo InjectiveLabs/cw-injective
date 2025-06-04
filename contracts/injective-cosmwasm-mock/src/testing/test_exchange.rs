@@ -10,13 +10,12 @@ use cosmwasm_std::{Addr, Coin};
 use injective_cosmwasm::{
     checked_address_to_subaccount_id,
     exchange::{response::QueryOrderbookResponse, types::VolumeByType},
-    CancellationStrategy, ExchangeParamsResponse, MarketId, MarketMidPriceAndTOBResponse, MarketVolatilityResponse, OrderSide, PriceLevel,
-    QueryAggregateVolumeResponse, QueryMarketAtomicExecutionFeeMultiplierResponse, SpotMarketResponse, SubaccountDepositResponse, SubaccountId,
-    TraderSpotOrdersResponse, TrimmedSpotLimitOrder,
+    get_default_subaccount_id_for_checked_address, CancellationStrategy, ExchangeParamsResponse, MarketId, MarketMidPriceAndTOBResponse,
+    MarketVolatilityResponse, OrderSide, PriceLevel, QueryAggregateVolumeResponse, QueryMarketAtomicExecutionFeeMultiplierResponse,
+    SpotMarketResponse, SubaccountDepositResponse, SubaccountId, TraderSpotOrdersResponse, TrimmedSpotLimitOrder,
 };
 use injective_math::FPDecimal;
 use injective_test_tube::{
-    injective_cosmwasm::get_default_subaccount_id_for_checked_address,
     injective_std::types::{
         cosmos::base::v1beta1::Coin as BaseCoin,
         injective::exchange::v1beta1::{
@@ -58,7 +57,7 @@ fn test_exchange_params() {
     assert!(res.params.is_some());
     let params = res.params.unwrap();
 
-    let listing_fee_coin = str_coin("1000", BASE_DENOM, BASE_DECIMALS);
+    let listing_fee_coin = str_coin("20", BASE_DENOM, BASE_DECIMALS);
     assert_eq!(params.spot_market_instant_listing_fee, listing_fee_coin);
     assert_eq!(params.derivative_market_instant_listing_fee, listing_fee_coin);
     assert_eq!(params.trading_rewards_vesting_duration, 604800);

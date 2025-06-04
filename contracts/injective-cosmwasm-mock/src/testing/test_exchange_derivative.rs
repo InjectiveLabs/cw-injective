@@ -8,17 +8,15 @@ use crate::{
 };
 use cosmwasm_std::Addr;
 use injective_cosmwasm::{
-    checked_address_to_subaccount_id, exchange::response::QueryOrderbookResponse, CancellationStrategy, DerivativeMarketResponse, MarketId,
-    MarketMidPriceAndTOBResponse, PerpetualMarketFundingResponse, PerpetualMarketInfoResponse, PriceLevel,
-    SubaccountEffectivePositionInMarketResponse, SubaccountId, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse,
-    TrimmedDerivativeLimitOrder,
+    checked_address_to_subaccount_id, exchange::response::QueryOrderbookResponse, get_default_subaccount_id_for_checked_address,
+    CancellationStrategy, DerivativeMarketResponse, MarketId, MarketMidPriceAndTOBResponse, PerpetualMarketFundingResponse,
+    PerpetualMarketInfoResponse, PriceLevel, SubaccountEffectivePositionInMarketResponse, SubaccountId, SubaccountPositionInMarketResponse,
+    TraderDerivativeOrdersResponse, TrimmedDerivativeLimitOrder,
 };
 use injective_math::FPDecimal;
-use injective_test_tube::{
-    injective_cosmwasm::get_default_subaccount_id_for_checked_address,
-    injective_std::types::injective::exchange::v1beta1::{MsgInstantPerpetualMarketLaunch, OrderType},
-    Account, Exchange, Module, Wasm,
-};
+use injective_std::types::injective::exchange::v2;
+use injective_test_tube::{injective_std::types::injective::exchange::v1beta1::OrderType, Account, Exchange, Module, Wasm};
+use injective_testing::test_tube::exchange::add_exchange_admin;
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
@@ -52,30 +50,33 @@ fn test_query_derivative_market() {
     let maintenance_margin_ratio = FPDecimal::must_from_str("0.05");
     let min_price_tick_size = FPDecimal::must_from_str("1000.0");
     let min_quantity_tick_size = FPDecimal::must_from_str("1000000000000000");
-    let min_notional = FPDecimal::must_from_str("1");
+    let min_notional = FPDecimal::must_from_str("0.001");
     let quote_denom = QUOTE_DENOM.to_string();
-    let maker_fee_rate = FPDecimal::ZERO;
-    let taker_fee_rate = FPDecimal::ZERO;
+    let maker_fee_rate = FPDecimal::must_from_str("0.0001");
+    let taker_fee_rate = FPDecimal::must_from_str("0.0001");
+
+    add_exchange_admin(&env.app, &env.validator, env.owner.address());
 
     exchange
-        .instant_perpetual_market_launch(
-            MsgInstantPerpetualMarketLaunch {
-                sender: env.signer.address(),
+        .instant_perpetual_market_launch_v2(
+            v2::MsgInstantPerpetualMarketLaunch {
+                sender: env.owner.address(),
                 ticker: ticker.to_owned(),
-                quote_denom: quote_denom.to_owned(),
-                oracle_base: BASE_DENOM.to_owned(),
-                oracle_quote: quote_denom.to_owned(),
+                quote_denom: "usdt".to_string(),
+                oracle_base: "inj".to_string(),
+                oracle_quote: "usdt".to_string(),
                 oracle_scale_factor: 6u32,
                 oracle_type: 2i32,
-                maker_fee_rate: dec_to_proto(maker_fee_rate).to_string(),
-                taker_fee_rate: dec_to_proto(taker_fee_rate),
-                initial_margin_ratio: dec_to_proto(initial_margin_ratio),
-                maintenance_margin_ratio: dec_to_proto(maintenance_margin_ratio),
-                min_price_tick_size: dec_to_proto(min_price_tick_size),
-                min_quantity_tick_size: dec_to_proto(min_quantity_tick_size),
-                min_notional: dec_to_proto(min_notional),
+                maker_fee_rate: "-100000000000000".to_string(),
+                taker_fee_rate: "1000000000000000".to_string(),
+                initial_margin_ratio: "195000000000000000".to_owned(),
+                maintenance_margin_ratio: "50000000000000000".to_owned(),
+                min_price_tick_size: "1000000000000000000000".to_owned(),
+                min_quantity_tick_size: "1000000000000000".to_owned(),
+                min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
+                reduce_margin_ratio: "195000000000000000".to_owned(),
             },
-            &env.signer,
+            &env.owner,
         )
         .unwrap();
 
@@ -88,7 +89,7 @@ fn test_query_derivative_market() {
     let response_market = res.market.unwrap().market.unwrap();
     assert_eq!(response_market.market_id.as_str(), derivative_market_id);
     assert_eq!(response_market.ticker, ticker);
-    assert_eq!(response_market.quote_denom, quote_denom);
+    assert_eq!(response_market.quote_denom, QUOTE_DENOM);
     assert_eq!(response_market.min_price_tick_size, min_price_tick_size);
     assert_eq!(response_market.min_quantity_tick_size, min_quantity_tick_size);
     assert_eq!(response_market.maker_fee_rate, maker_fee_rate);

@@ -15,12 +15,13 @@ use injective_cosmwasm::{
     SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse, TrimmedDerivativeLimitOrder,
 };
 use injective_math::FPDecimal;
+use injective_std::types::injective::exchange::v2;
 use injective_test_tube::{
     injective_cosmwasm::get_default_subaccount_id_for_checked_address,
     injective_std::types::injective::exchange::v1beta1::{
-        MsgInstantPerpetualMarketLaunch, OrderType, QueryDerivativeMarketRequest, QueryDerivativeMidPriceAndTobRequest,
-        QueryDerivativeOrderbookRequest, QueryPerpetualMarketFundingRequest, QueryPerpetualMarketInfoRequest,
-        QuerySubaccountEffectivePositionInMarketRequest, QuerySubaccountPositionInMarketRequest, QueryTraderDerivativeOrdersRequest,
+        OrderType, QueryDerivativeMarketRequest, QueryDerivativeMidPriceAndTobRequest, QueryDerivativeOrderbookRequest,
+        QueryPerpetualMarketFundingRequest, QueryPerpetualMarketInfoRequest, QuerySubaccountEffectivePositionInMarketRequest,
+        QuerySubaccountPositionInMarketRequest, QueryTraderDerivativeOrdersRequest,
     },
     Account, Exchange, Module, Wasm,
 };
@@ -70,8 +71,8 @@ fn test_query_derivative_market() {
     let taker_fee_rate = FPDecimal::must_from_str("0.0005");
 
     exchange
-        .instant_perpetual_market_launch(
-            MsgInstantPerpetualMarketLaunch {
+        .instant_perpetual_market_launch_v2(
+            v2::MsgInstantPerpetualMarketLaunch {
                 sender: env.owner.address(),
                 ticker: ticker.to_owned(),
                 quote_denom: quote_denom.to_owned(),
@@ -86,6 +87,7 @@ fn test_query_derivative_market() {
                 min_price_tick_size: dec_to_proto(min_price_tick_size),
                 min_quantity_tick_size: dec_to_proto(min_quantity_tick_size),
                 min_notional: dec_to_proto(min_notional),
+                reduce_margin_ratio: dec_to_proto(initial_margin_ratio),
             },
             &env.owner,
         )
