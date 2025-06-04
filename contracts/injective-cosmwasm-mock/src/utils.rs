@@ -1,9 +1,9 @@
 use crate::msg::{InstantiateMsg, MSG_CREATE_DERIVATIVE_LIMIT_ORDER_ENDPOINT, MSG_CREATE_SPOT_LIMIT_ORDER_ENDPOINT};
 use cosmwasm_std::{coin, Addr, Coin};
-use injective_cosmwasm::{checked_address_to_subaccount_id, SubaccountId};
+use injective_cosmwasm::{checked_address_to_subaccount_id, get_default_subaccount_id_for_checked_address, SubaccountId};
 use injective_math::{scale::Scaled, FPDecimal};
+use injective_std::types::injective::exchange::v2;
 use injective_test_tube::{
-    injective_cosmwasm::get_default_subaccount_id_for_checked_address,
     injective_std::{
         shim::{Any, Timestamp},
         types::{
@@ -18,8 +18,8 @@ use injective_test_tube::{
             },
             injective::{
                 exchange::v1beta1::{
-                    DerivativeOrder, MsgCreateDerivativeLimitOrder, MsgCreateSpotLimitOrder, MsgInstantPerpetualMarketLaunch,
-                    MsgInstantSpotMarketLaunch, OrderInfo, OrderType, QueryDerivativeMarketsRequest, QuerySpotMarketsRequest, SpotOrder,
+                    DerivativeOrder, MsgCreateDerivativeLimitOrder, MsgCreateSpotLimitOrder, MsgInstantSpotMarketLaunch, OrderInfo, OrderType,
+                    QueryDerivativeMarketsRequest, QuerySpotMarketsRequest, SpotOrder,
                 },
                 insurance::v1beta1::MsgCreateInsuranceFund,
                 oracle::v1beta1::{
@@ -31,6 +31,7 @@ use injective_test_tube::{
     },
     Account, Authz, Bank, Exchange, ExecuteResponse, Gov, InjectiveTestApp, Insurance, Module, Oracle, Runner, SigningAccount, Wasm,
 };
+use injective_testing::test_tube::exchange::{add_denom_notional_and_decimal, add_exchange_admin};
 use injective_testing::utils::human_to_i64;
 use prost::Message;
 use std::{collections::HashMap, ops::Neg, str::FromStr};
@@ -73,6 +74,7 @@ impl Setup {
     pub fn new(exchange_type: ExchangeType) -> Self {
         let app = InjectiveTestApp::new();
         let wasm = Wasm::new(&app);
+        let exchange = Exchange::new(&app);
         let mut market_id = None;
 
         let mut denoms = HashMap::new();
@@ -80,8 +82,15 @@ impl Setup {
         denoms.insert("quote".to_string(), QUOTE_DENOM.to_string());
         denoms.insert("base".to_string(), BASE_DENOM.to_string());
 
-        let signer = app.init_account(&[str_coin("1000000", BASE_DENOM, BASE_DECIMALS)]).unwrap();
-
+        let signer = app
+            .init_account_decimals(
+                &[
+                    Coin::new(10_000_000_000_000_000_000_000u128, "inj"),
+                    Coin::new(100_000_000_000_000_000_000u128, "usdt"),
+                ],
+                &[18u32, 6u32],
+            )
+            .unwrap();
         let validator = app.get_first_validator_signing_account(BASE_DENOM.to_string(), 1.2f64).unwrap();
 
         let owner = app
@@ -91,8 +100,12 @@ impl Setup {
                 str_coin("1000000", QUOTE_DENOM, QUOTE_DECIMALS),
             ])
             .unwrap();
+        send(&Bank::new(&app), "1000000000000000000000", BASE_DENOM, &owner, &validator);
+        add_denom_notional_and_decimal(&app, &validator, QUOTE_DENOM.to_string(), "1".to_string(), QUOTE_DECIMALS as u64);
 
+        add_denom_notional_and_decimal(&app, &validator, BASE_DENOM.to_string(), "1".to_string(), BASE_DECIMALS as u64);
         let mut users: Vec<UserInfo> = Vec::new();
+
         for _ in 0..10 {
             let user = app
                 .init_account(&[
@@ -122,8 +135,6 @@ impl Setup {
 
         assert!(!contract_address.is_empty(), "Contract address is empty");
 
-        send(&Bank::new(&app), "1000000000000000000000", BASE_DENOM, &owner, &validator);
-
         launch_insurance_fund(
             &app,
             &owner,
@@ -140,16 +151,15 @@ impl Setup {
             &validator,
             denoms["base"].as_str(),
             denoms["quote"].as_str(),
-            human_to_dec("10.01", BASE_DECIMALS).to_string(),
+            human_to_dec("10.01", QUOTE_DECIMALS).to_string(),
         );
 
         match exchange_type {
             ExchangeType::Spot => {
-                let exchange = Exchange::new(&app);
                 market_id = Some(launch_spot_market(&exchange, &owner, "INJ/USDT".to_string()));
             }
             ExchangeType::Derivative => {
-                let exchange = Exchange::new(&app);
+                add_exchange_admin(&app, &validator, owner.address());
                 market_id = Some(launch_perp_market(&exchange, &owner, "INJ/USDT".to_string()));
             }
             ExchangeType::None => {}
@@ -353,22 +363,23 @@ pub fn get_spot_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: String)
 
 pub fn launch_perp_market(exchange: &Exchange<InjectiveTestApp>, signer: &SigningAccount, ticker: String) -> String {
     exchange
-        .instant_perpetual_market_launch(
-            MsgInstantPerpetualMarketLaunch {
+        .instant_perpetual_market_launch_v2(
+            v2::MsgInstantPerpetualMarketLaunch {
                 sender: signer.address(),
                 ticker: ticker.to_owned(),
-                quote_denom: "usdt".to_string(),
-                oracle_base: "inj".to_string(),
-                oracle_quote: "usdt".to_string(),
+                quote_denom: QUOTE_DENOM.to_string(),
+                oracle_base: BASE_DENOM.to_string(),
+                oracle_quote: QUOTE_DENOM.to_string(),
                 oracle_scale_factor: 6u32,
                 oracle_type: 2i32,
-                maker_fee_rate: "0".to_owned(),
-                taker_fee_rate: "0".to_owned(),
-                initial_margin_ratio: "195000000000000000".to_owned(),
-                maintenance_margin_ratio: "50000000000000000".to_owned(),
-                min_price_tick_size: "1000000000000000000000".to_owned(),
-                min_quantity_tick_size: "1000000000000000".to_owned(),
-                min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
+                maker_fee_rate: dec_to_proto(FPDecimal::must_from_str("-0.005")),
+                taker_fee_rate: dec_to_proto(FPDecimal::must_from_str("0.05")),
+                initial_margin_ratio: dec_to_proto(FPDecimal::must_from_str("0.033333")),
+                maintenance_margin_ratio: dec_to_proto(FPDecimal::must_from_str("0.02")),
+                min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.001")),
+                min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("0.001")),
+                min_notional: dec_to_proto(FPDecimal::must_from_str("0.01")),
+                reduce_margin_ratio: dec_to_proto(FPDecimal::must_from_str("0.033333")),
             },
             signer,
         )

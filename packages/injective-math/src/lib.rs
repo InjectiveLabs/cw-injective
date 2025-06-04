@@ -11,17 +11,19 @@ pub use utils::*;
 pub use vector::*;
 
 /// ## Description
+///
 /// Calculates the cluster imbalance.
 ///
 /// ## Params
-/// - **i** is a reference to an array containing objects of type [`FPDecimal`] which
-///     is the asset inventory.
 ///
-/// - **p** is a reference to an array containing objects of type [`FPDecimal`] which
-///     are the prices of the assets.
+/// - **i** is a reference to an array containing objects of type [`FPDecimal`] which  
+///   is the asset inventory.
+///
+/// - **p** is a reference to an array containing objects of type [`FPDecimal`] which  
+///   are the prices of the assets.
 ///
 /// - **w** is a reference to an array containing objects of type [`FPDecimal`] which
-///     are the target weights of the assets.
+///   are the target weights of the assets.
 pub fn imbalance(i: &[FPDecimal], p: &[FPDecimal], w: &[FPDecimal]) -> FPDecimal {
     // Target weights with prices
     // -- u = elem_mul(targets, prices)

@@ -9,6 +9,7 @@ use crate::{
 use cosmwasm_std::{Addr, Uint128};
 use injective_cosmwasm::{get_default_subaccount_id_for_checked_address, SubaccountId};
 use injective_math::FPDecimal;
+use injective_std::types::cosmos::gov;
 use injective_test_tube::{
     injective_std::{
         shim::Any,
@@ -18,13 +19,13 @@ use injective_test_tube::{
                 gov::v1::{MsgSubmitProposal, MsgVote},
             },
             injective::exchange::v1beta1::{
-                BatchExchangeModificationProposal, DenomDecimals, DenomMinNotional, DenomMinNotionalProposal, DerivativeOrder,
-                MsgBatchExchangeModification, MsgBatchUpdateOrders, MsgBatchUpdateOrdersResponse, MsgCancelDerivativeOrder,
-                MsgCreateDerivativeLimitOrder, MsgCreateDerivativeLimitOrderResponse, MsgCreateSpotLimitOrder, MsgInstantPerpetualMarketLaunch,
-                MsgInstantSpotMarketLaunch, MsgUpdateParams, OrderInfo, OrderType, PerpetualMarketFunding, Position, QueryDerivativeMarketsRequest,
-                QueryExchangeParamsRequest, QueryExchangeParamsResponse, QuerySpotMarketsRequest, QuerySubaccountDepositsRequest,
-                QuerySubaccountEffectivePositionInMarketRequest, SpotOrder, UpdateDenomDecimalsProposal,
+                BatchExchangeModificationProposal, DenomDecimals, DenomMinNotional, DenomMinNotionalProposal, DerivativeOrder, MsgBatchUpdateOrders,
+                MsgBatchUpdateOrdersResponse, MsgCancelDerivativeOrder, MsgCreateDerivativeLimitOrder, MsgCreateDerivativeLimitOrderResponse,
+                MsgCreateSpotLimitOrder, MsgInstantSpotMarketLaunch, MsgUpdateParams, OrderInfo, OrderType, PerpetualMarketFunding, Position,
+                QueryDerivativeMarketsRequest, QueryExchangeParamsRequest, QueryExchangeParamsResponse, QuerySpotMarketsRequest,
+                QuerySubaccountDepositsRequest, QuerySubaccountEffectivePositionInMarketRequest, SpotOrder, UpdateDenomDecimalsProposal,
             },
+            injective::exchange::v2,
         },
     },
     Account, Exchange, Gov, InjectiveTestApp, Module, Runner, SigningAccount,
@@ -43,7 +44,7 @@ pub fn add_exchange_admin(app: &InjectiveTestApp, validator: &SigningAccount, ad
     exchange_params.exchange_admins.push(admin_address);
     exchange_params.max_derivative_order_side_count = 300u32;
 
-    // NOTE: this could change int he future
+    // NOTE: this could change in the future
     let governance_module_address = "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt";
 
     let mut buf = vec![];
@@ -89,13 +90,13 @@ pub fn add_exchange_admin(app: &InjectiveTestApp, validator: &SigningAccount, ad
         validator,
     )
     .unwrap();
+
+    // Increase time to pass the proposal
+    app.increase_time(20u64);
 }
 
-pub fn add_denom(app: &InjectiveTestApp, validator: &SigningAccount, denom: String, min_notional: String, decimals: u64) {
+pub fn add_denom_notional_and_decimal(app: &InjectiveTestApp, validator: &SigningAccount, denom: String, min_notional: String, decimals: u64) {
     let gov = Gov::new(app);
-
-    // NOTE: this could change int he future
-    let governance_module_address = "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt";
 
     let proposal = BatchExchangeModificationProposal {
         title: "Update params".to_string(),
@@ -126,35 +127,23 @@ pub fn add_denom(app: &InjectiveTestApp, validator: &SigningAccount, denom: Stri
     };
 
     let mut buf = vec![];
-    MsgBatchExchangeModification::encode(
-        &MsgBatchExchangeModification {
-            sender: governance_module_address.to_string(),
-            proposal: Some(proposal),
-        },
-        &mut buf,
-    )
-    .unwrap();
+    proposal.encode(&mut buf).unwrap();
 
-    let res = gov
-        .submit_proposal(
-            MsgSubmitProposal {
-                messages: vec![Any {
-                    type_url: MsgBatchExchangeModification::TYPE_URL.to_string(),
-                    value: buf,
-                }],
-                initial_deposit: vec![BaseCoin {
-                    amount: "100000000000000000000".to_string(),
-                    denom: "inj".to_string(),
-                }],
-                proposer: validator.address(),
-                metadata: "".to_string(),
-                title: "Update params".to_string(),
-                summary: "Basically updating the params".to_string(),
-                expedited: false,
-            },
-            validator,
-        )
-        .unwrap();
+    let content_any = Any {
+        type_url: "/injective.exchange.v2.BatchExchangeModificationProposal".to_string(),
+        value: buf,
+    };
+
+    let msg_submit_proposal = gov::v1beta1::MsgSubmitProposal {
+        content: Some(content_any),
+        initial_deposit: vec![BaseCoin {
+            amount: "100000000000000000000".to_string(),
+            denom: "inj".to_string(),
+        }],
+        proposer: validator.address(),
+    };
+
+    let res = gov.submit_proposal_v1beta1(msg_submit_proposal, validator).unwrap();
 
     let proposal_id = res.events.iter().find(|e| e.ty == "submit_proposal").unwrap().attributes[0].value.clone();
 
@@ -168,6 +157,9 @@ pub fn add_denom(app: &InjectiveTestApp, validator: &SigningAccount, denom: Stri
         validator,
     )
     .unwrap();
+
+    // Increase time to pass the proposal
+    app.increase_time(20u64);
 }
 
 pub fn create_perp_mid_price(app: &InjectiveTestApp, market_id: &str, base_price: &str, base_quantity: &str, base_margin: &str, spread: f64) {
@@ -535,12 +527,12 @@ pub fn launch_spot_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
 
 pub fn launch_spot_market_atom(exchange: &Exchange<InjectiveTestApp>, signer: &SigningAccount, ticker: String) -> String {
     exchange
-        .instant_spot_market_launch(
-            MsgInstantSpotMarketLaunch {
+        .instant_spot_market_launch_v2(
+            v2::MsgInstantSpotMarketLaunch {
                 sender: signer.address(),
-                ticker: ticker.clone(),
-                base_denom: MOCK_ATOM_DENOM.to_string(),
-                quote_denom: MOCK_QUOTE_DENOM.to_string(),
+                ticker: "INJ/USDT".to_owned(),
+                base_denom: "inj".to_owned(),
+                quote_denom: "usdt".to_owned(),
                 min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.000010000000000000")),
                 min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("100000")),
                 min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
@@ -585,8 +577,8 @@ pub fn launch_spot_market_custom(
 
 pub fn launch_perp_market(exchange: &Exchange<InjectiveTestApp>, signer: &SigningAccount, ticker: String) -> String {
     exchange
-        .instant_perpetual_market_launch(
-            MsgInstantPerpetualMarketLaunch {
+        .instant_perpetual_market_launch_v2(
+            v2::MsgInstantPerpetualMarketLaunch {
                 sender: signer.address(),
                 ticker: ticker.to_owned(),
                 quote_denom: "usdt".to_string(),
@@ -601,6 +593,7 @@ pub fn launch_perp_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
                 min_price_tick_size: "1000000000000000000000".to_owned(),
                 min_quantity_tick_size: "1000000000000000".to_owned(),
                 min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
+                reduce_margin_ratio: "150000000000000000".to_string(),
             },
             signer,
         )
@@ -611,8 +604,8 @@ pub fn launch_perp_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
 
 pub fn launch_perp_market_atom(exchange: &Exchange<InjectiveTestApp>, signer: &SigningAccount, ticker: String) -> String {
     exchange
-        .instant_perpetual_market_launch(
-            MsgInstantPerpetualMarketLaunch {
+        .instant_perpetual_market_launch_v2(
+            v2::MsgInstantPerpetualMarketLaunch {
                 sender: signer.address(),
                 ticker: ticker.to_owned(),
                 quote_denom: "usdt".to_string(),
@@ -627,6 +620,7 @@ pub fn launch_perp_market_atom(exchange: &Exchange<InjectiveTestApp>, signer: &S
                 min_price_tick_size: "1000000000000000000000".to_owned(),
                 min_quantity_tick_size: "10000000000000000".to_owned(),
                 min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
+                reduce_margin_ratio: "150000000000000000".to_string(),
             },
             signer,
         )
