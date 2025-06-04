@@ -82,7 +82,15 @@ impl Setup {
         denoms.insert("quote".to_string(), QUOTE_DENOM.to_string());
         denoms.insert("base".to_string(), BASE_DENOM.to_string());
 
-        let signer = app.init_account(&[str_coin("1000000", BASE_DENOM, BASE_DECIMALS)]).unwrap();
+        let signer = app
+            .init_account_decimals(
+                &[
+                    Coin::new(10_000_000_000_000_000_000_000u128, "inj"),
+                    Coin::new(100_000_000_000_000_000_000u128, "usdt"),
+                ],
+                &[10u32, 6u32],
+            )
+            .unwrap();
         let validator = app.get_first_validator_signing_account(BASE_DENOM.to_string(), 1.2f64).unwrap();
 
         let owner = app
