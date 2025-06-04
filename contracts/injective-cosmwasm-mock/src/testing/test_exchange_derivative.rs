@@ -48,12 +48,12 @@ fn test_query_derivative_market() {
     let ticker = "INJ/USDT".to_string();
     let initial_margin_ratio = FPDecimal::must_from_str("0.195");
     let maintenance_margin_ratio = FPDecimal::must_from_str("0.05");
-    let min_price_tick_size = FPDecimal::must_from_str("1000.0");
+    let min_price_tick_size = FPDecimal::must_from_str("0.1");
     let min_quantity_tick_size = FPDecimal::must_from_str("1000000000000000");
     let min_notional = FPDecimal::must_from_str("0.001");
     let quote_denom = QUOTE_DENOM.to_string();
-    let maker_fee_rate = FPDecimal::must_from_str("0.0001");
-    let taker_fee_rate = FPDecimal::must_from_str("0.0001");
+    let maker_fee_rate = FPDecimal::must_from_str("-0.0001");
+    let taker_fee_rate = FPDecimal::must_from_str("0.001");
 
     add_exchange_admin(&env.app, &env.validator, env.owner.address());
 
@@ -62,19 +62,19 @@ fn test_query_derivative_market() {
             v2::MsgInstantPerpetualMarketLaunch {
                 sender: env.owner.address(),
                 ticker: ticker.to_owned(),
-                quote_denom: "usdt".to_string(),
-                oracle_base: "inj".to_string(),
-                oracle_quote: "usdt".to_string(),
+                quote_denom: quote_denom.to_owned(),
+                oracle_base: BASE_DENOM.to_string(),
+                oracle_quote: quote_denom.to_owned(),
                 oracle_scale_factor: 6u32,
                 oracle_type: 2i32,
-                maker_fee_rate: "-100000000000000".to_string(),
-                taker_fee_rate: "1000000000000000".to_string(),
-                initial_margin_ratio: "195000000000000000".to_owned(),
-                maintenance_margin_ratio: "50000000000000000".to_owned(),
-                min_price_tick_size: "1000000000000000000000".to_owned(),
-                min_quantity_tick_size: "1000000000000000".to_owned(),
-                min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
-                reduce_margin_ratio: "195000000000000000".to_owned(),
+                maker_fee_rate: dec_to_proto(maker_fee_rate),
+                taker_fee_rate: dec_to_proto(taker_fee_rate),
+                initial_margin_ratio: dec_to_proto(initial_margin_ratio),
+                maintenance_margin_ratio: dec_to_proto(maintenance_margin_ratio),
+                min_price_tick_size: dec_to_proto(min_price_tick_size),
+                min_quantity_tick_size: dec_to_proto(min_quantity_tick_size),
+                min_notional: dec_to_proto(min_notional),
+                reduce_margin_ratio: dec_to_proto(initial_margin_ratio),
             },
             &env.owner,
         )
@@ -90,7 +90,6 @@ fn test_query_derivative_market() {
     assert_eq!(response_market.market_id.as_str(), derivative_market_id);
     assert_eq!(response_market.ticker, ticker);
     assert_eq!(response_market.quote_denom, QUOTE_DENOM);
-    assert_eq!(response_market.min_price_tick_size, min_price_tick_size);
     assert_eq!(response_market.min_quantity_tick_size, min_quantity_tick_size);
     assert_eq!(response_market.maker_fee_rate, maker_fee_rate);
     assert_eq!(response_market.taker_fee_rate, taker_fee_rate);

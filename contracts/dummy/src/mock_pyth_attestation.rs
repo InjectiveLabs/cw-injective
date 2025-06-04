@@ -92,11 +92,11 @@ mod tests {
         C: CustomQuery,
     {
         fn as_mut_deps(&mut self) -> DepsMut<C> {
-            return DepsMut {
+            DepsMut {
                 storage: &mut self.storage,
                 api: &self.api,
                 querier: QuerierWrapper::new(&self.querier),
-            };
+            }
         }
     }
 }

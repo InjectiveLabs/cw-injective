@@ -19,12 +19,11 @@ use injective_test_tube::{
                 gov::v1::{MsgSubmitProposal, MsgVote},
             },
             injective::exchange::v1beta1::{
-                BatchExchangeModificationProposal, DenomDecimals, DenomMinNotional, DenomMinNotionalProposal, DerivativeOrder,
-                MsgBatchUpdateOrders, MsgBatchUpdateOrdersResponse, MsgCancelDerivativeOrder,
-                MsgCreateDerivativeLimitOrder, MsgCreateDerivativeLimitOrderResponse, MsgCreateSpotLimitOrder, MsgInstantSpotMarketLaunch,
-                MsgUpdateParams, OrderInfo, OrderType, PerpetualMarketFunding, Position, QueryDerivativeMarketsRequest, QueryExchangeParamsRequest,
-                QueryExchangeParamsResponse, QuerySpotMarketsRequest, QuerySubaccountDepositsRequest,
-                QuerySubaccountEffectivePositionInMarketRequest, SpotOrder, UpdateDenomDecimalsProposal,
+                BatchExchangeModificationProposal, DenomDecimals, DenomMinNotional, DenomMinNotionalProposal, DerivativeOrder, MsgBatchUpdateOrders,
+                MsgBatchUpdateOrdersResponse, MsgCancelDerivativeOrder, MsgCreateDerivativeLimitOrder, MsgCreateDerivativeLimitOrderResponse,
+                MsgCreateSpotLimitOrder, MsgInstantSpotMarketLaunch, MsgUpdateParams, OrderInfo, OrderType, PerpetualMarketFunding, Position,
+                QueryDerivativeMarketsRequest, QueryExchangeParamsRequest, QueryExchangeParamsResponse, QuerySpotMarketsRequest,
+                QuerySubaccountDepositsRequest, QuerySubaccountEffectivePositionInMarketRequest, SpotOrder, UpdateDenomDecimalsProposal,
             },
             injective::exchange::v2,
         },
@@ -99,9 +98,6 @@ pub fn add_exchange_admin(app: &InjectiveTestApp, validator: &SigningAccount, ad
 pub fn add_denom_notional_and_decimal(app: &InjectiveTestApp, validator: &SigningAccount, denom: String, min_notional: String, decimals: u64) {
     let gov = Gov::new(app);
 
-    // NOTE: this could change int he future
-    let governance_module_address = "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt";
-
     let proposal = BatchExchangeModificationProposal {
         title: "Update params".to_string(),
         description: "Basically updating the params".to_string(),
@@ -147,7 +143,7 @@ pub fn add_denom_notional_and_decimal(app: &InjectiveTestApp, validator: &Signin
         proposer: validator.address(),
     };
 
-    let res = gov.submit_proposal_v1beta1(msg_submit_proposal, &validator).unwrap();
+    let res = gov.submit_proposal_v1beta1(msg_submit_proposal, validator).unwrap();
 
     let proposal_id = res.events.iter().find(|e| e.ty == "submit_proposal").unwrap().attributes[0].value.clone();
 
@@ -158,7 +154,7 @@ pub fn add_denom_notional_and_decimal(app: &InjectiveTestApp, validator: &Signin
             option: 1i32,
             metadata: "".to_string(),
         },
-        &validator,
+        validator,
     )
     .unwrap();
 
@@ -543,7 +539,7 @@ pub fn launch_spot_market_atom(exchange: &Exchange<InjectiveTestApp>, signer: &S
                 base_decimals: MOCK_BASE_DECIMALS as u32,
                 quote_decimals: MOCK_QUOTE_DECIMALS as u32,
             },
-            &signer,
+            signer,
         )
         .unwrap();
 
