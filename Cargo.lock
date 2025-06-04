@@ -1714,7 +1714,8 @@ dependencies = [
 [[package]]
 name = "injective-test-tube"
 version = "1.16.0-beta.2"
-source = "git+https://github.com/InjectiveLabs/test-tube.git?branch=f%2Fv1.16.0-beta.2#5c5dd9b416893ab205aeec677ca2be19b6f9cf38"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c580384eb587dcabfc866a1b1366bdb7e49a4b0971d454373052a033a45198b"
 dependencies = [
  "bindgen",
  "cosmrs",
@@ -1724,7 +1725,7 @@ dependencies = [
  "prost 0.13.5",
  "serde",
  "serde_json",
- "test-tube-inj 2.0.6",
+ "test-tube-inj",
 ]
 
 [[package]]
@@ -1744,7 +1745,7 @@ dependencies = [
  "regex",
  "secp256k1 0.30.0",
  "serde",
- "test-tube-inj 2.0.7",
+ "test-tube-inj",
  "tiny-keccak",
 ]
 
@@ -3140,19 +3141,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tendermint-proto 0.32.2",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "test-tube-inj"
-version = "2.0.7"
-source = "git+https://github.com/InjectiveLabs/test-tube.git?branch=f%2Fv1.16.0-beta.2#5c5dd9b416893ab205aeec677ca2be19b6f9cf38"
-dependencies = [
- "base64 0.21.7",
- "cosmrs",
- "cosmwasm-std",
- "prost 0.13.5",
- "serde_json",
  "thiserror 1.0.69",
 ]
 

@@ -7,37 +7,36 @@ codegen-units = 1
 incremental   = false
 
 [workspace.dependencies]
-anyhow               = { version = "1.0.66" }
-base64               = { version = "0.21.5" }
-cosmos-sdk-proto     = { version = "0.20.0", default-features = false }
-cosmwasm-schema      = { version = "1.5.0" }
-cosmwasm-std         = { version = "2.1.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
-cw-multi-test        = { version = "2.1.0" }
-cw-storage-plus      = { version = "2.0.0" }
-cw2                  = { version = "2.0.0" }
-ethereum-types       = { version = "0.5.2" }
-hex                  = { version = "0.4.3", features = [ "serde" ] }
-injective-cosmwasm   = { path = "./packages/injective-cosmwasm" }
-injective-math       = { path = "./packages/injective-math" }
-injective-std        = { version = "1.16.0-beta.2"}
-injective-test-tube  = { git = "https://github.com/InjectiveLabs/test-tube.git", branch = "f/v1.16.0-beta.2", package = "injective-test-tube" }
-injective-testing    = { version = "1.1.7", path = "./packages/injective-testing" }
-primitive-types      = { version = "0.12.2", default-features = false }
-prost                = { version = "0.13.4", features = [ "prost-derive" ] }
-rand                 = { version = "0.4.6" }
-regex                = { version = "1.11.1" }
-schemars             = { version = "0.8.16" }
-secp256k1            = { version = "0.30.0", features = [ "rand" ] }
-serde                = { version = "1.0.196", default-features = false, features = [ "derive" ] }
-serde-json-wasm      = { version = "1.0.0" }
-serde_json           = { version = "1.0.111" }
-serde_repr           = { version = "0.1.17" }
-serde_test           = { version = "1.0.176" }
-subtle-encoding      = { version = "0.5.1", features = [ "bech32-preview" ] }
-test-tube-inj        = { git = "https://github.com/InjectiveLabs/test-tube.git",branch = "f/v1.16.0-beta.2",package = "test-tube-inj" }
-thiserror            = { version = "1.0.56" }
-tiny-keccak          = { version = "1.2.1" }
-
+anyhow              = { version = "1.0.66" }
+base64              = { version = "0.21.5" }
+cosmos-sdk-proto    = { version = "0.20.0", default-features = false }
+cosmwasm-schema     = { version = "1.5.0" }
+cosmwasm-std        = { version = "2.1.0", features = [ "abort", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
+cw-multi-test       = { version = "2.1.0" }
+cw-storage-plus     = { version = "2.0.0" }
+cw2                 = { version = "2.0.0" }
+ethereum-types      = { version = "0.5.2" }
+hex                 = { version = "0.4.3", features = [ "serde" ] }
+injective-cosmwasm  = { path = "./packages/injective-cosmwasm" }
+injective-math      = { path = "./packages/injective-math" }
+injective-std       = { version = "1.16.0-beta.2" }
+injective-test-tube = { version = "1.16.0-beta.2" }
+injective-testing   = { version = "1.1.7", path = "./packages/injective-testing" }
+primitive-types     = { version = "0.12.2", default-features = false }
+prost               = { version = "0.13.4", features = [ "prost-derive" ] }
+rand                = { version = "0.4.6" }
+regex               = { version = "1.11.1" }
+schemars            = { version = "0.8.16" }
+secp256k1           = { version = "0.30.0", features = [ "rand" ] }
+serde               = { version = "1.0.196", default-features = false, features = [ "derive" ] }
+serde-json-wasm     = { version = "1.0.0" }
+serde_json          = { version = "1.0.111" }
+serde_repr          = { version = "0.1.17" }
+serde_test          = { version = "1.0.176" }
+subtle-encoding     = { version = "0.5.1", features = [ "bech32-preview" ] }
+test-tube-inj       = { version = "2.0.6" }
+thiserror           = { version = "1.0.56" }
+tiny-keccak         = { version = "1.2.1" }
 
 [profile.release]
 codegen-units    = 1
