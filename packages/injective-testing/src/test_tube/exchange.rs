@@ -606,8 +606,6 @@ pub fn launch_spot_market_custom_v2(
     get_spot_market_id(exchange, ticker)
 }
 
-
-
 pub fn launch_perp_market(exchange: &Exchange<InjectiveTestApp>, signer: &SigningAccount, ticker: String) -> String {
     exchange
         .instant_perpetual_market_launch_v2(

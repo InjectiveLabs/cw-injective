@@ -1728,10 +1728,9 @@ dependencies = [
 
 [[package]]
 name = "injective-testing"
-version = "1.1.9"
+version = "1.1.10"
 dependencies = [
  "anyhow",
- "base64 0.21.7",
  "cosmwasm-std",
  "cw-multi-test",
  "injective-cosmwasm 0.3.3",
@@ -1743,7 +1742,6 @@ dependencies = [
  "regex",
  "secp256k1 0.30.0",
  "serde",
- "test-tube-inj",
  "tiny-keccak",
 ]
 
