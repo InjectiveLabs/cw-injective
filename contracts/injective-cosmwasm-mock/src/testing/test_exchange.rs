@@ -169,7 +169,7 @@ fn test_query_spot_market() {
                 min_price_tick_size: dec_to_proto(min_price_tick_size),
                 min_quantity_tick_size: dec_to_proto(min_quantity_tick_size),
                 min_notional: dec_to_proto(min_notional),
-                base_decimals: MOCK_QUOTE_DECIMALS as u32,
+                base_decimals: MOCK_BASE_DECIMALS as u32,
                 quote_decimals: MOCK_QUOTE_DECIMALS as u32,
             },
             &env.signer,
@@ -217,7 +217,7 @@ fn test_query_trader_spot_orders() {
 
         assert_eq!(orders.len(), 1, "Expected exactly one order in the response");
         let expected_orders = TrimmedSpotLimitOrder {
-            price: human_to_dec("10.01", MOCK_BASE_DECIMALS - MOCK_BASE_DECIMALS),
+            price: human_to_dec("10.01", MOCK_QUOTE_DECIMALS - MOCK_BASE_DECIMALS),
             quantity: human_to_dec("5.1", MOCK_BASE_DECIMALS),
             fillable: human_to_dec("5.1", MOCK_BASE_DECIMALS),
             isBuy: false,
