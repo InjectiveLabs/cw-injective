@@ -18,8 +18,8 @@ use injective_test_tube::{
             },
             injective::{
                 exchange::v1beta1::{
-                    DerivativeOrder, MsgCreateDerivativeLimitOrder, MsgCreateSpotLimitOrder, MsgInstantSpotMarketLaunch, OrderInfo, OrderType,
-                    QueryDerivativeMarketsRequest, QuerySpotMarketsRequest, SpotOrder,
+                    DerivativeOrder, MsgCreateDerivativeLimitOrder, MsgCreateSpotLimitOrder, OrderInfo, OrderType, QueryDerivativeMarketsRequest,
+                    SpotOrder,
                 },
                 insurance::v1beta1::MsgCreateInsuranceFund,
                 oracle::v1beta1::{
@@ -31,8 +31,11 @@ use injective_test_tube::{
     },
     Account, Authz, Bank, Exchange, ExecuteResponse, Gov, InjectiveTestApp, Insurance, Module, Oracle, Runner, SigningAccount, Wasm,
 };
-use injective_testing::test_tube::exchange::{add_denom_notional_and_decimal, add_exchange_admin};
-use injective_testing::utils::human_to_i64;
+use injective_testing::{
+    mocks::{MOCK_BASE_DECIMALS, MOCK_BASE_DENOM, MOCK_QUOTE_DECIMALS, MOCK_QUOTE_DENOM},
+    test_tube::exchange::{add_denom_notional_and_decimal, add_exchange_admin, launch_spot_market},
+    utils::human_to_i64,
+};
 use prost::Message;
 use std::{collections::HashMap, ops::Neg, str::FromStr};
 
@@ -79,8 +82,8 @@ impl Setup {
 
         let mut denoms = HashMap::new();
         denoms.insert("atom".to_string(), ATOM_DENOM.to_string());
-        denoms.insert("quote".to_string(), QUOTE_DENOM.to_string());
-        denoms.insert("base".to_string(), BASE_DENOM.to_string());
+        denoms.insert("quote".to_string(), MOCK_QUOTE_DENOM.to_string());
+        denoms.insert("base".to_string(), MOCK_BASE_DENOM.to_string());
 
         let signer = app
             .init_account_decimals(
@@ -91,26 +94,32 @@ impl Setup {
                 &[18u32, 6u32],
             )
             .unwrap();
-        let validator = app.get_first_validator_signing_account(BASE_DENOM.to_string(), 1.2f64).unwrap();
+        let validator = app.get_first_validator_signing_account(MOCK_BASE_DENOM.to_string(), 1.2f64).unwrap();
 
         let owner = app
             .init_account(&[
                 str_coin("1000000", ATOM_DENOM, ATOM_DECIMALS),
-                str_coin("1000000", BASE_DENOM, BASE_DECIMALS),
-                str_coin("1000000", QUOTE_DENOM, QUOTE_DECIMALS),
+                str_coin("1000000", MOCK_BASE_DENOM, MOCK_BASE_DECIMALS),
+                str_coin("1000000", MOCK_QUOTE_DENOM, MOCK_QUOTE_DECIMALS),
             ])
             .unwrap();
-        send(&Bank::new(&app), "1000000000000000000000", BASE_DENOM, &owner, &validator);
-        add_denom_notional_and_decimal(&app, &validator, QUOTE_DENOM.to_string(), "1".to_string(), QUOTE_DECIMALS as u64);
-        add_denom_notional_and_decimal(&app, &validator, BASE_DENOM.to_string(), "1".to_string(), BASE_DECIMALS as u64);
+        send(&Bank::new(&app), "1000000000000000000000", MOCK_BASE_DENOM, &owner, &validator);
+        add_denom_notional_and_decimal(
+            &app,
+            &validator,
+            MOCK_QUOTE_DENOM.to_string(),
+            "1".to_string(),
+            MOCK_QUOTE_DECIMALS as u64,
+        );
+        add_denom_notional_and_decimal(&app, &validator, MOCK_BASE_DENOM.to_string(), "1".to_string(), MOCK_BASE_DECIMALS as u64);
         let mut users: Vec<UserInfo> = Vec::new();
 
         for _ in 0..10 {
             let user = app
                 .init_account(&[
                     str_coin("1000000", ATOM_DENOM, ATOM_DECIMALS),
-                    str_coin("1000000", BASE_DENOM, BASE_DECIMALS),
-                    str_coin("1000", QUOTE_DENOM, QUOTE_DECIMALS),
+                    str_coin("1000000", MOCK_BASE_DENOM, MOCK_BASE_DECIMALS),
+                    str_coin("1000", MOCK_QUOTE_DENOM, MOCK_QUOTE_DECIMALS),
                 ])
                 .unwrap();
 
@@ -150,7 +159,7 @@ impl Setup {
             &validator,
             denoms["base"].as_str(),
             denoms["quote"].as_str(),
-            human_to_dec("10.01", QUOTE_DECIMALS).to_string(),
+            human_to_dec("10.01", MOCK_QUOTE_DECIMALS).to_string(),
         );
 
         match exchange_type {
@@ -326,40 +335,6 @@ pub fn launch_insurance_fund(
         .unwrap();
 }
 
-pub fn launch_spot_market(exchange: &Exchange<InjectiveTestApp>, signer: &SigningAccount, ticker: String) -> String {
-    exchange
-        .instant_spot_market_launch(
-            MsgInstantSpotMarketLaunch {
-                sender: signer.address(),
-                ticker: ticker.clone(),
-                base_denom: BASE_DENOM.to_string(),
-                quote_denom: QUOTE_DENOM.to_string(),
-                min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.000000000000001")),
-                min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("1")),
-                min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
-                base_decimals: BASE_DECIMALS as u32,
-                quote_decimals: QUOTE_DECIMALS as u32,
-            },
-            signer,
-        )
-        .unwrap();
-
-    get_spot_market_id(exchange, ticker)
-}
-
-pub fn get_spot_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: String) -> String {
-    let spot_markets = exchange
-        .query_spot_markets(&QuerySpotMarketsRequest {
-            status: "Active".to_string(),
-            market_ids: vec![],
-        })
-        .unwrap()
-        .markets;
-
-    let market = spot_markets.iter().find(|m| m.ticker == ticker).unwrap();
-    market.market_id.to_string()
-}
-
 pub fn launch_perp_market(exchange: &Exchange<InjectiveTestApp>, signer: &SigningAccount, ticker: String) -> String {
     exchange
         .instant_perpetual_market_launch_v2(
@@ -442,7 +417,7 @@ pub fn add_spot_order_as(app: &InjectiveTestApp, market_id: String, trader: &Use
 pub fn add_spot_orders(app: &InjectiveTestApp, market_id: String, orders: Vec<HumanOrder>) {
     let account = app
         .init_account(&[
-            str_coin("1000000", BASE_DENOM, BASE_DECIMALS),
+            str_coin("1000000", BASE_DENOM, MOCK_BASE_DECIMALS),
             str_coin("1000000", QUOTE_DENOM, QUOTE_DECIMALS),
         ])
         .unwrap();
@@ -569,8 +544,8 @@ pub fn add_derivative_order_as(
 pub fn add_derivative_orders(app: &InjectiveTestApp, market_id: String, orders: Vec<HumanOrder>, margin: Option<String>) {
     let trader = app
         .init_account(&[
-            str_coin("1000000", BASE_DENOM, BASE_DECIMALS),
-            str_coin("1000000", QUOTE_DENOM, QUOTE_DECIMALS),
+            str_coin("1000000", MOCK_BASE_DENOM, MOCK_BASE_DECIMALS),
+            str_coin("1000000", MOCK_QUOTE_DENOM, MOCK_QUOTE_DECIMALS),
         ])
         .unwrap();
 
