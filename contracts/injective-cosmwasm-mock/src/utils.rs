@@ -102,7 +102,6 @@ impl Setup {
             .unwrap();
         send(&Bank::new(&app), "1000000000000000000000", BASE_DENOM, &owner, &validator);
         add_denom_notional_and_decimal(&app, &validator, QUOTE_DENOM.to_string(), "1".to_string(), QUOTE_DECIMALS as u64);
-
         add_denom_notional_and_decimal(&app, &validator, BASE_DENOM.to_string(), "1".to_string(), BASE_DECIMALS as u64);
         let mut users: Vec<UserInfo> = Vec::new();
 

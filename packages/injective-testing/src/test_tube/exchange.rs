@@ -530,13 +530,13 @@ pub fn launch_spot_market_atom(exchange: &Exchange<InjectiveTestApp>, signer: &S
         .instant_spot_market_launch_v2(
             v2::MsgInstantSpotMarketLaunch {
                 sender: signer.address(),
-                ticker: "INJ/USDT".to_owned(),
-                base_denom: "inj".to_owned(),
-                quote_denom: "usdt".to_owned(),
+                ticker: "ATOM/USDT".to_owned(),
+                base_denom: MOCK_ATOM_DENOM.to_owned(),
+                quote_denom: MOCK_QUOTE_DENOM.to_owned(),
                 min_price_tick_size: dec_to_proto(FPDecimal::must_from_str("0.000010000000000000")),
                 min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("100000")),
                 min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
-                base_decimals: MOCK_BASE_DECIMALS as u32,
+                base_decimals: MOCK_ATOM_DECIMALS as u32,
                 quote_decimals: MOCK_QUOTE_DECIMALS as u32,
             },
             signer,
@@ -575,6 +575,39 @@ pub fn launch_spot_market_custom(
     get_spot_market_id(exchange, ticker)
 }
 
+pub fn launch_spot_market_custom_v2(
+    exchange: &Exchange<InjectiveTestApp>,
+    signer: &SigningAccount,
+    ticker: String,
+    base_denom: String,
+    quote_denom: String,
+    min_price_tick_size: String,
+    min_quantity_tick_size: String,
+    base_decimals: u32,
+    quote_decimals: u32,
+) -> String {
+    exchange
+        .instant_spot_market_launch_v2(
+            v2::MsgInstantSpotMarketLaunch {
+                sender: signer.address(),
+                ticker: ticker.clone(),
+                base_denom,
+                quote_denom,
+                min_price_tick_size: dec_to_proto(FPDecimal::must_from_str(&min_price_tick_size)),
+                min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str(&min_quantity_tick_size)),
+                min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
+                base_decimals,
+                quote_decimals,
+            },
+            signer,
+        )
+        .unwrap();
+
+    get_spot_market_id(exchange, ticker)
+}
+
+
+
 pub fn launch_perp_market(exchange: &Exchange<InjectiveTestApp>, signer: &SigningAccount, ticker: String) -> String {
     exchange
         .instant_perpetual_market_launch_v2(
@@ -608,9 +641,9 @@ pub fn launch_perp_market_atom(exchange: &Exchange<InjectiveTestApp>, signer: &S
             v2::MsgInstantPerpetualMarketLaunch {
                 sender: signer.address(),
                 ticker: ticker.to_owned(),
-                quote_denom: "usdt".to_string(),
-                oracle_base: "atom".to_string(),
-                oracle_quote: "usdt".to_string(),
+                quote_denom: MOCK_QUOTE_DENOM.to_owned(),
+                oracle_base: MOCK_ATOM_DENOM.to_owned(),
+                oracle_quote: MOCK_QUOTE_DENOM.to_owned(),
                 oracle_scale_factor: 6u32,
                 oracle_type: 2i32,
                 maker_fee_rate: "-000100000000000000".to_owned(),
