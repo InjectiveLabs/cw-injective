@@ -2,8 +2,8 @@ use crate::{
     msg::{ExecuteMsg, QueryMsg},
     utils::{
         add_spot_initial_liquidity, add_spot_order_as, add_spot_orders, dec_to_proto, execute_all_authorizations,
-        get_initial_liquidity_orders_vector, get_spot_market_id, human_to_dec, human_to_proto, scale_price_quantity_for_spot_market,
-        scale_price_quantity_for_spot_market_dec, str_coin, ExchangeType, HumanOrder, Setup, BASE_DECIMALS, BASE_DENOM, QUOTE_DECIMALS, QUOTE_DENOM,
+        get_initial_liquidity_orders_vector, human_to_dec, human_to_proto, scale_price_quantity_for_spot_market,
+        scale_price_quantity_for_spot_market_dec, str_coin, ExchangeType, HumanOrder, Setup,
     },
 };
 use cosmwasm_std::{Addr, Coin};
@@ -23,6 +23,10 @@ use injective_test_tube::{
         },
     },
     Account, Exchange, Module, RunnerResult, Wasm,
+};
+use injective_testing::{
+    mocks::{MOCK_BASE_DECIMALS, MOCK_BASE_DENOM, MOCK_QUOTE_DECIMALS, MOCK_QUOTE_DENOM},
+    test_tube::exchange::get_spot_market_id,
 };
 
 #[test]
@@ -57,7 +61,7 @@ fn test_exchange_params() {
     assert!(res.params.is_some());
     let params = res.params.unwrap();
 
-    let listing_fee_coin = str_coin("20", BASE_DENOM, BASE_DECIMALS);
+    let listing_fee_coin = str_coin("20", MOCK_BASE_DENOM, MOCK_BASE_DECIMALS);
     assert_eq!(params.spot_market_instant_listing_fee, listing_fee_coin);
     assert_eq!(params.derivative_market_instant_listing_fee, listing_fee_coin);
     assert_eq!(params.trading_rewards_vesting_duration, 604800);
@@ -102,31 +106,31 @@ fn test_query_subaccount_deposit() {
     assert_eq!(
         response.deposits[&env.denoms["base"].clone()],
         Deposit {
-            available_balance: human_to_proto("10.0", BASE_DECIMALS),
-            total_balance: human_to_proto("10.0", BASE_DECIMALS),
+            available_balance: human_to_proto("10.0", MOCK_BASE_DECIMALS),
+            total_balance: human_to_proto("10.0", MOCK_BASE_DECIMALS),
         }
     );
     assert_eq!(
         response.deposits[&env.denoms["quote"].clone()],
         Deposit {
-            available_balance: human_to_proto("100.0", QUOTE_DECIMALS),
-            total_balance: human_to_proto("100.0", QUOTE_DECIMALS),
+            available_balance: human_to_proto("100.0", MOCK_QUOTE_DECIMALS),
+            total_balance: human_to_proto("100.0", MOCK_QUOTE_DECIMALS),
         }
     );
 
     let query_msg = QueryMsg::TestSubAccountDepositQuery {
         subaccount_id: subaccount_id.clone(),
-        denom: BASE_DENOM.to_string(),
+        denom: MOCK_BASE_DENOM.to_string(),
     };
     let contract_response: SubaccountDepositResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
-    assert_eq!(contract_response.deposits.total_balance, human_to_dec("10.0", BASE_DECIMALS));
+    assert_eq!(contract_response.deposits.total_balance, human_to_dec("10.0", MOCK_BASE_DECIMALS));
 
     let query_msg = QueryMsg::TestSubAccountDepositQuery {
         subaccount_id: subaccount_id.clone(),
-        denom: QUOTE_DENOM.to_string(),
+        denom: MOCK_QUOTE_DENOM.to_string(),
     };
     let contract_response: SubaccountDepositResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
-    assert_eq!(contract_response.deposits.available_balance, human_to_dec("100.0", QUOTE_DECIMALS));
+    assert_eq!(contract_response.deposits.available_balance, human_to_dec("100.0", MOCK_QUOTE_DECIMALS));
 }
 
 #[test]
@@ -160,13 +164,13 @@ fn test_query_spot_market() {
             MsgInstantSpotMarketLaunch {
                 sender: env.signer.address(),
                 ticker: ticker.clone(),
-                base_denom: BASE_DENOM.to_string(),
-                quote_denom: QUOTE_DENOM.to_string(),
+                base_denom: MOCK_BASE_DENOM.to_string(),
+                quote_denom: MOCK_QUOTE_DENOM.to_string(),
                 min_price_tick_size: dec_to_proto(min_price_tick_size),
                 min_quantity_tick_size: dec_to_proto(min_quantity_tick_size),
                 min_notional: dec_to_proto(min_notional),
-                base_decimals: BASE_DECIMALS as u32,
-                quote_decimals: QUOTE_DECIMALS as u32,
+                base_decimals: MOCK_BASE_DECIMALS as u32,
+                quote_decimals: MOCK_QUOTE_DECIMALS as u32,
             },
             &env.signer,
         )
@@ -182,8 +186,8 @@ fn test_query_spot_market() {
     let response_market = res.market.unwrap();
     assert_eq!(response_market.market_id.as_str(), spot_market_id);
     assert_eq!(response_market.ticker.as_str(), ticker);
-    assert_eq!(response_market.base_denom.as_str(), BASE_DENOM);
-    assert_eq!(response_market.quote_denom.as_str(), QUOTE_DENOM);
+    assert_eq!(response_market.base_denom.as_str(), MOCK_BASE_DENOM);
+    assert_eq!(response_market.quote_denom.as_str(), MOCK_QUOTE_DENOM);
     assert_eq!(response_market.min_price_tick_size.clone().to_string(), min_price_tick_size.to_string());
     assert_eq!(response_market.min_quantity_tick_size.to_string(), min_quantity_tick_size.to_string());
 }
@@ -205,7 +209,7 @@ fn test_query_trader_spot_orders() {
     };
 
     {
-        let (price, quantity) = scale_price_quantity_for_spot_market("10.01", "5.1", &BASE_DECIMALS, &QUOTE_DECIMALS);
+        let (price, quantity) = scale_price_quantity_for_spot_market("10.01", "5.1", &MOCK_BASE_DECIMALS, &MOCK_QUOTE_DECIMALS);
         add_spot_order_as(&env.app, market_id.to_owned(), &env.users[0], price, quantity, OrderType::Sell);
 
         let res: TraderSpotOrdersResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
@@ -213,9 +217,9 @@ fn test_query_trader_spot_orders() {
 
         assert_eq!(orders.len(), 1, "Expected exactly one order in the response");
         let expected_orders = TrimmedSpotLimitOrder {
-            price: human_to_dec("10.01", QUOTE_DECIMALS - BASE_DECIMALS),
-            quantity: human_to_dec("5.1", BASE_DECIMALS),
-            fillable: human_to_dec("5.1", BASE_DECIMALS),
+            price: human_to_dec("10.01", MOCK_QUOTE_DECIMALS - MOCK_BASE_DECIMALS),
+            quantity: human_to_dec("5.1", MOCK_BASE_DECIMALS),
+            fillable: human_to_dec("5.1", MOCK_BASE_DECIMALS),
             isBuy: false,
             order_hash: "".to_string(),
         };
@@ -226,7 +230,7 @@ fn test_query_trader_spot_orders() {
     }
 
     {
-        let (price, quantity) = scale_price_quantity_for_spot_market("9.90", "0.5", &BASE_DECIMALS, &QUOTE_DECIMALS);
+        let (price, quantity) = scale_price_quantity_for_spot_market("9.90", "0.5", &MOCK_BASE_DECIMALS, &MOCK_QUOTE_DECIMALS);
         add_spot_order_as(&env.app, market_id.to_owned(), &env.users[0], price, quantity, OrderType::Buy);
 
         let res: TraderSpotOrdersResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
@@ -234,9 +238,9 @@ fn test_query_trader_spot_orders() {
 
         assert_eq!(orders.len(), 2);
         let expected_order = TrimmedSpotLimitOrder {
-            price: human_to_dec("9.90", QUOTE_DECIMALS - BASE_DECIMALS),
-            quantity: human_to_dec("0.5", BASE_DECIMALS),
-            fillable: human_to_dec("0.5", BASE_DECIMALS),
+            price: human_to_dec("9.90", MOCK_QUOTE_DECIMALS - MOCK_BASE_DECIMALS),
+            quantity: human_to_dec("0.5", MOCK_BASE_DECIMALS),
+            fillable: human_to_dec("0.5", MOCK_BASE_DECIMALS),
             isBuy: true,
             order_hash: "".to_string(),
         };
@@ -261,9 +265,9 @@ fn test_query_spot_market_mid_price_and_tob() {
     };
 
     let res: MarketMidPriceAndTOBResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
-    assert_eq!(res.mid_price, Some(human_to_dec("10", QUOTE_DECIMALS - BASE_DECIMALS)));
-    assert_eq!(res.best_buy_price, Some(human_to_dec("9.9", QUOTE_DECIMALS - BASE_DECIMALS)));
-    assert_eq!(res.best_sell_price, Some(human_to_dec("10.1", QUOTE_DECIMALS - BASE_DECIMALS)));
+    assert_eq!(res.mid_price, Some(human_to_dec("10", MOCK_QUOTE_DECIMALS - MOCK_BASE_DECIMALS)));
+    assert_eq!(res.best_buy_price, Some(human_to_dec("9.9", MOCK_QUOTE_DECIMALS - MOCK_BASE_DECIMALS)));
+    assert_eq!(res.best_sell_price, Some(human_to_dec("10.1", MOCK_QUOTE_DECIMALS - MOCK_BASE_DECIMALS)));
 }
 
 #[test]
@@ -291,8 +295,11 @@ fn test_query_spot_market_orderbook() {
     assert_eq!(
         buys_price_level[0],
         PriceLevel {
-            p: human_to_dec(liquidity_orders[sells_price_level.len()].price.as_str(), QUOTE_DECIMALS - BASE_DECIMALS),
-            q: human_to_dec(liquidity_orders[sells_price_level.len()].quantity.as_str(), BASE_DECIMALS),
+            p: human_to_dec(
+                liquidity_orders[sells_price_level.len()].price.as_str(),
+                MOCK_QUOTE_DECIMALS - MOCK_BASE_DECIMALS
+            ),
+            q: human_to_dec(liquidity_orders[sells_price_level.len()].quantity.as_str(), MOCK_BASE_DECIMALS),
         }
     );
     assert_eq!(
@@ -300,9 +307,9 @@ fn test_query_spot_market_orderbook() {
         PriceLevel {
             p: human_to_dec(
                 liquidity_orders[sells_price_level.len() + 1].price.as_str(),
-                QUOTE_DECIMALS - BASE_DECIMALS
+                MOCK_QUOTE_DECIMALS - MOCK_BASE_DECIMALS
             ),
-            q: human_to_dec(liquidity_orders[sells_price_level.len() + 1].quantity.as_str(), BASE_DECIMALS),
+            q: human_to_dec(liquidity_orders[sells_price_level.len() + 1].quantity.as_str(), MOCK_BASE_DECIMALS),
         }
     );
 
@@ -311,9 +318,9 @@ fn test_query_spot_market_orderbook() {
         PriceLevel {
             p: human_to_dec(
                 liquidity_orders[sells_price_level.len() - 1].price.as_str(),
-                QUOTE_DECIMALS - BASE_DECIMALS
+                MOCK_QUOTE_DECIMALS - MOCK_BASE_DECIMALS
             ),
-            q: human_to_dec(liquidity_orders[sells_price_level.len() - 1].quantity.as_str(), BASE_DECIMALS),
+            q: human_to_dec(liquidity_orders[sells_price_level.len() - 1].quantity.as_str(), MOCK_BASE_DECIMALS),
         }
     );
     assert_eq!(
@@ -321,9 +328,9 @@ fn test_query_spot_market_orderbook() {
         PriceLevel {
             p: human_to_dec(
                 liquidity_orders[sells_price_level.len() - 2].price.as_str(),
-                QUOTE_DECIMALS - BASE_DECIMALS
+                MOCK_QUOTE_DECIMALS - MOCK_BASE_DECIMALS
             ),
-            q: human_to_dec(liquidity_orders[sells_price_level.len() - 2].quantity.as_str(), BASE_DECIMALS),
+            q: human_to_dec(liquidity_orders[sells_price_level.len() - 2].quantity.as_str(), MOCK_BASE_DECIMALS),
         }
     );
 }
@@ -419,13 +426,13 @@ fn test_query_aggregate_account_volume() {
     let res: QueryAggregateVolumeResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
     assert!(res.aggregate_volumes.is_none());
 
-    let (price, quantity) = scale_price_quantity_for_spot_market("9.9", "1", &BASE_DECIMALS, &QUOTE_DECIMALS);
+    let (price, quantity) = scale_price_quantity_for_spot_market("9.9", "1", &MOCK_BASE_DECIMALS, &MOCK_QUOTE_DECIMALS);
     add_spot_order_as(&env.app, market_id.clone(), &env.users[1], price, quantity, OrderType::Sell);
 
     let res: QueryAggregateVolumeResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
     let volume: &VolumeByType = &res.aggregate_volumes.unwrap()[0].volume;
     assert_eq!(volume.maker_volume, FPDecimal::ZERO);
-    assert_eq!(volume.taker_volume, human_to_dec("9.9", QUOTE_DECIMALS));
+    assert_eq!(volume.taker_volume, human_to_dec("9.9", MOCK_QUOTE_DECIMALS));
 }
 
 #[test]
@@ -438,7 +445,7 @@ fn test_query_market_atomic_execution_fee_multiplier() {
         market_id: MarketId::new(market_id.clone()).unwrap(),
     };
     let res: QueryMarketAtomicExecutionFeeMultiplierResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
-    assert_eq!(res.multiplier, human_to_dec("0.0000025", QUOTE_DECIMALS));
+    assert_eq!(res.multiplier, human_to_dec("0.0000025", MOCK_QUOTE_DECIMALS));
 }
 
 #[test]
@@ -458,16 +465,16 @@ fn test_query_spot_orders_to_cancel_up_to_amount() {
     };
 
     {
-        let (price, quantity) = scale_price_quantity_for_spot_market("9.90", "1", &BASE_DECIMALS, &QUOTE_DECIMALS);
+        let (price, quantity) = scale_price_quantity_for_spot_market("9.90", "1", &MOCK_BASE_DECIMALS, &MOCK_QUOTE_DECIMALS);
         add_spot_order_as(&env.app, market_id.to_owned(), &env.users[0], price, quantity, OrderType::Buy);
 
         let res: TraderSpotOrdersResponse = wasm.query(&env.contract_address, &query_spot_msg).unwrap();
         let orders = res.orders.clone().unwrap();
 
         let expected_order = TrimmedSpotLimitOrder {
-            price: human_to_dec("9.90", QUOTE_DECIMALS - BASE_DECIMALS),
-            quantity: human_to_dec("1", BASE_DECIMALS),
-            fillable: human_to_dec("1", BASE_DECIMALS),
+            price: human_to_dec("9.90", MOCK_QUOTE_DECIMALS - MOCK_BASE_DECIMALS),
+            quantity: human_to_dec("1", MOCK_BASE_DECIMALS),
+            fillable: human_to_dec("1", MOCK_BASE_DECIMALS),
             isBuy: true,
             order_hash: "".to_string(),
         };
@@ -481,8 +488,8 @@ fn test_query_spot_orders_to_cancel_up_to_amount() {
         let query_spot_cancel_msg = QueryMsg::TestSpotOrdersToCancelUpToAmount {
             market_id: MarketId::new(market_id.clone()).unwrap(),
             subaccount_id: SubaccountId::new(subaccount_id).unwrap(),
-            base_amount: human_to_dec("0", BASE_DECIMALS),
-            quote_amount: human_to_dec("0.2", QUOTE_DECIMALS),
+            base_amount: human_to_dec("0", MOCK_BASE_DECIMALS),
+            quote_amount: human_to_dec("0.2", MOCK_QUOTE_DECIMALS),
             strategy: CancellationStrategy::UnspecifiedOrder,
             reference_price: None,
         };
@@ -504,7 +511,7 @@ fn test_query_trader_transient_spot_orders() {
     execute_all_authorizations(&env.app, &env.users[0].account, env.contract_address.clone());
     add_spot_initial_liquidity(&env.app, market_id.clone());
 
-    let (scale_price, scale_quantity) = scale_price_quantity_for_spot_market_dec("9.8", "1", &BASE_DECIMALS, &QUOTE_DECIMALS);
+    let (scale_price, scale_quantity) = scale_price_quantity_for_spot_market_dec("9.8", "1", &MOCK_BASE_DECIMALS, &MOCK_QUOTE_DECIMALS);
 
     let res = wasm
         .execute(
