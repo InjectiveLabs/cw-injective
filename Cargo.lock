@@ -1711,9 +1711,9 @@ dependencies = [
 
 [[package]]
 name = "injective-test-tube"
-version = "1.16.0-beta.2.1"
+version = "1.16.0-beta.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65f435f2d37b4166ac18426f0975d532e0f1abd6a216a5e3fbe449d05a7f8cf8"
+checksum = "643bd3780018d0c26d0f1a6efb623e94578e3ede1e59984e131be34d761571b9"
 dependencies = [
  "bindgen",
  "cosmrs",
@@ -1728,7 +1728,7 @@ dependencies = [
 
 [[package]]
 name = "injective-testing"
-version = "1.1.10"
+version = "1.1.11"
 dependencies = [
  "anyhow",
  "cosmwasm-std",
