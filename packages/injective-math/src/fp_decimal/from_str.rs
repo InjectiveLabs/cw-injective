@@ -16,7 +16,7 @@ impl FromStr for FPDecimal {
         let parts = input.trim_start_matches('-').split('.').collect::<Vec<&str>>();
         match parts.len() {
             1 => {
-                let integer = U256::from_dec_str(parts[0]).map_err(|_| StdError::generic_err("Error parsing integer"))?;
+                let integer = U256::from_dec_str(parts[0]).map_err(|_| StdError::msg("Error parsing integer"))?;
                 if integer == U256([0, 0, 0, 0]) {
                     sign = 1;
                 }
@@ -26,18 +26,18 @@ impl FromStr for FPDecimal {
                 })
             }
             2 => {
-                let integer = U256::from_dec_str(parts[0]).map_err(|_| StdError::generic_err("Error parsing integer"))?;
-                let fraction = U256::from_dec_str(parts[1]).map_err(|_| StdError::generic_err("Error parsing fraction"))?;
+                let integer = U256::from_dec_str(parts[0]).map_err(|_| StdError::msg("Error parsing integer"))?;
+                let fraction = U256::from_dec_str(parts[1]).map_err(|_| StdError::msg("Error parsing fraction"))?;
                 let exp = FPDecimal::DIGITS
                     .checked_sub(parts[1].len())
-                    .ok_or_else(|| StdError::generic_err(format!("Cannot parse more than {} fractional digits", FPDecimal::DIGITS)))?;
+                    .ok_or_else(|| StdError::msg(format!("Cannot parse more than {} fractional digits", FPDecimal::DIGITS)))?;
 
                 Ok(FPDecimal {
                     num: integer * FPDecimal::ONE.num + fraction * U256::exp10(exp),
                     sign,
                 })
             }
-            _ => Err(StdError::generic_err("Unexpected number of dots")),
+            _ => Err(StdError::msg("Unexpected number of dots")),
         }
     }
 }
