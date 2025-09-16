@@ -234,7 +234,7 @@ pub fn create_external_transfer_msg(
     }
 
     if is_default_subaccount(source_subaccount_id) {
-        return Err(StdError::generic_err("Cannot send from default subaccount to external subaccount"));
+        return Err(StdError::msg("Cannot send from default subaccount to external subaccount"));
     }
 
     Ok(vec![InjectiveMsgWrapper {
