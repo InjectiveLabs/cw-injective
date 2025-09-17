@@ -443,7 +443,6 @@ impl fmt::Display for Hash {
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::StdError;
     use serde_test::{assert_de_tokens, assert_ser_tokens, Token};
     use std::panic::catch_unwind;
 
@@ -493,38 +492,38 @@ mod tests {
     fn subaccount_id_checks() {
         let wrong_prefix_err = SubaccountId::new("00B5e09b93aCEb70C1711aF078922fA256011D7e56000000000000000000000045").unwrap_err();
         assert_eq!(
-            wrong_prefix_err,
-            StdError::generic_err("Invalid prefix: subaccount_id must start with 0x")
+            wrong_prefix_err.to_string(),
+            "kind: Other, error: Invalid prefix: subaccount_id must start with 0x"
         );
 
         let wrong_length_err = SubaccountId::new("0xB5e09b93aCEb70C1711aF078922fA256011D7e5600000000000000000000004").unwrap_err();
         assert_eq!(
-            wrong_length_err,
-            StdError::generic_err("Invalid length: subaccount_id must be exactly 66 characters")
+            wrong_length_err.to_string(),
+            "kind: Other, error: Invalid length: subaccount_id must be exactly 66 characters"
         );
 
         let wrong_length_err = SubaccountId::new("0xB5e09b93aCEb70C1711aF078922fA256011D7e560000000000000000000000451").unwrap_err();
         assert_eq!(
-            wrong_length_err,
-            StdError::generic_err("Invalid length: subaccount_id must be exactly 66 characters")
+            wrong_length_err.to_string(),
+            "kind: Other, error: Invalid length: subaccount_id must be exactly 66 characters"
         );
     }
 
     #[test]
     fn market_id_checks() {
         let wrong_prefix_err = MarketId::new("0001EDFAB47F124748DC89998EB33144AF734484BA07099014594321729A0CA16B").unwrap_err();
-        assert_eq!(wrong_prefix_err, StdError::generic_err("Invalid prefix: market_id must start with 0x"));
+        assert_eq!(wrong_prefix_err.to_string(), "kind: Other, error: Invalid prefix: market_id must start with 0x");
 
         let wrong_length_err = MarketId::new("0x01EDFAB47F124748DC89998EB33144AF734484BA07099014594321729A0CA16").unwrap_err();
         assert_eq!(
-            wrong_length_err,
-            StdError::generic_err("Invalid length: market_id must be exactly 66 characters")
+            wrong_length_err.to_string(),
+            "kind: Other, error: Invalid length: market_id must be exactly 66 characters"
         );
 
         let wrong_length_err = MarketId::new("0x01EDFAB47F124748DC89998EB33144AF734484BA07099014594321729A0CA16B2").unwrap_err();
         assert_eq!(
-            wrong_length_err,
-            StdError::generic_err("Invalid length: market_id must be exactly 66 characters")
+            wrong_length_err.to_string(),
+            "kind: Other, error: Invalid length: market_id must be exactly 66 characters"
         );
     }
 
