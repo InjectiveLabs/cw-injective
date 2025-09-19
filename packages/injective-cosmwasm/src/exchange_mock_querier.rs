@@ -2,7 +2,10 @@ use std::marker::PhantomData;
 use std::str::FromStr;
 
 use cosmwasm_std::testing::{MockApi, MockStorage};
-use cosmwasm_std::{from_json, to_json_binary, Addr, BalanceResponse, BankQuery, Binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest, SupplyResponse, SystemError, SystemResult, Uint128, Uint256, WasmQuery};
+use cosmwasm_std::{
+    from_json, to_json_binary, Addr, BalanceResponse, BankQuery, Binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest,
+    SupplyResponse, SystemError, SystemResult, Uint128, Uint256, WasmQuery,
+};
 
 use injective_math::FPDecimal;
 
@@ -426,7 +429,6 @@ pub trait HandlesBankBalanceQuery {
     fn handle(&self, address: String, denom: String) -> QuerierResult;
 }
 
-
 pub trait HandlesByAddressQuery {
     fn handle(&self, address: String) -> QuerierResult;
 }
@@ -783,7 +785,10 @@ impl TestDeposit {
 }
 
 pub mod handlers {
-    use cosmwasm_std::{to_json_binary, Addr, BalanceResponse, Binary, Checksum, CodeInfoResponse, Coin, ContractInfoResponse, ContractResult, QuerierResult, SupplyResponse, SystemError, SystemResult, Uint128, Uint256};
+    use cosmwasm_std::{
+        to_json_binary, Addr, BalanceResponse, Binary, Checksum, CodeInfoResponse, Coin, ContractInfoResponse, ContractResult, QuerierResult,
+        SupplyResponse, SystemError, SystemResult, Uint128, Uint256,
+    };
     use std::collections::HashMap;
 
     use injective_math::FPDecimal;
@@ -803,8 +808,8 @@ pub mod handlers {
         TrimmedSpotLimitOrder,
     };
     use crate::{
-        HandlesBankBalanceQuery, HandlesCodeInfo, HandlesContractInfo,
-        HandlesTraderDerivativeOrdersToCancelUpToAmountQuery, MarketMidPriceAndTOBResponse, OracleType,
+        HandlesBankBalanceQuery, HandlesCodeInfo, HandlesContractInfo, HandlesTraderDerivativeOrdersToCancelUpToAmountQuery,
+        MarketMidPriceAndTOBResponse, OracleType,
     };
 
     use super::{HandlesOraclePriceQuery, TestDeposit};

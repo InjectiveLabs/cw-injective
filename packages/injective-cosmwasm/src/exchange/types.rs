@@ -512,7 +512,10 @@ mod tests {
     #[test]
     fn market_id_checks() {
         let wrong_prefix_err = MarketId::new("0001EDFAB47F124748DC89998EB33144AF734484BA07099014594321729A0CA16B").unwrap_err();
-        assert_eq!(wrong_prefix_err.to_string(), "kind: Other, error: Invalid prefix: market_id must start with 0x");
+        assert_eq!(
+            wrong_prefix_err.to_string(),
+            "kind: Other, error: Invalid prefix: market_id must start with 0x"
+        );
 
         let wrong_length_err = MarketId::new("0x01EDFAB47F124748DC89998EB33144AF734484BA07099014594321729A0CA16").unwrap_err();
         assert_eq!(
