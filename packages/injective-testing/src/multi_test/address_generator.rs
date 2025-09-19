@@ -13,7 +13,13 @@ const ADDRESS_BYTE_INDEX: usize = KECCAK_OUTPUT_BYTES - ADDRESS_BYTES;
 pub struct InjectiveAddressGenerator();
 
 impl AddressGenerator for InjectiveAddressGenerator {
-    fn contract_address(&self, _api: &dyn cosmwasm_std::Api, _storage: &mut dyn Storage, _code_id: u64, _instance_id: u64) -> Result<Addr, cosmwasm_std::StdError> {
+    fn contract_address(
+        &self,
+        _api: &dyn cosmwasm_std::Api,
+        _storage: &mut dyn Storage,
+        _code_id: u64,
+        _instance_id: u64,
+    ) -> Result<Addr, cosmwasm_std::StdError> {
         Ok(generate_inj_address())
     }
 
@@ -45,7 +51,13 @@ impl Default for StorageAwareInjectiveAddressGenerator {
 }
 
 impl AddressGenerator for StorageAwareInjectiveAddressGenerator {
-    fn contract_address(&self, _api: &dyn cosmwasm_std::Api, storage: &mut dyn Storage, _code_id: u64, _instance_id: u64) -> Result<Addr, cosmwasm_std::StdError>{
+    fn contract_address(
+        &self,
+        _api: &dyn cosmwasm_std::Api,
+        storage: &mut dyn Storage,
+        _code_id: u64,
+        _instance_id: u64,
+    ) -> Result<Addr, cosmwasm_std::StdError> {
         let generated_address = generate_inj_address();
         let key = self.key.as_bytes();
         let stored = storage.get(key);

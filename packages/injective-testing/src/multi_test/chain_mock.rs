@@ -1,5 +1,8 @@
 use crate::multi_test::address_generator::InjectiveAddressGenerator;
-use cosmwasm_std::{testing::{MockApi, MockStorage}, Addr, Api, Binary, BlockInfo, Coin, CustomQuery, Empty, Querier, Storage, to_json_binary, StdError};
+use cosmwasm_std::{
+    testing::{MockApi, MockStorage},
+    to_json_binary, Addr, Api, Binary, BlockInfo, Coin, CustomQuery, Empty, Querier, StdError, Storage,
+};
 use cw_multi_test::{
     no_init, AddressGenerator, App, AppResponse, BankKeeper, BasicAppBuilder, CosmosRouter, Module, StargateAccepting, StargateFailing, WasmKeeper,
 };
@@ -231,7 +234,14 @@ impl Module for CustomInjectiveHandler {
         }
     }
 
-    fn query(&self, _api: &dyn Api, _storage: &dyn Storage, _querier: &dyn Querier, _block: &BlockInfo, request: Self::QueryT) -> Result<Binary, StdError> {
+    fn query(
+        &self,
+        _api: &dyn Api,
+        _storage: &dyn Storage,
+        _querier: &dyn Querier,
+        _block: &BlockInfo,
+        request: Self::QueryT,
+    ) -> Result<Binary, StdError> {
         let mut query_calls_count = self.state.queries.borrow().len();
 
         if !self.assertions.queries.is_empty()
