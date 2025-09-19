@@ -26,3 +26,4 @@ tarpaulin-report.*
 
 packages/*/schema
 contracts/*/schema
+/packages/injective-cosmwasm/Cargo.lock

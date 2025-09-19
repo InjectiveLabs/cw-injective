@@ -4,7 +4,7 @@
 # - Defaults to building the 'injective-cosmwasm-mock' contract if no argument is provided.
 # - Specify a contract name (e.g., 'atomic-order-example') to build a different contract.
 # - The contract must be a directory in 'contracts/' (e.g., 'contracts/[contract-name]').
-# - Run from the workspace root (e.g., cw-injective) to ensure access to the workspace Cargo.toml.
+# - Run from the workspace root (e.g., cw-injective) to ensure access to the workspace pCargo.toml.
 # Examples:
 #   ./build.sh                    # Builds injective-cosmwasm-mock
 #   ./build.sh atomic-order-example  # Builds atomic-order-example
