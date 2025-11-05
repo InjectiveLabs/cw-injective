@@ -20,9 +20,7 @@ pub fn handle_query_stargate_raw(querier: &QuerierWrapper<InjectiveQueryWrapper>
     }?
     .to_string();
 
-    let decoded_value = BASE64_STANDARD
-        .decode(value)
-        .map_err(|_| StdError::msg("Decoding base64 value"))?;
+    let decoded_value = BASE64_STANDARD.decode(value).map_err(|_| StdError::msg("Decoding base64 value"))?;
     to_json_binary(&QueryStargateResponse {
         value: String::from_utf8(decoded_value)?,
     })
