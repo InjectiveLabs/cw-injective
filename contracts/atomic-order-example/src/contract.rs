@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{BankMsg, Coin, DepsMut, Env, MessageInfo, Reply, Response, SubMsg, Uint128};
+use cosmwasm_std::{BankMsg, Coin, DepsMut, Env, MessageInfo, Reply, Response, SubMsg, Uint256};
 use cw2::set_contract_version;
 use injective_cosmwasm::{
     create_spot_market_order_msg, get_default_subaccount_id_for_checked_address,
@@ -81,7 +81,7 @@ pub fn try_swap(
             val: "No funds deposited!".to_string(),
         });
     }
-    let message_deposit = FPDecimal::from(info.funds[0].amount.u128());
+    let message_deposit = injective_math::FPDecimal::from(info.funds[0].amount);
     if message_deposit < min_deposit {
         return Err(ContractError::CustomError {
             val: format!("Deposit: {message_deposit} below min_deposit: {min_deposit}"),
@@ -180,8 +180,8 @@ fn handle_atomic_order_reply(
 
     let purchased_coins = Coin::new(u128::from(quantity), config.base_denom.clone());
     let paid = quantity * price + fee;
-    let leftover = cache.deposited_amount.amount - Uint128::from(u128::from(paid));
-    let leftover_coins = Coin::new(u128::from(leftover), config.quote_denom);
+    let leftover = cache.deposited_amount.amount - Uint256::from(u128::from(paid));
+    let leftover_coins = Coin::new(Uint256::from(leftover), config.quote_denom);
 
     let send_message = BankMsg::Send {
         to_address: cache.sender_address,
