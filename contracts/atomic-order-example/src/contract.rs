@@ -181,7 +181,7 @@ fn handle_atomic_order_reply(
     let purchased_coins = Coin::new(u128::from(quantity), config.base_denom.clone());
     let paid = quantity * price + fee;
     let leftover = cache.deposited_amount.amount - Uint256::from(u128::from(paid));
-    let leftover_coins = Coin::new(Uint256::from(leftover), config.quote_denom);
+    let leftover_coins = Coin::new(leftover, config.quote_denom);
 
     let send_message = BankMsg::Send {
         to_address: cache.sender_address,

@@ -34,7 +34,7 @@ impl AddressGenerator for InjectiveAddressGenerator {
         salt: &[u8],
     ) -> Result<Addr, cosmwasm_std::StdError> {
         let canonical_addr = cosmwasm_std::instantiate2_address(checksum, creator, salt)?;
-        Ok(api.addr_humanize(&canonical_addr)?)
+        api.addr_humanize(&canonical_addr)
     }
 }
 

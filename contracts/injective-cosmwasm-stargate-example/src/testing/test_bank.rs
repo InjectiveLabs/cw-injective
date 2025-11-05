@@ -4,7 +4,7 @@ use crate::{
     testing::type_helpers::{BankParams, ParamResponse, QueryBalanceResponse, QueryDenomMetadataResponse, QuerySupplyOffResponse},
     utils::{ExchangeType, Setup},
 };
-use cosmwasm_std::{Coin, Uint128};
+use cosmwasm_std::{Coin, Uint256};
 use injective_test_tube::{
     injective_std::types::{
         cosmos::bank::v1beta1::{QueryBalanceRequest, QueryDenomMetadataRequest, QuerySupplyOfRequest},
@@ -92,7 +92,7 @@ fn test_query_bank_balance() {
         response.balance,
         Coin {
             denom: "inj".to_string(),
-            amount: Uint128::new(1_000_000_000_000_000_000_000_000),
+            amount: Uint256::new(1_000_000_000_000_000_000_000_000),
         }
     );
 }
@@ -114,7 +114,7 @@ fn test_query_supply_of() {
         response.amount,
         Coin {
             denom: "inj".to_string(),
-            amount: Uint128::new(12000004078367203674350010),
+            amount: Uint256::new(12000004078367203674350010),
         }
     );
 }
