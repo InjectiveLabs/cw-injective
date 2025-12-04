@@ -49,7 +49,7 @@ pub fn execute(
             Ok(response)
         }
         ExecuteMsg::Error { .. } => Err(ContractError::Std(StdError::generic_err("oh no!"))),
-        ExecuteMsg::TriggerPythUpdate { price } => execute_trigger_pyth_update(deps, env, price),
+        ExecuteMsg::TriggerPythUpdate { price, price_id } => execute_trigger_pyth_update(deps, env, price, price_id),
     }
 }
 

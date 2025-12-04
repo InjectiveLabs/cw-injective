@@ -12,21 +12,16 @@ pub fn execute_trigger_pyth_update(
     deps: DepsMut<InjectiveQueryWrapper>,
     env: Env,
     price: i64,
+    price_id: String,
 ) -> Result<Response<InjectiveMsgWrapper>, ContractError> {
     deps.api.debug("Starting trigger update");
     let mut response = Response::new();
     let pa = PriceAttestation {
         product_id: "MOCK_PRODUCT_ID".to_string(),
-        // price_id: Hash::from_hex(
-        //     "f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b",
-        // )?,
-        price_id: Hash::from_hex(
-            "f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b",
-        )?
-        .to_string(),
+        price_id: Hash::from_hex(&price_id)?.to_string(),
         price,
         conf: 500,
-        expo: -3,
+        expo: -8,
         ema_price: 1000,
         ema_conf: 2000,
         status: PythStatus::Trading,
@@ -59,7 +54,10 @@ mod tests {
     pub fn test_send_pyth() {
         let sender_addr = "inj1x2ck0ql2ngyxqtw8jteyc0tchwnwxv7npaungt";
 
-        let msg = ExecuteMsg::TriggerPythUpdate { price: 10000 };
+        let msg = ExecuteMsg::TriggerPythUpdate {
+            price: 10000,
+            price_id: "f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b".to_string(),
+        };
         let info = message_info(&Addr::unchecked(sender_addr), &[]);
         let env = mock_env();
         let res = execute(inj_mock_deps().as_mut_deps(), env, info, msg);
