@@ -21,7 +21,7 @@ injective-cosmwasm  = { version = "0.3.5-1" }
 injective-math      = { version = "0.3.5-1" }
 injective-std       = { version = "1.16.4-1" }
 injective-test-tube = { version = "1.16.4-1" }
-injective-testing   = { version = "1.1.13-1"}
+injective-testing   = { version = "1.2.0"}
 primitive-types     = { version = "0.12.2", default-features = false }
 prost               = { version = "0.13.5", features = [ "prost-derive" ] }
 rand                = { version = "0.4.6" }
@@ -52,4 +52,4 @@ rpath            = false
 # injective-cosmwasm = { path = "./packages/injective-cosmwasm" }
 # injective-math     = { path = "./packages/injective-math" }
 # injective-protobuf = { path = "./packages/injective-protobuf" }
-# injective-testing  = { path = "./packages/injective-testing" }
+injective-testing  = { path = "../injective-testing" }

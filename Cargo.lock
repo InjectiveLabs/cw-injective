@@ -1733,7 +1733,7 @@ dependencies = [
  "injective-math",
  "injective-std",
  "injective-test-tube",
- "injective-testing 1.1.13-1",
+ "injective-testing",
  "prost 0.13.5",
  "schemars 0.8.22",
  "serde",
@@ -1754,7 +1754,7 @@ dependencies = [
  "injective-math",
  "injective-std",
  "injective-test-tube",
- "injective-testing 1.1.13-1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-testing",
  "prost 0.13.5",
  "schemars 0.8.22",
  "serde",
@@ -1822,28 +1822,7 @@ dependencies = [
 
 [[package]]
 name = "injective-testing"
-version = "1.1.13-1"
-dependencies = [
- "anyhow",
- "cosmwasm-std",
- "cw-multi-test",
- "injective-cosmwasm 0.3.5-1 (registry+https://github.com/rust-lang/crates.io-index)",
- "injective-math",
- "injective-std",
- "injective-test-tube",
- "prost 0.13.5",
- "rand 0.4.6",
- "regex",
- "secp256k1 0.30.0",
- "serde",
- "tiny-keccak",
-]
-
-[[package]]
-name = "injective-testing"
-version = "1.1.13-1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "696d6fff16d73e1f1655e69643ae259991571915a8a91d83715b67486439832b"
+version = "1.2.0"
 dependencies = [
  "anyhow",
  "cosmwasm-std",
@@ -2321,7 +2300,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a56d757972c98b346a9b766e3f02746cde6dd1cd1d1d563472929fdd74bec4d"
 dependencies = [
  "anyhow",
- "itertools 0.14.0",
+ "itertools 0.12.1",
  "proc-macro2",
  "quote",
  "syn 2.0.101",
@@ -2334,7 +2313,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9120690fafc389a67ba3803df527d0ec9cbbc9cc45e4cc20b332996dfb672425"
 dependencies = [
  "anyhow",
- "itertools 0.14.0",
+ "itertools 0.12.1",
  "proc-macro2",
  "quote",
  "syn 2.0.101",
