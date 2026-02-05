@@ -3,8 +3,8 @@ use std::str::FromStr;
 
 use cosmwasm_std::testing::{MockApi, MockStorage};
 use cosmwasm_std::{
-    from_json, to_json_binary, Addr, AllBalanceResponse, BalanceResponse, BankQuery, Binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult,
-    QueryRequest, SupplyResponse, SystemError, SystemResult, Uint128, WasmQuery,
+    from_json, to_json_binary, Addr, BalanceResponse, BankQuery, Binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest,
+    SupplyResponse, SystemError, SystemResult, Uint128, Uint256, WasmQuery,
 };
 
 use injective_math::FPDecimal;
@@ -248,7 +248,7 @@ fn default_token_factory_denom_total_supply_handler() -> QuerierResult {
 fn default_bank_total_supply_handler() -> QuerierResult {
     let response = SupplyResponse::new(Coin {
         denom: "inj".to_string(),
-        amount: Uint128::from(1000u128),
+        amount: Uint256::from(1000u128),
     });
     SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
 }
@@ -267,11 +267,6 @@ fn default_contract_registration_info_response_handler() -> QuerierResult {
 
 fn default_balance_bank_query_handler(denom: impl Into<String>) -> QuerierResult {
     let response = BalanceResponse::new(Coin::new(1000000000000000u128, denom));
-    SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
-}
-
-fn default_all_balances_bank_query_handler() -> QuerierResult {
-    let response = AllBalanceResponse::new(vec![Coin::new(1000000000000000u128, "inj")]);
     SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
 }
 
@@ -434,10 +429,6 @@ pub trait HandlesBankBalanceQuery {
     fn handle(&self, address: String, denom: String) -> QuerierResult;
 }
 
-pub trait HandlesBankAllBalancesQuery {
-    fn handle(&self, address: String) -> QuerierResult;
-}
-
 pub trait HandlesByAddressQuery {
     fn handle(&self, address: String) -> QuerierResult;
 }
@@ -504,7 +495,6 @@ pub struct WasmMockQuerier {
     pub token_factory_denom_total_supply_handler: Option<Box<dyn HandlesDenomSupplyQuery>>,
     pub token_factory_denom_creation_fee_handler: Option<Box<dyn HandlesFeeQuery>>,
     pub balance_query_handler: Option<Box<dyn HandlesBankBalanceQuery>>,
-    pub all_balances_query_handler: Option<Box<dyn HandlesBankAllBalancesQuery>>,
     pub total_supply_handler: Option<Box<dyn HandlesDenomSupplyQuery>>,
     pub registered_contract_info_query_handler: Option<Box<dyn HandlesByAddressQuery>>,
     pub spot_market_orderbook_response_handler: Option<Box<dyn HandlesPriceLevelsQuery>>,
@@ -554,11 +544,6 @@ impl WasmMockQuerier {
                 BankQuery::Balance { address, denom } => match &self.balance_query_handler {
                     Some(handler) => handler.handle(address.to_string(), denom.to_string()),
                     None => default_balance_bank_query_handler(denom),
-                },
-                #[allow(deprecated)]
-                BankQuery::AllBalances { address } => match &self.all_balances_query_handler {
-                    Some(handler) => handler.handle(address.to_string()),
-                    None => default_all_balances_bank_query_handler(),
                 },
                 BankQuery::Supply { denom } => match &self.total_supply_handler {
                     Some(handler) => handler.handle(denom.to_string()),
@@ -767,7 +752,6 @@ impl WasmMockQuerier {
             token_factory_denom_total_supply_handler: None,
             token_factory_denom_creation_fee_handler: None,
             balance_query_handler: None,
-            all_balances_query_handler: None,
             registered_contract_info_query_handler: None,
             denom_decimals_handler: None,
             spot_market_orderbook_response_handler: None,
@@ -802,8 +786,8 @@ impl TestDeposit {
 
 pub mod handlers {
     use cosmwasm_std::{
-        to_json_binary, Addr, AllBalanceResponse, BalanceResponse, Binary, Checksum, CodeInfoResponse, Coin, ContractInfoResponse, ContractResult,
-        QuerierResult, StdResult, SupplyResponse, SystemError, SystemResult, Uint128,
+        to_json_binary, Addr, BalanceResponse, Binary, Checksum, CodeInfoResponse, Coin, ContractInfoResponse, ContractResult, QuerierResult,
+        SupplyResponse, SystemError, SystemResult, Uint128, Uint256,
     };
     use std::collections::HashMap;
 
@@ -824,8 +808,8 @@ pub mod handlers {
         TrimmedSpotLimitOrder,
     };
     use crate::{
-        HandlesBankAllBalancesQuery, HandlesBankBalanceQuery, HandlesCodeInfo, HandlesContractInfo,
-        HandlesTraderDerivativeOrdersToCancelUpToAmountQuery, MarketMidPriceAndTOBResponse, OracleType,
+        HandlesBankBalanceQuery, HandlesCodeInfo, HandlesContractInfo, HandlesTraderDerivativeOrdersToCancelUpToAmountQuery,
+        MarketMidPriceAndTOBResponse, OracleType,
     };
 
     use super::{HandlesOraclePriceQuery, TestDeposit};
@@ -1202,9 +1186,9 @@ pub mod handlers {
         }))
     }
 
-    pub fn create_bank_supply_handler(supply: Uint128) -> Option<Box<dyn HandlesDenomSupplyQuery>> {
+    pub fn create_bank_supply_handler(supply: Uint256) -> Option<Box<dyn HandlesDenomSupplyQuery>> {
         struct Temp {
-            supply: Uint128,
+            supply: Uint256,
         }
         impl HandlesDenomSupplyQuery for Temp {
             fn handle(&self, denom: String) -> QuerierResult {
@@ -1273,20 +1257,6 @@ pub mod handlers {
         Some(Box::new(Temp { balances }))
     }
 
-    pub fn create_simple_all_balances_bank_query_handler(balances: Vec<Coin>) -> Option<Box<dyn HandlesBankAllBalancesQuery>> {
-        struct Temp {
-            balances: Vec<Coin>,
-        }
-        impl HandlesBankAllBalancesQuery for Temp {
-            fn handle(&self, _: String) -> QuerierResult {
-                let res = AllBalanceResponse::new(self.balances.to_owned());
-
-                SystemResult::Ok(ContractResult::from(to_json_binary(&res)))
-            }
-        }
-        Some(Box::new(Temp { balances }))
-    }
-
     pub fn create_atomic_order_fee_multiplier_handler(multiplier: FPDecimal) -> Option<Box<dyn HandlesMarketIdQuery>> {
         struct Temp {
             multiplier: FPDecimal,
@@ -1307,7 +1277,7 @@ pub mod handlers {
         impl HandlesSmartQuery for Temp {
             fn handle(&self, _contract_addr: &str, _msg: &Binary) -> QuerierResult {
                 match self.result.clone() {
-                    Ok(resp) => SystemResult::Ok(ContractResult::from(StdResult::Ok(resp))),
+                    Ok(resp) => SystemResult::Ok(ContractResult::from(Ok::<Binary, cosmwasm_std::StdError>(resp))),
                     Err(err) => SystemResult::Err(err),
                 }
             }
@@ -1322,7 +1292,7 @@ pub mod handlers {
         impl HandlesRawQuery for Temp {
             fn handle(&self, _contract_addr: &str, _key: &Binary) -> QuerierResult {
                 match self.result.clone() {
-                    Ok(resp) => SystemResult::Ok(ContractResult::from(StdResult::Ok(resp))),
+                    Ok(resp) => SystemResult::Ok(ContractResult::from(Ok::<Binary, cosmwasm_std::StdError>(resp))),
                     Err(err) => SystemResult::Err(err),
                 }
             }
@@ -1338,8 +1308,7 @@ pub mod handlers {
 
         impl HandlesContractInfo for Temp {
             fn handle(&self, _contract_addr: &str) -> QuerierResult {
-                let response = ContractInfoResponse::new(self.code_id, self.creator.to_owned(), None, false, None);
-
+                let response = ContractInfoResponse::new(self.code_id, self.creator.to_owned(), None, false, None, None);
                 SystemResult::Ok(ContractResult::from(to_json_binary(&response)))
             }
         }

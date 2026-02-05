@@ -1,23 +1,23 @@
 [package]
-authors     = [ "Markus Waas <markus@injectivelabs.org>" ]
+authors     = ["Markus Waas <markus@injectivelabs.org>", "Jose Luis Bernal Castillo <joseluis@injectivelabs.org>" ]
 description = "Testing utils for Injective Cosmwasm and core modules"
 edition     = "2021"
 license     = "Apache-2.0"
 name        = "injective-testing"
 repository  = "https://github.com/InjectiveLabs/cw-injective/tree/dev/packages/injective-testing"
-version     = "1.1.11"
+version     = "1.1.13-1"
 
 [dependencies]
-anyhow              = { workspace = true }
-cosmwasm-std        = { workspace = true }
-cw-multi-test       = { workspace = true }
-injective-cosmwasm  = { workspace = true }
-injective-math      = { workspace = true }
-injective-std       = { workspace = true }
-injective-test-tube = { workspace = true }
-prost               = { workspace = true, features = [ "prost-derive" ] }
-rand                = { workspace = true }
-regex               = { workspace = true }
-secp256k1           = { workspace = true }
-serde               = { workspace = true }
-tiny-keccak         = { workspace = true }
+anyhow              = { version = "1.0.66" }
+cosmwasm-std        = { version = "3.0.2", features = ["cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
+cw-multi-test       = { version = "3.0.1" }
+injective-test-tube = { version = "1.16.4-1"}
+injective-cosmwasm  = { version = "0.3.5-1"}
+injective-math      = { version = "0.3.5-1"}
+injective-std       = { version = "1.16.4-1"}
+prost               = { version = "0.13.5", features = [ "prost-derive" ] }
+rand                = { version = "0.4.6" }
+regex               = { version = "1.11.1" }
+secp256k1           = { version = "0.30.0", features = [ "rand" ] }
+serde               = { version = "1.0.196", default-features = false, features = [ "derive" ] }
+tiny-keccak         = { version = "1.2.1" }

@@ -3,7 +3,7 @@ use std::str::FromStr;
 use cosmwasm_std::testing::{message_info, MockApi, MockStorage};
 use cosmwasm_std::{
     coins, to_json_binary, Addr, BankMsg, Binary, ContractResult, CosmosMsg, MsgResponse,
-    OwnedDeps, QuerierResult, Reply, SubMsgResponse, SubMsgResult, SystemResult, Uint128,
+    OwnedDeps, QuerierResult, Reply, SubMsgResponse, SubMsgResult, SystemResult, Uint256,
 };
 
 use injective_cosmwasm::InjectiveMsg::CreateSpotMarketOrder;
@@ -120,9 +120,9 @@ fn test_swap() {
         assert_eq!(to_address, sender_addr);
         assert_eq!(2, amount.len());
         assert_eq!(amount[0].denom, "INJ");
-        assert_eq!(amount[0].amount, Uint128::from(8u128));
+        assert_eq!(amount[0].amount, Uint256::from(8u128));
         assert_eq!(amount[1].denom, "USDT");
-        assert_eq!(amount[1].amount, Uint128::from(9000u128 - 8036u128));
+        assert_eq!(amount[1].amount, Uint256::from(9000u128 - 8036u128));
     } else {
         panic!("Wrong message type!");
     }

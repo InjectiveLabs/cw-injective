@@ -1,8 +1,8 @@
 use crate::multi_test::address_generator::InjectiveAddressGenerator;
-
-use anyhow::{bail, Result as AnyResult};
-use cosmwasm_std::{testing::MockApi, Addr, Api, Binary, BlockInfo, Coin, CustomQuery, Empty, MemoryStorage, Querier, Storage};
-use cosmwasm_std::{to_json_binary, StdError};
+use cosmwasm_std::{
+    testing::{MockApi, MockStorage},
+    to_json_binary, Addr, Api, Binary, BlockInfo, Coin, CustomQuery, Empty, Querier, StdError, Storage,
+};
 use cw_multi_test::{
     no_init, AddressGenerator, App, AppResponse, BankKeeper, BasicAppBuilder, CosmosRouter, Module, StargateAccepting, StargateFailing, WasmKeeper,
 };
@@ -19,7 +19,7 @@ pub enum StargateT {
     Failing(StargateFailing),
 }
 
-pub type MockedInjectiveApp = App<BankKeeper, MockApi, MemoryStorage, CustomInjectiveHandler, WasmKeeper<InjectiveMsgWrapper, InjectiveQueryWrapper>>;
+pub type MockedInjectiveApp = App<BankKeeper, MockApi, MockStorage, CustomInjectiveHandler, WasmKeeper<InjectiveMsgWrapper, InjectiveQueryWrapper>>;
 
 #[derive(Clone)]
 pub struct InitialBalance {
@@ -194,7 +194,7 @@ impl Module for CustomInjectiveHandler {
         _block: &BlockInfo,
         _sender: Addr,
         msg: Self::ExecT,
-    ) -> AnyResult<AppResponse> {
+    ) -> Result<AppResponse, StdError> {
         let mut exec_calls_count = self.state.execs.borrow().len();
 
         if !self.assertions.executes.is_empty()
@@ -230,11 +230,18 @@ impl Module for CustomInjectiveHandler {
                 }),
                 &None => Ok(AppResponse::default()),
             },
-            Err(e) => Err(anyhow::Error::new(StdError::generic_err(e.to_string()))),
+            Err(e) => Err(StdError::msg(e.to_string())),
         }
     }
 
-    fn query(&self, _api: &dyn Api, _storage: &dyn Storage, _querier: &dyn Querier, _block: &BlockInfo, request: Self::QueryT) -> AnyResult<Binary> {
+    fn query(
+        &self,
+        _api: &dyn Api,
+        _storage: &dyn Storage,
+        _querier: &dyn Querier,
+        _block: &BlockInfo,
+        request: Self::QueryT,
+    ) -> Result<Binary, StdError> {
         let mut query_calls_count = self.state.queries.borrow().len();
 
         if !self.assertions.queries.is_empty()
@@ -263,7 +270,7 @@ impl Module for CustomInjectiveHandler {
             // and that's the reason why I'm manually copying the underlying [u8] in order to return owned data
             match &stored_result {
                 Ok(optional_data) => Ok(copy_binary(optional_data)),
-                Err(e) => Err(anyhow::Error::new(StdError::generic_err(e.to_string()))),
+                Err(e) => Err(StdError::msg(e.to_string())),
             }
         }
     }
@@ -275,8 +282,8 @@ impl Module for CustomInjectiveHandler {
         _router: &dyn CosmosRouter<ExecC = ExecC, QueryC = QueryC>,
         _block: &BlockInfo,
         msg: Self::SudoT,
-    ) -> AnyResult<AppResponse> {
-        bail!("Unexpected sudo msg {:?}", msg)
+    ) -> Result<AppResponse, StdError> {
+        Err(StdError::msg(format!("Unexpected sudo msg {:?}", msg)))
     }
 }
 

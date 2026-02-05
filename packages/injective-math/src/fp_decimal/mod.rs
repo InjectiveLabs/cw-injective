@@ -101,7 +101,7 @@ impl TryFrom<FPDecimal> for Decimal256 {
 
     fn try_from(fp_decimal: FPDecimal) -> Result<Self, Self::Error> {
         if fp_decimal.is_negative() {
-            return Err(StdError::generic_err(format!("Value {} must be >= {}", fp_decimal.num, 0)));
+            return Err(StdError::msg(format!("Value {} must be >= {}", fp_decimal.num, 0)));
         }
 
         let fp_decimal_num_uint256 = fp_decimal.to_u256();

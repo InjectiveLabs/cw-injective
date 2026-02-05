@@ -1,27 +1,39 @@
 [package]
-authors     = [ "Albert Chon <albert@injectivelabs.org>", "F Grabner <friedrich@injectivelabs.org>", "Markus Waas <markus@injectivelabs.org>" ]
+authors = [ "Albert Chon albert@injectivelabs.org", "F Grabner friedrich@injectivelabs.org", "Markus Waas markus@injectivelabs.org", "Jose Luis joseluis@injectivelabs.org" ]
 description = "Bindings for CosmWasm contracts to call into custom modules of Injective Core"
-edition     = "2021"
-license     = "Apache-2.0"
-name        = "injective-cosmwasm"
-readme      = "README.md"
-repository  = "https://github.com/InjectiveLabs/cw-injective/tree/dev/packages/injective-cosmwasm"
-version     = "0.3.3"
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+edition = "2021"
+license = "Apache-2.0"
+name = "injective-cosmwasm"
+readme = "README.md"
+repository = "https://github.com/InjectiveLabs/cw-injective/tree/dev/packages/injective-cosmwasm"
+version = "0.3.5-1"
 
 [dependencies]
-cosmwasm-std    = { workspace = true }
-cw-storage-plus = { workspace = true }
-ethereum-types  = { workspace = true }
-hex             = { workspace = true }
-injective-math  = { workspace = true }
-schemars        = { workspace = true }
-serde           = { workspace = true }
-serde_repr      = { workspace = true }
-subtle-encoding = { workspace = true }
-tiny-keccak     = { workspace = true }
+cosmwasm-std    = { version = "3.0.2", features = ["cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
+cw-storage-plus = { version = "3.0.1" }
+ethereum-types  = { version = "0.5.2" }
+hex             = { version = "0.4.3", features = [ "serde" ] }
+injective-math  = { version = "0.3.5-1"}
+schemars        = { version = "0.8.16" }
+serde           = { version = "1.0.196", default-features = false, features = [ "derive" ] }
+serde_repr      = { version = "0.1.17" }
+subtle-encoding = { version = "0.5.1", features = [ "bech32-preview" ] }
+tiny-keccak     = { version = "1.2.1" }
+
 
 [dev-dependencies]
-cosmwasm-schema = { workspace = true }
-serde-json-wasm = { workspace = true }
-serde_test      = { workspace = true }
+serde-json-wasm = { version = "1.0.0" }
+serde_test = { version = "1.0.176" }
+
+[profile.release]
+codegen-units = 1
+debug = false
+debug-assertions = false
+incremental = false
+lto = true
+opt-level = 3
+overflow-checks = true
+panic = 'abort'
+rpath = false
+
+

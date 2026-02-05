@@ -29,7 +29,7 @@ where
             ensure_band(&v, min, max, range_ends)?;
             Ok(v)
         }
-        Err(e) => Err(StdError::generic_err(e.to_string())),
+        Err(e) => Err(StdError::msg(e.to_string())),
     }
 }
 
@@ -38,12 +38,12 @@ pub fn ensure_band<T: Ord + Display>(v: &T, min: Option<&T>, max: Option<&T>, ra
         match range_ends {
             RangeEnds::BothInclusive | RangeEnds::MinInclusive => {
                 if v < minv {
-                    return Err(StdError::generic_err(format!("value {v} must be >= {minv}")));
+                    return Err(StdError::msg(format!("value {v} must be >= {minv}")));
                 }
             }
             RangeEnds::MaxInclusive | RangeEnds::Exclusive => {
                 if v <= minv {
-                    return Err(StdError::generic_err(format!("value {v} must be > {minv}")));
+                    return Err(StdError::msg(format!("value {v} must be > {minv}")));
                 }
             }
         }
@@ -52,12 +52,12 @@ pub fn ensure_band<T: Ord + Display>(v: &T, min: Option<&T>, max: Option<&T>, ra
         match range_ends {
             RangeEnds::BothInclusive | RangeEnds::MaxInclusive => {
                 if v > maxv {
-                    return Err(StdError::generic_err(format!("value {v} must be <= {maxv}")));
+                    return Err(StdError::msg(format!("value {v} must be <= {maxv}")));
                 }
             }
             RangeEnds::MinInclusive | RangeEnds::Exclusive => {
                 if v >= maxv {
-                    return Err(StdError::generic_err(format!("value {v} must be < {maxv}")));
+                    return Err(StdError::msg(format!("value {v} must be < {maxv}")));
                 }
             }
         }
@@ -66,7 +66,7 @@ pub fn ensure_band<T: Ord + Display>(v: &T, min: Option<&T>, max: Option<&T>, ra
 }
 
 pub fn band_error_to_human(err: StdError, value_name: &str) -> StdError {
-    StdError::generic_err(format!("Value '{value_name}' failed validation due to: '{err}'"))
+    StdError::msg(format!("Value '{value_name}' failed validation due to: '{err}'"))
 }
 
 pub fn div_dec(num: FPDecimal, denom: FPDecimal) -> FPDecimal {

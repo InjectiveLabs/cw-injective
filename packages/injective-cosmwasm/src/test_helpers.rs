@@ -6,9 +6,7 @@ pub(crate) mod testing_helpers {
     use std::string::ToString;
 
     use cosmwasm_std::testing::{MockApi, MockStorage};
-    use cosmwasm_std::{
-        Addr, Api, BlockInfo, ContractInfo, CustomQuery, DepsMut, Env, OwnedDeps, Querier, QuerierWrapper, Storage, Timestamp, TransactionInfo,
-    };
+    use cosmwasm_std::{Addr, Api, BlockInfo, ContractInfo, CustomQuery, DepsMut, Env, OwnedDeps, Querier, QuerierWrapper, Storage, Timestamp};
 
     use injective_math::FPDecimal;
 
@@ -53,7 +51,7 @@ pub(crate) mod testing_helpers {
                 time: Timestamp::from_nanos(1_571_797_419_879_305_533),
                 chain_id: "cosmos-testnet-14002".to_string(),
             },
-            transaction: Some(TransactionInfo { index: 3 }),
+            transaction: None,
             contract: ContractInfo {
                 address: Addr::unchecked(TEST_CONTRACT_ADDR),
             },

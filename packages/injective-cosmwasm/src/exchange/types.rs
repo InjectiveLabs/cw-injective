@@ -106,11 +106,11 @@ impl MarketId {
         let market_id = market_id_s.into();
 
         if !market_id.starts_with("0x") {
-            return Err(StdError::generic_err("Invalid prefix: market_id must start with 0x"));
+            return Err(StdError::msg("Invalid prefix: market_id must start with 0x"));
         }
 
         if market_id.len() != 66 {
-            return Err(StdError::generic_err("Invalid length: market_id must be exactly 66 characters"));
+            return Err(StdError::msg("Invalid length: market_id must be exactly 66 characters"));
         }
 
         Ok(Self(market_id.to_lowercase()))
@@ -191,11 +191,11 @@ impl SubaccountId {
         let subaccount_id = subaccount_id_s.into();
 
         if !subaccount_id.starts_with("0x") {
-            return Err(StdError::generic_err("Invalid prefix: subaccount_id must start with 0x"));
+            return Err(StdError::msg("Invalid prefix: subaccount_id must start with 0x"));
         }
 
         if subaccount_id.len() != 66 {
-            return Err(StdError::generic_err("Invalid length: subaccount_id must be exactly 66 characters"));
+            return Err(StdError::msg("Invalid length: subaccount_id must be exactly 66 characters"));
         }
 
         Ok(Self(subaccount_id.to_lowercase()))
@@ -283,7 +283,7 @@ impl ShortSubaccountId {
     pub fn validate(&self) -> StdResult<Self> {
         let as_decimal = match u32::from_str_radix(self.as_str(), 16) {
             Ok(dec) => Ok(dec),
-            Err(_) => Err(StdError::generic_err(format!(
+            Err(_) => Err(StdError::msg(format!(
                 "Invalid value: ShortSubaccountId was not a hexadecimal number: {}",
                 &self.0
             ))),
@@ -291,7 +291,7 @@ impl ShortSubaccountId {
 
         match as_decimal?.to_string().parse::<u16>() {
             Ok(value) if value <= MAX_SHORT_SUBACCOUNT_NONCE => Ok(self.clone()),
-            _ => Err(StdError::generic_err(format!(
+            _ => Err(StdError::msg(format!(
                 "Invalid value: ShortSubaccountId must be a number between 0-999, but {} was received",
                 &self.0
             ))),
@@ -430,7 +430,7 @@ impl Hash {
 
     pub fn from_hex<T: AsRef<[u8]>>(s: T) -> StdResult<Hash> {
         let mut bytes = [0u8; 32];
-        hex::decode_to_slice(s, &mut bytes).map_err(|e| StdError::generic_err(e.to_string()))?;
+        hex::decode_to_slice(s, &mut bytes).map_err(|e| StdError::msg(e.to_string()))?;
         Ok(Hash::new(bytes))
     }
 }
@@ -443,7 +443,6 @@ impl fmt::Display for Hash {
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::StdError;
     use serde_test::{assert_de_tokens, assert_ser_tokens, Token};
     use std::panic::catch_unwind;
 
@@ -493,38 +492,41 @@ mod tests {
     fn subaccount_id_checks() {
         let wrong_prefix_err = SubaccountId::new("00B5e09b93aCEb70C1711aF078922fA256011D7e56000000000000000000000045").unwrap_err();
         assert_eq!(
-            wrong_prefix_err,
-            StdError::generic_err("Invalid prefix: subaccount_id must start with 0x")
+            wrong_prefix_err.to_string(),
+            "kind: Other, error: Invalid prefix: subaccount_id must start with 0x"
         );
 
         let wrong_length_err = SubaccountId::new("0xB5e09b93aCEb70C1711aF078922fA256011D7e5600000000000000000000004").unwrap_err();
         assert_eq!(
-            wrong_length_err,
-            StdError::generic_err("Invalid length: subaccount_id must be exactly 66 characters")
+            wrong_length_err.to_string(),
+            "kind: Other, error: Invalid length: subaccount_id must be exactly 66 characters"
         );
 
         let wrong_length_err = SubaccountId::new("0xB5e09b93aCEb70C1711aF078922fA256011D7e560000000000000000000000451").unwrap_err();
         assert_eq!(
-            wrong_length_err,
-            StdError::generic_err("Invalid length: subaccount_id must be exactly 66 characters")
+            wrong_length_err.to_string(),
+            "kind: Other, error: Invalid length: subaccount_id must be exactly 66 characters"
         );
     }
 
     #[test]
     fn market_id_checks() {
         let wrong_prefix_err = MarketId::new("0001EDFAB47F124748DC89998EB33144AF734484BA07099014594321729A0CA16B").unwrap_err();
-        assert_eq!(wrong_prefix_err, StdError::generic_err("Invalid prefix: market_id must start with 0x"));
+        assert_eq!(
+            wrong_prefix_err.to_string(),
+            "kind: Other, error: Invalid prefix: market_id must start with 0x"
+        );
 
         let wrong_length_err = MarketId::new("0x01EDFAB47F124748DC89998EB33144AF734484BA07099014594321729A0CA16").unwrap_err();
         assert_eq!(
-            wrong_length_err,
-            StdError::generic_err("Invalid length: market_id must be exactly 66 characters")
+            wrong_length_err.to_string(),
+            "kind: Other, error: Invalid length: market_id must be exactly 66 characters"
         );
 
         let wrong_length_err = MarketId::new("0x01EDFAB47F124748DC89998EB33144AF734484BA07099014594321729A0CA16B2").unwrap_err();
         assert_eq!(
-            wrong_length_err,
-            StdError::generic_err("Invalid length: market_id must be exactly 66 characters")
+            wrong_length_err.to_string(),
+            "kind: Other, error: Invalid length: market_id must be exactly 66 characters"
         );
     }
 
