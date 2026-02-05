@@ -48,7 +48,7 @@ pub fn execute(
             response.data = Some(to_json_binary("pong")?);
             Ok(response)
         }
-        ExecuteMsg::Error { .. } => Err(ContractError::Std(StdError::generic_err("oh no!"))),
+        ExecuteMsg::Error { .. } => Err(ContractError::Std(StdError::msg("oh no!"))),
         ExecuteMsg::TriggerPythUpdate { price } => execute_trigger_pyth_update(deps, env, price),
     }
 }
@@ -73,7 +73,7 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, Contract
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Ping { .. } => to_json_binary("pong"),
-        QueryMsg::Error { .. } => Err(StdError::generic_err("oh no!")),
+        QueryMsg::Error { .. } => Err(StdError::msg("oh no!")),
         QueryMsg::Runs {} => {
             let runs_count = COUNTER.load(deps.storage)?;
             to_json_binary(&format!("{runs_count}"))
