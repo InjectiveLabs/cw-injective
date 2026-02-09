@@ -9,7 +9,10 @@ use crate::{
 use cosmwasm_std::{Addr, Uint128};
 use injective_cosmwasm::{get_default_subaccount_id_for_checked_address, SubaccountId};
 use injective_math::FPDecimal;
-use injective_std::types::cosmos::gov;
+use injective_std::types::{
+    cosmos::gov,
+    injective::exchange::v2::{open_notional_cap::Cap, OpenNotionalCap, OpenNotionalCapUncapped},
+};
 use injective_test_tube::{
     injective_std::{
         shim::Any,
@@ -621,10 +624,13 @@ pub fn launch_perp_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
                 taker_fee_rate: "0005000000000000000".to_owned(),
                 initial_margin_ratio: "195000000000000000".to_owned(),
                 maintenance_margin_ratio: "50000000000000000".to_owned(),
-                min_price_tick_size: "1000000000000000000000".to_owned(),
+                min_price_tick_size: "100000000000000000".to_owned(),
                 min_quantity_tick_size: "1000000000000000".to_owned(),
                 min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
-                reduce_margin_ratio: "150000000000000000".to_string(),
+                reduce_margin_ratio: "350000000000000000".to_string(),
+                open_notional_cap: Some(OpenNotionalCap {
+                    cap: Some(Cap::Uncapped(OpenNotionalCapUncapped {})),
+                }),
             },
             signer,
         )
@@ -652,6 +658,9 @@ pub fn launch_perp_market_atom(exchange: &Exchange<InjectiveTestApp>, signer: &S
                 min_quantity_tick_size: "10000000000000000".to_owned(),
                 min_notional: dec_to_proto(FPDecimal::must_from_str("1")),
                 reduce_margin_ratio: "150000000000000000".to_string(),
+                open_notional_cap: Some(OpenNotionalCap {
+                    cap: Some(Cap::Uncapped(OpenNotionalCapUncapped {})),
+                }),
             },
             signer,
         )
@@ -898,4 +907,68 @@ pub fn get_spot_market_id(exchange: &Exchange<InjectiveTestApp>, ticker: String)
     let market = spot_markets.iter().find(|m| m.ticker == ticker).unwrap();
 
     market.market_id.to_string()
+}
+
+pub fn add_exchange_admin_v2(app: &InjectiveTestApp, validator: &SigningAccount, admin_address: String) {
+    let gov = Gov::new(app);
+
+    let res: v2::QueryExchangeParamsResponse = app
+        .query("/injective.exchange.v2.Query/QueryExchangeParams", &v2::QueryExchangeParamsRequest {})
+        .unwrap();
+
+    let mut exchange_params = res.params.unwrap();
+    exchange_params.exchange_admins.push(admin_address);
+    exchange_params.max_derivative_order_side_count = 300u32;
+    exchange_params.post_only_mode_blocks_amount = 1u64;
+    exchange_params.post_only_mode_blocks_amount_after_downtime = 1u64;
+
+    // NOTE: this could change in the future
+    let governance_module_address = "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt";
+
+    let mut buf = vec![];
+    v2::MsgUpdateParams::encode(
+        &v2::MsgUpdateParams {
+            authority: governance_module_address.to_string(),
+            params: Some(exchange_params),
+        },
+        &mut buf,
+    )
+    .unwrap();
+
+    let res = gov
+        .submit_proposal(
+            MsgSubmitProposal {
+                messages: vec![Any {
+                    type_url: v2::MsgUpdateParams::TYPE_URL.to_string(),
+                    value: buf,
+                }],
+                initial_deposit: vec![BaseCoin {
+                    amount: "100000000000000000000".to_string(),
+                    denom: "inj".to_string(),
+                }],
+                proposer: validator.address(),
+                metadata: "".to_string(),
+                title: "Update params v2".to_string(),
+                summary: "Updating the v2 exchange params".to_string(),
+                expedited: false,
+            },
+            validator,
+        )
+        .unwrap();
+
+    let proposal_id = res.events.iter().find(|e| e.ty == "submit_proposal").unwrap().attributes[0].value.clone();
+
+    gov.vote(
+        MsgVote {
+            proposal_id: u64::from_str(&proposal_id).unwrap(),
+            voter: validator.address(),
+            option: 1i32,
+            metadata: "".to_string(),
+        },
+        validator,
+    )
+    .unwrap();
+
+    // Increase time to pass the proposal
+    app.increase_time(20u64);
 }

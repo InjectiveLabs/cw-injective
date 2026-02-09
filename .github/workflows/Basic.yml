@@ -22,6 +22,29 @@ jobs:
           target: wasm32-unknown-unknown
           override: true
 
+      - name: Run all Rust tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          toolchain: 1.87.0
+          args: --workspace --all-targets --locked
+        env:
+          RUST_BACKTRACE: 1
+  integration:
+    name: Integration Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+      - name: Fix git safe.directory in container
+        run: mkdir -p /home/runner/work/_temp/_github_home && printf "[safe]\n\tdirectory = /github/workspace" >/home/runner/work/_temp/_github_home/.gitconfig
+      - name: Install contract toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.81.0
+          target: wasm32-unknown-unknown
+          override: true
       - name: Compile contracts
         run: |
           for dir in contracts/*/
@@ -30,16 +53,21 @@ jobs:
             RUSTFLAGS='-C link-arg=-s' cargo wasm
             cd -
           done
-
-      - name: Run unit tests
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.87.0
+          target: wasm32-unknown-unknown
+          override: true
+      - name: Run all integration tests
         uses: actions-rs/cargo@v1
         with:
-          command: unit-test
+          command: test
           toolchain: 1.87.0
-          args: --locked
+          args: --workspace --all-targets --locked --features=integration
         env:
           RUST_BACKTRACE: 1
-
   lints:
     name: Lints
     runs-on: ubuntu-latest

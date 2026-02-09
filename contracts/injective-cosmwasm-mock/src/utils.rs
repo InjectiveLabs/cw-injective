@@ -2,7 +2,7 @@ use crate::msg::{InstantiateMsg, MSG_CREATE_DERIVATIVE_LIMIT_ORDER_ENDPOINT, MSG
 use cosmwasm_std::{coin, Addr, Coin};
 use injective_cosmwasm::{checked_address_to_subaccount_id, get_default_subaccount_id_for_checked_address, SubaccountId};
 use injective_math::{scale::Scaled, FPDecimal};
-use injective_std::types::injective::exchange::v2;
+use injective_std::types::injective::exchange::v2::{self, open_notional_cap::Cap, OpenNotionalCap, OpenNotionalCapUncapped};
 use injective_test_tube::{
     injective_std::{
         shim::{Any, Timestamp},
@@ -33,7 +33,7 @@ use injective_test_tube::{
 };
 use injective_testing::{
     mocks::{MOCK_BASE_DECIMALS, MOCK_BASE_DENOM, MOCK_QUOTE_DECIMALS, MOCK_QUOTE_DENOM},
-    test_tube::exchange::{add_denom_notional_and_decimal, add_exchange_admin, launch_spot_market},
+    test_tube::exchange::{add_denom_notional_and_decimal, add_exchange_admin_v2, launch_spot_market},
     utils::human_to_i64,
 };
 use prost::Message;
@@ -167,7 +167,7 @@ impl Setup {
                 market_id = Some(launch_spot_market(&exchange, &owner, "INJ/USDT".to_string()));
             }
             ExchangeType::Derivative => {
-                add_exchange_admin(&app, &validator, owner.address());
+                add_exchange_admin_v2(&app, &validator, owner.address());
                 market_id = Some(launch_perp_market(&exchange, &owner, "INJ/USDT".to_string()));
             }
             ExchangeType::None => {}
@@ -354,6 +354,9 @@ pub fn launch_perp_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
                 min_quantity_tick_size: dec_to_proto(FPDecimal::must_from_str("0.001")),
                 min_notional: dec_to_proto(FPDecimal::must_from_str("0.01")),
                 reduce_margin_ratio: dec_to_proto(FPDecimal::must_from_str("0.033333")),
+                open_notional_cap: Some(OpenNotionalCap {
+                    cap: Some(Cap::Uncapped(OpenNotionalCapUncapped {})),
+                }),
             },
             signer,
         )
@@ -724,6 +727,9 @@ pub fn set_address_of_pyth_contract(app: &InjectiveTestApp, validator: &SigningA
             authority: GOV_MODULE_ADDRESS.to_string(),
             params: Some(Params {
                 pyth_contract: pyth_address.address(),
+                chainlink_verifier_proxy_contract: "".to_string(),
+                accept_unverified_chainlink_data_streams_reports: true,
+                chainlink_data_streams_verification_gas_limit: 1000000,
             }),
         },
         &mut buf,

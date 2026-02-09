@@ -1,5 +1,5 @@
 use crate::msg::{InstantiateMsg, QueryStargateResponse, MSG_CREATE_DERIVATIVE_LIMIT_ORDER_ENDPOINT, MSG_CREATE_SPOT_LIMIT_ORDER_ENDPOINT};
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Coin};
 use injective_cosmwasm::{checked_address_to_subaccount_id, get_default_subaccount_id_for_checked_address, SubaccountId};
 use injective_test_tube::{
     injective_std::{
@@ -25,7 +25,7 @@ use injective_test_tube::{
 use injective_testing::{
     test_tube::{
         bank::send,
-        exchange::{add_exchange_admin, launch_perp_market, launch_spot_market},
+        exchange::{add_exchange_admin_v2, launch_perp_market, launch_spot_market},
         insurance::launch_insurance_fund,
         oracle::launch_price_feed_oracle,
         utils::wasm_file,
@@ -84,8 +84,15 @@ impl Setup {
         denoms.insert("quote".to_string(), QUOTE_DENOM.to_string());
         denoms.insert("base".to_string(), BASE_DENOM.to_string());
 
-        let signer = app.init_account(&[str_coin("1000000", BASE_DENOM, BASE_DECIMALS)]).unwrap();
-
+        let signer = app
+            .init_account_decimals(
+                &[
+                    Coin::new(10_000_000_000_000_000_000_000u128, "inj"),
+                    Coin::new(100_000_000_000_000_000_000u128, "usdt"),
+                ],
+                &[18u32, 6u32],
+            )
+            .unwrap();
         let validator = app.get_first_validator_signing_account(BASE_DENOM.to_string(), 1.2f64).unwrap();
 
         let owner = app
@@ -128,8 +135,6 @@ impl Setup {
 
         send(&Bank::new(&app), "1000000000000000000000", BASE_DENOM, &owner, &validator);
 
-        add_exchange_admin(&app, &validator, owner.address().to_string());
-
         launch_insurance_fund(
             &app,
             &owner,
@@ -154,6 +159,7 @@ impl Setup {
                 market_id = Some(launch_spot_market(&exchange, &owner, "INJ/USDT".to_string()));
             }
             ExchangeType::Derivative => {
+                add_exchange_admin_v2(&app, &validator, owner.address().to_string());
                 market_id = Some(launch_perp_market(&exchange, &owner, "INJ/USDT".to_string()));
             }
             ExchangeType::None => {}
@@ -371,6 +377,18 @@ pub fn add_derivative_orders(app: &InjectiveTestApp, market_id: String, orders: 
     for order in orders {
         let (price, quantity, order_margin) =
             scale_price_quantity_perp_market(order.price.as_str(), order.quantity.as_str(), &margin, &QUOTE_DECIMALS);
+
+        println!(
+            "Adding derivative order with price: {}, quantity: {}, margin: {}",
+            price, quantity, order_margin
+        );
+        println!(
+            "OLD price: {}, quantity: {}, margin: {}",
+            order.price.as_str(),
+            order.quantity.as_str(),
+            margin
+        );
+
         add_derivative_order_as(app, market_id.to_owned(), &trader, price, quantity, order.order_type, order_margin);
     }
 }
@@ -489,6 +507,9 @@ pub fn set_address_of_pyth_contract(app: &InjectiveTestApp, validator: &SigningA
             authority: GOV_MODULE_ADDRESS.to_string(),
             params: Some(Params {
                 pyth_contract: pyth_address.address(),
+                chainlink_verifier_proxy_contract: "".to_string(),
+                accept_unverified_chainlink_data_streams_reports: true,
+                chainlink_data_streams_verification_gas_limit: 1000000,
             }),
         },
         &mut buf,

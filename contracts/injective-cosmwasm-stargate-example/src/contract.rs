@@ -2,7 +2,7 @@ use crate::{
     error::ContractError,
     handle::{handle_test_market_spot_order, handle_test_transient_derivative_order, handle_test_transient_spot_order},
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
-    query::{handle_query_bank_params, handle_query_spot_market, handle_query_stargate_raw},
+    query::{handle_derivative_market_query, handle_query_bank_params, handle_query_spot_market, handle_query_stargate_raw},
     reply::{handle_create_derivative_order_reply_stargate, handle_create_order_reply_stargate},
 };
 
@@ -57,6 +57,7 @@ pub fn query(deps: Deps<InjectiveQueryWrapper>, _env: Env, msg: QueryMsg) -> Std
         QueryMsg::QueryStargateRaw { path, query_request } => handle_query_stargate_raw(&deps.querier, path, query_request),
         QueryMsg::QueryBankParams {} => handle_query_bank_params(deps),
         QueryMsg::QuerySpotMarket { market_id } => handle_query_spot_market(deps, &market_id),
+        QueryMsg::TestDerivativeMarketQuery { market_id } => handle_derivative_market_query(deps, market_id),
     }
 }
 

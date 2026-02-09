@@ -14,9 +14,9 @@ use injective_cosmwasm::{
     TraderDerivativeOrdersResponse, TrimmedDerivativeLimitOrder,
 };
 use injective_math::FPDecimal;
-use injective_std::types::injective::exchange::v2;
+use injective_std::types::injective::exchange::v2::{self, open_notional_cap::Cap, OpenNotionalCap, OpenNotionalCapUncapped};
 use injective_test_tube::{injective_std::types::injective::exchange::v1beta1::OrderType, Account, Exchange, Module, Wasm};
-use injective_testing::test_tube::exchange::add_exchange_admin;
+use injective_testing::test_tube::exchange::add_exchange_admin_v2;
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
@@ -55,7 +55,7 @@ fn test_query_derivative_market() {
     let maker_fee_rate = FPDecimal::must_from_str("-0.0001");
     let taker_fee_rate = FPDecimal::must_from_str("0.001");
 
-    add_exchange_admin(&env.app, &env.validator, env.owner.address());
+    add_exchange_admin_v2(&env.app, &env.validator, env.owner.address());
 
     exchange
         .instant_perpetual_market_launch_v2(
@@ -75,6 +75,9 @@ fn test_query_derivative_market() {
                 min_quantity_tick_size: dec_to_proto(min_quantity_tick_size),
                 min_notional: dec_to_proto(min_notional),
                 reduce_margin_ratio: dec_to_proto(initial_margin_ratio),
+                open_notional_cap: Some(OpenNotionalCap {
+                    cap: Some(Cap::Uncapped(OpenNotionalCapUncapped {})),
+                }),
             },
             &env.owner,
         )

@@ -39,6 +39,7 @@ pub enum QueryMsg {
     QueryStargateRaw { path: String, query_request: String },
     QueryBankParams {},
     QuerySpotMarket { market_id: String },
+    TestDerivativeMarketQuery { market_id: MarketId },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
