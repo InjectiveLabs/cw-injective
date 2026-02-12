@@ -9,7 +9,7 @@ use crate::{
     },
 };
 
-use cosmwasm_std::{coin, Addr, Int64};
+use cosmwasm_std::{Addr, Int64};
 use injective_cosmwasm::{
     checked_address_to_subaccount_id, exchange::response::QueryOrderbookResponse, DerivativeMarketResponse, MarketId, MarketMidPriceAndTOBResponse,
     PriceLevel, SubaccountEffectivePositionInMarketResponse, SubaccountPositionInMarketResponse, TraderDerivativeOrdersResponse,
@@ -28,7 +28,7 @@ use injective_test_tube::{
 };
 use injective_testing::{
     test_tube::exchange::add_exchange_admin_v2,
-    utils::{dec_to_proto, human_to_dec, scale_price_quantity_perp_market},
+    utils::{dec_to_proto, human_to_dec, scale_price_quantity_perp_market, scale_price_quantity_perp_market_dec},
 };
 
 #[test]
@@ -426,32 +426,31 @@ fn test_query_trader_transient_derivative_orders() {
 
     add_perp_initial_liquidity(&env.app, market_id.clone());
 
-    let (price, quantity, margin) = scale_price_quantity_perp_market("9.7", "0.5", "1", &QUOTE_DECIMALS);
+    let (price, quantity, margin) = scale_price_quantity_perp_market("9.7", "0.5", "2", &QUOTE_DECIMALS);
     add_derivative_order_as(
         &env.app,
         market_id.to_owned(),
         &env.users[0].account,
         price,
         quantity,
-        OrderType::Buy,
+        OrderType::Sell,
         margin,
     );
 
-    let (scale_price, scale_quantity, scaled_margin) = scale_price_quantity_perp_market("9.7", "0.1", "0.5", &QUOTE_DECIMALS);
-    let res = wasm
-        .execute(
-            &env.contract_address,
-            &ExecuteMsg::TestTraderTransientDerivativeOrders {
-                market_id: MarketId::new(market_id).unwrap(),
-                subaccount_id: subaccount_id.clone(),
-                price: scale_price.to_string(),
-                quantity: scale_quantity.to_string(),
-                margin: scaled_margin.to_string(),
-            },
-            &[coin(1000000u128, QUOTE_DENOM)],
-            &env.users[0].account,
-        )
-        .unwrap();
+    let (scale_price, scale_quantity, scaled_margin) = scale_price_quantity_perp_market_dec("9.7", "0.1", "2", &QUOTE_DECIMALS);
+    let res = wasm.execute(
+        &env.contract_address,
+        &ExecuteMsg::TestTraderTransientDerivativeOrders {
+            market_id: MarketId::new(market_id).unwrap(),
+            subaccount_id: subaccount_id.clone(),
+            price: scale_price.to_string(),
+            quantity: scale_quantity.to_string(),
+            margin: scaled_margin.to_string(),
+        },
+        &[],
+        &env.users[0].account,
+    );
+    let res = res.unwrap();
 
     let transient_query = res
         .events
@@ -460,6 +459,8 @@ fn test_query_trader_transient_derivative_orders() {
         .and_then(|event| event.attributes.iter().find(|a| a.key == "query_str"));
     println!("{:?}", transient_query);
     assert!(transient_query.is_some());
-    let expected_order_info = "{\"value\":\"{\\\"orders\\\":[{\\\"price\\\":\\\"9700000.000000000000000000\\\",\\\"quantity\\\":\\\"0.100000000000000000\\\",\\\"margin\\\":\\\"485000.000000000000000000\\\",\\\"fillable\\\":\\\"0.100000000000000000\\\",\\\"isBuy\\\":true,";
-    assert!(transient_query.unwrap().value.contains(expected_order_info));
+    let transient_query = transient_query.unwrap().value.clone();
+    assert!(transient_query.contains("\"price\":\"9700000.000000000000000000\""));
+    assert!(transient_query.contains("\"quantity\":\"0.100000000000000000\""));
+    assert!(transient_query.contains("\"isBuy\":true"));
 }

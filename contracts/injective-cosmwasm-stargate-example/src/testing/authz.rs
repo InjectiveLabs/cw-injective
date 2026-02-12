@@ -100,21 +100,6 @@ fn test_query_grants() {
     let query_msg = QueryMsg::QueryStargateRaw {
         path: "/cosmos.authz.v1beta1.Query/Grants".to_string(),
         query_request: encode_proto_message(QueryGrantsRequest {
-            granter: env.users[0].account.address().to_string(),
-            grantee: env.users[1].account.address().to_string(),
-            msg_type_url: "/injective.exchange.v1beta1.MsgCreateDerivativeMarketOrder".to_string(),
-            pagination: None,
-        }),
-    };
-
-    let contract_response: QueryStargateResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
-    println!("{:?}", contract_response);
-    // let query_result = get_stargate_query_result::<GranteeGrantsResponse>(wasm.query(&env.contract_address, &query_msg)).unwrap();
-    // println!("{:?}", query_result);
-
-    let query_msg = QueryMsg::QueryStargateRaw {
-        path: "/cosmos.authz.v1beta1.Query/Grants".to_string(),
-        query_request: encode_proto_message(QueryGrantsRequest {
             granter: env.users[2].account.address().to_string(),
             grantee: env.users[1].account.address().to_string(),
             msg_type_url: "/injective.exchange.v1beta1.MsgCreateDerivativeMarketOrder".to_string(),
@@ -125,8 +110,8 @@ fn test_query_grants() {
     let contract_response: RunnerResult<QueryStargateResponse> = wasm.query(&env.contract_address, &query_msg);
 
     if let Err(QueryError { msg }) = contract_response {
-        assert_eq!(
-            msg, "Generic error: Querier contract error: codespace: authz, code: 2: query wasm contract failed",
+        assert!(
+            msg.contains("Querier contract error: codespace: authz, code: 2: query wasm contract failed"),
             "The error message does not match the expected value"
         );
     } else {

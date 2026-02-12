@@ -3,7 +3,7 @@ use crate::msg::QueryStargateResponse;
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
 use base64::Engine as _;
 use cosmwasm_std::{to_json_binary, to_json_vec, Binary, ContractResult, Deps, QuerierWrapper, QueryRequest, StdError, StdResult, SystemResult};
-use injective_cosmwasm::{InjectiveQueryWrapper, MarketId};
+use injective_cosmwasm::{InjectiveQuerier, InjectiveQueryWrapper, MarketId};
 use injective_std::types::{cosmos::bank::v1beta1::BankQuerier, injective::exchange::v2::ExchangeQuerier as ExchangeQuerierV2};
 
 pub fn handle_query_stargate_raw(querier: &QuerierWrapper<InjectiveQueryWrapper>, path: String, query_request: String) -> StdResult<Binary> {
@@ -27,8 +27,9 @@ pub fn handle_query_stargate_raw(querier: &QuerierWrapper<InjectiveQueryWrapper>
 }
 
 pub fn handle_query_spot_market(deps: Deps<InjectiveQueryWrapper>, market_id: &str) -> StdResult<Binary> {
-    let querier = ExchangeQuerierV2::new(&deps.querier);
-    to_json_binary(&querier.derivative_market(market_id.to_string())?)
+    let querier = InjectiveQuerier::new(&deps.querier);
+    let market_id = MarketId::new(market_id)?;
+    to_json_binary(&querier.query_spot_market(&market_id)?)
 }
 
 pub fn handle_query_bank_params(deps: Deps<InjectiveQueryWrapper>) -> StdResult<Binary> {

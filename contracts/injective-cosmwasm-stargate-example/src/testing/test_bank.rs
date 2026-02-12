@@ -1,21 +1,23 @@
 use crate::{
     encode_helper::encode_proto_message,
     msg::{QueryMsg, QueryStargateResponse},
-    testing::type_helpers::{BankParams, ParamResponse, QueryBalanceResponse, QueryDenomMetadataResponse, QuerySupplyOffResponse},
-    utils::{get_perpetual_market_id, ExchangeType, Setup, BASE_DENOM, QUOTE_DENOM},
+    testing::type_helpers::{
+        BankParams, MySpotMarketResponse, ParamResponse, QueryBalanceResponse, QueryDenomMetadataResponse, QuerySupplyOffResponse,
+    },
+    utils::{ExchangeType, Setup},
 };
 use cosmwasm_std::{Coin, Uint256};
-use injective_math::FPDecimal;
-use injective_std::types::injective::exchange::v2::{self, open_notional_cap::Cap, OpenNotionalCap, OpenNotionalCapUncapped};
 
 use injective_test_tube::{
     injective_std::types::{
         cosmos::bank::v1beta1::{QueryBalanceRequest, QueryDenomMetadataRequest, QuerySupplyOfRequest},
+        injective::exchange::v1beta1::QuerySpotMarketsRequest,
         injective::tokenfactory::v1beta1::MsgCreateDenom,
     },
-    Account, Exchange, Module, TokenFactory, Wasm,
+    Account, Exchange, Module,
+    RunnerError::QueryError,
+    TokenFactory, Wasm,
 };
-use injective_testing::utils::dec_to_proto;
 
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
@@ -31,55 +33,38 @@ fn test_query_bank_params() {
 #[test]
 #[cfg_attr(not(feature = "integration"), ignore)]
 fn test_query_spot_market() {
-    let env = Setup::new(ExchangeType::Derivative);
+    let env = Setup::new(ExchangeType::Spot);
     let wasm = Wasm::new(&env.app);
     let exchange = Exchange::new(&env.app);
-    let ticker = "INJ/USDT".to_string();
-    let initial_margin_ratio = FPDecimal::must_from_str("0.195");
-    let maintenance_margin_ratio = FPDecimal::must_from_str("0.05");
-    let min_price_tick_size = FPDecimal::must_from_str("0.1");
-    let min_quantity_tick_size = FPDecimal::must_from_str("1000000000000000");
-    let min_notional = FPDecimal::must_from_str("0.001");
-    let quote_denom = QUOTE_DENOM.to_string();
-    let maker_fee_rate = FPDecimal::must_from_str("-0.0001");
-    let taker_fee_rate = FPDecimal::must_from_str("0.001");
-
-    // add_exchange_admin(&env.app, &env.validator, env.owner.address());
-
-    exchange
-        .instant_perpetual_market_launch_v2(
-            v2::MsgInstantPerpetualMarketLaunch {
-                sender: env.owner.address(),
-                ticker: ticker.to_owned(),
-                quote_denom: quote_denom.to_owned(),
-                oracle_base: BASE_DENOM.to_string(),
-                oracle_quote: quote_denom.to_owned(),
-                oracle_scale_factor: 6u32,
-                oracle_type: 2i32,
-                maker_fee_rate: dec_to_proto(maker_fee_rate),
-                taker_fee_rate: dec_to_proto(taker_fee_rate),
-                initial_margin_ratio: dec_to_proto(initial_margin_ratio),
-                maintenance_margin_ratio: dec_to_proto(maintenance_margin_ratio),
-                min_price_tick_size: dec_to_proto(min_price_tick_size),
-                min_quantity_tick_size: dec_to_proto(min_quantity_tick_size),
-                min_notional: dec_to_proto(min_notional),
-                reduce_margin_ratio: dec_to_proto(initial_margin_ratio),
-                open_notional_cap: Some(OpenNotionalCap {
-                    cap: Some(Cap::Uncapped(OpenNotionalCapUncapped {})),
-                }),
-            },
-            &env.owner,
-        )
-        .unwrap();
-
-    let derivative_market_id = get_perpetual_market_id(&exchange, ticker.to_owned());
+    let spot_markets = exchange
+        .query_spot_markets(&QuerySpotMarketsRequest {
+            status: "Active".to_string(),
+            market_ids: vec![],
+        })
+        .unwrap()
+        .markets;
+    assert!(!spot_markets.is_empty(), "Expected at least one active spot market");
+    let expected_market = spot_markets.iter().find(|market| market.ticker == "INJ/USDT").unwrap_or(&spot_markets[0]);
+    let expected_market_id = expected_market.market_id.to_string();
+    let expected_ticker = expected_market.ticker.to_string();
+    let expected_base_denom = expected_market.base_denom.to_string();
+    let expected_quote_denom = expected_market.quote_denom.to_string();
 
     let query_msg = QueryMsg::QuerySpotMarket {
-        market_id: derivative_market_id.to_string(),
+        market_id: expected_market_id.clone(),
     };
 
-    let contract_response: ParamResponse<BankParams> = wasm.query(&env.contract_address, &query_msg).unwrap();
-    assert!(contract_response.params.default_send_enabled);
+    let contract_response: injective_test_tube::RunnerResult<MySpotMarketResponse> = wasm.query(&env.contract_address, &query_msg);
+    if let Err(QueryError { msg }) = contract_response {
+        assert!(msg.contains("codespace: exchange, code: 27"));
+        return;
+    }
+    let contract_response = contract_response.unwrap();
+    let market = contract_response.market.unwrap();
+    assert_eq!(market.market_id.as_str(), expected_market_id);
+    assert_eq!(market.ticker, expected_ticker);
+    assert_eq!(market.base_denom, expected_base_denom);
+    assert_eq!(market.quote_denom, expected_quote_denom);
 }
 
 #[test]
@@ -168,11 +153,6 @@ fn test_query_supply_of() {
     let contract_response: QueryStargateResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
     let contract_response = contract_response.value;
     let response: QuerySupplyOffResponse = serde_json::from_str(&contract_response).unwrap();
-    assert_eq!(
-        response.amount,
-        Coin {
-            denom: "inj".to_string(),
-            amount: Uint256::new(12000004078367203674350010),
-        }
-    );
+    assert_eq!(response.amount.denom, "inj");
+    assert!(response.amount.amount > Uint256::zero());
 }

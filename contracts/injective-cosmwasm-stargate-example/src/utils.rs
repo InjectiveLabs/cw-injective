@@ -25,7 +25,7 @@ use injective_test_tube::{
 use injective_testing::{
     test_tube::{
         bank::send,
-        exchange::{add_exchange_admin_v2, launch_perp_market, launch_spot_market},
+        exchange::{add_denom_notional_and_decimal, add_exchange_admin_v2, launch_perp_market, launch_spot_market},
         insurance::launch_insurance_fund,
         oracle::launch_price_feed_oracle,
         utils::wasm_file,
@@ -134,6 +134,8 @@ impl Setup {
         assert!(!contract_address.is_empty(), "Contract address is empty");
 
         send(&Bank::new(&app), "1000000000000000000000", BASE_DENOM, &owner, &validator);
+        add_denom_notional_and_decimal(&app, &validator, QUOTE_DENOM.to_string(), "1".to_string(), QUOTE_DECIMALS as u64);
+        add_denom_notional_and_decimal(&app, &validator, BASE_DENOM.to_string(), "1".to_string(), BASE_DECIMALS as u64);
 
         launch_insurance_fund(
             &app,
@@ -151,7 +153,7 @@ impl Setup {
             &validator,
             denoms["base"].as_str(),
             denoms["quote"].as_str(),
-            human_to_dec("10.01", BASE_DECIMALS).to_string(),
+            human_to_dec("10.01", QUOTE_DECIMALS).to_string(),
         );
 
         match exchange_type {

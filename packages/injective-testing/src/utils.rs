@@ -62,14 +62,23 @@ pub fn scale_price_quantity_spot_market(price: &str, quantity: &str, base_decima
 }
 
 pub fn scale_price_quantity_perp_market(price: &str, quantity: &str, margin_ratio: &str, quote_decimals: &i32) -> (String, String, String) {
+    let (scaled_price, scaled_quantity, scaled_margin) = scale_price_quantity_perp_market_dec(price, quantity, margin_ratio, quote_decimals);
+    (dec_to_proto(scaled_price), dec_to_proto(scaled_quantity), dec_to_proto(scaled_margin))
+}
+
+pub fn scale_price_quantity_perp_market_dec(
+    price: &str,
+    quantity: &str,
+    margin_ratio: &str,
+    quote_decimals: &i32,
+) -> (FPDecimal, FPDecimal, FPDecimal) {
     let price_dec = FPDecimal::must_from_str(price.replace('_', "").as_str());
     let quantity_dec = FPDecimal::must_from_str(quantity.replace('_', "").as_str());
     let margin_ratio_dec = FPDecimal::must_from_str(margin_ratio.replace('_', "").as_str());
 
     let scaled_price = price_dec.scaled(*quote_decimals);
     let scaled_quantity = quantity_dec;
-
     let scaled_margin = (price_dec * quantity_dec * margin_ratio_dec).scaled(*quote_decimals);
 
-    (dec_to_proto(scaled_price), dec_to_proto(scaled_quantity), dec_to_proto(scaled_margin))
+    (scaled_price, scaled_quantity, scaled_margin)
 }

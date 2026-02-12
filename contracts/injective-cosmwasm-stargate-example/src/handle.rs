@@ -9,7 +9,7 @@ use crate::{
 use cosmos_sdk_proto::{cosmos::authz::v1beta1::MsgExec, traits::Message, Any};
 use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, SubMsg};
 use injective_cosmwasm::{InjectiveMsgWrapper, InjectiveQuerier, InjectiveQueryWrapper, MarketId, OrderType, SubaccountId};
-use injective_math::FPDecimal;
+use injective_math::{scale::Scaled, FPDecimal};
 
 pub const MSG_EXEC: &str = "/cosmos.authz.v1beta1.MsgExec";
 
@@ -92,9 +92,9 @@ pub fn handle_test_transient_derivative_order(
     let market = querier.query_derivative_market(&market_id).unwrap().market.unwrap();
 
     let order_msg = create_derivative_limit_order(
-        FPDecimal::must_from_str(price.as_str()),
-        FPDecimal::must_from_str(quantity.as_str()),
-        FPDecimal::must_from_str(margin.as_str()),
+        FPDecimal::must_from_str(price.as_str()).scaled(18i32),
+        FPDecimal::must_from_str(quantity.as_str()).scaled(18i32),
+        FPDecimal::must_from_str(margin.as_str()).scaled(18i32),
         OrderType::Buy,
         info.sender.as_str(),
         subaccount_id.as_str(),
