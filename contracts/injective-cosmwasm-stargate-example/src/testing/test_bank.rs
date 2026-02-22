@@ -14,9 +14,7 @@ use injective_test_tube::{
         injective::exchange::v1beta1::QuerySpotMarketsRequest,
         injective::tokenfactory::v1beta1::MsgCreateDenom,
     },
-    Account, Exchange, Module,
-    RunnerError::QueryError,
-    TokenFactory, Wasm,
+    Account, Exchange, Module, TokenFactory, Wasm,
 };
 
 #[test]
@@ -54,12 +52,7 @@ fn test_query_spot_market() {
         market_id: expected_market_id.clone(),
     };
 
-    let contract_response: injective_test_tube::RunnerResult<MySpotMarketResponse> = wasm.query(&env.contract_address, &query_msg);
-    if let Err(QueryError { msg }) = contract_response {
-        assert!(msg.contains("codespace: exchange, code: 27"));
-        return;
-    }
-    let contract_response = contract_response.unwrap();
+    let contract_response: MySpotMarketResponse = wasm.query(&env.contract_address, &query_msg).unwrap();
     let market = contract_response.market.unwrap();
     assert_eq!(market.market_id.as_str(), expected_market_id);
     assert_eq!(market.ticker, expected_ticker);

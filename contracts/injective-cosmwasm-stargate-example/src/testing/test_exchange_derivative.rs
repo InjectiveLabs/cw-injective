@@ -457,10 +457,9 @@ fn test_query_trader_transient_derivative_orders() {
         .iter()
         .find(|e| e.ty == "wasm-transient_derivative_order")
         .and_then(|event| event.attributes.iter().find(|a| a.key == "query_str"));
-    println!("{:?}", transient_query);
     assert!(transient_query.is_some());
     let transient_query = transient_query.unwrap().value.clone();
-    assert!(transient_query.contains("\"price\":\"9700000.000000000000000000\""));
-    assert!(transient_query.contains("\"quantity\":\"0.100000000000000000\""));
-    assert!(transient_query.contains("\"isBuy\":true"));
+    assert!(transient_query.contains("\\\"price\\\":\\\"9700000.000000000000000000\\\""));
+    assert!(transient_query.contains("\\\"quantity\\\":\\\"0.100000000000000000\\\""));
+    assert!(transient_query.contains("\\\"isBuy\\\":true"));
 }
