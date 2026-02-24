@@ -1,5 +1,5 @@
 use cosmwasm_std::{Coin, Int64};
-use injective_cosmwasm::MarketId;
+use injective_cosmwasm::{MarketId, MarketStatus};
 use injective_math::FPDecimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -34,7 +34,7 @@ pub struct MySpotMarket {
     pub taker_fee_rate: FPDecimal,
     pub relayer_fee_share_rate: FPDecimal,
     pub market_id: MarketId,
-    pub status: String,
+    pub status: MarketStatus,
     pub min_price_tick_size: FPDecimal,
     pub min_quantity_tick_size: FPDecimal,
     pub min_notional: FPDecimal,
