@@ -20,9 +20,9 @@ use injective_std::types::injective::exchange::v2::{self, open_notional_cap::Cap
 use injective_test_tube::{
     injective_cosmwasm::get_default_subaccount_id_for_checked_address,
     injective_std::types::injective::exchange::v1beta1::{
-        OrderType, QueryDerivativeMarketRequest, QueryDerivativeMidPriceAndTobRequest, QueryDerivativeOrderbookRequest,
-        QueryPerpetualMarketFundingRequest, QueryPerpetualMarketInfoRequest, QuerySubaccountEffectivePositionInMarketRequest,
-        QuerySubaccountPositionInMarketRequest, QueryTraderDerivativeOrdersRequest,
+        OrderType, QueryDerivativeMarketRequest, QueryDerivativeOrderbookRequest, QueryPerpetualMarketFundingRequest,
+        QueryPerpetualMarketInfoRequest, QuerySubaccountEffectivePositionInMarketRequest, QuerySubaccountPositionInMarketRequest,
+        QueryTraderDerivativeOrdersRequest,
     },
     Account, Exchange, Module, Wasm,
 };
@@ -339,9 +339,8 @@ fn test_query_perpetual_market_funding() {
     assert_eq!(state.cumulative_price, FPDecimal::ZERO);
 }
 
-#[ignore = "TODO fix me"]
 #[test]
-//#[cfg_attr(not(feature = "integration"), ignore)]
+#[cfg_attr(not(feature = "integration"), ignore)]
 fn test_query_derivative_market_mid_price_and_tob() {
     let env = Setup::new(ExchangeType::Derivative);
     let wasm = Wasm::new(&env.app);
@@ -349,15 +348,15 @@ fn test_query_derivative_market_mid_price_and_tob() {
 
     add_perp_initial_liquidity(&env.app, market_id.to_owned());
     let query_msg = QueryMsg::QueryStargateRaw {
-        path: "/injective.exchange.v1beta1.Query/DerivativeMidPriceAndTOB".to_string(),
-        query_request: encode_proto_message(QueryDerivativeMidPriceAndTobRequest {
+        path: "/injective.exchange.v2.Query/DerivativeMidPriceAndTOB".to_string(),
+        query_request: encode_proto_message(v2::QueryDerivativeMidPriceAndTobRequest {
             market_id: market_id.to_owned(),
         }),
     };
     let res = get_stargate_query_result::<MarketMidPriceAndTOBResponse>(wasm.query(&env.contract_address, &query_msg)).unwrap();
-    assert_eq!(res.mid_price, Some(human_to_dec("10", QUOTE_DECIMALS)));
-    assert_eq!(res.best_buy_price, Some(human_to_dec("9.9", QUOTE_DECIMALS)));
-    assert_eq!(res.best_sell_price, Some(human_to_dec("10.1", QUOTE_DECIMALS)));
+    assert_eq!(res.mid_price, Some(FPDecimal::must_from_str("10")));
+    assert_eq!(res.best_buy_price, Some(FPDecimal::must_from_str("9.9")));
+    assert_eq!(res.best_sell_price, Some(FPDecimal::must_from_str("10.1")));
 }
 
 #[test]

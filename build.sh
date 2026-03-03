@@ -1,42 +1,55 @@
 #!/bin/bash
-# Usage: ./build.sh [contract-name]
-# Purpose: Builds a CosmWasm smart contract using the cosmwasm/optimizer Docker image.
-# - Defaults to building the 'injective-cosmwasm-mock' contract if no argument is provided.
-# - Specify a contract name (e.g., 'atomic-order-example') to build a different contract.
-# - The contract must be a directory in 'contracts/' (e.g., 'contracts/[contract-name]').
-# - Run from the workspace root (e.g., cw-injective) to ensure access to the workspace pCargo.toml.
-# Examples:
-#   ./build.sh                    # Builds injective-cosmwasm-mock
-#   ./build.sh atomic-order-example  # Builds atomic-order-example
-#   ./build.sh dummy              # Builds dummy
-#   ./build.sh injective-cosmwasm-stargate-example  # Builds injective-cosmwasm-stargate-example
-# Output: Produces an optimized .wasm file in target/wasm32-unknown-unknown/release/
+# Usage: ./build.sh <alias|contract-dir>
+# Aliases:
+#   stargate  -> injective-cosmwasm-stargate-example
+#   mock      -> injective-cosmwasm-mock
+#   atomic    -> atomic-order-example
+#   dummy     -> dummy
+# Full contract directory names also accepted.
 
 ARCH=""
-
-# Set architecture suffix for arm64
-if [[ $(arch) = "arm64" ]]; then
+if [ "$(arch)" = "arm64" ]; then
   ARCH=-arm64
 fi
 
-# Default contract name
-DEFAULT_CONTRACT="injective-cosmwasm-mock"
-CONTRACT=${1:-$DEFAULT_CONTRACT}
+resolve_alias() {
+  case "$1" in
+    stargate) echo "injective-cosmwasm-stargate-example" ;;
+    mock)     echo "injective-cosmwasm-mock" ;;
+    atomic)   echo "atomic-order-example" ;;
+    dummy)    echo "dummy" ;;
+    *)        echo "$1" ;;
+  esac
+}
 
-# Validate that the contract directory exists
-if [[ ! -d "contracts/$CONTRACT" ]]; then
+if [ -z "$1" ]; then
+  echo "Usage: ./build.sh <alias|contract-dir>"
+  echo ""
+  echo "Aliases:"
+  echo "  stargate  -> injective-cosmwasm-stargate-example"
+  echo "  mock      -> injective-cosmwasm-mock"
+  echo "  atomic    -> atomic-order-example"
+  echo "  dummy     -> dummy"
+  echo ""
+  echo "Available contract directories:"
+  ls -1 contracts/
+  exit 1
+fi
+
+CONTRACT=$(resolve_alias "$1")
+
+if [ ! -d "contracts/$CONTRACT" ]; then
   echo "Error: Contract directory 'contracts/$CONTRACT' does not exist."
   echo "Available contracts:"
   ls -1 contracts/
   exit 1
 fi
 
-# Run the optimizer with the specified or default contract
 docker run --rm -v "$(pwd)":/code \
   -v "$HOME/.cargo/git":/usr/local/cargo/git \
-  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/optimizer${ARCH}:0.16.1 /code/contracts/$CONTRACT
+  cosmwasm/optimizer${ARCH}:0.17.0 /code/contracts/$CONTRACT
 
 
 
