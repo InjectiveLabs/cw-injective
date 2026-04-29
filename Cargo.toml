@@ -11,17 +11,17 @@ anyhow              = { version = "1.0.66" }
 base64              = { version = "0.21.5" }
 cosmos-sdk-proto    = { version = "0.20.0", default-features = false }
 cosmwasm-schema     = { version = "1.5.0" }
-cosmwasm-std        = { version = "3.0.2", features = [ "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
+cosmwasm-std        = { version = "3.0.5", features = [ "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
 cw-multi-test       = { version = "3.0.0" }
 cw-storage-plus     = { version = "3.0.1" }
 cw2                 = { version = "3.0.0" }
 ethereum-types      = { version = "0.5.2" }
 hex                 = { version = "0.4.3", features = [ "serde" ] }
-injective-cosmwasm  = { version = "0.3.5-1" }
-injective-math      = { version = "0.3.5-1" }
-injective-std       = { version = "1.18.0" }
-injective-test-tube = { version = "1.18.0" }
-injective-testing   = { path = "./packages/injective-testing" }
+injective-cosmwasm  = { version = "0.3.6" }
+injective-math      = { version = "0.3.6" }
+injective-std       = { version = "1.19.0" }
+injective-test-tube = { version = "1.19.0" }
+injective-testing   = { version = "1.19.0", path = "./packages/injective-testing" }
 primitive-types     = { version = "0.12.2", default-features = false }
 prost               = { version = "0.13.5", features = [ "prost-derive" ] }
 rand                = { version = "0.4.6" }
@@ -47,9 +47,3 @@ opt-level        = 3
 overflow-checks  = true
 panic            = 'abort'
 rpath            = false
-
-[patch.crates-io]
-# injective-cosmwasm = { path = "./packages/injective-cosmwasm" }
-# injective-math     = { path = "./packages/injective-math" }
-# injective-protobuf = { path = "./packages/injective-protobuf" }
-# injective-testing  = { path = "./packages/injective-testing" }
