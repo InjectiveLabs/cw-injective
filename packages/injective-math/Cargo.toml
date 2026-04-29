@@ -6,12 +6,12 @@ license     = "Apache-2.0"
 name        = "injective-math"
 readme      = "README.md"
 repository  = "https://github.com/InjectiveLabs/cw-injective/tree/dev/packages/injective-math"
-version     = "0.3.5-1"
+version     = "0.3.6"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cosmwasm-std    = { version = "3.0.2", features = ["cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
+cosmwasm-std    = { version = "3.0.5", features = ["cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
 primitive-types = { version = "0.12.2", default-features = false }
 schemars        = { version = "0.8.16" }
 serde           = { version = "1.0.196", default-features = false, features = [ "derive" ] }

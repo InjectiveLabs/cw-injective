@@ -164,15 +164,12 @@ impl<'de> Deserialize<'de> for MarketId {
         let market_id = String::deserialize(deserializer)?;
 
         if !market_id.starts_with("0x") {
-            let error_message = format!("Invalid prefix in deserialization: market_id must start with 0x, received {}", market_id);
+            let error_message = format!("Invalid prefix in deserialization: market_id must start with 0x, received {market_id}");
             return Err(D::Error::custom(error_message));
         }
 
         if market_id.len() != 66 {
-            let error_message = format!(
-                "Invalid length in deserialization: market_id must be exactly 66 characters, received {}",
-                market_id
-            );
+            let error_message = format!("Invalid length in deserialization: market_id must be exactly 66 characters, received {market_id}");
             return Err(D::Error::custom(error_message));
         }
 
@@ -226,18 +223,12 @@ impl<'de> Deserialize<'de> for SubaccountId {
         let subaccount_id = String::deserialize(deserializer)?;
 
         if !subaccount_id.starts_with("0x") {
-            let error_message = format!(
-                "Invalid prefix in deserialization: subaccount_id must start with 0x, received {}",
-                subaccount_id
-            );
+            let error_message = format!("Invalid prefix in deserialization: subaccount_id must start with 0x, received {subaccount_id}");
             return Err(D::Error::custom(error_message));
         }
 
         if subaccount_id.len() != 66 {
-            let error_message = format!(
-                "Invalid length in deserialization: subaccount_id must be exactly 66 characters, received {}",
-                subaccount_id
-            );
+            let error_message = format!("Invalid length in deserialization: subaccount_id must be exactly 66 characters, received {subaccount_id}");
             return Err(D::Error::custom(error_message));
         }
 
@@ -312,7 +303,7 @@ impl<'de> Deserialize<'de> for ShortSubaccountId {
         let id = String::deserialize(deserializer)?;
 
         match id.parse::<u16>() {
-            Ok(value) if value <= MAX_SHORT_SUBACCOUNT_NONCE => Ok(ShortSubaccountId::unchecked(format!("{:03x}", value))),
+            Ok(value) if value <= MAX_SHORT_SUBACCOUNT_NONCE => Ok(ShortSubaccountId::unchecked(format!("{value:03x}"))),
             _ => {
                 let maybe_long = SubaccountId::unchecked(id);
                 let maybe_short: ShortSubaccountId = ShortSubaccountId::from(maybe_long);

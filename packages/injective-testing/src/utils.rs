@@ -2,17 +2,11 @@ use cosmwasm_std::{coin, Coin};
 use injective_math::{scale::Scaled, FPDecimal};
 
 pub fn assert_execute_error(message: &str) -> String {
-    format!(
-        "execute error: failed to execute message; message index: 0: {}: execute wasm contract failed",
-        message
-    )
+    format!("execute error: failed to execute message; message index: 0: {message}: execute wasm contract failed")
 }
 
 pub fn assert_instantiate_error(message: &str) -> String {
-    format!(
-        "execute error: failed to execute message; message index: 0: {}: instantiate wasm contract failed",
-        message
-    )
+    format!("execute error: failed to execute message; message index: 0: {message}: instantiate wasm contract failed")
 }
 
 pub fn proto_to_dec(val: &str) -> FPDecimal {

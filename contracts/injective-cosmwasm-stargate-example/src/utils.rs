@@ -510,7 +510,6 @@ pub fn set_address_of_pyth_contract(app: &InjectiveTestApp, validator: &SigningA
             params: Some(Params {
                 pyth_contract: pyth_address.address(),
                 chainlink_verifier_proxy_contract: "".to_string(),
-                accept_unverified_chainlink_data_streams_reports: true,
                 chainlink_data_streams_verification_gas_limit: 1000000,
             }),
         },
