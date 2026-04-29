@@ -18,7 +18,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.87.0
+          toolchain: 1.88.0
           target: wasm32-unknown-unknown
           override: true
 
@@ -26,7 +26,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-          toolchain: 1.87.0
+          toolchain: 1.88.0
           args: --workspace --all-targets --locked
         env:
           RUST_BACKTRACE: 1
@@ -57,14 +57,14 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.87.0
+          toolchain: 1.88.0
           target: wasm32-unknown-unknown
           override: true
       - name: Run all integration tests
         uses: actions-rs/cargo@v1
         with:
           command: test
-          toolchain: 1.87.0
+          toolchain: 1.88.0
           args: --workspace --all-targets --locked --features=integration
         env:
           RUST_BACKTRACE: 1
@@ -81,7 +81,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.87.0
+          toolchain: 1.88.0
           override: true
           components: rustfmt, clippy
 
@@ -89,12 +89,12 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: fmt
-          toolchain: 1.87.0
+          toolchain: 1.88.0
           args: --all -- --check
 
       - name: Run cargo clippy
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          toolchain: 1.87.0
+          toolchain: 1.88.0
           args: -- -D warnings
