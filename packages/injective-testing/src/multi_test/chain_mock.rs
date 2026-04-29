@@ -283,7 +283,7 @@ impl Module for CustomInjectiveHandler {
         _block: &BlockInfo,
         msg: Self::SudoT,
     ) -> Result<AppResponse, StdError> {
-        Err(StdError::msg(format!("Unexpected sudo msg {:?}", msg)))
+        Err(StdError::msg(format!("Unexpected sudo msg {msg:?}")))
     }
 }
 

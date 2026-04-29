@@ -42,5 +42,5 @@ pub struct PrivilegedAction {
 }
 
 pub fn coins_to_string(coins: Vec<Coin>) -> String {
-    coins.into_iter().map(|coin| format!("{}", coin)).collect::<Vec<String>>().join(", ")
+    coins.into_iter().map(|coin| format!("{coin}")).collect::<Vec<String>>().join(", ")
 }
