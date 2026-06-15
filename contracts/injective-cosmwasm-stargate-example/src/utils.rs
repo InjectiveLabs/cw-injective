@@ -380,10 +380,7 @@ pub fn add_derivative_orders(app: &InjectiveTestApp, market_id: String, orders: 
         let (price, quantity, order_margin) =
             scale_price_quantity_perp_market(order.price.as_str(), order.quantity.as_str(), &margin, &QUOTE_DECIMALS);
 
-        println!(
-            "Adding derivative order with price: {}, quantity: {}, margin: {}",
-            price, quantity, order_margin
-        );
+        println!("Adding derivative order with price: {price}, quantity: {quantity}, margin: {order_margin}");
         println!(
             "OLD price: {}, quantity: {}, margin: {}",
             order.price.as_str(),
@@ -619,7 +616,7 @@ pub fn create_some_usdt_price_attestation(human_price: &str, decimal_precision: 
 pub fn get_stargate_query_result<T: DeserializeOwned>(contract_response: RunnerResult<QueryStargateResponse>) -> serde_json::Result<T> {
     let contract_response = contract_response.unwrap().value;
     serde_json::from_str::<T>(&contract_response).map_err(|error| {
-        println!("{} \n {}", error, contract_response);
+        println!("{error} \n {contract_response}");
         error
     })
 }

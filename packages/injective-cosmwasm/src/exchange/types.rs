@@ -554,7 +554,7 @@ mod tests {
     #[test]
     fn subaccount_id_implements_display() {
         let subaccount_id = SubaccountId::unchecked("literal-string");
-        assert_eq!(format!("{}", subaccount_id), "literal-string");
+        assert_eq!(format!("{subaccount_id}"), "literal-string");
     }
 
     #[test]

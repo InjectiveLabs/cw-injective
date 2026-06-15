@@ -443,7 +443,7 @@ mod tests {
     #[test]
     fn test_div_identity() {
         for i in 1..10000 {
-            let a = FPDecimal::must_from_str(&format!("{}", i));
+            let a = FPDecimal::must_from_str(&format!("{i}"));
             assert_eq!(a / a, FPDecimal::ONE);
         }
     }

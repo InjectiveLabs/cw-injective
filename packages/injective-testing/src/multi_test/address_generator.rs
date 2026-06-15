@@ -125,7 +125,7 @@ mod tests {
         // Ensure the generated address starts with the Injective prefix (e.g., "inj")
         assert!(generated_address.as_str().starts_with("inj"), "Generated address should start with 'inj'");
 
-        println!("generated address: {:?}", generated_address);
+        println!("generated address: {generated_address:?}");
 
         // Ensure the address matches a valid bech32 format
         let bech32_regex = Regex::new(r"^inj[0-9a-z]{39}$").unwrap();
