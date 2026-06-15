@@ -52,6 +52,10 @@ pub enum OracleType {
     Pyth = 9,
     BandIBC = 10,
     Provider = 11,
+    Stork = 12,
+    ChainlinkDataStreams = 13,
+    PythPro = 14,
+    SedaFast = 15,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -121,4 +125,18 @@ pub struct PythPriceState {
     #[serde(default)]
     pub publish_time: i64,
     pub price_state: PriceState,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::OracleType;
+    use serde_test::{assert_tokens, Token};
+
+    #[test]
+    fn oracle_type_serializes_core_1_20_variants() {
+        assert_tokens(&OracleType::Stork, &[Token::I32(12)]);
+        assert_tokens(&OracleType::ChainlinkDataStreams, &[Token::I32(13)]);
+        assert_tokens(&OracleType::PythPro, &[Token::I32(14)]);
+        assert_tokens(&OracleType::SedaFast, &[Token::I32(15)]);
+    }
 }

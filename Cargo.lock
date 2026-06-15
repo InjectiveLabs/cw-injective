@@ -204,8 +204,8 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus",
  "cw2",
- "injective-cosmwasm 0.3.6",
- "injective-math 0.3.6",
+ "injective-cosmwasm 0.3.7",
+ "injective-math 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "injective-std",
  "prost 0.13.5",
  "schemars 0.8.22",
@@ -956,7 +956,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus",
  "cw2",
- "injective-cosmwasm 0.3.6",
+ "injective-cosmwasm 0.3.7",
  "injective-std",
  "schemars 0.8.22",
  "serde",
@@ -1113,7 +1113,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cea14ef9355e3beab063703aa9dab15afd25f0667c341310c1e5274bb1d0da18"
 dependencies = [
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -1687,24 +1687,6 @@ dependencies = [
 [[package]]
 name = "injective-cosmwasm"
 version = "0.3.6"
-dependencies = [
- "cosmwasm-std",
- "cw-storage-plus",
- "ethereum-types",
- "hex",
- "injective-math 0.3.6",
- "schemars 0.8.22",
- "serde",
- "serde-json-wasm",
- "serde_repr",
- "serde_test",
- "subtle-encoding",
- "tiny-keccak",
-]
-
-[[package]]
-name = "injective-cosmwasm"
-version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2f0fc1345be5ca8c1bf7bcc7215b581cbef6a13a73e62fa390dc2be122183363"
 dependencies = [
@@ -1712,10 +1694,28 @@ dependencies = [
  "cw-storage-plus",
  "ethereum-types",
  "hex",
- "injective-math 0.3.6",
+ "injective-math 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "schemars 0.8.22",
  "serde",
  "serde_repr",
+ "subtle-encoding",
+ "tiny-keccak",
+]
+
+[[package]]
+name = "injective-cosmwasm"
+version = "0.3.7"
+dependencies = [
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "ethereum-types",
+ "hex",
+ "injective-math 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "schemars 0.8.22",
+ "serde",
+ "serde-json-wasm",
+ "serde_repr",
+ "serde_test",
  "subtle-encoding",
  "tiny-keccak",
 ]
@@ -1730,8 +1730,8 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus",
  "cw2",
- "injective-cosmwasm 0.3.6",
- "injective-math 0.3.6",
+ "injective-cosmwasm 0.3.7",
+ "injective-math 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "injective-std",
  "injective-test-tube",
  "injective-testing",
@@ -1752,8 +1752,8 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus",
  "cw2",
- "injective-cosmwasm 0.3.6",
- "injective-math 0.3.6",
+ "injective-cosmwasm 0.3.7",
+ "injective-math 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "injective-std",
  "injective-test-tube",
  "injective-testing",
@@ -1766,9 +1766,7 @@ dependencies = [
 
 [[package]]
 name = "injective-math"
-version = "0.3.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c04b6ee8f956b14b48b554acb8c70389f7ef614b8f1cdab9c1b8e87651ff8c8b"
+version = "0.3.7"
 dependencies = [
  "cosmwasm-std",
  "primitive-types",
@@ -1779,6 +1777,8 @@ dependencies = [
 [[package]]
 name = "injective-math"
 version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f830683c4408bc3046d3ee6aeef82cf1fcccdb85e0dd7c6ebc8b50ee7ef462f6"
 dependencies = [
  "cosmwasm-std",
  "primitive-types",
@@ -1824,7 +1824,7 @@ dependencies = [
  "bindgen",
  "cosmrs",
  "cosmwasm-std",
- "injective-cosmwasm 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-cosmwasm 0.3.6",
  "injective-std",
  "k256",
  "prost 0.13.5",
@@ -1842,8 +1842,8 @@ dependencies = [
  "anyhow",
  "cosmwasm-std",
  "cw-multi-test",
- "injective-cosmwasm 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "injective-math 0.3.6",
+ "injective-cosmwasm 0.3.6",
+ "injective-math 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "injective-std",
  "injective-test-tube",
  "prost 0.13.5",
@@ -1868,7 +1868,7 @@ checksum = "3640c1c38b8e4e43584d8df18be5fc6b0aa314ce6ebf51b53313d4306cca8e46"
 dependencies = [
  "hermit-abi 0.5.2",
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -2673,7 +2673,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.59.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3828,7 +3828,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]

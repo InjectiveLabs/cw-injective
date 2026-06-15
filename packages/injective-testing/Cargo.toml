@@ -12,7 +12,7 @@ anyhow              = { version = "1.0.66" }
 cosmwasm-std        = { version = "3.0.5", features = [ "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "iterator", "stargate" ] }
 cw-multi-test       = { version = "3.0.1" }
 injective-cosmwasm  = { version = "0.3.6" }
-injective-math      = { version = "0.3.6" }
+injective-math      = { version = "0.3.7" }
 injective-std       = { version = "1.19.0" }
 injective-test-tube = { version = "1.19.0" }
 prost               = { version = "0.13.5", features = [ "prost-derive" ] }
