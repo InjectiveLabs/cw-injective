@@ -96,6 +96,7 @@ fn test_query_derivative_market() {
                 open_notional_cap: Some(OpenNotionalCap {
                     cap: Some(Cap::Uncapped(OpenNotionalCapUncapped {})),
                 }),
+                cross_margin_eligible: false,
             },
             &env.owner,
         )
@@ -160,6 +161,7 @@ fn test_query_derivative_market_v2() {
                 open_notional_cap: Some(OpenNotionalCap {
                     cap: Some(Cap::Uncapped(OpenNotionalCapUncapped {})),
                 }),
+                cross_margin_eligible: false,
             },
             &env.owner,
         )
@@ -253,7 +255,7 @@ fn test_query_vanilla_subaccount_position() {
 
     let res: SubaccountPositionInMarketResponse =
         get_stargate_query_result::<SubaccountPositionInMarketResponse>(wasm.query(&env.contract_address, &query_msg)).unwrap();
-    println!("{:?}", res);
+    println!("{res:?}");
     assert!(res.state.is_some());
 
     let liquidity_orders: Vec<HumanOrder> = vec![HumanOrder {
@@ -264,7 +266,7 @@ fn test_query_vanilla_subaccount_position() {
     add_derivative_orders(&env.app, market_id.clone(), liquidity_orders.to_owned(), None);
 
     let res = get_stargate_query_result::<SubaccountPositionInMarketResponse>(wasm.query(&env.contract_address, &query_msg)).unwrap();
-    println!("{:?}", res);
+    println!("{res:?}");
     assert!(res.state.is_some());
 }
 

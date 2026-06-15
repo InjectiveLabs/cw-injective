@@ -380,10 +380,7 @@ pub fn add_derivative_orders(app: &InjectiveTestApp, market_id: String, orders: 
         let (price, quantity, order_margin) =
             scale_price_quantity_perp_market(order.price.as_str(), order.quantity.as_str(), &margin, &QUOTE_DECIMALS);
 
-        println!(
-            "Adding derivative order with price: {}, quantity: {}, margin: {}",
-            price, quantity, order_margin
-        );
+        println!("Adding derivative order with price: {price}, quantity: {quantity}, margin: {order_margin}");
         println!(
             "OLD price: {}, quantity: {}, margin: {}",
             order.price.as_str(),
@@ -511,6 +508,10 @@ pub fn set_address_of_pyth_contract(app: &InjectiveTestApp, validator: &SigningA
                 pyth_contract: pyth_address.address(),
                 chainlink_verifier_proxy_contract: "".to_string(),
                 chainlink_data_streams_verification_gas_limit: 1000000,
+                pyth_pro_verifier_contract: "".to_string(),
+                pyth_pro_verification_gas_limit: 500000,
+                pyth_pro_verification_fee: 1,
+                seda_fast_params: None,
             }),
         },
         &mut buf,
@@ -615,7 +616,7 @@ pub fn create_some_usdt_price_attestation(human_price: &str, decimal_precision: 
 pub fn get_stargate_query_result<T: DeserializeOwned>(contract_response: RunnerResult<QueryStargateResponse>) -> serde_json::Result<T> {
     let contract_response = contract_response.unwrap().value;
     serde_json::from_str::<T>(&contract_response).map_err(|error| {
-        println!("{} \n {}", error, contract_response);
+        println!("{error} \n {contract_response}");
         error
     })
 }

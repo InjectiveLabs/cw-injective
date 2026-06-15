@@ -204,8 +204,8 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus",
  "cw2",
- "injective-cosmwasm 0.3.6",
- "injective-math 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-cosmwasm 0.3.7",
+ "injective-math 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "injective-std",
  "prost 0.13.5",
  "schemars 0.8.22",
@@ -956,7 +956,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus",
  "cw2",
- "injective-cosmwasm 0.3.6",
+ "injective-cosmwasm 0.3.7",
  "injective-std",
  "schemars 0.8.22",
  "serde",
@@ -1686,13 +1686,13 @@ dependencies = [
 
 [[package]]
 name = "injective-cosmwasm"
-version = "0.3.6"
+version = "0.3.7"
 dependencies = [
  "cosmwasm-std",
  "cw-storage-plus",
  "ethereum-types",
  "hex",
- "injective-math 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-math 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "schemars 0.8.22",
  "serde",
  "serde-json-wasm",
@@ -1704,15 +1704,15 @@ dependencies = [
 
 [[package]]
 name = "injective-cosmwasm"
-version = "0.3.6"
+version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f0fc1345be5ca8c1bf7bcc7215b581cbef6a13a73e62fa390dc2be122183363"
+checksum = "5a172a9ee576d6d00d86119766cd3b5b8dbbd757c13ed2440225986a55bce941"
 dependencies = [
  "cosmwasm-std",
  "cw-storage-plus",
  "ethereum-types",
  "hex",
- "injective-math 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-math 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "schemars 0.8.22",
  "serde",
  "serde_repr",
@@ -1730,8 +1730,8 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus",
  "cw2",
- "injective-cosmwasm 0.3.6",
- "injective-math 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-cosmwasm 0.3.7",
+ "injective-math 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "injective-std",
  "injective-test-tube",
  "injective-testing",
@@ -1752,8 +1752,8 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus",
  "cw2",
- "injective-cosmwasm 0.3.6",
- "injective-math 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-cosmwasm 0.3.7",
+ "injective-math 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "injective-std",
  "injective-test-tube",
  "injective-testing",
@@ -1766,7 +1766,7 @@ dependencies = [
 
 [[package]]
 name = "injective-math"
-version = "0.3.6"
+version = "0.3.7"
 dependencies = [
  "cosmwasm-std",
  "primitive-types",
@@ -1776,9 +1776,9 @@ dependencies = [
 
 [[package]]
 name = "injective-math"
-version = "0.3.6"
+version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c04b6ee8f956b14b48b554acb8c70389f7ef614b8f1cdab9c1b8e87651ff8c8b"
+checksum = "f830683c4408bc3046d3ee6aeef82cf1fcccdb85e0dd7c6ebc8b50ee7ef462f6"
 dependencies = [
  "cosmwasm-std",
  "primitive-types",
@@ -1788,9 +1788,9 @@ dependencies = [
 
 [[package]]
 name = "injective-std"
-version = "1.19.0"
+version = "1.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2313d53947ef805df990c67ff94ffa7b2eb02b1f8bdb5ff01539419bb1f0d736"
+checksum = "31c948f99e2a1783e4c0168fd3f5ea15c6dbe8a112f3e2fc360a04941da97ca5"
 dependencies = [
  "chrono",
  "cosmwasm-std",
@@ -1804,9 +1804,9 @@ dependencies = [
 
 [[package]]
 name = "injective-std-derive"
-version = "1.16.4-1"
+version = "1.16.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d641a3aac0c25e166670df2a94293a508293639711e8ac29a7b48223eaf0af2e"
+checksum = "1de432e1d74b25b99dda0af277c0af0e6f28ab34daf27c5745349ece821861d6"
 dependencies = [
  "cosmwasm-std",
  "itertools 0.14.0",
@@ -1817,14 +1817,14 @@ dependencies = [
 
 [[package]]
 name = "injective-test-tube"
-version = "1.19.0"
+version = "1.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c252988f42118daef1844725f4b46ed2591b544b909401ec34407c349122b324"
+checksum = "18294a80f0e4ea8a683c5401d23402f7ad9af985cf4240a683da07d258e8436f"
 dependencies = [
  "bindgen",
  "cosmrs",
  "cosmwasm-std",
- "injective-cosmwasm 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-cosmwasm 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "injective-std",
  "k256",
  "prost 0.13.5",
@@ -1837,13 +1837,13 @@ dependencies = [
 
 [[package]]
 name = "injective-testing"
-version = "1.19.0"
+version = "1.20.0"
 dependencies = [
  "anyhow",
  "cosmwasm-std",
  "cw-multi-test",
- "injective-cosmwasm 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "injective-math 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-cosmwasm 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "injective-math 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "injective-std",
  "injective-test-tube",
  "prost 0.13.5",
@@ -3374,9 +3374,9 @@ dependencies = [
 
 [[package]]
 name = "test-tube-inj"
-version = "2.0.10"
+version = "2.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36156086ca5edd5da0d000432782a6818e9db8da4d97b1d7717304e543388c5f"
+checksum = "00f4fc723ea738896f18a633a34ebd3c70d24cf136075bfc981250aa7e781729"
 dependencies = [
  "base64 0.21.7",
  "cosmrs",

@@ -78,6 +78,7 @@ fn test_query_derivative_market() {
                 open_notional_cap: Some(OpenNotionalCap {
                     cap: Some(Cap::Uncapped(OpenNotionalCapUncapped {})),
                 }),
+                cross_margin_eligible: false,
             },
             &env.owner,
         )

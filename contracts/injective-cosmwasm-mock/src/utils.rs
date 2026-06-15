@@ -357,6 +357,7 @@ pub fn launch_perp_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
                 open_notional_cap: Some(OpenNotionalCap {
                     cap: Some(Cap::Uncapped(OpenNotionalCapUncapped {})),
                 }),
+                cross_margin_eligible: false,
             },
             signer,
         )
@@ -729,6 +730,10 @@ pub fn set_address_of_pyth_contract(app: &InjectiveTestApp, validator: &SigningA
                 pyth_contract: pyth_address.address(),
                 chainlink_verifier_proxy_contract: "".to_string(),
                 chainlink_data_streams_verification_gas_limit: 1000000,
+                pyth_pro_verifier_contract: "".to_string(),
+                pyth_pro_verification_gas_limit: 500000,
+                pyth_pro_verification_fee: 1,
+                seda_fast_params: None,
             }),
         },
         &mut buf,
