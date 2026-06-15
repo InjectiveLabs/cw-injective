@@ -357,6 +357,7 @@ pub fn launch_perp_market(exchange: &Exchange<InjectiveTestApp>, signer: &Signin
                 open_notional_cap: Some(OpenNotionalCap {
                     cap: Some(Cap::Uncapped(OpenNotionalCapUncapped {})),
                 }),
+                cross_margin_eligible: false,
             },
             signer,
         )
